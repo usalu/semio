@@ -23,7 +23,7 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for PatchSnapshot {
     fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffMutation as Mutation<TiffSnapshot>>::Diff> {
         match editing::apply_snapshot_patch(base, &self.patch) {
             Ok(next) => protocol::MutationOutcome::new(<TiffDiff as DiffAlgebra<TiffSnapshot>>::between(base, &next)),
-            Err(error) => protocol::MutationOutcome::error(error.code, error.message, [error.path]),
+            Err(error) => protocol::MutationOutcome::refuse(error.outcome_code(), format!("{}: {}", error.code, error.message), [error.path]),
         }
     }
 

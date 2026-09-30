@@ -1,0 +1,6 @@
+{
+  "ChangeZoneOutdoorAir": {
+    "zoneId": "zone-office",
+    "newOutdoorAirSuppliedM3H": 1200.0
+  }
+}

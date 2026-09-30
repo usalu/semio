@@ -32,6 +32,10 @@ pub enum DrawingMutation {
     UpdateText(UpdateText),
     SetLayerFillRule(SetLayerFillRule),
     SetGroupIsolation(SetGroupIsolation),
+    DragLayers(DragLayers),
+    RotateLayers(RotateLayers),
+    ScaleLayers(ScaleLayers),
+    DragPathPoints(DragPathPoints),
 }
 //#endregion 🔖️Mutations
 pub use crate::standards::v1::subsets::style::schema::mutations::update_text::mutation::{update_text, UpdateText};
@@ -294,6 +298,11 @@ pub const KINDS: &[&str] = &[
     "update-path-geometry",
     "update-text",
     "set-layer-fill-rule",
+    "set-group-isolation",
+    "drag-layers",
+    "rotate-layers",
+    "scale-layers",
+    "drag-path-points",
 ];
 //#endregion 🔖️Kinds
 
@@ -308,3 +317,166 @@ pub use crate::standards::v1::subsets::transform::schema::mutations::update_path
 pub use crate::standards::v1::subsets::style::schema::mutations::set_layer_fill_rule::mutation::{set_layer_fill_rule,SetLayerFillRule};
 
 pub use crate::standards::v1::subsets::style::schema::mutations::set_group_isolation::mutation::{set_group_isolation,SetGroupIsolation};
+
+pub use crate::standards::v1::subsets::transform::schema::mutations::drag_layers::mutation::{drag_layers, DragLayers};
+pub use crate::standards::v1::subsets::transform::schema::mutations::rotate_layers::mutation::{rotate_layers, RotateLayers};
+pub use crate::standards::v1::subsets::transform::schema::mutations::scale_layers::mutation::{scale_layers, ScaleLayers};
+pub use crate::standards::v1::subsets::transform::schema::mutations::drag_path_points::mutation::{drag_path_points, DragPathPoints, DrawingPathPointTarget};
+
+//#region 🔖️SelectionTransform
+/// 🧮️ The identity affine matrix `[a, b, c, d, e, f]`.
+pub const DRAWING_IDENTITY_MATRIX: [f64; 6] = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
+
+/// 🌍️ One addressed layer of `base` in document order: its parent chain's world matrix, whether it and every ancestor is
+/// visible and unlocked, and the nearest addressed ancestor, if any.
+pub struct DrawingPlacedLayer<'a> {
+    pub layer: &'a DrawingLayerNode,
+    pub parent: [f64; 6],
+    pub editable: bool,
+    pub addressed_ancestor: Option<&'a str>,
+}
+
+/// 🗂️ Every layer of `base` whose id is in `ids`, in document (pre-)order, placed in the world.
+pub fn drawing_placed_layers<'a>(base: &'a DrawingSnapshot, ids: &[&str]) -> Vec<DrawingPlacedLayer<'a>> {
+    let mut placed = Vec::new();
+    let mut stack: Vec<(std::slice::Iter<'a, DrawingLayerNode>, [f64; 6], bool, Option<&'a str>)> = vec![(base.layers.iter(), DRAWING_IDENTITY_MATRIX, true, None)];
+    while let Some((layers, parent, editable, ancestor)) = stack.last_mut() {
+        let Some(layer) = layers.next() else {
+            stack.pop();
+            continue;
+        };
+        let (parent, ancestor) = (*parent, *ancestor);
+        let layer_base = layer_base(layer);
+        let editable = *editable && layer_base.visible && !layer_base.locked;
+        let addressed = ids.contains(&layer_base.id.as_str());
+        if addressed {
+            placed.push(DrawingPlacedLayer { layer, parent, editable, addressed_ancestor: ancestor });
+        }
+        if let DrawingLayerNode::Group(group) = layer {
+            let matrix = crate::schema::geometry::multiply(parent, crate::schema::drawing_transform_to_matrix(&layer_base.transform));
+            stack.push((group.children.iter(), matrix, editable, if addressed { Some(layer_base.id.as_str()) } else { ancestor }));
+        }
+    }
+    placed
+}
+
+/// 🚨️ The schema-stated target invariant every selection transform shares: at least one id, none repeated.
+pub fn drawing_targets_invariant(targets: &[String]) -> Result<(), &'static str> {
+    if targets.is_empty() {
+        return Err("a selection transform addresses at least one layer");
+    }
+    let unique: std::collections::BTreeSet<&str> = targets.iter().map(String::as_str).collect();
+    if unique.len() != targets.len() {
+        return Err("a selection transform addresses every layer once");
+    }
+    Ok(())
+}
+
+/// 🧭️ The one diff every layer selection transform builds: `place` maps a surviving layer's transform through its parent's
+/// world matrix, a layer whose addressed ancestor moved moves with it, locked, hidden, missing or singular targets are
+/// skipped (`mutation.partial`), none left is `mutation.target-missing`, nothing moving is `mutation.no-op`.
+pub fn drawing_selection_diff(base: &DrawingSnapshot, targets: &[String], place: impl Fn(&crate::DrawingTransform, [f64; 6]) -> Option<crate::DrawingTransform>) -> protocol::MutationOutcome<crate::diff::DrawingDiff> {
+    if let Err(reason) = drawing_targets_invariant(targets) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
+    }
+    let ids: Vec<&str> = targets.iter().map(String::as_str).collect();
+    let placed = drawing_placed_layers(base, &ids);
+    let (mut moved, mut locked, mut singular, mut patched) = (std::collections::BTreeSet::<&str>::new(), Vec::new(), Vec::new(), Vec::new());
+    let mut applies = false;
+    for entry in &placed {
+        let source = layer_base(entry.layer);
+        if entry.addressed_ancestor.is_some_and(|ancestor| moved.contains(ancestor)) {
+            applies = true;
+            continue;
+        }
+        if !entry.editable {
+            locked.push(source.id.clone());
+            continue;
+        }
+        match place(&source.transform, entry.parent) {
+            Some(next) => {
+                applies = true;
+                moved.insert(source.id.as_str());
+                if next != source.transform {
+                    patched.push((source.id.clone(), next));
+                }
+            }
+            None => singular.push(source.id.clone()),
+        }
+    }
+    if !applies {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is a visible, unlocked layer this transform can place", targets.len()), targets.to_vec());
+    }
+    let missing: Vec<String> = targets.iter().filter(|id| !placed.iter().any(|entry| layer_base(entry.layer).id == **id)).cloned().collect();
+    let partial: Vec<protocol::MutationMessage> = [(missing, "not in this drawing"), (locked, "locked or hidden"), (singular, "placed through a singular transform")]
+        .into_iter()
+        .filter(|(skipped, _)| !skipped.is_empty())
+        .map(|(skipped, reason)| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", skipped.len(), targets.len(), skipped.join(", "))).at(skipped))
+        .collect();
+    if patched.is_empty() {
+        return protocol::MutationOutcome::new(crate::diff::DrawingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "no layer changes its transform").at(targets.to_vec())]));
+    }
+    protocol::MutationOutcome::new(crate::diff::diff_set_layer_transforms(patched)).absorb_messages(partial)
+}
+
+/// ↔️ A layer's transform after its world-space drag by `delta` through its parent's world matrix — only the origin moves.
+pub fn drawing_dragged_transform(source: &crate::DrawingTransform, parent: [f64; 6], delta: [f64; 2]) -> Option<crate::DrawingTransform> {
+    let [x, y, scale_x, scale_y, rotation] = crate::schema::geometry::translation::translate([source.x, source.y, source.scale_x, source.scale_y, source.rotation], parent, delta)?;
+    Some(crate::DrawingTransform { x, y, scale_x, scale_y, rotation, shear: source.shear })
+}
+
+/// 🌐️ A layer's transform after the world-space affine `motion` through its parent's world matrix:
+/// `parent⁻¹ · motion · parent · local`.
+pub fn drawing_moved_transform(source: &crate::DrawingTransform, parent: [f64; 6], motion: [f64; 6]) -> Option<crate::DrawingTransform> {
+    use crate::schema::geometry::{inverse, multiply};
+    let local = multiply(inverse(parent)?, multiply(motion, multiply(parent, crate::schema::drawing_transform_to_matrix(source))));
+    local.iter().all(|value| value.is_finite()).then(|| crate::schema::drawing_matrix_to_transform(local))
+}
+
+/// 🔄️ The world-space rotation by `angle` radians about `(pivot_x, pivot_y)`.
+pub fn drawing_rotation_matrix(pivot_x: f64, pivot_y: f64, angle: f64) -> [f64; 6] {
+    let (s, c) = angle.sin_cos();
+    [c, s, -s, c, pivot_x - c * pivot_x + s * pivot_y, pivot_y - s * pivot_x - c * pivot_y]
+}
+
+/// 📐️ The world-space scaling by `(scale_x, scale_y)` about `(pivot_x, pivot_y)`.
+pub fn drawing_scaling_matrix(pivot_x: f64, pivot_y: f64, scale_x: f64, scale_y: f64) -> [f64; 6] {
+    [scale_x, 0.0, 0.0, scale_y, pivot_x * (1.0 - scale_x), pivot_y * (1.0 - scale_y)]
+}
+
+/// ↩️ Exact base-derived inverse of a layer selection transform: `update-layer-transform` back to every BASE transform its
+/// forward outcome patches — absolute setters, never a negated motion that would accumulate float error.
+pub fn drawing_selection_inverse(base: &DrawingSnapshot, outcome: protocol::MutationOutcome<crate::diff::DrawingDiff>) -> Vec<DrawingMutation> {
+    outcome.diff().layers.iter().flat_map(|delta| delta.patched.iter()).filter_map(|entry| find_drawing_layer(base, &entry.id).map(|layer| update_layer_transform(entry.id.clone(), layer_base(layer).transform.clone()))).collect()
+}
+
+/// 🔢️ A selection label's number, `(en, de)`: two decimals at most, trailing zeros trimmed, a German decimal comma.
+pub fn drawing_label_number(value: f64) -> (String, String) {
+    let rounded = (value * 100.0).round() / 100.0;
+    let text = format!("{:.2}", if rounded == 0.0 { 0.0 } else { rounded });
+    let en = text.trim_end_matches('0').trim_end_matches('.').to_string();
+    let de = en.replace('.', ",");
+    (en, de)
+}
+
+/// 🔠️ A selection label's counted noun, `(en, de)`: "1 layer" / "1 Ebene", "3 layers" / "3 Ebenen".
+pub fn drawing_label_layers(count: usize) -> (String, String) {
+    match count {
+        1 => ("1 layer".to_string(), "1 Ebene".to_string()),
+        count => (format!("{count} layers"), format!("{count} Ebenen")),
+    }
+}
+/// 🧺️ The most inverse rows `mutation` yields on any base — the retained store's fold declaration, proven from the
+/// mutation alone: a selection transform restores one absolute row per addressed layer, every other leaf is
+/// point-invertible.
+pub fn drawing_inverse_rows(mutation: &DrawingMutation) -> usize {
+    match mutation {
+        DrawingMutation::DragLayers(leaf) => leaf.targets.len(),
+        DrawingMutation::RotateLayers(leaf) => leaf.targets.len(),
+        DrawingMutation::ScaleLayers(leaf) => leaf.targets.len(),
+        DrawingMutation::DragPathPoints(leaf) => crate::standards::v1::subsets::transform::schema::mutations::drag_path_points::mutation::drag_path_points_layers(&leaf.targets).len(),
+        _ => 1,
+    }
+    .max(1)
+}
+//#endregion 🔖️SelectionTransform

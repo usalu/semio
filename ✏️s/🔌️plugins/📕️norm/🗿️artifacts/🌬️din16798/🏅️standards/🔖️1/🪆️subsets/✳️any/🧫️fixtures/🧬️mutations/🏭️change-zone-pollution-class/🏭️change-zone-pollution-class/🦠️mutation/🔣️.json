@@ -1,0 +1,6 @@
+{
+  "ChangeZonePollutionClass": {
+    "zoneId": "zone-office",
+    "newPollutionClass": "very_low"
+  }
+}

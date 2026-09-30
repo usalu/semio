@@ -287,3 +287,188 @@ peer is adding `#[mutation_leaf(payload = Apply)]` while the derive grows `paylo
   | draw | 2 | 1 | | | | |
 
 - **Scratch:** `🗑️generated/w2s-c/` holds the lint JSONs, the scan outputs and `touched-files.txt`.
+
+## Follow-up
+
+This section covers the coordinator's follow-up: no exemptions from the evidence rule, the forms case, the procedural widget
+documents, draft-07 everywhere in scope, and the strict-oracle twin tests (W2-S's F13 recipe). It supersedes §5 bullets
+"Procedural artifact documents" and "Draft 2020-12", §4.1 "Forms Python oracle", and §6.2/§6.3.
+
+### F.1 Payload-only wire witnesses (no exemptions)
+
+Each witness is `🧫️fixtures/🧬️mutations/<leaf>/🧾️wire-witness/🦠️mutation/🔣️.json`: the tagged leaf payload only, with no
+before/after snapshot. Two checks read each one:
+
+- the lint validates it against the leaf schema;
+- the owning crate decodes it and re-encodes exactly the committed JSON (`store::os_store::test_support::assert_wire_witness`, W2-S
+  F11).
+
+| Owner | Leaves | Owner-side check |
+|---|---|---|
+| cad `✳️any` | `🆕create-object`, `❌delete-object`, `🚚move-objects`, `🌀rotate-objects`, `⚖️scale-objects` | `object_lifecycle_wire_witnesses_are_the_canonical_rust_wire` (new region `🧾️WireWitnesses` in `🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs`) asserts, for each witness, that it decodes, re-encodes byte-canonically, names its own kind, and equals the operation the leaf laws construct (`sample_object("object-b", …)`, `cad_object_spec_of`, `cad_object_primitives_of`). `semio_payload_law_cad_mutation` reads the same files (its owner is `✳️any`, which holds `🧫️fixtures`). |
+| raster `✳️any` | `🎭️change-layer-mask`, `📐️change-layer-transform` | `committed_wire_witness_is_the_canonical_rust_wire` in each leaf's `🧪️tests/🦀️.rs`, plus `semio_payload_law_raster_mutation`. The mask witness takes the `reveal` mask from the leaf vectors; the transform witness is a sheared, non-identity map. |
+| cad `🧩️extensions/🏢️aec-building` | `🏢️create-building-storey` | `committed_wire_witness_is_the_canonical_rust_wire` in `🧬️schema/🧬️mutations/🏢️create-building-storey/🧪️tests/🔬️unit/🦀️.rs`. The crate has no `#[derive(Mutations)]` aggregate: the leaf is a composite contributed onto cad. No `semio_payload_law_*` is emitted for it, so this test is the round-trip law for that leaf. |
+
+- **Lint (W2-S's file).** `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/📋️orchestration/🟦️.ts` gained one branch.
+  A leaf with no aggregate whose `🔣️.json` declares `composition: "composite"` now validates its payload against its own leaf
+  schema and counts as witnessed. Before, the aec witness was reported unmapped.
+- **Oracle manifest.** `📐️cad/…/✳️any/🔮️oracles/🔣️.json` `_comment` now names the witnesses. The rest of the comment still
+  holds: there is no quintet, because the state is pane child materialization.
+- **Cad case unaffected.** `📐️mutate-cad-1` oracle: 39/39.
+
+### F.2 Forms case green
+
+- **Reference.** `🧪️tests/🌵️mutate-forms-1/🐍️.py` was rewritten against the committed document shape.
+  - The required members now include `definition`/`responses`.
+  - diagnose/apply/inverse act on `definition.steps`.
+  - `change-form-title` inverts through `null`.
+  - It has a grammar-driven `.forms` carrier reader for `identity-round-trip`.
+
+  The `🥒️.feature` description and the `🦀️.rs` subject imports (`parse_forms_dsl`, `print_forms_dsl`) and docs were refreshed.
+- **Parity found one more drift.** The Rust subject's `identity-round-trip` exact-bytes law failed: 2162 bytes printed against
+  2161 committed.
+  - The committed demo `🖼️assets/🎬️demo/🗣️.dsl.semio` had a hand-appended tail (`] ]` / `responses=[]` / `structure=…` /
+    `results=…` on four lines).
+  - The printer emits these fields on one line with `[ ]`, the same way it prints every sibling field above them.
+  - Lines 1–45 were already byte-identical. The tail was regenerated to the printer's exact output, checked by a one-off dump
+    whose `[DEBUG]` line was removed afterwards.
+  - The other two examples (`📇️contact`, `🌱️onboarding`) are not under an exact-bytes law and were left alone.
+- **Strict-oracle twins.** `📨️response/🧪️tests/🔬️events/🟦️.ts` (`testFormsResponses`, `testFormsSubmission`) and
+  `📨️response/📤️export/🧪️tests/🟦️.ts` failed with `unknown keyword "x-semio-ui"`. The response schema gained annotations in
+  `48d881aa7ab`. Both files now compile through `semioSchemaAjvV1()`.
+
+### F.3 Procedural widget documents
+
+The generation2d and generation3d artifact documents (`✳️any/🧬️schema/🔣️.json`) now describe the real `Widget` union instead of
+a JSON string. The same goes for `FlowTree`/`FlowNeuron`/`FlowUi`/`FlowNodeGui`/`NodeChrome`/`FlowPreviewGui`/`FlowChannelRef`/
+`Dictionary` and for `FormGeneration.values`, which was a string `valuesJson` before.
+
+- **Leaves.** `create-widget`, `replace-widget` and `update-widget` `$ref` the new `$defs`.
+- **TS twins.** Updated: `🧬️schema/🟦️.ts` (`parseWidget` over `WIDGET_MEMBERS`, parsed `values`, `selectedGenerationId`, the
+  layout map), `📸️snapshot/🟦️.ts`, `🔺️diff/🟦️.ts`, and the `create-widget` `🦠️mutation`/`↩️inverse` twins, which import
+  `Widget` and use `widget.id`.
+- **Projections.** GraphQL (4 per artifact) and proto (4 per artifact) follow.
+
+This is 32 files in total, written by `🧪️w2-s-design-parity-fix.py` section `procedural_projections`, which is idempotent.
+
+### F.4 Draft-07 across the scope
+
+Nineteen non-leaf documents moved from draft 2020-12 to draft-07 (section `draft07_documents`), along with the 9 tests that load
+them:
+
+- procedural `🧭️transforms`, `set-widget-input`, and the preview/flow window configs;
+- the raster editor commands `set-brush-hardness`, `set-brush-color` and `move-layer`;
+- forms editor config, inspection panel, visibility, `choice-edit`, and try-window config/transient;
+- draw viewer/editor canvas config and transient, and presence.
+
+`/usr/bin/grep -rl "draft/2020-12"` over all ten scope paths now returns nothing.
+
+Three tests still construct `Ajv2020` with the draft-07 meta-schema added. They compile the framework's own 2020-12 UI documents
+(`🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json`, `$id …/framework/ui/viewport/2d`) next to scope documents:
+
+- draw viewer canvas config;
+- draw editor canvas window-ownership;
+- procedural gen2d window-camera-ownership, which also had stale fixture paths that were fixed.
+
+The fix script skips files that already import `json-schema-draft-07.json`, so it stays idempotent.
+
+### F.5 Strict-oracle twin tests (F13 recipe)
+
+Each test below now builds its validator with `semioSchemaAjvV1({allErrors: true})` instead of `new Ajv({strict: false})`. It
+validates the tagged wire (`{mutation: "<tag>", …}`), asserts that the tagless payload is rejected, and passes the tagless payload
+to the payload-level TS parsers/appliers.
+
+| Plugin | Test file (under `🪆️subsets/`) | Tag |
+|---|---|---|
+| draw | `✳️any/🧬️schema/🧮️geometry/↗️affine/🧪️tests/🔬️unit/🟦️.ts` | `updateLayerTransform` |
+| draw | `✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🟦️.ts` (both tests, including the aggregate) | `setLayerBlendMode` |
+| draw | `🔀️transform/…/✏️update-path-geometry/🧪️tests/🔬️unit/🟦️.ts` (also validates the committed scenario mutation) | `updatePathGeometry` |
+| draw | `🎨️style/…/📝️update-text/🧪️tests/🔬️unit/🟦️.ts` | `updateText` |
+| draw | `🎨️style/…/🧩️set-group-isolation/🧪️tests/🔬️unit/🟦️.ts` (both tests) | `setGroupIsolation` |
+| raster | `✳️any/🧬️schema/🧪️tests/🎭️mask/🟦️.ts` (all four validators) | `changeLayerMask` |
+| raster | `✳️any/🧬️schema/🧪️tests/🎛️adjustment/🟦️.ts` (all three validators) | `changeLayerAdjustmentParameter` |
+| raster | `✳️any/🧬️schema/🧪️tests/🔒️protection/🟦️.ts` (all three validators) | `changeLayerLocked` |
+| raster | `✳️any/🧬️schema/🧬️mutations/📐️change-layer-transform/🧪️tests/🟦️.ts` | `changeLayerTransform` |
+
+The strict oracle surfaced one real schema defect. The raster `🔺️diff/🔣️.json` `RasterLayerPatch.adjustmentParameters`
+expressed "at most one entry per parameter" as an `anyOf` of 2-item `items` tuples. That is an Ajv `strictTuples` violation,
+because it has no `minItems`. It is now tuple-free:
+
+```json
+"not": {"anyOf": [
+  {"type": "array", "minItems": 2, "items": {"type": "object", "properties": {"parameter": {"const": "brightness"}}}},
+  {"type": "array", "minItems": 2, "items": {"type": "object", "properties": {"parameter": {"const": "contrast"}}}}]}
+```
+
+It sits beside the unchanged `maxItems: 2` and `items: RasterAdjustmentParameter`. The committed `parameterPatches` vectors (six
+rows: `[]`, `[b,c]`, `[c,b]` valid; `[b,b]`, `[c,c]`, three entries invalid) still agree with `parseRasterLayerPatch`. The owned
+Rust validator supports `not`/`anyOf`/`minItems`, and the raster diff tests that validate against this document stayed green.
+
+### F.6 Raster case rows
+
+The `🖨️mutate-raster-1` oracle ran 38/40. The two `createLayer` payloads in the `🥒️.feature` Examples tables (lines 78 and 104)
+predate `locked`. The artifact schema requires `locked` on every layer node, and the Rust wire always emits it. Both rows now carry
+`"locked":false`. The oracle is now 40/40.
+
+### F.7 Verification (follow-up, all run, foreground, gated)
+
+| Command | Result |
+|---|---|
+| `schema mutation-payloads --under <each of the 10 scope paths>` | **0 findings** in every path. Witnessed leaves: shooting 39/39, puzzle 3d 35/35, puzzle 5d 35/35, procedural 45/45, cad 25/25 (aec included), raster 17/17, note 34/34, forms 14/14, block 105/105, draw 18/18 |
+| `schema mutation-inputs --under <each of the 10 scope paths>` | **0 findings** in every path |
+| `bun 🧪️w2-r-design-check-inputs.ts` / `python3 🧪️w2-r-design-check-schemas.py` | 262 leaves, 1,083 inputs: 0 failures. 1,662 annotations in 563 documents, 279 fixtures: 0 failures |
+| `bun 🧪️w2-s-design-check.ts` (strict Ajv, every leaf + aggregate + fixture) | 367 leaves, 24 aggregates, 333 fixtures: **0 failures** |
+| `python3 🧪️w2-s-design-rust-parity.py` / `🧪️w2-s-design-parity-fix.py --dry-run` | 0 findings / 0 files would change |
+| `cargo test -p semio-s-artifact-cad-cad --lib -- wire_witness payload_law` | **2 passed** (`object_lifecycle_wire_witnesses_are_the_canonical_rust_wire`, `semio_payload_law_cad_mutation`) |
+| `cargo test -p semio-s-artifact-raster-raster --lib -- wire_witness payload_law` | **3 passed** (both leaf witness tests, `semio_payload_law_raster_mutation`) |
+| `cargo test -p semio-s-plugin-cad-aec-building --lib -- wire_witness …` | **2 passed** (witness + existing storey vectors) |
+| `cargo test -p semio-s-artifact-forms-forms --lib` | **230 passed, 0 failed** (rerun after the demo regeneration) |
+| `cargo check --target wasm32-wasip2 -p shooting -p forms -p generation2d -p generation3d -p cad -p raster -p aec-building` | **exit 0**. Warnings are emitted, which proves the crates were type-checked |
+| `parity exhaustive --owner 📋️forms --case 🌵️mutate-forms-1` | **42/42, parity 21/21** (Python reference + Rust subject) |
+| `oracle exhaustive … 🌵️mutate-forms-1` / `📐️mutate-cad-1` / `🖨️mutate-raster-1` | 21/21, 39/39, 40/40 |
+| `bun test` on every Ajv-using TS test in scope (49 files) + every TS test in procedural/forms/raster/draw/cad (123 files) | All green except the two unrelated files listed below |
+| Exported-function TS tests in scope (35 functions, e.g. `testFormsResponses`) via `bun -e` | 34 ok. The remaining one is a `bun test`-style file, green under `bun test` |
+| `tsc` on the 9 edited F13 tests | 0 errors in these files. All 50 reported errors are in a peer's `📕️norm/…/en1996/…/🧬️mutations/🟦️.ts` |
+
+### F.8 Seen, not caused here (left to their owners)
+
+- **Full `--lib` runs** (the witness and payload-law tests above are green):
+  - cad: 437/440. The two failures are the demo asset's content-hashed child ids and the archive-door closure (`Incomplete`).
+  - raster: 4 deterministic failures when run single-threaded. They are store lifecycle faults: "document store close awaits a
+    retained reader or owner", an initializer that reaches no terminal in 400,000 steps, and a fuel counter reading 13 where 0
+    is expected. Two more tests fail on the resulting `PoisonError`.
+  - aec: `descriptor_is_fresh`. The only differing byte is `appChannelVersion` 20 vs 19, a framework constant bump.
+
+  None of them touches a file this work changed.
+- **draw `✳️any/🧬️schema/🎨️fill/🧪️tests/🔬️unit/🟦️.ts`.** The sharp/SVG pixel sampling mismatches (`solid-alpha`,
+  `zero-radius-gradient`). The file and its fixtures are untouched; its Ajv part passes.
+- **cad `🧪️tests/🎨️storybook-renderer/🟦️.ts`.** This is a Playwright spec and does not run under `bun test`.
+- **Raster parity (`parity exhaustive --case 🖨️mutate-raster-1`).** Written, not verified. Two attempts could not compile
+  `semio-framework-os-kernel`: a peer was mid-edit (`artifact_retire_struct` macro, E0061/E0425). The Python side is 40/40.
+- **Taxonomy report** (`verify taxonomy report --scope …`). Stopped after 10 minutes of repo walk. The `🧾️wire-witness` case
+  directory is W2-S's established form and already exists in 234 plugin fixture directories.
+- **Procedural `📝️text` twin type errors.** Pre-existing and unchanged.
+- **Central regeneration still owed.** The schema catalog hashes (`schema generate`) now also cover the raster diff document, the
+  procedural artifact documents and the draft-07 documents. Plugin descriptors (`describe`) are owed as well.
+
+### F.9 Files (follow-up)
+
+- **Created:**
+  - the 8 witness JSONs listed in F.1;
+  - the aec `🧫️fixtures/🧬️mutations/🏢️create-building-storey/…` tree.
+- **Modified, Rust tests:**
+  - cad `✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs`;
+  - raster `🎭️change-layer-mask/🧪️tests/🦀️.rs` and `📐️change-layer-transform/🧪️tests/🦀️.rs`;
+  - aec `🏢️create-building-storey/🧪️tests/🔬️unit/🦀️.rs`.
+- **Modified, lint:** `🧪️test/🧬️schema/📋️orchestration/🟦️.ts`.
+- **Modified, cad:** `✳️any/🔮️oracles/🔣️.json`.
+- **Modified, forms:**
+  - `🧪️tests/🌵️mutate-forms-1/{🐍️.py,🥒️.feature,🦀️.rs}`;
+  - `🖼️assets/🎬️demo/🗣️.dsl.semio`;
+  - `📨️response/🧪️tests/🔬️events/🟦️.ts` and `📨️response/📤️export/🧪️tests/🟦️.ts`.
+- **Modified, procedural:** the 32 files of F.3.
+- **Modified, draft-07:** the 28 files of F.4 (19 documents + 9 tests).
+- **Modified, F13:** the 9 twin tests of F.5 and raster `✳️any/🧬️schema/🔺️diff/🔣️.json`.
+- **Modified, raster case:** `🧪️tests/🖨️mutate-raster-1/🥒️.feature`.
+- **Ticket tools:** `🧪️w2-s-design-parity-fix.py` gained the sections `procedural_projections` and `draft07_documents` and the
+  idempotent Ajv swap.

@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeLightingGainVisibleFraction, base: &EnergyMod
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Lighting Gain {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !(0.0..=1.0).contains(&payload.new_visible_fraction) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Lighting Gain {}: visible fraction must be a fraction in [0, 1], got {}.", payload.id.0, payload.new_visible_fraction), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Lighting Gain {}: visible fraction must be a fraction in [0, 1], got {}.", payload.id.0, payload.new_visible_fraction), [payload.id.0.to_string()]);
     }
     if existing.visible_fraction == payload.new_visible_fraction {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Lighting Gain {} already carries this visible fraction: {}.", payload.id.0, payload.new_visible_fraction));

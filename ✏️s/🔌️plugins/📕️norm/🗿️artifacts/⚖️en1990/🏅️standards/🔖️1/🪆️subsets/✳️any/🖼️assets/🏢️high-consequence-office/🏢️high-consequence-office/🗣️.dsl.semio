@@ -11,7 +11,7 @@ variables [id:TEXT category:TEXT qk:NUM] {
 }
 accidentals [id:TEXT ad:NUM] {
 }
-seismics [id:TEXT a-ek:NUM importance-class:TEXT] {
+seismics [id:TEXT a-ek:NUM importance-class:ENUM] {
 }
 members [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {
   beam-B1 "Office beam B1" "Büroträger B1" 200000 200000 180000 150000 0 8 0.04 250 2.5 3

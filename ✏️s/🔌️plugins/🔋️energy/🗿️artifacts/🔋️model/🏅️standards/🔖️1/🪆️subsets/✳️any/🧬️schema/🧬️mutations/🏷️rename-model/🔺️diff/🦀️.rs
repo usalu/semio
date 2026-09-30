@@ -7,7 +7,7 @@ use crate::EnergyModelSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &super::RenameModel, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
     if payload.new_name.trim().is_empty() {
-        return protocol::MutationOutcome::error("mutation.invariant", "An energy model name must not be blank.", [payload.new_name.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "An energy model name must not be blank.", [payload.new_name.clone()]);
     }
     if base.model.name == payload.new_name {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("The energy model is already named \"{}\".", payload.new_name));

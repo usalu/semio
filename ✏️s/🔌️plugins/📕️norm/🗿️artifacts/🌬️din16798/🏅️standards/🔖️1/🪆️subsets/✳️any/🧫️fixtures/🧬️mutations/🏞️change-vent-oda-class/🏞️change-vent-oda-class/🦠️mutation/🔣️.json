@@ -1,0 +1,6 @@
+{
+  "ChangeVentOdaClass": {
+    "ventId": "vent-central",
+    "newOdaClass": "ODA3"
+  }
+}

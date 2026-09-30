@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberNEd",
+  "memberId": "purlin-1",
+  "actionId": "G",
+  "newNK": 2500.0
+}

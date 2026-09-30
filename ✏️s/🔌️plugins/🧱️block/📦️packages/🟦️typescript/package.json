@@ -3,14 +3,11 @@
   "projectType": "library",
   "name": "@semio-tech/block-js",
   "version": "0.1.0",
-  "description": "🧱️ Block plugin TS: typed twins of the block2d/block3d/block5d kind-definition schemas (snapshot, diff, mutations, text/binary codecs), io facades, and the publication-authority law test.",
+  "description": "@semio-tech/block-js authored owner test infrastructure.",
   "type": "module",
   "private": true,
   "scripts": {
     "test": "bun nx run @semio-tech/block-js:test"
-  },
-  "exports": {
-    ".": "./🟦️.ts"
   },
   "dependencies": {},
   "devDependencies": {
@@ -27,7 +24,7 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript"
   },
-  "bundleKind": "library",
+  "bundleKind": "repo",
   "nx": {
     "includedScripts": []
   }

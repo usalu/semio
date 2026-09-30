@@ -10,7 +10,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const repo = "/Users/ueli/Documents/semio";
-const roots = ["✏️s/🔌️plugins/📏️layout", "✏️s/🔌️plugins/➗️mathematical", "✏️s/🔌️plugins/📜️imperative", "✏️s/🔌️plugins/🏭️process", "✏️s/🔌️plugins/🎬️sequence", "✏️s/🔌️plugins/🌊️flow", "✏️s/🔌️plugins/🕸️dag", "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store", "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite", "🧰️framework/🛍️products/💻️os/🎚️config"];
+const roots = ["✏️s/🔌️plugins/📏️layout", "✏️s/🔌️plugins/➗️mathematical", "✏️s/🔌️plugins/📜️imperative", "✏️s/🔌️plugins/🏭️process", "✏️s/🔌️plugins/🎬️sequence", "✏️s/🔌️plugins/🌊️flow", "✏️s/🔌️plugins/🕸️dag", "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack", "✏️s/🔌️plugins/📋️forms", "✏️s/🔌️plugins/🎞️animate", "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store", "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite", "🧰️framework/🛍️products/💻️os/🎚️config"];
 const skipped = new Set(["node_modules", "target", "dist", "🗑️generated"]);
 const catalog = JSON.parse(readFileSync(join(repo, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json"), "utf8")) as { scopes: Record<string, { path: string }> };
 const documents = new Map<string, unknown>();

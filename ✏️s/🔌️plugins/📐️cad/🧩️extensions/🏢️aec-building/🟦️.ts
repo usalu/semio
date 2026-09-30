@@ -40,6 +40,16 @@ const BUILDING_LAYER_TYPOLOGY: Readonly<Record<string, TypologyRef>> = {
 // #region 📦️Register
 /** 📦️ Registers building STEP import profile on the core engine. */
 export function register(): void {
+  core.registerSpatialKernelCommand("building.building.placeCeilingFrom2PointsAndHeight", core.constructBoxFromPoints);
+  core.registerSpatialKernelCommand("building.building.placeColumnFrom2PointsAndHeight", core.constructBoxFromPoints);
+  core.registerSpatialKernelCommand("building.building.placeDoorFrom2PointsAndHeight", core.constructBoxFromPoints);
+  core.registerSpatialKernelCommand("building.building.placeFoundationFrom2PointsAndHeight", core.constructBoxFromPoints);
+  core.registerSpatialKernelCommand("building.building.placeRoofFrom2PointsAndHeight", core.constructBoxFromPoints);
+  core.registerSpatialKernelCommand("building.building.placeSlabFrom2PointsAndHeight", core.constructBoxFromPoints);
+  core.registerSpatialKernelCommand("building.building.placeStairFrom2PointsAndHeight", core.constructBoxFromPoints);
+  core.registerSpatialKernelCommand("building.building.placeWallFrom2PointsAndHeight", core.constructLinearPrism);
+  core.registerSpatialKernelCommand("building.building.placeWindowFrom2PointsAndHeight", core.constructBoxFromPoints);
+
   registerImportProfile(AEC_BUILDING_MODEL_DEFINITION_ID, {
     layerTypology: BUILDING_LAYER_TYPOLOGY,
     fallbackTypology: "building.building.slab" as TypologyRef,

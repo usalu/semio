@@ -16,7 +16,7 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-building/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-system-base-shear-resistance-n/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-system-v-rd-n/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-storey-permanent-gk-n/schema.json"
@@ -31,13 +31,13 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-building-plan-regular/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-building-elevation-regular/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-elevation-regular/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-member-detailing-compatible/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-member-detailing/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-building-masonry-wall-area-ratio/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-masonry-wall-ratio/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-bridge/schema.json"
@@ -68,6 +68,27 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tower-m-rd-nm/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-bridge/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-assessment/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-silo/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-tank/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-foundation/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-retaining-wall/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-tower/schema.json"
     }
   ]
 }

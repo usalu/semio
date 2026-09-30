@@ -1,50 +1,51 @@
-#[path = "../../#️⃣change-beam-stud-count/🧪️tests/#️⃣applies-change-beam-stud-count/🦀️.rs"]
-mod tests____applies_change_beam_stud_count;
-#[path = "../../↔️change-beam-transverse-as/🧪️tests/↔️applies-change-beam-transverse-as/🦀️.rs"]
-mod tests___applies_change_beam_transverse_as;
-#[path = "../../↪️change-column-kind/🧪️tests/↪️applies-change-column-kind/🦀️.rs"]
-mod tests___applies_change_column_kind;
-#[path = "../../⛔️remove-column/🧪️tests/⛔️applies-remove-column/🦀️.rs"]
-mod tests___applies_remove_column;
-#[path = "../../✂️change-beam-stud-spacing-m/🧪️tests/✂️applies-change-beam-stud-spacing-m/🦀️.rs"]
-mod tests___applies_change_beam_stud_spacing_m;
-#[path = "../../➕insert-slab/🧪️tests/➕applies-insert-slab/🦀️.rs"]
-mod tests__applies_insert_slab;
-#[path = "../../➕️insert-beam/🧪️tests/➕️applies-insert-beam/🦀️.rs"]
-mod tests___applies_insert_beam;
-#[path = "../../➖remove-slab/🧪️tests/➖applies-remove-slab/🦀️.rs"]
-mod tests__applies_remove_slab;
-#[path = "../../➖️remove-beam/🧪️tests/➖️applies-remove-beam/🦀️.rs"]
-mod tests___applies_remove_beam;
-#[path = "../../➗️insert-column/🧪️tests/➗️applies-insert-column/🦀️.rs"]
-mod tests___applies_insert_column;
-#[path = "../../⬇️change-column-action-force-n/🧪️tests/⬇️applies-change-column-action-force-n/🦀️.rs"]
-mod tests___applies_change_column_action_force_n;
-#[path = "../../⭕️change-beam-stud-diameter-m/🧪️tests/⭕️applies-change-beam-stud-diameter-m/🦀️.rs"]
-mod tests___applies_change_beam_stud_diameter_m;
-#[path = "../../🌀️change-beam-action-q-area-pa/🧪️tests/🌀️applies-change-beam-action-q-area-pa/🦀️.rs"]
-mod tests___applies_change_beam_action_q_area_pa;
-#[path = "../../🌍️change-annex/🧪️tests/🌍️applies-change-annex/🦀️.rs"]
-mod tests___applies_change_annex;
-#[path = "../../🏋️change-steel-fy-pa/🧪️tests/🏋️applies-change-steel-fy-pa/🦀️.rs"]
-mod tests___applies_change_steel_fy_pa;
-#[path = "../../🏗️change-structure-kind/🧪️tests/🏗️applies-change-structure-kind/🦀️.rs"]
-mod tests___applies_change_structure_kind;
-#[path = "../../💪️change-beam-stud-fu-pa/🧪️tests/💪️applies-change-beam-stud-fu-pa/🦀️.rs"]
-mod tests___applies_change_beam_stud_fu_pa;
-#[path = "../../📏change-slab-thickness-m/🧪️tests/📏️applies-change-slab-thickness-m/🦀️.rs"]
-mod tests___applies_change_slab_thickness_m;
-#[path = "../../📏️change-beam-span-m/🧪️tests/📏️applies-change-beam-span-m/🦀️.rs"]
-mod tests___applies_change_beam_span_m;
-#[path = "../../📐️change-slab-action-q-area-pa/🧪️tests/📐️applies-change-slab-action-q-area-pa/🦀️.rs"]
-mod tests___applies_change_slab_action_q_area_pa;
-#[path = "../../🔁️change-fatigue-detail/🧪️tests/🔁️applies-change-fatigue-detail/🦀️.rs"]
-mod tests___applies_change_fatigue_detail;
-#[path = "../../🔥️change-fire-rating/🧪️tests/🔥️applies-change-fire-rating/🦀️.rs"]
-mod tests___applies_change_fire_rating;
-#[path = "../../🛠️change-beam-construction/🧪️tests/🏗️applies-change-beam-construction/🦀️.rs"]
-mod tests___applies_change_beam_construction;
-#[path = "../../🧯️change-insulation-thickness-m/🧪️tests/🧯️applies-change-insulation-thickness-m/🦀️.rs"]
-mod tests___applies_change_insulation_thickness_m;
-#[path = "../../🧱change-beam-slab-thickness-m/🧪️tests/🧱applies-change-beam-slab-thickness-m/🦀️.rs"]
-mod tests__applies_change_beam_slab_thickness_m;
+//! 🧫️ One canonical test per committed EN 1994 specification vector.
+#[path = "../../🌍️change-annex/🧪️tests/🌐️switches-national/🦀️.rs"]
+mod vector_change_annex_switches_national;
+#[path = "../../🏗️change-structure-kind/🧪️tests/✏️to-bridge/🦀️.rs"]
+mod vector_change_structure_kind_to_bridge;
+#[path = "../../🏋️change-steel-fy-pa/🧪️tests/🏋️upgrades-fy/🦀️.rs"]
+mod vector_change_steel_fy_pa_upgrades_fy;
+#[path = "../../🔥️change-fire-rating/🧪️tests/🔥️upgrades-to-r90/🦀️.rs"]
+mod vector_change_fire_rating_upgrades_to_r90;
+#[path = "../../🧯️change-insulation-thickness-m/🧪️tests/✏️0-028/🦀️.rs"]
+mod vector_change_insulation_thickness_m_0_028;
+#[path = "../../🔁️change-fatigue-detail/🧪️tests/✏️to-flange/🦀️.rs"]
+mod vector_change_fatigue_detail_to_flange;
+#[path = "../../➕️insert-beam/🧪️tests/➕️inserts-beam/🦀️.rs"]
+mod vector_insert_beam_inserts_beam;
+#[path = "../../➖️remove-beam/🧪️tests/➖️removes-beam/🦀️.rs"]
+mod vector_remove_beam_removes_beam;
+#[path = "../../🌀️change-beam-action-q-area-pa/🧪️tests/✏️3000/🦀️.rs"]
+mod vector_change_beam_action_q_area_pa_3000;
+#[path = "../../✂️change-beam-stud-spacing-m/🧪️tests/✏️to-0-15/🦀️.rs"]
+mod vector_change_beam_stud_spacing_m_to_0_15;
+#[path = "../../📏️change-beam-span-m/🧪️tests/📏️sets-span-10m/🦀️.rs"]
+mod vector_change_beam_span_m_sets_span_10m;
+#[path = "../../🧱change-beam-slab-thickness-m/🧪️tests/✏️to-0-16/🦀️.rs"]
+mod vector_change_beam_slab_thickness_m_to_0_16;
+#[path = "../../⭕️change-beam-stud-diameter-m/🧪️tests/✏️to-0-022/🦀️.rs"]
+mod vector_change_beam_stud_diameter_m_to_0_022;
+#[path = "../../#️⃣change-beam-stud-count/🧪️tests/#️⃣sets-count/🦀️.rs"]
+mod vector_change_beam_stud_count_sets_count;
+#[path = "../../💪️change-beam-stud-fu-pa/🧪️tests/💪️sets-fu/🦀️.rs"]
+mod vector_change_beam_stud_fu_pa_sets_fu;
+#[path = "../../↔️change-beam-transverse-as/🧪️tests/↔️sets-as/🦀️.rs"]
+mod vector_change_beam_transverse_as_sets_as;
+#[path = "../../🛠️change-beam-construction/🧪️tests/✏️unpropped/🦀️.rs"]
+mod vector_change_beam_construction_unpropped;
+#[path = "../../➗️insert-column/🧪️tests/➗️inserts-column/🦀️.rs"]
+mod vector_insert_column_inserts_column;
+#[path = "../../⛔️remove-column/🧪️tests/⛔️removes-column/🦀️.rs"]
+mod vector_remove_column_removes_column;
+#[path = "../../⬇️change-column-action-force-n/🧪️tests/⬇️sets-n/🦀️.rs"]
+mod vector_change_column_action_force_n_sets_n;
+#[path = "../../↪️change-column-kind/🧪️tests/↪️sets-kind/🦀️.rs"]
+mod vector_change_column_kind_sets_kind;
+#[path = "../../➕insert-slab/🧪️tests/➕inserts-slab/🦀️.rs"]
+mod vector_insert_slab_inserts_slab;
+#[path = "../../➖remove-slab/🧪️tests/➖removes-slab/🦀️.rs"]
+mod vector_remove_slab_removes_slab;
+#[path = "../../📐️change-slab-action-q-area-pa/🧪️tests/✏️4000/🦀️.rs"]
+mod vector_change_slab_action_q_area_pa_4000;
+#[path = "../../📏change-slab-thickness-m/🧪️tests/📏sets-thickness/🦀️.rs"]
+mod vector_change_slab_thickness_m_sets_thickness;

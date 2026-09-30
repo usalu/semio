@@ -49,11 +49,11 @@
     "snapshot.widget.cluster.tree",
     "snapshot.widget.cluster.flow",
     "snapshot.generation.values.nested-json",
-    "mutation.widget.neuron.params.table-soa",
-    "mutation.widget.neuron.params.recursive-value",
-    "mutation.widget.cluster.tree",
-    "mutation.widget.cluster.flow",
-    "mutation.generation.values.nested-json"
+    "mutations.widget.neuron.params.table-soa",
+    "mutations.widget.neuron.params.recursive-value",
+    "mutations.widget.cluster.tree",
+    "mutations.widget.cluster.flow",
+    "mutations.generation.values.nested-json"
   ],
   "auxiliaryOwners": [
     "history-edit",

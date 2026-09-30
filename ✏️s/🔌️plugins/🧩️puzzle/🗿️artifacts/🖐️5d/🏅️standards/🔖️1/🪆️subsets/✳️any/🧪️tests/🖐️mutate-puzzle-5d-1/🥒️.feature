@@ -4,7 +4,7 @@
 @mutations-puzzle-5d-1-any
 Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, once in Python — and require the same answer
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
-  second implementation of the `s.puzzle.5d` assembly document and its thirty-five typed mutations,
+  second implementation of the `s.puzzle.5d` assembly document and its thirty-nine typed mutations,
   written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, from
   rules 1, 2, 4 and 7 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and
@@ -119,6 +119,10 @@ Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, on
       | scale-target-volume           | 📐scale-target-volume/📏️per-axis-to-uniform             |
       | change-target-volume-hidden   | 🙈change-target-volume-hidden/🙈️hides-volume-1          |
       | change-target-volume-locked   | 🔐change-target-volume-locked/🔒️locks-volume-1          |
+      | drag-selection2d             | ✋️drag-selection2d/✋️drags-two-parts                  |
+      | drag-selection3d             | 🚚️drag-selection3d/🚚️drags-part-and-volume            |
+      | rotate-selection3d           | 🔄️rotate-selection3d/🔄️turns-part-and-volume          |
+      | scale-selection3d            | 🔍️scale-selection3d/🔍️scales-parts-and-volume         |
 
   @id-inverse
   @level-exhaustive
@@ -174,6 +178,10 @@ Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, on
       | scale-target-volume           | 📐scale-target-volume/📏️per-axis-to-uniform             |
       | change-target-volume-hidden   | 🙈change-target-volume-hidden/🙈️hides-volume-1          |
       | change-target-volume-locked   | 🔐change-target-volume-locked/🔒️locks-volume-1          |
+      | drag-selection2d             | ✋️drag-selection2d/✋️drags-two-parts                  |
+      | drag-selection3d             | 🚚️drag-selection3d/🚚️drags-part-and-volume            |
+      | rotate-selection3d           | 🔄️rotate-selection3d/🔄️turns-part-and-volume          |
+      | scale-selection3d            | 🔍️scale-selection3d/🔍️scales-parts-and-volume         |
 
   @id-identity-round-trip
   @level-long

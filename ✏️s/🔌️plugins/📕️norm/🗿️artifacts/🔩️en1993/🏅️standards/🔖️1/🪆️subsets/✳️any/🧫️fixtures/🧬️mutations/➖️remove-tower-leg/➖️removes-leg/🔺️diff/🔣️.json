@@ -1,0 +1,22 @@
+{
+  "artifact": null,
+  "annex": null,
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "loadCases": null,
+  "memberActions": null,
+  "joints": null,
+  "fatigueDetails": null,
+  "fireExposures": null,
+  "coldFormedMembers": null,
+  "platedPanels": null,
+  "siloShells": null,
+  "tensionComponents": null,
+  "bridgeFatigue": null,
+  "towerLegs": {
+    "values": []
+  },
+  "piles": null,
+  "craneRunways": null
+}

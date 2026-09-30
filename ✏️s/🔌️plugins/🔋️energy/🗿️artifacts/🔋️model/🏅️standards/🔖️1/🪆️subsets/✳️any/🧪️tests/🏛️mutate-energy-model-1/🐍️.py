@@ -2238,7 +2238,7 @@ def reorder_construction_layers(before, payload):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     wanted = payload["newLayerMaterialIds"]
     if sorted(wanted) != sorted(construction["layer_material_ids"]):
-        return unchanged(before), rejected("mutation.id-mismatch", [str(payload["id"])])
+        return unchanged(before), rejected("mutation.target-mismatch", [str(payload["id"])])
     if construction["layer_material_ids"] == wanted:
         return unchanged(before), no_op()
     after = copy.deepcopy(before)

@@ -1,7 +1,7 @@
 {
-  "$schema": "../../../../../../../../../../\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83e\uddea\ufe0ftest/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "\ud83e\udde9\ufe0f This subset's own contribution. A mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the oracle registration and the catalog live here rather than in a shared manifest. `en1994-1-any` is generated from each triad leaf's own `SemanticDescriptor.kind`, in `#[derive(dsl::Mutations)]`'s declaration order, and `kinds_match_the_enum_and_the_catalog` in `../\ud83e\uddec\ufe0fschema/\ud83e\uddec\ufe0fmutations/\ud83e\udd80\ufe0f.rs` fails the moment this list and the enum part company.",
+  "_comment": "🧩️ This subset's own contribution. A mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the oracle registration and the catalog live here rather than in a shared manifest. `en1994-1-any` is generated from each triad leaf's own `SemanticDescriptor.kind`, in `#[derive(dsl::Mutations)]`'s declaration order, and `kinds_match_the_enum_and_the_catalog` in `../🧬️schema/🧬️mutations/🦀️.rs` fails the moment this list and the enum part company.",
   "oracles": [
     {
       "id": "en1994-1-python-independent",
@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "\ud83d\udc0d\ufe0f No third-party library in any ecosystem reads or writes `s.norm.en1994` \u2014 checked against PyPI, which serves no `en1994`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format \u2014 so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../../../../../\ud83e\uddea\ufe0ftests/mutate-en1994-1/\ud83d\udc0d\ufe0fcomponent.py`, all 22 kinds of `En1994Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `\ud83d\udcd3\ufe0ftaxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `\ud83d\udcd3\ufe0fderivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it \u2014 the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` \u2014 a required SUPPLEMENTAL oracle that does not discharge `en1994-1-mutate`'s external-oracle requirement for its 22-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 \u2014 SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 22 committed fixture vector(s). See .\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/\ud83d\udcd3\ufe0fd1-native-oracle-discharge.md.",
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.en1994` — checked against PyPI, which serves no `en1994`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../../../../../🧪️tests/mutate-en1994-1/🐍️component.py`, all 25 kinds of `En1994Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `en1994-1-mutate`'s external-oracle requirement for its 25-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 25 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -33,23 +33,23 @@
           "candidatesConsidered": [
             {
               "package": "structuralcodes",
-              "reason": "implement design-code formulae and speak no interchange format \u2014 so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
+              "reason": "implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
             },
             {
               "package": "concreteproperties",
-              "reason": "implement design-code formulae and speak no interchange format \u2014 so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
+              "reason": "implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
             },
             {
               "package": "anastruct",
-              "reason": "implement design-code formulae and speak no interchange format \u2014 so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
+              "reason": "implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
             }
           ]
         },
         "subjectImplementationLanguage": "rust",
         "secondImplementationLanguage": "python",
-        "specificationSource": "\ud83d\udcd3\ufe0ftaxonomy.md; \ud83d\udcd3\ufe0fderivation-rules.md; .dsl.semio",
+        "specificationSource": "📓️taxonomy.md; 📓️derivation-rules.md; .dsl.semio",
         "fixtureCoverage": {
-          "vectors": 22,
+          "vectors": 25,
           "capabilitiesCovered": [
             "en1994-1-mutate"
           ]
@@ -62,248 +62,281 @@
     {
       "id": "en1994-1-any",
       "capability": "en1994-1-mutate",
-      "standardDirectoryName": "\ud83d\udd16\ufe0f1",
-      "subsetDirectoryName": "\u2733\ufe0fany",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
       "vectors": [
         {
           "mutationId": "change-annex",
-          "sourceMutationDirectoryName": "\ud83c\udf0d\ufe0fchange-annex",
-          "mutationDirectoryName": "\ud83c\udf0d\ufe0fchange-annex",
+          "sourceMutationDirectoryName": "🌍️change-annex",
+          "mutationDirectoryName": "🌍️change-annex",
           "scenarios": [
             {
-              "id": "switches-national-annex-to-en",
-              "directoryName": "\ud83c\udf10\ufe0fswitches-national-annex-to-en"
+              "id": "switches-national",
+              "directoryName": "🌐️switches-national"
             }
           ]
         },
         {
-          "mutationId": "change-d-mm",
-          "sourceMutationDirectoryName": "\u2b55\ufe0fchange-d-mm",
-          "mutationDirectoryName": "\u2b55\ufe0fchange-d-mm",
+          "mutationId": "change-structure-kind",
+          "sourceMutationDirectoryName": "🏗️change-structure-kind",
+          "mutationDirectoryName": "🏗️change-structure-kind",
           "scenarios": [
             {
-              "id": "thickens-stud-shank-to-22-mm",
-              "directoryName": "\u2b55\ufe0fthickens-stud-shank-to-22-mm"
+              "id": "to-bridge",
+              "directoryName": "✏️to-bridge"
             }
           ]
         },
         {
-          "mutationId": "change-deck-type",
-          "sourceMutationDirectoryName": "\ud83e\ude9c\ufe0fchange-deck-type",
-          "mutationDirectoryName": "\ud83e\ude9c\ufe0fchange-deck-type",
+          "mutationId": "change-steel-fy-pa",
+          "sourceMutationDirectoryName": "🏋️change-steel-fy-pa",
+          "mutationDirectoryName": "🏋️change-steel-fy-pa",
           "scenarios": [
             {
-              "id": "switches-deck-to-re-entrant",
-              "directoryName": "\u21a9\ufe0fswitches-deck-to-re-entrant"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-delta-sigma-mpa",
-          "sourceMutationDirectoryName": "\ud83d\udcca\ufe0fchange-delta-sigma-mpa",
-          "mutationDirectoryName": "\ud83d\udcca\ufe0fchange-delta-sigma-mpa",
-          "scenarios": [
-            {
-              "id": "raises-steel-stress-range-to-96-mpa",
-              "directoryName": "\ud83d\udcc8\ufe0fraises-steel-stress-range-to-96-mpa"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-delta-tau-stud-mpa",
-          "sourceMutationDirectoryName": "\ud83d\udd29\ufe0fchange-delta-tau-stud-mpa",
-          "mutationDirectoryName": "\ud83d\udd29\ufe0fchange-delta-tau-stud-mpa",
-          "scenarios": [
-            {
-              "id": "raises-stud-shear-stress-range-to-110-mpa",
-              "directoryName": "\ud83d\udd29\ufe0fraises-stud-shear-stress-range-to-110-mpa"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-e-cm-mpa",
-          "sourceMutationDirectoryName": "\ud83e\udea8\ufe0fchange-e-cm-mpa",
-          "mutationDirectoryName": "\ud83e\udea8\ufe0fchange-e-cm-mpa",
-          "scenarios": [
-            {
-              "id": "raises-concrete-modulus-to-35000-mpa",
-              "directoryName": "\ud83e\udea8\ufe0fraises-concrete-modulus-to-35000-mpa"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-eta",
-          "sourceMutationDirectoryName": "\ud83e\udd1d\ufe0fchange-eta",
-          "mutationDirectoryName": "\ud83e\udd1d\ufe0fchange-eta",
-          "scenarios": [
-            {
-              "id": "raises-shear-connection-degree-to-0-875",
-              "directoryName": "\ud83e\udd1d\ufe0fraises-shear-connection-degree-to-0-875"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-f-ck-mpa",
-          "sourceMutationDirectoryName": "\ud83e\uddf1\ufe0fchange-f-ck-mpa",
-          "mutationDirectoryName": "\ud83e\uddf1\ufe0fchange-f-ck-mpa",
-          "scenarios": [
-            {
-              "id": "upgrades-concrete-cylinder-strength-to-40-mpa",
-              "directoryName": "\ud83e\uddf1\ufe0fupgrades-concrete-cylinder-strength-to-40-mpa"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-fatigue-detail",
-          "sourceMutationDirectoryName": "\ud83d\udd01\ufe0fchange-fatigue-detail",
-          "mutationDirectoryName": "\ud83d\udd01\ufe0fchange-fatigue-detail",
-          "scenarios": [
-            {
-              "id": "switches-fatigue-detail-to-flange-butt-weld",
-              "directoryName": "\ud83e\udea1\ufe0fswitches-fatigue-detail-to-flange-butt-weld"
+              "id": "upgrades-fy",
+              "directoryName": "🏋️upgrades-fy"
             }
           ]
         },
         {
           "mutationId": "change-fire-rating",
-          "sourceMutationDirectoryName": "\ud83d\udd25\ufe0fchange-fire-rating",
-          "mutationDirectoryName": "\ud83d\udd25\ufe0fchange-fire-rating",
+          "sourceMutationDirectoryName": "🔥️change-fire-rating",
+          "mutationDirectoryName": "🔥️change-fire-rating",
           "scenarios": [
             {
-              "id": "upgrades-fire-rating-to-r90",
-              "directoryName": "\ud83e\uddef\ufe0fupgrades-fire-rating-to-r90"
+              "id": "upgrades-to-r90",
+              "directoryName": "🔥️upgrades-to-r90"
             }
           ]
         },
         {
-          "mutationId": "change-fu-mpa",
-          "sourceMutationDirectoryName": "\ud83d\udcaa\ufe0fchange-fu-mpa",
-          "mutationDirectoryName": "\ud83d\udcaa\ufe0fchange-fu-mpa",
+          "mutationId": "change-insulation-thickness-m",
+          "sourceMutationDirectoryName": "🧯️change-insulation-thickness-m",
+          "mutationDirectoryName": "🧯️change-insulation-thickness-m",
           "scenarios": [
             {
-              "id": "upgrades-stud-ultimate-strength-to-500-mpa",
-              "directoryName": "\ud83d\udcaa\ufe0fupgrades-stud-ultimate-strength-to-500-mpa"
+              "id": "to-0",
+              "directoryName": "✏️to-0"
             }
           ]
         },
         {
-          "mutationId": "change-fy-mpa",
-          "sourceMutationDirectoryName": "\ud83c\udfcb\ufe0fchange-fy-mpa",
-          "mutationDirectoryName": "\ud83c\udfcb\ufe0fchange-fy-mpa",
+          "mutationId": "change-fatigue-detail",
+          "sourceMutationDirectoryName": "🔁️change-fatigue-detail",
+          "mutationDirectoryName": "🔁️change-fatigue-detail",
           "scenarios": [
             {
-              "id": "upgrades-steel-yield-to-460-mpa",
-              "directoryName": "\ud83c\udfcb\ufe0fupgrades-steel-yield-to-460-mpa"
+              "id": "to-flange",
+              "directoryName": "✏️to-flange"
             }
           ]
         },
         {
-          "mutationId": "change-h-sc-mm",
-          "sourceMutationDirectoryName": "\u2195\ufe0fchange-h-sc-mm",
-          "mutationDirectoryName": "\u2195\ufe0fchange-h-sc-mm",
+          "mutationId": "insert-beam",
+          "sourceMutationDirectoryName": "➕️insert-beam",
+          "mutationDirectoryName": "➕️insert-beam",
           "scenarios": [
             {
-              "id": "lengthens-stud-to-125-mm",
-              "directoryName": "\ud83d\udccf\ufe0flengthens-stud-to-125-mm"
+              "id": "inserts-beam",
+              "directoryName": "➕️inserts-beam"
             }
           ]
         },
         {
-          "mutationId": "change-insulation-thickness-mm",
-          "sourceMutationDirectoryName": "\ud83e\uddef\ufe0fchange-insulation-thickness-mm",
-          "mutationDirectoryName": "\ud83e\uddef\ufe0fchange-insulation-thickness-mm",
+          "mutationId": "remove-beam",
+          "sourceMutationDirectoryName": "➖️remove-beam",
+          "mutationDirectoryName": "➖️remove-beam",
           "scenarios": [
             {
-              "id": "thickens-fire-insulation-to-40-mm",
-              "directoryName": "\ud83e\udde3\ufe0fthickens-fire-insulation-to-40-mm"
+              "id": "removes-beam",
+              "directoryName": "➖️removes-beam"
             }
           ]
         },
         {
-          "mutationId": "change-m-ed-knm",
-          "sourceMutationDirectoryName": "\ud83c\udf00\ufe0fchange-m-ed-knm",
-          "mutationDirectoryName": "\ud83c\udf00\ufe0fchange-m-ed-knm",
+          "mutationId": "change-beam-action-q-area-pa",
+          "sourceMutationDirectoryName": "🌀️change-beam-action-q-area-pa",
+          "mutationDirectoryName": "🌀️change-beam-action-q-area-pa",
           "scenarios": [
             {
-              "id": "raises-design-moment-to-320-knm",
-              "directoryName": "\ud83c\udf00\ufe0fraises-design-moment-to-320-knm"
+              "id": "sets",
+              "directoryName": "✏️sets"
             }
           ]
         },
         {
-          "mutationId": "change-m-pl-rd",
-          "sourceMutationDirectoryName": "\ud83d\udee1\ufe0fchange-m-pl-rd",
-          "mutationDirectoryName": "\ud83d\udee1\ufe0fchange-m-pl-rd",
+          "mutationId": "change-beam-stud-spacing-m",
+          "sourceMutationDirectoryName": "✂️change-beam-stud-spacing-m",
+          "mutationDirectoryName": "✂️change-beam-stud-spacing-m",
           "scenarios": [
             {
-              "id": "raises-plastic-moment-resistance-to-375-knm",
-              "directoryName": "\ud83d\udee1\ufe0fraises-plastic-moment-resistance-to-375-knm"
+              "id": "to-0-15",
+              "directoryName": "✏️to-0-15"
             }
           ]
         },
         {
-          "mutationId": "change-m-pla",
-          "sourceMutationDirectoryName": "\ud83e\uddbe\ufe0fchange-m-pla",
-          "mutationDirectoryName": "\ud83e\uddbe\ufe0fchange-m-pla",
+          "mutationId": "change-beam-span-m",
+          "sourceMutationDirectoryName": "📏️change-beam-span-m",
+          "mutationDirectoryName": "📏️change-beam-span-m",
           "scenarios": [
             {
-              "id": "raises-steel-plastic-moment-to-128-knm",
-              "directoryName": "\ud83e\uddbe\ufe0fraises-steel-plastic-moment-to-128-knm"
+              "id": "sets-span-10m",
+              "directoryName": "📏️sets-span-10m"
             }
           ]
         },
         {
-          "mutationId": "change-n-cycles-stud",
-          "sourceMutationDirectoryName": "\ud83d\udd04\ufe0fchange-n-cycles-stud",
-          "mutationDirectoryName": "\ud83d\udd04\ufe0fchange-n-cycles-stud",
+          "mutationId": "change-beam-slab-thickness-m",
+          "sourceMutationDirectoryName": "🧱change-beam-slab-thickness-m",
+          "mutationDirectoryName": "🧱change-beam-slab-thickness-m",
           "scenarios": [
             {
-              "id": "raises-stud-cycle-count-to-5000000",
-              "directoryName": "\ud83d\udd22\ufe0fraises-stud-cycle-count-to-5000000"
+              "id": "to-0-16",
+              "directoryName": "✏️to-0-16"
             }
           ]
         },
         {
-          "mutationId": "change-span-m",
-          "sourceMutationDirectoryName": "\ud83d\udccf\ufe0fchange-span-m",
-          "mutationDirectoryName": "\ud83d\udccf\ufe0fchange-span-m",
+          "mutationId": "change-beam-stud-diameter-m",
+          "sourceMutationDirectoryName": "⭕️change-beam-stud-diameter-m",
+          "mutationDirectoryName": "⭕️change-beam-stud-diameter-m",
           "scenarios": [
             {
-              "id": "lengthens-span-to-12-m",
-              "directoryName": "\ud83d\udccf\ufe0flengthens-span-to-12-m"
+              "id": "to-0-022",
+              "directoryName": "✏️to-0-022"
             }
           ]
         },
         {
-          "mutationId": "change-v-ed-kn",
-          "sourceMutationDirectoryName": "\u2702\ufe0fchange-v-ed-kn",
-          "mutationDirectoryName": "\u2702\ufe0fchange-v-ed-kn",
+          "mutationId": "change-beam-stud-count",
+          "sourceMutationDirectoryName": "#️⃣change-beam-stud-count",
+          "mutationDirectoryName": "#️⃣change-beam-stud-count",
           "scenarios": [
             {
-              "id": "raises-design-shear-to-225-kn",
-              "directoryName": "\u2b06\ufe0fraises-design-shear-to-225-kn"
+              "id": "sets-count",
+              "directoryName": "#️⃣sets-count"
             }
           ]
         },
         {
-          "mutationId": "change-v-ed-per-stud-kn",
-          "sourceMutationDirectoryName": "\ud83d\udccc\ufe0fchange-v-ed-per-stud-kn",
-          "mutationDirectoryName": "\ud83d\udccc\ufe0fchange-v-ed-per-stud-kn",
+          "mutationId": "change-beam-stud-fu-pa",
+          "sourceMutationDirectoryName": "💪️change-beam-stud-fu-pa",
+          "mutationDirectoryName": "💪️change-beam-stud-fu-pa",
           "scenarios": [
             {
-              "id": "raises-per-stud-shear-to-62-5-kn",
-              "directoryName": "\ud83d\udccc\ufe0fraises-per-stud-shear-to-62-5-kn"
+              "id": "sets-fu",
+              "directoryName": "💪️sets-fu"
             }
           ]
         },
         {
-          "mutationId": "change-vl-rd",
-          "sourceMutationDirectoryName": "\u2194\ufe0fchange-vl-rd",
-          "mutationDirectoryName": "\u2194\ufe0fchange-vl-rd",
+          "mutationId": "change-beam-transverse-as",
+          "sourceMutationDirectoryName": "↔️change-beam-transverse-as",
+          "mutationDirectoryName": "↔️change-beam-transverse-as",
           "scenarios": [
             {
-              "id": "raises-longitudinal-shear-resistance-to-240-kn",
-              "directoryName": "\u2194\ufe0fraises-longitudinal-shear-resistance-to-240-kn"
+              "id": "sets-as",
+              "directoryName": "↔️sets-as"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-beam-construction",
+          "sourceMutationDirectoryName": "🛠️change-beam-construction",
+          "mutationDirectoryName": "🛠️change-beam-construction",
+          "scenarios": [
+            {
+              "id": "sets",
+              "directoryName": "✏️sets"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-column",
+          "sourceMutationDirectoryName": "➗️insert-column",
+          "mutationDirectoryName": "➗️insert-column",
+          "scenarios": [
+            {
+              "id": "inserts-column",
+              "directoryName": "➗️inserts-column"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-column",
+          "sourceMutationDirectoryName": "⛔️remove-column",
+          "mutationDirectoryName": "⛔️remove-column",
+          "scenarios": [
+            {
+              "id": "removes-column",
+              "directoryName": "⛔️removes-column"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-column-action-force-n",
+          "sourceMutationDirectoryName": "⬇️change-column-action-force-n",
+          "mutationDirectoryName": "⬇️change-column-action-force-n",
+          "scenarios": [
+            {
+              "id": "sets-n",
+              "directoryName": "⬇️sets-n"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-column-kind",
+          "sourceMutationDirectoryName": "↪️change-column-kind",
+          "mutationDirectoryName": "↪️change-column-kind",
+          "scenarios": [
+            {
+              "id": "sets-kind",
+              "directoryName": "↪️sets-kind"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-slab",
+          "sourceMutationDirectoryName": "➕insert-slab",
+          "mutationDirectoryName": "➕insert-slab",
+          "scenarios": [
+            {
+              "id": "inserts-slab",
+              "directoryName": "➕inserts-slab"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-slab",
+          "sourceMutationDirectoryName": "➖remove-slab",
+          "mutationDirectoryName": "➖remove-slab",
+          "scenarios": [
+            {
+              "id": "removes-slab",
+              "directoryName": "➖removes-slab"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-slab-action-q-area-pa",
+          "sourceMutationDirectoryName": "📐️change-slab-action-q-area-pa",
+          "mutationDirectoryName": "📐️change-slab-action-q-area-pa",
+          "scenarios": [
+            {
+              "id": "sets",
+              "directoryName": "✏️sets"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-slab-thickness-m",
+          "sourceMutationDirectoryName": "📏change-slab-thickness-m",
+          "mutationDirectoryName": "📏change-slab-thickness-m",
+          "scenarios": [
+            {
+              "id": "sets-thickness",
+              "directoryName": "📏sets-thickness"
             }
           ]
         }
@@ -343,16 +376,17 @@
       "artifact": "s.norm.en1994",
       "standard": "1",
       "subset": "any",
-      "standardDirectoryName": "\ud83d\udd16\ufe0f1",
-      "subsetDirectoryName": "\u2733\ufe0fany",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
       "mutations": [
         {
           "id": "change-annex",
           "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-annex",
@@ -367,18 +401,18 @@
           ]
         },
         {
-          "id": "change-d-mm",
+          "id": "change-structure-kind",
           "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-d-mm",
+            "operation": "change-structure-kind",
             "bridgeVersion": 1,
-            "variant": "ChangeDMm"
+            "variant": "ChangeStructureKind"
           },
           "oracleRequirements": [
             {
@@ -388,142 +422,18 @@
           ]
         },
         {
-          "id": "change-deck-type",
+          "id": "change-steel-fy-pa",
           "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-deck-type",
-            "bridgeVersion": 1,
-            "variant": "ChangeDeckType"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1994-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-delta-sigma-mpa",
-          "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-delta-sigma-mpa",
+            "operation": "change-steel-fy-pa",
             "bridgeVersion": 1,
-            "variant": "ChangeDeltaSigmaMpa"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1994-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-delta-tau-stud-mpa",
-          "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-delta-tau-stud-mpa",
-            "bridgeVersion": 1,
-            "variant": "ChangeDeltaTauStudMpa"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1994-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-e-cm-mpa",
-          "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-e-cm-mpa",
-            "bridgeVersion": 1,
-            "variant": "ChangeECmMpa"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1994-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-eta",
-          "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-eta",
-            "bridgeVersion": 1,
-            "variant": "ChangeEta"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1994-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-f-ck-mpa",
-          "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-f-ck-mpa",
-            "bridgeVersion": 1,
-            "variant": "ChangeFCkMpa"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1994-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-fatigue-detail",
-          "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-fatigue-detail",
-            "bridgeVersion": 1,
-            "variant": "ChangeFatigueDetail"
+            "variant": "ChangeSteelFYPa"
           },
           "oracleRequirements": [
             {
@@ -535,10 +445,11 @@
         {
           "id": "change-fire-rating",
           "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-fire-rating",
@@ -553,18 +464,18 @@
           ]
         },
         {
-          "id": "change-fu-mpa",
+          "id": "change-insulation-thickness-m",
           "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-fu-mpa",
+            "operation": "change-insulation-thickness-m",
             "bridgeVersion": 1,
-            "variant": "ChangeFUMpa"
+            "variant": "ChangeInsulationThicknessM"
           },
           "oracleRequirements": [
             {
@@ -574,18 +485,18 @@
           ]
         },
         {
-          "id": "change-fy-mpa",
+          "id": "change-fatigue-detail",
           "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-fy-mpa",
+            "operation": "change-fatigue-detail",
             "bridgeVersion": 1,
-            "variant": "ChangeFYMpa"
+            "variant": "ChangeFatigueDetail"
           },
           "oracleRequirements": [
             {
@@ -595,18 +506,18 @@
           ]
         },
         {
-          "id": "change-h-sc-mm",
+          "id": "insert-beam",
           "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-h-sc-mm",
+            "operation": "insert-beam",
             "bridgeVersion": 1,
-            "variant": "ChangeHScMm"
+            "variant": "InsertBeam"
           },
           "oracleRequirements": [
             {
@@ -616,18 +527,18 @@
           ]
         },
         {
-          "id": "change-insulation-thickness-mm",
+          "id": "remove-beam",
           "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-insulation-thickness-mm",
+            "operation": "remove-beam",
             "bridgeVersion": 1,
-            "variant": "ChangeInsulationThicknessMm"
+            "variant": "RemoveBeam"
           },
           "oracleRequirements": [
             {
@@ -637,18 +548,18 @@
           ]
         },
         {
-          "id": "change-m-ed-knm",
+          "id": "change-beam-action-q-area-pa",
           "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-m-ed-knm",
+            "operation": "change-beam-action-q-area-pa",
             "bridgeVersion": 1,
-            "variant": "ChangeMEdKnm"
+            "variant": "ChangeBeamActionQAreaPa"
           },
           "oracleRequirements": [
             {
@@ -658,18 +569,18 @@
           ]
         },
         {
-          "id": "change-m-pl-rd",
+          "id": "change-beam-stud-spacing-m",
           "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-m-pl-rd",
+            "operation": "change-beam-stud-spacing-m",
             "bridgeVersion": 1,
-            "variant": "ChangeMPlRd"
+            "variant": "ChangeBeamStudSpacingM"
           },
           "oracleRequirements": [
             {
@@ -679,18 +590,18 @@
           ]
         },
         {
-          "id": "change-m-pla",
+          "id": "change-beam-span-m",
           "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-m-pla",
+            "operation": "change-beam-span-m",
             "bridgeVersion": 1,
-            "variant": "ChangeMPla"
+            "variant": "ChangeBeamSpanM"
           },
           "oracleRequirements": [
             {
@@ -700,18 +611,18 @@
           ]
         },
         {
-          "id": "change-n-cycles-stud",
+          "id": "change-beam-slab-thickness-m",
           "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-n-cycles-stud",
+            "operation": "change-beam-slab-thickness-m",
             "bridgeVersion": 1,
-            "variant": "ChangeNCyclesStud"
+            "variant": "ChangeBeamSlabThicknessM"
           },
           "oracleRequirements": [
             {
@@ -721,18 +632,18 @@
           ]
         },
         {
-          "id": "change-span-m",
+          "id": "change-beam-stud-diameter-m",
           "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-span-m",
+            "operation": "change-beam-stud-diameter-m",
             "bridgeVersion": 1,
-            "variant": "ChangeSpanM"
+            "variant": "ChangeBeamStudDiameterM"
           },
           "oracleRequirements": [
             {
@@ -742,18 +653,18 @@
           ]
         },
         {
-          "id": "change-v-ed-kn",
+          "id": "change-beam-stud-count",
           "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-v-ed-kn",
+            "operation": "change-beam-stud-count",
             "bridgeVersion": 1,
-            "variant": "ChangeVEdKn"
+            "variant": "ChangeBeamStudCount"
           },
           "oracleRequirements": [
             {
@@ -763,18 +674,18 @@
           ]
         },
         {
-          "id": "change-v-ed-per-stud-kn",
+          "id": "change-beam-stud-fu-pa",
           "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-v-ed-per-stud-kn",
+            "operation": "change-beam-stud-fu-pa",
             "bridgeVersion": 1,
-            "variant": "ChangeVEdPerStudKn"
+            "variant": "ChangeBeamStudFUPa"
           },
           "oracleRequirements": [
             {
@@ -784,18 +695,207 @@
           ]
         },
         {
-          "id": "change-vl-rd",
+          "id": "change-beam-transverse-as",
           "capability": "en1994-1-mutate",
-          "payloadSchema": "\ud83e\uddec\ufe0f.schema.json",
+          "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-vl-rd",
+            "operation": "change-beam-transverse-as",
             "bridgeVersion": 1,
-            "variant": "ChangeVLRd"
+            "variant": "ChangeBeamTransverseAs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1994-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-beam-construction",
+          "capability": "en1994-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-beam-construction",
+            "bridgeVersion": 1,
+            "variant": "ChangeBeamConstruction"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1994-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-column",
+          "capability": "en1994-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-column",
+            "bridgeVersion": 1,
+            "variant": "InsertColumn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1994-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-column",
+          "capability": "en1994-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-column",
+            "bridgeVersion": 1,
+            "variant": "RemoveColumn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1994-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-column-action-force-n",
+          "capability": "en1994-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-column-action-force-n",
+            "bridgeVersion": 1,
+            "variant": "ChangeColumnActionForceN"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1994-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-column-kind",
+          "capability": "en1994-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-column-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeColumnKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1994-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-slab",
+          "capability": "en1994-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-slab",
+            "bridgeVersion": 1,
+            "variant": "InsertSlab"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1994-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-slab",
+          "capability": "en1994-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-slab",
+            "bridgeVersion": 1,
+            "variant": "RemoveSlab"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1994-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-slab-action-q-area-pa",
+          "capability": "en1994-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-slab-action-q-area-pa",
+            "bridgeVersion": 1,
+            "variant": "ChangeSlabActionQAreaPa"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1994-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-slab-thickness-m",
+          "capability": "en1994-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-slab-thickness-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeSlabThicknessM"
           },
           "oracleRequirements": [
             {

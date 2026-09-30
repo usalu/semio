@@ -12,7 +12,7 @@
 //! shared-string table (`shared_strings_table.rs`) is populated ONLY as a byproduct of `write_string`
 //! on a cell; there is no API to insert, remove or target a pool entry independent of a cell write.
 //! Concretely: sheet/cell mutations (`InsertSheet`, `RemoveSheet`, `RenameSheet`, `SetCell`,
-//! `RemoveCell`, `SetSnapshot`, `NoMutation`) round-trip through "read the whole workbook into a
+//! `RemoveCell`) round-trip through "read the whole workbook into a
 //! grid, apply the change to the grid, rebuild the whole workbook from the grid" — a genuine second
 //! producer, hence `@mode-differential`. `InsertSharedString`/`RemoveSharedString`/`SetSharedString`
 //! address the shared-string pool by an INDEX that is independent of any cell reference — exactly the
@@ -100,9 +100,9 @@ fn write_workbook_grid(sheets: &[GridSheet]) -> Result<Vec<u8>, String> {
 //#endregion 🔖️Grid
 
 //#region 🔖️SpecReaders
-/// 🔀️ This module's own JSON wire contract: `row` is 1-based (the subset's `XlsxCell::row`
-/// convention, ECMA-376's own `<row r="N">` index), `col` is 0-based — matching both sides so one
-/// spec drives the subject's typed mutation AND this module's grid without a second translation.
+/// 🔀️ Every spec's `params` is the leaf's own wire payload (`XlsxMutation::payload_value()`). A cell's `row` is 1-based
+/// (the subset's `XlsxCell::row`, ECMA-376's own `<row r="N">` index) and its `col` 0-based, converted to this module's
+/// 0-based grid at the boundary below.
 #[cfg(feature = "oracles")]
 fn mutation_params(spec: &Json) -> Json {
     spec.get("params").cloned().unwrap_or(Json::Null)
@@ -121,13 +121,16 @@ fn string(value: &Json, key: &str) -> String {
         _ => String::new(),
     }
 }
+/// 🔢️ A wire `XlsxCellValue` (`{kind, value}`) as a grid value — the three kinds a `calamine` read and a `rust_xlsxwriter`
+/// write both reproduce. A pool reference, an error or a formula is outside what this pairing can write back, and is
+/// refused rather than approximated.
 #[cfg(feature = "oracles")]
-fn json_to_grid_value(value: &Json) -> Result<GridValue, String> {
-    match value {
-        Json::Number(n) => Ok(GridValue::Number(*n)),
-        Json::Bool(b) => Ok(GridValue::Bool(*b)),
-        Json::String(s) => Ok(GridValue::Text(s.clone())),
-        other => Err(format!("cell value must be a number, boolean or string, got {other:?}")),
+fn cell_value(value: &Json) -> Result<GridValue, String> {
+    match (value.str("kind").as_str(), value.get("value")) {
+        ("number", Some(Json::Number(n))) => Ok(GridValue::Number(*n)),
+        ("boolean", Some(Json::Bool(b))) => Ok(GridValue::Bool(*b)),
+        ("inlineString", Some(Json::String(s))) => Ok(GridValue::Text(s.clone())),
+        _ => Err(format!("cell value {} is outside what the calamine + rust_xlsxwriter pairing reproduces", value.to_string())),
     }
 }
 /// 🔁️ One-based (`XlsxCell::row` convention) -> zero-based (this module's/`calamine`'s convention).
@@ -139,47 +142,203 @@ fn row0(one_based_row: f64) -> Result<u32, String> {
     }
     Ok((row - 1) as u32)
 }
+/// 📄️ One wire `XlsxSheet` (`{name, cells: [{row, col, value}]}`) as a grid sheet.
 #[cfg(feature = "oracles")]
-fn cells_from_json(value: &Json, key: &str) -> Result<Vec<(u32, u32, GridValue)>, String> {
-    value
-        .array(key)
+fn sheet_of(sheet: &Json) -> Result<GridSheet, String> {
+    let cells = sheet
+        .array("cells")
         .iter()
-        .map(|entry| {
-            let row = row0(number(entry, "row").ok_or_else(|| format!("{key} entry missing `row`"))?)?;
-            let col = number(entry, "col").ok_or_else(|| format!("{key} entry missing `col`"))? as u32;
-            let value = json_to_grid_value(entry.get("value").ok_or_else(|| format!("{key} entry missing `value`"))?)?;
-            Ok((row, col, value))
+        .map(|cell| {
+            let row = row0(number(cell, "row").ok_or("sheet cell missing `row`")?)?;
+            let col = number(cell, "col").ok_or("sheet cell missing `col`")? as u32;
+            Ok((row, col, cell_value(cell.get("value").ok_or("sheet cell missing `value`")?)?))
         })
-        .collect()
-}
-#[cfg(feature = "oracles")]
-fn sheets_from_json(value: &Json, key: &str) -> Result<Vec<GridSheet>, String> {
-    value.array(key).iter().map(|entry| Ok((string(entry, "name"), cells_from_json(entry, "cells")?))).collect()
+        .collect::<Result<Vec<_>, String>>()?;
+    Ok((string(sheet, "name"), cells))
 }
 //#endregion 🔖️SpecReaders
+
+//#region 🔖️CellAddress
+/// 🧭️ A wire `XlsxCellAddress` resolved against the package it was taken on, independently of the subject's
+/// `resolve_xlsx_cell_address`: `partPath` names the worksheet part, `nodePath` the child indices from its root element to
+/// the addressed `c` element (every element, text run, CDATA section, comment and processing instruction is one child),
+/// and that element's own `r` reference names the cell; the part's sheet name is read out of the main part and its
+/// relationships. The lineage `revision` is the subject's own staleness guard and plays no part in a reference edit.
+#[cfg(feature = "oracles")]
+mod cell_address {
+    use crate::document::ooxml::{main_part, part_bytes, read_parts, relationships_part_path};
+    use quick_xml::events::{BytesStart, Event};
+    use quick_xml::reader::Reader;
+    use quick_xml::XmlVersion;
+    use semio_repo_test_host::Json;
+
+    /// 🌳️ One child slot of an element: an element with its attributes and children, or any other node.
+    enum Node {
+        Element { name: String, attrs: Vec<(String, String)>, children: Vec<Node> },
+        Other,
+    }
+
+    fn attrs_of(start: &BytesStart) -> Result<Vec<(String, String)>, String> {
+        start
+            .attributes()
+            .map(|attribute| {
+                let attribute = attribute.map_err(|error| error.to_string())?;
+                let value = attribute.normalized_value(XmlVersion::Explicit1_0).map_err(|error| error.to_string())?;
+                Ok((attribute.key.as_ref().to_string(), value.to_string()))
+            })
+            .collect()
+    }
+
+    fn element(reader: &mut Reader<&[u8]>, start: BytesStart) -> Result<Node, String> {
+        let (name, attrs) = (start.name().as_ref().to_string(), attrs_of(&start)?);
+        let mut children = Vec::new();
+        let mut in_text = false;
+        loop {
+            match reader.read_event().map_err(|error| format!("quick-xml parse error at byte {}: {error}", reader.error_position()))? {
+                Event::End(_) => return Ok(Node::Element { name, attrs, children }),
+                Event::Start(child) => {
+                    in_text = false;
+                    children.push(element(reader, child)?);
+                }
+                Event::Empty(child) => {
+                    in_text = false;
+                    children.push(Node::Element { name: child.name().as_ref().to_string(), attrs: attrs_of(&child)?, children: Vec::new() });
+                }
+                Event::Text(_) | Event::GeneralRef(_) => {
+                    if !in_text {
+                        children.push(Node::Other);
+                    }
+                    in_text = true;
+                }
+                Event::CData(_) | Event::Comment(_) | Event::PI(_) => {
+                    in_text = false;
+                    children.push(Node::Other);
+                }
+                Event::Eof => return Err(format!("unclosed element <{name}>")),
+                Event::Decl(_) | Event::DocType(_) => return Err(format!("declaration inside element <{name}>")),
+            }
+        }
+    }
+
+    fn root(bytes: &[u8]) -> Result<Node, String> {
+        let text = std::str::from_utf8(bytes).map_err(|error| error.to_string())?;
+        let mut reader = Reader::from_str(text);
+        loop {
+            match reader.read_event().map_err(|error| format!("quick-xml parse error at byte {}: {error}", reader.error_position()))? {
+                Event::Start(start) => return element(&mut reader, start),
+                Event::Empty(start) => return Ok(Node::Element { name: start.name().as_ref().to_string(), attrs: attrs_of(&start)?, children: Vec::new() }),
+                Event::Eof => return Err("part has no root element".to_string()),
+                _ => {}
+            }
+        }
+    }
+
+    fn local(name: &str) -> &str {
+        name.rsplit(':').next().unwrap_or(name)
+    }
+
+    fn attribute<'a>(attrs: &'a [(String, String)], key: impl Fn(&str) -> bool) -> Option<&'a str> {
+        attrs.iter().find(|(name, _)| key(name)).map(|(_, value)| value.as_str())
+    }
+
+    fn elements<'a>(node: &'a Node, name: &'a str) -> Vec<&'a Node> {
+        let mut found = Vec::new();
+        if let Node::Element { name: own, children, .. } = node {
+            if local(own) == name {
+                found.push(node);
+            }
+            for child in children {
+                found.extend(elements(child, name));
+            }
+        }
+        found
+    }
+
+    /// 🔗️ `target` of a relationship owned by `source`, as a package part path.
+    fn resolve(source: &str, target: &str) -> String {
+        if let Some(absolute) = target.strip_prefix('/') {
+            return absolute.to_string();
+        }
+        let mut segments: Vec<&str> = source.rsplit_once('/').map(|(directory, _)| directory.split('/').collect()).unwrap_or_default();
+        for segment in target.split('/') {
+            match segment {
+                "" | "." => {}
+                ".." => {
+                    segments.pop();
+                }
+                other => segments.push(other),
+            }
+        }
+        segments.join("/")
+    }
+
+    /// 🏷️ The sheet name whose worksheet part is `part_path`, through the main part's `sheets` and its relationships.
+    fn sheet_name(parts: &[(String, Vec<u8>)], part_path: &str) -> Result<String, String> {
+        let workbook = main_part(parts)?;
+        let rels = root(part_bytes(parts, &relationships_part_path(&workbook)).ok_or_else(|| format!("{workbook} has no relationships part"))?)?;
+        let id = elements(&rels, "Relationship")
+            .into_iter()
+            .find_map(|relationship| match relationship {
+                Node::Element { attrs, .. } if attribute(attrs, |key| key == "Target").is_some_and(|target| resolve(&workbook, target) == part_path) => attribute(attrs, |key| key == "Id").map(str::to_string),
+                _ => None,
+            })
+            .ok_or_else(|| format!("{workbook} declares no relationship to {part_path}"))?;
+        let document = root(part_bytes(parts, &workbook).ok_or_else(|| format!("main part {workbook} is absent"))?)?;
+        elements(&document, "sheet")
+            .into_iter()
+            .find_map(|sheet| match sheet {
+                Node::Element { attrs, .. } if attribute(attrs, |key| key.ends_with(":id")) == Some(id.as_str()) => attribute(attrs, |key| key == "name").map(str::to_string),
+                _ => None,
+            })
+            .ok_or_else(|| format!("{workbook} names no sheet for relationship {id}"))
+    }
+
+    /// 🧭️ `(sheet name, 0-based row, 0-based column)` of the cell `address` names in `input`.
+    pub fn addressed_cell(input: &[u8], address: &Json) -> Result<(String, u32, u32), String> {
+        let parts = read_parts(input)?;
+        let part_path = address.str("partPath");
+        let mut node = &root(part_bytes(&parts, &part_path).ok_or_else(|| format!("the addressed part {part_path} is not in the package"))?)?;
+        for step in address.array("nodePath") {
+            let (Json::Number(index), Node::Element { children, .. }) = (&step, node) else { return Err(format!("node path {} descends through a non-element", address.to_string())) };
+            node = children.get(*index as usize).ok_or_else(|| format!("node path child {index} is outside the element"))?;
+        }
+        let Node::Element { name, attrs, .. } = node else { return Err("the node path ends on a non-element".to_string()) };
+        if local(name) != "c" || local(name) != address.str("localName") {
+            return Err(format!("the node path ends on <{name}>, not the addressed cell element"));
+        }
+        let reference = attribute(attrs, |key| key == "r").ok_or("the addressed cell carries no `r` reference")?;
+        let split = reference.find(|character: char| character.is_ascii_digit()).ok_or_else(|| format!("cell reference {reference:?} has no row"))?;
+        let column = reference[..split].bytes().try_fold(0u32, |acc, letter| if letter.is_ascii_uppercase() { Ok(acc * 26 + u32::from(letter - b'A' + 1)) } else { Err(format!("cell reference {reference:?} has a malformed column")) })?;
+        let row: u32 = reference[split..].parse().map_err(|error| format!("cell reference {reference:?}: {error}"))?;
+        if row == 0 || column == 0 {
+            return Err(format!("cell reference {reference:?} is out of range"));
+        }
+        Ok((sheet_name(&parts, &part_path)?, row - 1, column - 1))
+    }
+}
+//#endregion 🔖️CellAddress
 
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
 ///
+/// `set-snapshot` writes the package its snapshot describes with the shared OPC engine
+/// (`crate::document::ooxml::write_snapshot_package`) — "the document becomes this snapshot", read back by `calamine`.
 /// `insert-shared-string`/`remove-shared-string`/`set-shared-string` do NOT go through
 /// `calamine`/`rust_xlsxwriter`: the raw pool those three address is invisible to the first's read
 /// model and unreachable by index through the second's write API. They go through the `zip` +
 /// `quick-xml` pairing instead (see the [`shared_strings`] module), which reads and rewrites
-/// `xl/sharedStrings.xml` as the OPC PART it is. That is a genuine second producer for an
-/// index-addressed pool edit, and [`project_shared_string_pool`] reads the result back out of the
-/// bytes — nothing about the pool is carried by the caller any more.
+/// `xl/sharedStrings.xml` as the OPC PART it is.
 #[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
-        "no-mutation" => Ok(input.to_vec()),
-        "set-snapshot" => write_workbook_grid(&sheets_from_json(&params, "sheets")?),
+        "set-snapshot" => crate::document::ooxml::write_snapshot_package(params.get("snapshot").ok_or("set-snapshot: missing `snapshot`")?),
         "insert-sheet" => {
             let mut sheets = read_workbook_grid(input)?;
-            sheets.push((string(&params, "name"), cells_from_json(&params, "cells")?));
+            sheets.push(sheet_of(params.get("sheet").ok_or("insert-sheet: missing `sheet`")?)?);
             write_workbook_grid(&sheets)
         }
         "remove-sheet" => {
@@ -195,31 +354,21 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
         "rename-sheet" => {
             let mut sheets = read_workbook_grid(input)?;
             let name = string(&params, "name");
-            let new_name = string(&params, "newName");
             let sheet = sheets.iter_mut().find(|(sheet_name, _)| sheet_name == &name).ok_or_else(|| format!("rename-sheet: no sheet named {name:?}"))?;
-            sheet.0 = new_name;
+            sheet.0 = string(&params, "newName");
             write_workbook_grid(&sheets)
         }
         "set-cell" => {
+            let (sheet_name, row, col) = cell_address::addressed_cell(input, params.get("address").ok_or("set-cell: missing `address`")?)?;
+            let value = cell_value(params.get("value").ok_or("set-cell: missing `value`")?)?;
             let mut sheets = read_workbook_grid(input)?;
-            let sheet_name = string(&params, "sheetName");
-            let row = row0(number(&params, "row").ok_or("set-cell: missing `row`")?)?;
-            let col = number(&params, "col").ok_or("set-cell: missing `col`")? as u32;
-            let value = json_to_grid_value(params.get("value").ok_or("set-cell: missing `value`")?)?;
-            let (_, cells) = sheets.iter_mut().find(|(name, _)| name == &sheet_name).ok_or_else(|| format!("set-cell: no sheet named {sheet_name:?}"))?;
-            match cells.iter_mut().find(|(r, c, _)| *r == row && *c == col) {
-                Some(cell) => cell.2 = value,
-                None => cells.push((row, col, value)),
-            }
+            put_cell(&mut sheets, &sheet_name, row, col, Some(value))?;
             write_workbook_grid(&sheets)
         }
         "remove-cell" => {
+            let (sheet_name, row, col) = cell_address::addressed_cell(input, params.get("address").ok_or("remove-cell: missing `address`")?)?;
             let mut sheets = read_workbook_grid(input)?;
-            let sheet_name = string(&params, "sheetName");
-            let row = row0(number(&params, "row").ok_or("remove-cell: missing `row`")?)?;
-            let col = number(&params, "col").ok_or("remove-cell: missing `col`")? as u32;
-            let (_, cells) = sheets.iter_mut().find(|(name, _)| name == &sheet_name).ok_or_else(|| format!("remove-cell: no sheet named {sheet_name:?}"))?;
-            cells.retain(|(r, c, _)| !(*r == row && *c == col));
+            put_cell(&mut sheets, &sheet_name, row, col, None)?;
             write_workbook_grid(&sheets)
         }
         "insert-shared-string" => {
@@ -232,6 +381,9 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             let index = number(&params, "index").ok_or("remove-shared-string: missing `index`")?.max(0.0) as usize;
             if index >= pool.len() {
                 return Err(format!("remove-shared-string: index {index} is outside the {}-entry pool", pool.len()));
+            }
+            if shared_strings::is_referenced(input, index)? {
+                return Err(format!("remove-shared-string: pool entry {index} is still referenced by a cell"));
             }
             pool.remove(index);
             shared_strings::write_pool(input, &pool)
@@ -251,17 +403,102 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     }
 }
 
+/// 🎬️ The real pre-state a kind runs on. `remove-shared-string` needs a pool entry no cell references, and every entry of
+/// the real workbook's pool is referenced, so for that kind this is the real package after the reference has appended one
+/// unreferenced entry — the removal under test is still the reference's own, on genuine OPC. Every other kind reads the
+/// committed bytes untouched.
+#[cfg(feature = "oracles")]
+pub fn oracle_arrange(input: &[u8], forward: &Json) -> Result<Vec<u8>, String> {
+    match forward.str("kind").as_str() {
+        "remove-shared-string" => {
+            let mut pool = shared_strings::read_pool(input)?;
+            pool.push(UNREFERENCED_ENTRY.to_string());
+            shared_strings::write_pool(input, &pool)
+        }
+        _ => Ok(input.to_vec()),
+    }
+}
+
+/// 🧾️ The pool entry [`oracle_arrange`] appends: text no cell of the real workbook carries.
+#[cfg(feature = "oracles")]
+const UNREFERENCED_ENTRY: &str = "Nicht referenzierter Eintrag";
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_arrange(_input: &[u8], _forward: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+/// ✍️ Writes (`Some`) or clears (`None`) one grid cell of the named sheet.
+#[cfg(feature = "oracles")]
+fn put_cell(sheets: &mut [GridSheet], sheet_name: &str, row: u32, col: u32, value: Option<GridValue>) -> Result<(), String> {
+    let (_, cells) = sheets.iter_mut().find(|(name, _)| name == sheet_name).ok_or_else(|| format!("no sheet named {sheet_name:?}"))?;
+    cells.retain(|(r, c, _)| !(*r == row && *c == col));
+    if let Some(value) = value {
+        cells.push((row, col, value));
+    }
+    Ok(())
+}
+
+/// ↩️ Undoes `forward` on `mutated`, sourcing whatever it discarded from `original` (the package the forward kind ran on) —
+/// the algebra `XlsxMutation::inverse` defines, computed independently by the reference pairing. A cell address is
+/// lineage-bound to `original`, so it is resolved there and the undo applied to the rebuilt grid by coordinate; a
+/// `set-snapshot` is undone by rebuilding the original's own grid; the three pool kinds go through
+/// [`shared_string_inverse_spec`].
+#[cfg(feature = "oracles")]
+pub fn oracle_apply_inverse(original: &[u8], mutated: &[u8], forward: &Json) -> Result<Vec<u8>, String> {
+    let params = mutation_params(forward);
+    let kind = forward.str("kind");
+    let cell_undo = |field: &str| -> Result<Vec<u8>, String> {
+        let (sheet_name, row, col) = cell_address::addressed_cell(original, params.get(field).ok_or_else(|| format!("{kind}: missing `{field}`"))?)?;
+        let before = read_workbook_grid(original)?.into_iter().find(|(name, _)| name == &sheet_name).and_then(|(_, cells)| cells.into_iter().find(|(r, c, _)| *r == row && *c == col)).map(|(_, _, value)| value);
+        let mut sheets = read_workbook_grid(mutated)?;
+        put_cell(&mut sheets, &sheet_name, row, col, before)?;
+        write_workbook_grid(&sheets)
+    };
+    match kind.as_str() {
+        "set-snapshot" => oracle_round_trip(original),
+        "insert-sheet" => {
+            let name = params.get("sheet").map(|sheet| string(sheet, "name")).unwrap_or_default();
+            let mut sheets = read_workbook_grid(mutated)?;
+            sheets.retain(|(sheet_name, _)| sheet_name != &name);
+            write_workbook_grid(&sheets)
+        }
+        "remove-sheet" => {
+            let name = string(&params, "name");
+            let originals = read_workbook_grid(original)?;
+            let index = originals.iter().position(|(sheet_name, _)| sheet_name == &name).ok_or_else(|| format!("remove-sheet inverse: no sheet named {name:?} in the original"))?;
+            let mut sheets = read_workbook_grid(mutated)?;
+            sheets.insert(index.min(sheets.len()), originals[index].clone());
+            write_workbook_grid(&sheets)
+        }
+        "rename-sheet" => {
+            let new_name = string(&params, "newName");
+            let mut sheets = read_workbook_grid(mutated)?;
+            let sheet = sheets.iter_mut().find(|(sheet_name, _)| sheet_name == &new_name).ok_or_else(|| format!("rename-sheet inverse: no sheet named {new_name:?}"))?;
+            sheet.0 = string(&params, "name");
+            write_workbook_grid(&sheets)
+        }
+        "set-cell" | "remove-cell" => cell_undo("address"),
+        "insert-shared-string" | "remove-shared-string" | "set-shared-string" => oracle_apply_mutation(mutated, &shared_string_inverse_spec(original, forward)?),
+        other => Err(format!("no inverse rule for kind {other:?}")),
+    }
+}
+
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_apply_inverse(_original: &[u8], _mutated: &[u8], _forward: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
 /// 🔁️ The oracle's own decode/re-encode, through the SAME independent `calamine` + `rust_xlsxwriter`
-/// pairing every mutation above uses — proves the reference pairing itself is stable on the real
+/// pairing every grid mutation above uses — proves the reference pairing itself is stable on the real
 /// fixture before the subject's own codec is asked to be. Genuinely rebuilds the package (never a
-/// literal byte passthrough): `rust_xlsxwriter` cannot reproduce another writer's object layout, so
-/// this is a real, if weak, round trip rather than an identity operation dressed up as one.
+/// literal byte passthrough): `rust_xlsxwriter` cannot reproduce another writer's object layout.
 #[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     write_workbook_grid(&read_workbook_grid(input)?)
@@ -298,6 +535,7 @@ pub mod shared_strings {
     use crate::document::ooxml::{part_bytes, read_parts, set_part, write_parts};
     use quick_xml::events::Event;
     use quick_xml::reader::Reader;
+    use quick_xml::XmlVersion;
 
     pub const PART: &str = "xl/sharedStrings.xml";
     const SST_NAMESPACE: &str = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
@@ -356,6 +594,43 @@ pub mod shared_strings {
         xml.push_str("</sst>");
         set_part(&mut parts, PART, xml.into_bytes());
         write_parts(&parts)
+    }
+
+    /// 🔗️ Whether any worksheet cell of the package references pool entry `index` (`<c t="s"><v>index</v></c>`, ECMA-376
+    /// §18.3.1.4). Removing such an entry would leave the cell's reference dangling, which this vocabulary refuses.
+    pub fn is_referenced(input: &[u8], index: usize) -> Result<bool, String> {
+        let parts = read_parts(input)?;
+        for (path, bytes) in parts.iter().filter(|(path, _)| path.starts_with("xl/worksheets/") && path.ends_with(".xml")) {
+            let text = std::str::from_utf8(bytes).map_err(|error| format!("{path} is not valid utf-8: {error}"))?;
+            let mut reader = Reader::from_str(text);
+            let (mut shared_cell, mut in_value, mut value) = (false, false, String::new());
+            loop {
+                match reader.read_event().map_err(|error| format!("independent XML reader could not read {path}: {error}"))? {
+                    Event::Start(start) => match local_name(start.name().as_ref()) {
+                        "c" => shared_cell = start.attributes().flatten().any(|attribute| attribute.key.as_ref() == "t" && attribute.normalized_value(XmlVersion::Explicit1_0).is_ok_and(|kind| kind == "s")),
+                        "v" if shared_cell => {
+                            in_value = true;
+                            value.clear();
+                        }
+                        _ => {}
+                    },
+                    Event::Text(run) if in_value => value.push_str(&run.xml10_content()),
+                    Event::End(end) => match local_name(end.name().as_ref()) {
+                        "v" if in_value => {
+                            in_value = false;
+                            if value.trim().parse::<usize>().ok() == Some(index) {
+                                return Ok(true);
+                            }
+                        }
+                        "c" => shared_cell = false,
+                        _ => {}
+                    },
+                    Event::Eof => break,
+                    _ => {}
+                }
+            }
+        }
+        Ok(false)
     }
 
     /// 🔣️ The five predefined XML entities plus numeric character references — every general

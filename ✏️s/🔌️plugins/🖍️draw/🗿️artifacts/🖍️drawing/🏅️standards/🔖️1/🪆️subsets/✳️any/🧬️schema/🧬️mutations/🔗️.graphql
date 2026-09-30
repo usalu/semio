@@ -161,6 +161,26 @@ union DrawingMutation =
   | UpdatePathGeometry
   | UpdateText
   | SetLayerFillRule
+  | SetGroupIsolation
+  | DragLayers
+  | RotateLayers
+  | ScaleLayers
+  | DragPathPoints
 
 # import FillRule from "../🔗️.graphql"
 type SetLayerFillRule { layerId: String! fillRule: FillRule! }
+type SetGroupIsolation { layerId: String! isolation: Boolean! }
+
+# ✋️ Mirrors Rust `DragLayers` (`🔀️transform/…/✋️drag-layers/🦠️mutation/🦀️.rs`).
+type DragLayers { targets: [String!]! dx: Float! dy: Float! }
+
+# 🧭️ Mirrors Rust `RotateLayers` (`🔀️transform/…/🧭️rotate-layers/🦠️mutation/🦀️.rs`).
+type RotateLayers { targets: [String!]! pivotX: Float! pivotY: Float! angle: Float! }
+
+# 📐️ Mirrors Rust `ScaleLayers` (`🔀️transform/…/📐️scale-layers/🦠️mutation/🦀️.rs`).
+type ScaleLayers { targets: [String!]! pivotX: Float! pivotY: Float! scaleX: Float! scaleY: Float! }
+
+# 📍️ Mirrors Rust `DrawingPathPointTarget` and `DragPathPoints` (`🔀️transform/…/📍️drag-path-points/🦠️mutation/🦀️.rs`).
+enum PathPoint { anchor control1 control2 }
+type DrawingPathPointTarget { layerId: String! index: Int! point: PathPoint! }
+type DragPathPoints { targets: [DrawingPathPointTarget!]! dx: Float! dy: Float! }

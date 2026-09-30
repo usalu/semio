@@ -85,8 +85,6 @@
         "seismicZone",
         "aGr",
         "deGroundCombo",
-        "enGroundType",
-        "enSpectrumType",
         "importanceClass"
       ],
       "properties": {
@@ -158,7 +156,13 @@
             "widget": "text"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "En1998System": {
       "title": "En1998System",
@@ -273,7 +277,13 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "En1998Storey": {
       "title": "En1998Storey",
@@ -470,7 +480,13 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "En1998Member": {
       "title": "En1998Member",
@@ -577,7 +593,13 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "En1998Building": {
       "title": "En1998Building",
@@ -805,7 +827,13 @@
             "precision": 3
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "En1998Bridge": {
       "title": "En1998Bridge",
@@ -913,7 +941,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "En1998Assessment": {
       "title": "En1998Assessment",
@@ -999,7 +1033,13 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "En1998Silo": {
       "title": "En1998Silo",
@@ -1136,7 +1176,13 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "En1998Tank": {
       "title": "En1998Tank",
@@ -1246,7 +1292,13 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "En1998Foundation": {
       "title": "En1998Foundation",
@@ -1341,7 +1393,13 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "En1998RetainingWall": {
       "title": "En1998RetainingWall",
@@ -1422,7 +1480,13 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "En1998Tower": {
       "title": "En1998Tower",
@@ -1526,7 +1590,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "En1998VariableAction": {
       "title": "En1998VariableAction",
@@ -1569,7 +1639,13 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "DeSeismicZone": {
       "title": "DeSeismicZone",
@@ -1599,7 +1675,12 @@
             "de": "Erdbebenzone 3"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
     },
     "DeGroundCombo": {
       "title": "DeGroundCombo",
@@ -1639,7 +1720,12 @@
             "de": "Baugrundklasse C, Untergrundklasse S"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
     }
   }
 }

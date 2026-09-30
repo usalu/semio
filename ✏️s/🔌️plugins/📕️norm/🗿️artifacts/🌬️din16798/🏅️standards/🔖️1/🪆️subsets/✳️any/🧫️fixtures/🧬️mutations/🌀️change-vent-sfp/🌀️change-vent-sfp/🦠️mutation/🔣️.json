@@ -1,0 +1,6 @@
+{
+  "ChangeVentSfp": {
+    "ventId": "vent-central",
+    "newSfpWM3S": 1250.0
+  }
+}

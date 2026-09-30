@@ -2,7 +2,7 @@
   "schema": "semio.os.execution-target-resume-fixture/v1",
   "description": "Whether a reconnect's fresh plan lets a child that a link shortage suspended RESUME (`resumes: true`) or makes the document reopen. `current` is the suspended child's lease fields (the hub lease fixture's `manifest`); every case's `next` is `current` with the JSON merge patch (RFC 7386) `patch` applied. Only the active checkpoint and the revalidation witness may differ, and only forward; every other field must be identical.",
   "current": {
-    "fixture": "🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json",
+    "fixture": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json",
     "pointer": "/manifest"
   },
   "cases": [

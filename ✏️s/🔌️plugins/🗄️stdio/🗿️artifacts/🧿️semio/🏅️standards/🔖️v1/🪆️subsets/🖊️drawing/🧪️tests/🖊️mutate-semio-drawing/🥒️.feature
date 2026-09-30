@@ -58,21 +58,22 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
   mouse's own `introduction-demo-mouse-button` style, which carries a fill and no stroke, so
   `change-stroke-color` has to CREATE the optional leaf where `replace-fill` replaces one.
 
-  🔴 **`inverse-unflatten-node` is RED, and it is left red: `Unflatten`'s computed inverse cannot restore
-  an arbitrary replaced node.** The payload replaces the mouse layer's real `clipPath` group with a
-  different one. The independent implementation undoes it by putting the captured node back and
-  restores the drawing exactly. The subject's own inverse law fails — `inverse-unflatten-node: undoing the
-  mutation did not restore the drawing`, with two different digests over the same layer and style
-  lists — because `Unflatten`'s inverse is `Flatten`, and flattening the REPLACEMENT does not bring
-  the replaced node back. The production vocabulary knows this: the demo-variant list in
-  `../../🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🦀️.rs` carries the comment
-  *"`original` is a genuine no-op restore (identical to the fixture's own node at this path, which has
-  no nested groups) — `flatten(original) == original` here, so the `unflatten` ↔ `flatten` inverse
-  pair's own law holds against the shared fixture"*. That caveat is now a measured failure rather than
-  a code comment: for any `Unflatten` payload the grammar admits but that arrangement does not cover,
-  the verb neither refuses the input nor captures the node it overwrites. Not tuned away — no
-  `ignoreKeys`, no relaxed profile, and the payload was not swapped for one the caveat happens to
-  cover.
+  **`inverse-unflatten-node` was RED, and it was fixed in the vocabulary rather than tuned away.**
+  The payload replaces the mouse layer's real `clipPath` group with a different one. The independent
+  implementation undoes it by putting the captured node back and restores the drawing exactly; the
+  subject's own inverse law failed, because `Unflatten`'s computed inverse was a bare `Flatten`, and
+  flattening the REPLACEMENT does not bring the replaced node back — that inverse was exact only for a
+  payload whose current node is the flattening of `original`, which is how the vocabulary pairs the
+  two verbs but not what the grammar admits. `Unflatten`'s inverse now captures the node it
+  overwrites and restores exactly that node (`🎈unflatten-node/↩️inverse`), pinned by the leaf's
+  `the_undo_restores_a_node_that_was_not_the_flattening` test. No `ignoreKeys`, no relaxed profile,
+  and the payload was not swapped.
+
+  **The census disagreement was this side's own projection, not the drawing.** Every Rust row came
+  back with `nodes.path` inflated and a `nodes.group-nodes` key the independent implementation never
+  emits: the census looked for a node kind spelled like the `group-nodes` VERB, while the snapshot's
+  wire tag — the schema's `DrawNode` union, which the Python census reads correctly — is `group`, so
+  every group was tallied as a path. The census now keys every node by the snapshot's own tag.
 
   `spec-vector-` keeps the evidence this case rested on before the oracle existed: the committed,
   independently handcrafted `(before, mutation, after)` vector for each of the seventeen kinds,

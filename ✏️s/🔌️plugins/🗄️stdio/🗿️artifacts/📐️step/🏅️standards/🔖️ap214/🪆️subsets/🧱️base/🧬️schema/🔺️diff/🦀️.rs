@@ -516,7 +516,7 @@ fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[String]) -
         let mut target = prefix.to_vec();
         target.extend(["args".to_string(), index.to_string()]);
         if index >= base_len || !removed.insert(index) {
-            return Err(target_error("invalid-remove-index", "argument removal target must exist exactly once", target));
+            return Err(target_error("mutation.apply.invalid-remove-index", "argument removal target must exist exactly once", target));
         }
     }
     let mut modified = BTreeSet::new();
@@ -524,7 +524,7 @@ fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[String]) -
         let mut target = prefix.to_vec();
         target.extend(["args".to_string(), entry.index.to_string()]);
         if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
-            return Err(target_error("invalid-modify-index", "argument modification target must exist exactly once and remain present", target));
+            return Err(target_error("mutation.apply.invalid-modify-index", "argument modification target must exist exactly once and remain present", target));
         }
     }
     let mut additions: Vec<usize> = diff.added.iter().map(|entry| entry.index).collect();
@@ -534,7 +534,7 @@ fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[String]) -
         let mut target = prefix.to_vec();
         target.extend(["args".to_string(), index.to_string()]);
         if index > length || previous == Some(index) {
-            return Err(target_error("invalid-add-index", "argument addition target must be unique and within the evolving sequence", target));
+            return Err(target_error("mutation.apply.invalid-add-index", "argument addition target must be unique and within the evolving sequence", target));
         }
         previous = Some(index);
     }
@@ -546,20 +546,20 @@ fn validate_entities_diff(base: &[StepEntity], diff: &StepEntitiesDiff) -> Mutat
     let mut base_by_id = BTreeMap::new();
     for entity in base {
         if base_by_id.insert(entity.id, entity).is_some() {
-            return Err(target_error("duplicate-base-target", "base entity ids must be unique", vec!["entities".to_string(), entity.id.to_string()]));
+            return Err(target_error("mutation.apply.duplicate-base-target", "base entity ids must be unique", vec!["entities".to_string(), entity.id.to_string()]));
         }
     }
     let mut removed = BTreeSet::new();
     for &id in &diff.removed {
         if !base_by_id.contains_key(&id) || !removed.insert(id) {
-            return Err(target_error("invalid-remove-target", "entity removal target must exist exactly once", vec!["entities".to_string(), id.to_string()]));
+            return Err(target_error("mutation.apply.invalid-remove-target", "entity removal target must exist exactly once", vec!["entities".to_string(), id.to_string()]));
         }
     }
     let mut modified = BTreeSet::new();
     for entry in &diff.modified {
         let base_entity = base_by_id.get(&entry.id);
         if base_entity.is_none() || removed.contains(&entry.id) || !modified.insert(entry.id) {
-            return Err(target_error("invalid-modify-target", "entity modification target must exist exactly once and remain present", vec!["entities".to_string(), entry.id.to_string()]));
+            return Err(target_error("mutation.apply.invalid-modify-target", "entity modification target must exist exactly once and remain present", vec!["entities".to_string(), entry.id.to_string()]));
         }
         if let Some(args) = &entry.diff.args {
             validate_args_diff(base_entity.map(|entity| entity.args.len()).unwrap_or_default(), args, &["entities".to_string(), entry.id.to_string()])?;
@@ -571,7 +571,7 @@ fn validate_entities_diff(base: &[StepEntity], diff: &StepEntitiesDiff) -> Mutat
     let mut previous = None;
     for (length, entry) in (base.len() - removed.len()..).zip(additions) {
         if base_by_id.contains_key(&entry.entity.id) || !added_ids.insert(entry.entity.id) || entry.index > length || previous == Some(entry.index) {
-            return Err(target_error("invalid-add-target", "entity id and position must be unique and valid", vec!["entities".to_string(), entry.entity.id.to_string()]));
+            return Err(target_error("mutation.apply.invalid-add-target", "entity id and position must be unique and valid", vec!["entities".to_string(), entry.entity.id.to_string()]));
         }
         previous = Some(entry.index);
     }

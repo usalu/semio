@@ -64,6 +64,15 @@ async function computeHeatedVolumeProperty(ctx: PropertyComputeContext): Promise
 // #region 📦️Register
 /** 📦️ Registers energy stat, property, and STEP import profile on the core engine. */
 export function register(): void {
+  core.registerSpatialKernelCommand("energy.energy.constructExternalWallFrom2PointsAndHeight", core.constructLinearPrism);
+  core.registerSpatialKernelCommand("energy.energy.constructExternalWallFromCurveAndHeight", core.constructPrismFromCurve);
+  core.registerSpatialKernelCommand("energy.energy.constructHullFrom2PointsAndHeight", core.constructBoxFromPoints);
+  core.registerSpatialKernelCommand("energy.energy.constructHullFromCurveAndHeight", core.constructPrismFromCurve);
+  core.registerSpatialKernelCommand("energy.energy.constructRoofFrom2PointsAndHeight", core.constructBoxFromPoints);
+  core.registerSpatialKernelCommand("energy.energy.constructRoofFromCurveAndHeight", core.constructPrismFromCurve);
+  core.registerSpatialKernelCommand("energy.energy.constructWindowsFrom2PointsAndHeight", core.constructBoxFromPoints);
+  core.registerSpatialKernelCommand("energy.energy.constructWindowsFromCurveAndHeight", core.constructPrismFromCurve);
+
   registerStatComputer(ENERGY_DEMAND_STAT_ID, computeEnergyDemandStat);
   registerPropertyComputer(ENERGY_HEATEDVOLUME_PROPERTY_ID, computeHeatedVolumeProperty);
   registerImportProfile(AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID, {

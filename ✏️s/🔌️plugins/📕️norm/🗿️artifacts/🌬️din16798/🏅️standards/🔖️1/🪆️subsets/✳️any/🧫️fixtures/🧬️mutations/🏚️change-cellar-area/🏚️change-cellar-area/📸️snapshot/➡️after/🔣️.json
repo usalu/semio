@@ -1,0 +1,56 @@
+{
+  "annex": "De",
+  "thetaRmC": 15.0,
+  "outdoorCo2Ppm": 400.0,
+  "zones": [
+    {
+      "id": "zone-office",
+      "name": "Open office",
+      "usageType": "office",
+      "floorAreaM2": 200.0,
+      "occupants": 20,
+      "comfortCategory": "II",
+      "pollutionClass": "low",
+      "comfortModel": "fixed_hvac",
+      "tOpWinterC": 22.0,
+      "tOpSummerC": 24.5,
+      "airSpeedMS": 0.1,
+      "clothingClo": 0.5,
+      "metabolicRateMet": 1.2,
+      "rhPercent": 45.0,
+      "outdoorAirSuppliedM3H": 1008.0,
+      "co2Ppm": 900.0,
+      "illuminanceLx": 500.0,
+      "noiseDb": 34.0,
+      "turbulenceIntensityPercent": 40.0,
+      "ventMethod": "method_1_perceived_air_quality",
+      "ventSystemId": "vent-central"
+    }
+  ],
+  "ventSystems": [
+    {
+      "id": "vent-central",
+      "name": "Central AHU",
+      "systemType": "central_mech",
+      "sfpWM3S": 950.0,
+      "sfpRequiredClass": 3,
+      "heatRecoveryEta": 0.75,
+      "odaClass": "ODA2",
+      "filterSupClass": "ePM1_55",
+      "yearsSinceInspection": 1,
+      "humidificationRequiredKgH": 0.0,
+      "humidificationProvidedKgH": 0.0,
+      "fanQVM3S": 0.28,
+      "fanTRunH": 2500.0,
+      "ductClass": "C",
+      "ductTestPressurePa": 400.0,
+      "ductLeakageM3SM2": 0.08,
+      "designAirflowM3H": 1008.0
+    }
+  ],
+  "envelopeN50HInv": 1.5,
+  "envelopeVolumeM3": 600.0,
+  "cellarAreaM2": 62.5,
+  "cellarVentilationM3H": 0.0,
+  "nightSetbackK": 4.0
+}

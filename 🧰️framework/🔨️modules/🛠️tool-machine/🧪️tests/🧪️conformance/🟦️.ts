@@ -495,3 +495,175 @@ describe("tool machine runner", () => {
     expect(runner.reset()).toBeUndefined();
   });
 });
+
+//#region 🔖️Scrub
+import scrubFixture from "../../🧫️fixtures/🧫️scrub-law/🔣️.json";
+
+const scrubLaw = scrubFixture as any;
+type Leaf = { readonly set: string; readonly target: string; readonly value: number };
+
+function scrubStepJson(step: T.ToolStep<unknown>, open: T.ScrubState<unknown> | undefined): Json {
+  return step.kind === "open" ? { kind: "open", transaction: open!.transaction } : step;
+}
+
+function scrubOpenJson(ledger: T.ScrubLedger<unknown>): Json {
+  return Object.fromEntries(ledger.windows().map((window) => {
+    const state = ledger.open(window)!;
+    return [window, { gesture: state.gesture, base: state.baseRevision, tool: state.tool, transaction: state.transaction, entries: entriesJson(state.entries) }];
+  }));
+}
+
+function scrubInput(json: Json): T.ScrubInput<unknown> {
+  return json.kind === "abort" ? { kind: "abort", reason: json.reason } : { kind: json.kind, gesture: json.gesture, leaves: json.leaves };
+}
+
+const scrubClock = (physical: number): T.ToolClock => ({ actor: 0, physical_ms: physical, logical: 0 });
+
+/** 🎛️ The xstate oracle of the scrub chart: guard `sameGesture`, actions logging yields, an independent `Map` transaction, the rest law, host cancels re-entering the initial snapshot, and the capture of another press as a host cancel first. */
+class ScrubOracle {
+  readonly #machine;
+  #snapshot: AnyMachineSnapshot;
+  #open: { reference: TransactionRef; model: MapTransaction } | undefined;
+
+  constructor(readonly tool: string, readonly actor: string) {
+    const replace = (context: any, leaves: readonly unknown[]) => [...leaves.map((mutation, index) => ({ kind: "upsert", key: String(index), mutation })), ...Array.from({ length: Math.max(0, context.keys - leaves.length) }, (_, offset) => ({ kind: "retract", key: String(leaves.length + offset) }))];
+    this.#machine = setup({
+      guards: { sameGesture: ({ context, event }: any) => context.gesture === event.gesture } as any,
+      actions: {
+        follow: assign(({ context, event }: any) => ({ log: [...context.log, ...replace(context, event.leaves)], gesture: event.gesture, keys: event.leaves.length })),
+        settle: assign(({ context, event }: any) => ({ log: [...context.log, ...replace(context, event.leaves), { kind: "commit" }], gesture: undefined, keys: 0 })),
+      } as any,
+    }).createMachine({
+      id: "scrub-oracle",
+      initial: scrubLaw.chart.initial,
+      context: { gesture: undefined, keys: 0, log: [] },
+      states: Object.fromEntries(scrubLaw.chart.states.map((state: string) => [state, { on: Object.fromEntries(scrubLaw.chart.events.map((event: string) => [event, scrubLaw.chart.transitions.filter((row: Json) => row.from === state && row.event === event).map((row: Json) => ({ target: row.to, actions: [row.action], ...(row.guard ? { guard: row.guard } : {}) }))])) }])),
+    } as any);
+    this.#snapshot = initialTransition(this.#machine)[0];
+  }
+
+  get state(): string {
+    return this.#snapshot.value as string;
+  }
+
+  #rest(): TransactionRef | undefined {
+    this.#snapshot = initialTransition(this.#machine)[0];
+    const dropped = this.#open?.reference;
+    this.#open = undefined;
+    return dropped;
+  }
+
+  send(input: T.ScrubInput<unknown>, clock: T.ToolClock): Json {
+    if (input.kind === "abort") {
+      const dropped = this.#rest();
+      return dropped ? { kind: "aborted", transaction: dropped, reason: input.reason } : { kind: "idle" };
+    }
+    const open = this.#snapshot.context.gesture;
+    if (open !== undefined && open !== input.gesture) this.#rest();
+    const before = this.#snapshot.context.log.length;
+    this.#snapshot = transition(this.#machine, this.#snapshot, { type: input.kind === "tick" ? "Tick" : "Commit", gesture: input.gesture, leaves: input.leaves } as any)[0];
+    for (const yielded of this.#snapshot.context.log.slice(before) as T.ToolYield<unknown>[]) {
+      if (this.#open) this.#open.model.apply(yielded);
+      else if (yielded.kind === "upsert") {
+        this.#open = { reference: mintTransactionRef(this.actor, clock, this.tool), model: new MapTransaction() };
+        this.#open.model.apply(yielded);
+      }
+    }
+    const current = this.#open;
+    if (!current) return { kind: "idle" };
+    if (current.model.state === "open") return { kind: "open", transaction: current.reference, entries: [...current.model.entries].map(([key, mutation]) => ({ key, mutation })) };
+    this.#open = undefined;
+    return current.model.entries.size === 0 ? { kind: "empty", transaction: current.reference } : { kind: "committed", transaction: current.reference, mutations: [...current.model.entries.values()] };
+  }
+}
+
+describe("scrub machine", () => {
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(schema);
+  const validator = (name: string) => ajv.getSchema(`${schema.$id}#/$defs/${name}`)!;
+
+  test("the scrub fixture validates and hostile mutations are rejected (ajv)", () => {
+    const validate = validator("ScrubLawFixture");
+    expect(validate(scrubLaw), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate({ ...scrubLaw, extra: 1 })).toBe(false);
+    expect(validate({ ...scrubLaw, chart: { ...scrubLaw.chart, fingerprint: "0x1" } })).toBe(false);
+    expect(validator("ScrubPhase")({ kind: "abort", gesture: "g", reason: "sideways" })).toBe(false);
+    expect(validator("ScrubPhase")({ kind: "tick", gesture: "" })).toBe(false);
+    expect(validator("ScrubInput")({ kind: "commit", gesture: "g" })).toBe(false);
+    expect(validator("ScrubStep")({ kind: "committed", transaction: { id: "tx-0000000000000000", tool: "a#b" }, mutations: [] })).toBe(false);
+  });
+
+  test("the protocol arguments parse like the fixture", () => {
+    expect(scrubLaw.args).toEqual({ gesture: T.SCRUB_GESTURE_ARG, commit: T.SCRUB_COMMIT_ARG, abort: T.SCRUB_ABORT_ARG });
+    for (const row of scrubLaw.phases) expect(T.parseScrubPhase(row.args.gesture, row.args.commit, row.args.abort) ?? null, JSON.stringify(row.args)).toEqual(row.phase);
+  });
+
+  test("the kernel tables are the fixture chart with the Rust fingerprint", () => {
+    const { definition } = T.scrubMachine<unknown>();
+    expect([definition.id, definition.fingerprint.toString(), definition.manifestJson]).toEqual([scrubLaw.chart.id, scrubLaw.chart.fingerprint, scrubLaw.chart.manifestJson]);
+    expect(definition.nodes.slice(1).map((node) => node.stableId)).toEqual(scrubLaw.chart.states);
+    expect(definition.nodes[definition.nodes[0]!.initial!]!.stableId).toBe(scrubLaw.chart.initial);
+    const rows = definition.transitions.map((row) => ({ from: definition.nodes[row.source]!.stableId, event: scrubLaw.chart.events[(row.trigger as { event: number }).event], guard: row.guard === undefined ? null : "sameGesture", to: definition.nodes[row.targets[0]!]!.stableId, action: ["follow", "settle"][row.actions[0]!] }));
+    expect(rows).toEqual(scrubLaw.chart.transitions);
+  });
+
+  test("the ledger replays every fixture scenario with the independently minted ids", () => {
+    for (const scenario of scrubLaw.scenarios) {
+      const ledger = new T.ScrubLedger<unknown>();
+      scenario.steps.forEach((row: Json, index: number) => {
+        const label = `${scenario.name} #${index}`;
+        if (row.abortAll !== undefined) expect(ledger.abortAll(row.abortAll), label).toEqual(row.expect.steps);
+        else if (row.retain !== undefined) expect(ledger.retainWindows((window) => row.retain.includes(window)), label).toEqual(row.expect.steps);
+        else if (row.abort !== undefined) expect(ledger.abort(row.window, row.abort.gesture ?? undefined, row.abort.reason), label).toEqual(row.expect.step);
+        else {
+          const result = ledger.send(row.window, row.tool, scrubLaw.actor, row.base, scrubInput(row.input), scrubClock(row.clock));
+          if (!result.ok) throw new Error(result.refusal);
+          expect(scrubStepJson(result.step, ledger.open(row.window)), label).toEqual(row.expect.step);
+        }
+        expect(scrubOpenJson(ledger), label).toEqual(row.expect.open);
+        expect(ledger.provisional(), label).toEqual(row.expect.provisional);
+      });
+    }
+  });
+
+  test("random presses with captures, host cancels and resumes: the scrub and the xstate oracle agree on steps, entries and ids", () => {
+    const leaves = fc.array(fc.record({ set: fc.constant("opacity"), target: fc.constantFrom("a", "b", "c"), value: fc.integer({ min: 0, max: 9 }) }), { maxLength: 3 });
+    type Operation = { readonly input: T.ScrubInput<Leaf> } | { readonly resume: true };
+    const operation: fc.Arbitrary<Operation> = fc.oneof(
+      { arbitrary: fc.record({ input: fc.record({ kind: fc.constant("tick" as const), gesture: fc.constantFrom("g1", "g2"), leaves }) }), weight: 6 },
+      { arbitrary: fc.record({ input: fc.record({ kind: fc.constant("commit" as const), gesture: fc.constantFrom("g1", "g2"), leaves }) }), weight: 2 },
+      { arbitrary: fc.record({ input: fc.record({ kind: fc.constant("abort" as const), reason: fc.constantFrom(...T.TOOL_ABORT_REASONS) }) }), weight: 1 },
+      { arbitrary: fc.constant({ resume: true as const }), weight: 2 },
+    );
+    fc.assert(
+      fc.property(fc.array(operation, { minLength: 1, maxLength: 50 }), (operations) => {
+        let scrub = T.Scrub.start<Leaf>("law#scrub", scrubLaw.actor, "r1");
+        const oracle = new ScrubOracle("law#scrub", scrubLaw.actor);
+        operations.forEach((item, index) => {
+          if ("resume" in item) {
+            const state = scrub.persist();
+            if (!state) {
+              expect(scrub.transaction()?.state === "open").toBe(false);
+              scrub = T.Scrub.start<Leaf>("law#scrub", scrubLaw.actor, "r1");
+              if (oracle.state !== scrubLaw.chart.initial) oracle.send({ kind: "abort", reason: "tool" }, scrubClock(0));
+              return;
+            }
+            const resumed = T.Scrub.resume(state);
+            if (!resumed.ok) throw new Error(resumed.refusal);
+            scrub = resumed.scrub;
+            return;
+          }
+          const clock = scrubClock(7000 + index);
+          const result = scrub.send(item.input, clock);
+          if (!result.ok) throw new Error(result.refusal);
+          const open = scrub.transaction();
+          const step = result.step.kind === "open" ? { kind: "open", transaction: open!.reference, entries: entriesJson(open!.entries()) } : result.step;
+          expect(step).toEqual(oracle.send(item.input, clock));
+          expect(open === undefined || scrub.runner.atRest() === false).toBe(true);
+        });
+      }),
+      { numRuns: 400 },
+    );
+  });
+});
+//#endregion 🔖️Scrub

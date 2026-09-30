@@ -1,0 +1,6 @@
+{
+  "ChangeZoneComfortCategory": {
+    "zoneId": "zone-office",
+    "newComfortCategory": "I"
+  }
+}

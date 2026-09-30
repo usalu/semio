@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeFenestrationArea, base: &EnergyModelSnapshot)
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Fenestration {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_area_m2.is_finite() || payload.new_area_m2 <= 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Fenestration {} needs a positive finite area, got {}.", payload.id.0, payload.new_area_m2), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fenestration {} needs a positive finite area, got {}.", payload.id.0, payload.new_area_m2), [payload.id.0.to_string()]);
     }
     if existing.area_m2 == payload.new_area_m2 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fenestration {} already has this area.", payload.id.0));

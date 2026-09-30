@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeShwSystemSetpoint, base: &EnergyModelSnapshot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Service hot water system {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_setpoint_c.is_finite() || !(0.0..=100.0).contains(&payload.new_setpoint_c) {
-        return protocol::MutationOutcome::error(
+        return protocol::MutationOutcome::fatal(
             "mutation.invariant",
             format!("Service hot water system {}: tank setpoint (°C) must be a liquid-water temperature in [0, 100] °C, got {}.", payload.id.0, payload.new_setpoint_c),
             [payload.id.0.to_string()],

@@ -1,0 +1,30 @@
+{
+  "artifact": null,
+  "annex": null,
+  "site": null,
+  "buildings": null,
+  "bridges": null,
+  "assessments": null,
+  "silos": null,
+  "tanks": null,
+  "foundations": null,
+  "retainingWalls": [
+    {
+      "id": "rw-1",
+      "heightM": 4.5,
+      "phiDeg": 32.0,
+      "soilGamma": 18000.0,
+      "r": 1.5,
+      "hRdNPerM": 250000.0
+    },
+    {
+      "id": "rw-2",
+      "heightM": 6.0,
+      "phiDeg": 32.0,
+      "soilGamma": 18000.0,
+      "r": 1.5,
+      "hRdNPerM": 250000.0
+    }
+  ],
+  "towers": null
+}

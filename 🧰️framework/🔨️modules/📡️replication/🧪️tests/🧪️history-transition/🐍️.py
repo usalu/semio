@@ -1,7 +1,7 @@
 """🐍️ Independent (non-Rust, non-TypeScript) encoder of `semio.history.transition` payloads.
 
 Written from the wire grammar alone (`tag varint | variant fields in declaration order`), with its own BLAKE3
-(the reference algorithm, no library) for the content-addressed transition id
+(the reference algorithm, no library) for the trunk alternative id of a document and the content-addressed transition id
 `transition-{hex16(blake3(hlc.actor varint | hlc.physical_ms varint | hlc.logical varint | payload bytes))}` — the
 free-form actor string never enters the id. It generates the language-agnostic corpus `../../🔗️causal/🧫️fixtures/🧫️history-transition/🔣️.json` that the Rust codec
 (`the_language_agnostic_fixture_matches_the_codec_byte_for_byte`) and the TypeScript encoder + Ajv test
@@ -168,6 +168,19 @@ def transition_id(payload: bytes) -> str:
     return "transition-" + blake3(material)[:8].hex()
 
 
+KINDS = ["revert", "reinstate", "commit", "branch", "checkout", "repin", "supersede"]
+
+
+def admits(shape: str, kind: str) -> bool:
+    """🗂️ Whether a history of `shape` holds a `kind` transition: a document every kind, a config only undo and redo."""
+    return shape == "document" or kind in ("revert", "reinstate")
+
+
+def trunk_id(document_id: str) -> str:
+    """🌳️ The id of `document_id`'s trunk, the implicit root alternative: `trunk-{hex16(blake3(str "semio.history.trunk" | str document_id))}`."""
+    return "trunk-" + blake3(s("semio.history.trunk") + s(document_id))[:8].hex()
+
+
 # endregion 🔖️Grammar
 
 # region 🔖️Corpus
@@ -211,6 +224,8 @@ def corpus() -> dict:
         "idClock": ID_CLOCK,
         "cases": [{"id": i, "payloadHex": encode(t).hex(), "expect": {"outcome": "accepted", "transition": t, "transitionId": transition_id(encode(t))}} for i, t in accepted]
         + [{"id": i, "payloadHex": b.hex(), "expect": {"outcome": "malformed", "detail": d}} for i, b, d in malformed],
+        "trunks": [{"documentId": d, "alternativeId": trunk_id(d)} for d in ["doc", "doc-supersede-fold", "Grüße 🧪 document"]],
+        "shapes": [{"shape": shape, "admits": [k for k in KINDS if admits(shape, k)]} for shape in ["document", "config"]],
     }
 
 

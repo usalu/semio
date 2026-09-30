@@ -1,14 +1,14 @@
 {
   "status": "rejected",
-  "code": "mutation.id-mismatch",
+  "code": "mutation.target-mismatch",
   "path": [
     "n2",
     "n2b"
   ],
   "messages": [
     {
-      "level": "fatal",
-      "code": "mutation.id-mismatch"
+      "level": "error",
+      "code": "mutation.target-mismatch"
     }
   ]
 }

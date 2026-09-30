@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""🖐️ An INDEPENDENT second implementation of the `s.puzzle.5d` assembly document and its thirty-five
+"""🖐️ An INDEPENDENT second implementation of the `s.puzzle.5d` assembly document and its thirty-nine
 typed mutations, in Python, serving as this case's differential oracle.
 
 **Why a second implementation and not a third-party library.** A `puzzle5d` document is an ASSEMBLY
@@ -46,6 +46,7 @@ readings those two siblings report.
 # region 🔖️Imports
 import copy
 import json
+import math
 
 from semio_repo_test import Adapter, Outcome
 
@@ -139,8 +140,30 @@ KINDS = (
     "scale-target-volume",
     "change-target-volume-hidden",
     "change-target-volume-locked",
+    "drag-selection2d",
+    "drag-selection3d",
+    "rotate-selection3d",
+    "scale-selection3d",
 )
 """🏷️ Every kind the catalog declares, in its declared order."""
+
+SELECTION = {"drag-selection2d": ("2d", None), "drag-selection3d": ("3d", "origin"), "rotate-selection3d": ("3d", "orientation"), "scale-selection3d": ("3d", "scale")}
+"""🧭️ The four parametric selection kinds: which facet of a part each rewrites and which member (`None`: the board
+position `x`/`y`). They state INTENT rather than a final value: every addressed part not locked on the board, and for a
+world kind every addressed unlocked target volume, is transformed IN PLACE from whatever pose the assembly holds."""
+
+PART_SETTERS = {"origin": ("move-part3d", "newOrigin"), "orientation": ("rotate-part3d", "newOrientation"), "scale": ("scale-part3d", "newScale")}
+"""↩️ The absolute setter restoring one world member of a part — how a world selection kind is undone."""
+
+VOLUME_SETTERS = {"origin": ("move-target-volume", "newOrigin"), "orientation": ("rotate-target-volume", "newOrientation"), "scale": ("scale-target-volume", "newScale")}
+"""↩️ The absolute setter restoring one member of a target volume."""
+
+IDENTITY = [0.0, 0.0, 0.0, 1.0]
+"""🧭️ The quaternion of no rotation, `[x, y, z, w]` — what a part or volume without an orientation stands at."""
+
+FLAT_TO_WORLD = 1.0 / 48.0
+"""🎛️ World metres per board unit: a world drag of a part carries its board pin along the same ground-plane
+motion (board y points the other way), so the two poses of one part never drift apart."""
 
 
 def tag_of(kind):
@@ -251,8 +274,9 @@ def holder_of(kind, part):
 
 
 def written(record, member, value):
-    """🫥 Writes a member, or REMOVES it when the value is the one a committed snapshot omits."""
-    if member in DEFAULTS and value == DEFAULTS[member]:
+    """🫥 Writes a member, or REMOVES it when the value is the one a committed snapshot omits — its default, or no
+    value at all for an optional member."""
+    if value is None or (member in DEFAULTS and value == DEFAULTS[member]):
         record.pop(member, None)
     else:
         record[member] = copy.deepcopy(value)
@@ -267,6 +291,55 @@ def attached_to(document, ports):
     """✂️ The fasteners addressed to any of these ports, in assembly order — what a removal severs."""
     return [held for held in document["fasteners"] if held["source"] in ports or held["target"] in ports]
 # endregion 🔖️Document
+
+
+# region 🔖️Selection
+def hamilton(a, b):
+    """✖️ The Hamilton product `a·b` of two `[x, y, z, w]` quaternions: turning by `b` and then by `a`."""
+    ax, ay, az, aw = a
+    bx, by, bz, bw = b
+    return [aw * bx + ax * bw + ay * bz - az * by, aw * by - ax * bz + ay * bw + az * bx, aw * bz + ax * by - ay * bx + az * bw, aw * bw - ax * bx - ay * by - az * bz]
+
+
+def axis_angle(axis, angle):
+    """🧭️ The unit quaternion turning `angle` radians about `axis` (right-handed); no turn for a degenerate axis."""
+    length = math.sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2])
+    if length < 1e-8:
+        return list(IDENTITY)
+    sine = math.sin(angle * 0.5)
+    return [axis[0] / length * sine, axis[1] / length * sine, axis[2] / length * sine, math.cos(angle * 0.5)]
+
+
+def moves(kind, payload):
+    """🚦️ Whether the parameters move anything at all."""
+    if kind == "drag-selection2d":
+        return (payload["dx"], payload["dy"]) != (0.0, 0.0)
+    if kind == "drag-selection3d":
+        return payload["offset"] != [0.0, 0.0, 0.0]
+    if kind == "rotate-selection3d":
+        return payload["angle"] != 0.0 and axis_angle(payload["axis"], payload["angle"]) != IDENTITY
+    return payload["factors"] != [1.0, 1.0, 1.0]
+
+
+def world_value(kind, payload, member, current):
+    """🧮️ The value a world selection kind writes over `current` (the member as held, `None` when absent)."""
+    if member == "origin":
+        return [current[axis] + payload["offset"][axis] for axis in range(3)]
+    if member == "orientation":
+        return hamilton(axis_angle(payload["axis"], payload["angle"]), current or IDENTITY)
+    triple = [1.0, 1.0, 1.0] if current is None else ([current] * 3 if isinstance(current, (int, float)) else current)
+    return [triple[axis] * payload["factors"][axis] for axis in range(3)]
+
+
+def addressed(document, kind, payload):
+    """🎯️ `(member, index)` of every record a moving selection kind rewrites, in assembly order: parts not locked
+    on the board, then — for a world kind — unlocked target volumes."""
+    if not moves(kind, payload):
+        return []
+    parts = [("parts", at) for at, part in enumerate(document["parts"]) if part["id"] in payload["targets"] and part["2d"].get("locked") is not True]
+    volumes = [("targetVolumes", at) for at, volume in enumerate(volumes_of(document)) if kind != "drag-selection2d" and volume["id"] in payload["targets"] and not volume["locked"]]
+    return parts + volumes
+# endregion 🔖️Selection
 
 
 # region 🔖️Verbs
@@ -353,11 +426,25 @@ def apply_mutation(document, kind, payload):
         with_volumes(document, [entry for entry in held if entry["id"] != payload["id"]])
     elif kind in TARGET_VOLUME_FIELDS:
         held = list(volumes_of(document))
-        addressed = next((entry for entry in held if entry["id"] == payload["id"]), None)
-        if addressed is None:
+        volume = next((entry for entry in held if entry["id"] == payload["id"]), None)
+        if volume is None:
             return with_volumes(document, held)
-        written_volume(addressed, TARGET_VOLUME_FIELDS[kind], payload[TARGET_VOLUME_ARGUMENT[kind]])
+        written_volume(volume, TARGET_VOLUME_FIELDS[kind], payload[TARGET_VOLUME_ARGUMENT[kind]])
         with_volumes(document, held)
+    elif kind in SELECTION:
+        facet, member = SELECTION[kind]
+        for collection, at in addressed(document, kind, payload):
+            record = document[collection][at]
+            if member is None:
+                record["2d"]["x"] = record["2d"]["x"] + payload["dx"]
+                record["2d"]["y"] = record["2d"]["y"] + payload["dy"]
+            elif collection == "parts":
+                record[facet][member] = world_value(kind, payload, member, record[facet].get(member))
+                if member == "origin":
+                    record["2d"]["x"] = record["2d"]["x"] + payload["offset"][0] / FLAT_TO_WORLD
+                    record["2d"]["y"] = record["2d"]["y"] - payload["offset"][1] / FLAT_TO_WORLD
+            else:
+                record[member] = world_value(kind, payload, member, record.get(member))
     else:
         raise AssertionError("mutate-%s: this implementation declares no verb for that kind" % kind)
     return document
@@ -438,6 +525,22 @@ def inverse_mutation(document, kind, payload):
         held = volumes_of(document)[at]
         restored = copy.deepcopy(held[member]) if member in held else (None if member in VOLUME_OPTIONAL else False)
         return [(kind, {"id": payload["id"], TARGET_VOLUME_ARGUMENT[kind]: restored})]
+    if kind in SELECTION:
+        facet, member = SELECTION[kind]
+        steps = []
+        for collection, at in addressed(document, kind, payload):
+            record = document[collection][at]
+            if member is None:
+                steps.append(("move-part2d", {"id": record["id"], "newX": record["2d"]["x"], "newY": record["2d"]["y"]}))
+            elif collection == "parts":
+                setter, argument = PART_SETTERS[member]
+                steps.append((setter, {"id": record["id"], argument: copy.deepcopy(record[facet].get(member))}))
+                if member == "origin":
+                    steps.append(("move-part2d", {"id": record["id"], "newX": record["2d"]["x"], "newY": record["2d"]["y"]}))
+            else:
+                setter, argument = VOLUME_SETTERS[member]
+                steps.append((setter, {"id": record["id"], argument: copy.deepcopy(record.get(member))}))
+        return steps
     if kind == "replace-kind-catalogs":
         if payload["newCatalogs"] is None:
             return []

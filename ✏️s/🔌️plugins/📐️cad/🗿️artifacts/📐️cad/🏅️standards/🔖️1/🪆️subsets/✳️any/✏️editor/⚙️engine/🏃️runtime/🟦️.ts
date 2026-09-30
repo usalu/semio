@@ -4,7 +4,7 @@
 
 import { ephemeralBox } from "@semio-tech/framework";
 import type { ProgramContributionEntry } from "@semio-tech/framework";
-import { registerModelDefinitionAssets, type ModelDefinitionAssetModules } from "../📔️registry/🟦️.ts";
+import { registerModelDefinitionAssets, type ModelDefinitionAssetModules } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
 import * as spatialShape from "@semio-tech/cad-js-module-spatial-shape";
 import * as aecBuilding from "@semio-tech/cad-js-module-aec-building";
 import * as aecBuildingEnergy from "@semio-tech/cad-js-module-aec-building-energy";

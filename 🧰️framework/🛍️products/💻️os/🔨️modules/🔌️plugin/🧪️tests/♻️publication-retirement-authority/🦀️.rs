@@ -569,3 +569,83 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
     eprintln!("window transient retired a rejected authority over {turns} Ok turns, refused a stale re-begin, and admitted the refreshed one at generation {}", app.window_transient_store.capture(Some(&view)).unwrap().unwrap().generation);
     close_registered_fixture_app(&mut app);
 }
+
+/// 🫧️ LAW: a window-transient emission the registry refuses is never dropped. The typed-operation unit hands the
+/// refusal back as its typed fault and keeps the mutation on the operation's emit, so the ladder retries it and a
+/// deterministic refusal ends the operation with that fault — never a silent success with the window transient lost
+/// (the refusal used to consume the mutation, and the retry then completed without it).
+#[semio_framework_async_macros::async_test]
+async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
+    let mut app = artifact_app_laws::new_app::<RetirementApp>().await;
+    let authority = app.window_transient_store.capture(Some(&retirement_view())).expect("window transient capture").expect("registered window transient owner");
+    let generation = authority.generation;
+    let revision = app.store.content_revision_now();
+    let operation = semio_framework_job::Operation::new(
+        semio_framework_job::allocate_operation_id(),
+        semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().expect("revision lane width"))),
+        semio_framework_job::Generation(app.store.generation_now()),
+        17,
+    );
+    let lease = app
+        .tool_cancellations
+        .clone()
+        .begin(crate::app::ToolOperationKey { app_instance_id: 7, document: crate::app::ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation })
+        .expect("cancellation lease");
+    let misaddressed = WindowTransientMutation::of::<RetirementWindowTransientOwner>("publication-retirement-window-right", ChangePublicationTransient { revision: 3 }.into());
+    let mut mounted = crate::app::MountedTypedCommandFullOperation::<RetirementApp> {
+        verb: "setTransient".into(),
+        meta: crate::app::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: Some(retirement_view()) },
+        operation,
+        canonical_revision: revision,
+        artifact_generation: operation.generation.0,
+        config_generation: 0,
+        draft_generation: 0,
+        presence_generation: 0,
+        transient_generation: 0,
+        window_config_authority: None,
+        window_transient_authority: Some(authority),
+        publication_lanes: &[crate::app::ArtifactToolPublicationLane::WindowTransient],
+        session: None,
+        session_rejected: None,
+        completion: None,
+        raw_input: None,
+        output_chunks: None,
+        cancellation_lease: Some(lease),
+        terminal_outcome: None,
+        terminal_seen: true,
+        publication: Some(crate::app::ArtifactToolCompletionValue::Emit(Ok(crate::app::Emit::default()), crate::app::EphemeralEmit { window_transient: vec![misaddressed], ..Default::default() })),
+        pending_artifact_publication: None,
+        pending_child_publication: None,
+        captured_child_content: Some(Arc::new(crate::app::ChildContentView::EMPTY)),
+        captured_child_content_generation: 0,
+        result_page: None,
+        result_page_presented: false,
+        result_sequence: 0,
+        publication_progress: 0,
+        publication_checkpoint: None,
+        publication_attempt: 0,
+        ui_pending: true,
+        progress: None,
+        progress_pending: false,
+        user_cancel_requested: false,
+        published_artifact: false,
+        published_config: false,
+        published_window_config: false,
+        command_logged: false,
+        interaction_revalidated: false,
+        terminal_fault: None,
+        stage: crate::app::MountedTypedCommandFullOperationStage::Publishing,
+    };
+    for attempt in 0..3 {
+        let refused = app.publish_mounted_typed_operation_unit(&mut mounted).await.expect_err("a misaddressed window transient is refused");
+        assert_eq!(refused.code.0, "window-transient.address", "attempt {attempt}: the refusal is the registry's typed fault");
+        let Some(crate::app::ArtifactToolCompletionValue::Emit(Ok(_), ephemeral)) = mounted.publication.as_ref() else { panic!("the emit stays installed") };
+        assert_eq!(ephemeral.window_transient.iter().map(WindowTransientMutation::window_id).collect::<Vec<_>>(), ["publication-retirement-window-right"], "attempt {attempt}: the refused mutation is kept, never dropped");
+        assert!(mounted.pending_artifact_publication.is_none() && mounted.result_page.is_none(), "attempt {attempt}: nothing was published or answered");
+    }
+    assert_eq!(app.window_transient_store.capture(Some(&retirement_view())).expect("capture").expect("owner").generation, generation, "the window transient never moved");
+    mounted.publication = None;
+    mounted.window_transient_authority = None;
+    drop(mounted);
+    close_registered_fixture_app(&mut app);
+}

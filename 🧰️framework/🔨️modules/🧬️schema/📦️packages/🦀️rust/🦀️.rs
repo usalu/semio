@@ -10,3 +10,7 @@ mod validator;
 
 pub use component::*;
 pub use validator::*;
+
+#[path = "../../🌐️document-http/🦀️.rs"]
+mod document_http;
+pub use document_http::*;

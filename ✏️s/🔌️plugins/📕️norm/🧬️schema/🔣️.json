@@ -960,8 +960,8 @@
         },
         "rows": {
           "type": "array",
-          "minItems": 392,
-          "maxItems": 392,
+          "minItems": 554,
+          "maxItems": 554,
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -1035,7 +1035,7 @@
         }
       },
       "title": "NormMutationLeafTaxonomy",
-      "description": "📕️ The 392-row mutation-leaf taxonomy census every norm artifact declares."
+      "description": "📕️ The 554-row mutation-leaf taxonomy census every norm artifact declares."
     }
   }
 }

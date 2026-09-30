@@ -203,7 +203,8 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
                 let retired = matches!(self, HomeConfigMutation::RetireLocalStudio { .. });
                 match base.with_local_studio_retired(space_id, retired) {
                     Some(candidate) if local_studio_tombstones_are_admissible(&candidate) => protocol::MutationOutcome::new(candidate),
-                    Some(_) => protocol::MutationOutcome::new(base.clone()).absorb_messages([protocol::MutationMessage::error("s.home.local-studio-tombstone-refused", format!("Local studio {space_id} cannot be retired: its id is not admissible or {HOME_RETIRED_LOCAL_STUDIOS_MAXIMUM} studios are retired already.")).at(["retiredLocalStudioIds"])]),
+                    Some(_) if !local_studio_id_is_admissible(space_id) => protocol::MutationOutcome::new(base.clone()).absorb_messages([protocol::MutationMessage::fatal("mutation.invariant", format!("Local studio id {space_id:?} is not admissible.")).at(["retiredLocalStudioIds"])]),
+                    Some(_) => protocol::MutationOutcome::new(base.clone()).absorb_messages([protocol::MutationMessage::error("mutation.target-mismatch", format!("Local studio {space_id} cannot be retired: {HOME_RETIRED_LOCAL_STUDIOS_MAXIMUM} studios are retired already.")).at(["retiredLocalStudioIds"])]),
                     None => protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", format!("Local studio {space_id} is already {}.", if retired { "retired" } else { "listed" })),
                 }
             }

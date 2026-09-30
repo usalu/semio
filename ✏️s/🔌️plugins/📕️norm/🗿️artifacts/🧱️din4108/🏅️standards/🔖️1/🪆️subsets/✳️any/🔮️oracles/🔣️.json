@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.din4108` — checked against PyPI, which serves no `din4108`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../../../../../🧪️tests/🧱️mutate-din4108-1/🐍️component.py`, all 33 kinds of `Din4108Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `din4108-1-mutate`'s external-oracle requirement for its 33-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 33 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.din4108` — checked against PyPI, which serves no `din4108`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../🧪️tests/🧱️mutate-din4108-1/🐍️.py` (engine `✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🐍️.py`), all 43 kinds of `Din4108Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `din4108-1-mutate`'s external-oracle requirement for its 43-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 43 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -106,200 +106,24 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
-          "mutationId": "change-airtightness-class",
-          "sourceMutationDirectoryName": "🔒️change-airtightness-class",
-          "mutationDirectoryName": "🔒️change-airtightness-class",
+          "mutationId": "change-climate-zone",
+          "sourceMutationDirectoryName": "🌦️change-climate-zone",
+          "mutationDirectoryName": "🌦️change-climate-zone",
           "scenarios": [
             {
-              "id": "upgrades-the-airtightness-class-to-class1",
-              "directoryName": "🔒️upgrades-the-airtightness-class-to-class1"
+              "id": "moves-to-zone-3",
+              "directoryName": "🗺️moves-to-zone-3"
             }
           ]
         },
         {
-          "mutationId": "change-airtightness-n50",
-          "sourceMutationDirectoryName": "💨️change-airtightness-n50",
-          "mutationDirectoryName": "💨️change-airtightness-n50",
+          "mutationId": "change-usage",
+          "sourceMutationDirectoryName": "🗂️change-usage",
+          "mutationDirectoryName": "🗂️change-usage",
           "scenarios": [
             {
-              "id": "tightens-n50-to-1-point-5-per-hour",
-              "directoryName": "💨️tightens-n50-to-1-point-5-per-hour"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-application-type",
-          "sourceMutationDirectoryName": "🧩️change-application-type",
-          "mutationDirectoryName": "🧩️change-application-type",
-          "scenarios": [
-            {
-              "id": "reclassifies-the-application-type-as-wab",
-              "directoryName": "🧩️reclassifies-the-application-type-as-wab"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-bb2-details-conform",
-          "sourceMutationDirectoryName": "✅️change-bb2-details-conform",
-          "mutationDirectoryName": "✅️change-bb2-details-conform",
-          "scenarios": [
-            {
-              "id": "declares-the-beiblatt-2-details-non-conforming",
-              "directoryName": "❌️declares-the-beiblatt-2-details-non-conforming"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-catalog-id",
-          "sourceMutationDirectoryName": "📇️change-catalog-id",
-          "mutationDirectoryName": "📇️change-catalog-id",
-          "scenarios": [
-            {
-              "id": "repoints-the-catalogue-entry-to-aw-07",
-              "directoryName": "📇️repoints-the-catalogue-entry-to-aw-07"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-category",
-          "sourceMutationDirectoryName": "🗂️change-category",
-          "mutationDirectoryName": "🗂️change-category",
-          "scenarios": [
-            {
-              "id": "retypes-the-assembly-as-office",
-              "directoryName": "🏢️retypes-the-assembly-as-office"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-climate",
-          "sourceMutationDirectoryName": "🌦️change-climate",
-          "mutationDirectoryName": "🌦️change-climate",
-          "scenarios": [
-            {
-              "id": "moves-the-building-to-climate-zone-4",
-              "directoryName": "🗺️moves-the-building-to-climate-zone-4"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-declared-application-class",
-          "sourceMutationDirectoryName": "🏷️change-declared-application-class",
-          "mutationDirectoryName": "🏷️change-declared-application-class",
-          "scenarios": [
-            {
-              "id": "declares-application-class-kh",
-              "directoryName": "🏷️declares-application-class-kh"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-envelope-area-m2",
-          "sourceMutationDirectoryName": "📐️change-envelope-area-m2",
-          "mutationDirectoryName": "📐️change-envelope-area-m2",
-          "scenarios": [
-            {
-              "id": "grows-the-envelope-to-150-m2",
-              "directoryName": "📐️grows-the-envelope-to-150-m2"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-irradiance-wm2",
-          "sourceMutationDirectoryName": "🔆️change-irradiance-wm2",
-          "mutationDirectoryName": "🔆️change-irradiance-wm2",
-          "scenarios": [
-            {
-              "id": "raises-design-irradiance-to-750-w-per-m2",
-              "directoryName": "🔆️raises-design-irradiance-to-750-w-per-m2"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-layer-lambda",
-          "sourceMutationDirectoryName": "🧊️change-layer-lambda",
-          "mutationDirectoryName": "🧊️change-layer-lambda",
-          "scenarios": [
-            {
-              "id": "degrades-the-masonry-lambda-to-0-point-5",
-              "directoryName": "🧊️degrades-the-masonry-lambda-to-0-point-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-layer-thickness",
-          "sourceMutationDirectoryName": "📏️change-layer-thickness",
-          "mutationDirectoryName": "📏️change-layer-thickness",
-          "scenarios": [
-            {
-              "id": "thickens-the-insulation-layer-to-0-point-2-m",
-              "directoryName": "📏️thickens-the-insulation-layer-to-0-point-2-m"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-material-id",
-          "sourceMutationDirectoryName": "🧽️change-material-id",
-          "mutationDirectoryName": "🧽️change-material-id",
-          "scenarios": [
-            {
-              "id": "swaps-the-insulation-material-to-eps",
-              "directoryName": "🧽️swaps-the-insulation-material-to-eps"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-moisture-mu-exterior",
-          "sourceMutationDirectoryName": "🌧️change-moisture-mu-exterior",
-          "mutationDirectoryName": "🌧️change-moisture-mu-exterior",
-          "scenarios": [
-            {
-              "id": "raises-the-exterior-mu-value-to-20",
-              "directoryName": "🌧️raises-the-exterior-mu-value-to-20"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-moisture-mu-interior",
-          "sourceMutationDirectoryName": "💦️change-moisture-mu-interior",
-          "mutationDirectoryName": "💦️change-moisture-mu-interior",
-          "scenarios": [
-            {
-              "id": "raises-the-interior-mu-value-to-2-point-5",
-              "directoryName": "💦️raises-the-interior-mu-value-to-2-point-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-psi-times-l-sum",
-          "sourceMutationDirectoryName": "🌉️change-psi-times-l-sum",
-          "mutationDirectoryName": "🌉️change-psi-times-l-sum",
-          "scenarios": [
-            {
-              "id": "raises-the-thermal-bridge-sum-to-0-point-05",
-              "directoryName": "🌉️raises-the-thermal-bridge-sum-to-0-point-05"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-rh-int",
-          "sourceMutationDirectoryName": "💧️change-rh-int",
-          "mutationDirectoryName": "💧️change-rh-int",
-          "scenarios": [
-            {
-              "id": "raises-indoor-relative-humidity-to-0-point-65",
-              "directoryName": "💧️raises-indoor-relative-humidity-to-0-point-65"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-solar-absorptance",
-          "sourceMutationDirectoryName": "☀️change-solar-absorptance",
-          "mutationDirectoryName": "☀️change-solar-absorptance",
-          "scenarios": [
-            {
-              "id": "lightens-the-facade-to-absorptance-0-point-25",
-              "directoryName": "☀️lightens-the-facade-to-absorptance-0-point-25"
+              "id": "sets-nonresidential",
+              "directoryName": "🏢️sets-nonresidential"
             }
           ]
         },
@@ -309,8 +133,217 @@
           "mutationDirectoryName": "🌡️change-t-int-c",
           "scenarios": [
             {
-              "id": "raises-the-indoor-design-temperature-to-22-point-5-c",
-              "directoryName": "🌡️raises-the-indoor-design-temperature-to-22-point-5-c"
+              "id": "sets-t-int-to-21-point-5",
+              "directoryName": "🌡️sets-t-int-to-21-point-5"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-rh-int",
+          "sourceMutationDirectoryName": "💧️change-rh-int",
+          "mutationDirectoryName": "💧️change-rh-int",
+          "scenarios": [
+            {
+              "id": "raises-rh-to-0-point-55",
+              "directoryName": "💧️raises-rh-to-0-point-55"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-airtightness-n50",
+          "sourceMutationDirectoryName": "💨️change-airtightness-n50",
+          "mutationDirectoryName": "💨️change-airtightness-n50",
+          "scenarios": [
+            {
+              "id": "tightens-n50-to-1-point-0",
+              "directoryName": "💨️tightens-n50-to-1-point-0"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-has-mechanical-ventilation",
+          "sourceMutationDirectoryName": "🌬️change-has-mechanical-ventilation",
+          "mutationDirectoryName": "🌬️change-has-mechanical-ventilation",
+          "scenarios": [
+            {
+              "id": "disables-mechanical-ventilation",
+              "directoryName": "🌬️disables-mechanical-ventilation"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bb2-details-conform",
+          "sourceMutationDirectoryName": "✅️change-bb2-details-conform",
+          "mutationDirectoryName": "✅️change-bb2-details-conform",
+          "scenarios": [
+            {
+              "id": "declares-bb2-non-conforming",
+              "directoryName": "❌️declares-bb2-non-conforming"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-zone",
+          "sourceMutationDirectoryName": "➕️insert-zone",
+          "mutationDirectoryName": "➕️insert-zone",
+          "scenarios": [
+            {
+              "id": "appends-extra-zone",
+              "directoryName": "➕️appends-extra-zone"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-zone",
+          "sourceMutationDirectoryName": "➖️remove-zone",
+          "mutationDirectoryName": "➖️remove-zone",
+          "scenarios": [
+            {
+              "id": "removes-first-zone",
+              "directoryName": "🚫️removes-first-zone"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-floor-area",
+          "sourceMutationDirectoryName": "📐️change-zone-floor-area",
+          "mutationDirectoryName": "📐️change-zone-floor-area",
+          "scenarios": [
+            {
+              "id": "sets-floor-area-to-90",
+              "directoryName": "📐️sets-floor-area-to-90"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-heaviness",
+          "sourceMutationDirectoryName": "🧱change-zone-heaviness",
+          "mutationDirectoryName": "🧱change-zone-heaviness",
+          "scenarios": [
+            {
+              "id": "sets-heaviness-light",
+              "directoryName": "🧱sets-heaviness-light"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-night-ventilation",
+          "sourceMutationDirectoryName": "🌙change-zone-night-ventilation",
+          "mutationDirectoryName": "🌙change-zone-night-ventilation",
+          "scenarios": [
+            {
+              "id": "sets-night-ventilation-high",
+              "directoryName": "🌙sets-night-ventilation-high"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-zone-window",
+          "sourceMutationDirectoryName": "🪟insert-zone-window",
+          "mutationDirectoryName": "🪟insert-zone-window",
+          "scenarios": [
+            {
+              "id": "appends-extra-window",
+              "directoryName": "🪟appends-extra-window"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-zone-window",
+          "sourceMutationDirectoryName": "🚫️remove-zone-window",
+          "mutationDirectoryName": "🚫️remove-zone-window",
+          "scenarios": [
+            {
+              "id": "removes-east-window",
+              "directoryName": "🚫️removes-east-window"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-window-area",
+          "sourceMutationDirectoryName": "📏change-zone-window-area",
+          "mutationDirectoryName": "📏change-zone-window-area",
+          "scenarios": [
+            {
+              "id": "grows-south-window",
+              "directoryName": "📏grows-south-window"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-window-g-value",
+          "sourceMutationDirectoryName": "☀️change-zone-window-g-value",
+          "mutationDirectoryName": "☀️change-zone-window-g-value",
+          "scenarios": [
+            {
+              "id": "sets-g-value-0-point-6",
+              "directoryName": "☀️sets-g-value-0-point-6"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-window-shading-fc",
+          "sourceMutationDirectoryName": "⛱️change-zone-window-shading-fc",
+          "mutationDirectoryName": "⛱️change-zone-window-shading-fc",
+          "scenarios": [
+            {
+              "id": "tightens-shading-fc",
+              "directoryName": "⛱️tightens-shading-fc"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-element",
+          "sourceMutationDirectoryName": "🏠️insert-element",
+          "mutationDirectoryName": "🏠️insert-element",
+          "scenarios": [
+            {
+              "id": "appends-extra-wall",
+              "directoryName": "🏠️appends-extra-wall"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-element",
+          "sourceMutationDirectoryName": "🚫️remove-element",
+          "mutationDirectoryName": "🚫️remove-element",
+          "scenarios": [
+            {
+              "id": "removes-first-element",
+              "directoryName": "🚫️removes-first-element"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-area",
+          "sourceMutationDirectoryName": "📐️change-element-area",
+          "mutationDirectoryName": "📐️change-element-area",
+          "scenarios": [
+            {
+              "id": "grows-wall-area",
+              "directoryName": "📐️grows-wall-area"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-adjacent",
+          "sourceMutationDirectoryName": "↔️change-element-adjacent",
+          "mutationDirectoryName": "↔️change-element-adjacent",
+          "scenarios": [
+            {
+              "id": "sets-adjacent-unheated",
+              "directoryName": "↔️sets-adjacent-unheated"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-kind",
+          "sourceMutationDirectoryName": "🏷️change-element-kind",
+          "mutationDirectoryName": "🏷️change-element-kind",
+          "scenarios": [
+            {
+              "id": "retags-as-opaque-frame",
+              "directoryName": "🏷️retags-as-opaque-frame"
             }
           ]
         },
@@ -320,8 +353,8 @@
           "mutationDirectoryName": "➕️insert-layer",
           "scenarios": [
             {
-              "id": "inserts-an-interior-plaster-layer-at-index-1",
-              "directoryName": "➕️inserts-an-interior-plaster-layer-at-index-1"
+              "id": "inserts-layer-into-wall",
+              "directoryName": "➕️inserts-layer-into-wall"
             }
           ]
         },
@@ -331,8 +364,8 @@
           "mutationDirectoryName": "➖️remove-layer",
           "scenarios": [
             {
-              "id": "removes-the-load-bearing-masonry-layer",
-              "directoryName": "🚫️removes-the-load-bearing-masonry-layer"
+              "id": "removes-eps-layer",
+              "directoryName": "➖️removes-eps-layer"
             }
           ]
         },
@@ -342,35 +375,254 @@
           "mutationDirectoryName": "🔀️reorder-layers",
           "scenarios": [
             {
-              "id": "moves-the-insulation-in-front-of-the-masonry",
-              "directoryName": "🧭️moves-the-insulation-in-front-of-the-masonry"
+              "id": "swaps-first-two-layers",
+              "directoryName": "🧭️swaps-first-two-layers"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-layer-thickness",
+          "sourceMutationDirectoryName": "📏️change-layer-thickness",
+          "mutationDirectoryName": "📏️change-layer-thickness",
+          "scenarios": [
+            {
+              "id": "thickens-eps-to-0-point-2",
+              "directoryName": "📏️thickens-eps-to-0-point-2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-layer-lambda",
+          "sourceMutationDirectoryName": "🌡change-layer-lambda",
+          "mutationDirectoryName": "🌡change-layer-lambda",
+          "scenarios": [
+            {
+              "id": "sets-eps-lambda",
+              "directoryName": "🌡️sets-eps-lambda"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-layer-mu",
+          "sourceMutationDirectoryName": "💧change-layer-mu",
+          "mutationDirectoryName": "💧change-layer-mu",
+          "scenarios": [
+            {
+              "id": "raises-eps-mu",
+              "directoryName": "💧raises-eps-mu"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-layer-material-id",
+          "sourceMutationDirectoryName": "🧽️change-layer-material-id",
+          "mutationDirectoryName": "🧽️change-layer-material-id",
+          "scenarios": [
+            {
+              "id": "retags-eps-material",
+              "directoryName": "🧽️retags-eps-material"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-thermal-bridge",
+          "sourceMutationDirectoryName": "🌉️insert-thermal-bridge",
+          "mutationDirectoryName": "🌉️insert-thermal-bridge",
+          "scenarios": [
+            {
+              "id": "appends-extra-bridge",
+              "directoryName": "🌉️appends-extra-bridge"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-thermal-bridge",
+          "sourceMutationDirectoryName": "🧊remove-thermal-bridge",
+          "mutationDirectoryName": "🧊remove-thermal-bridge",
+          "scenarios": [
+            {
+              "id": "removes-first-bridge",
+              "directoryName": "🧊removes-first-bridge"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-thermal-bridge-psi",
+          "sourceMutationDirectoryName": "🔘change-thermal-bridge-psi",
+          "mutationDirectoryName": "🔘change-thermal-bridge-psi",
+          "scenarios": [
+            {
+              "id": "lowers-psi",
+              "directoryName": "🔘lowers-psi"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-thermal-bridge-length",
+          "sourceMutationDirectoryName": "↔️change-thermal-bridge-length",
+          "mutationDirectoryName": "↔️change-thermal-bridge-length",
+          "scenarios": [
+            {
+              "id": "shortens-bridge",
+              "directoryName": "↔️shortens-bridge"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-orientation-deg",
+          "sourceMutationDirectoryName": "🧭change-element-orientation-deg",
+          "mutationDirectoryName": "🧭change-element-orientation-deg",
+          "scenarios": [
+            {
+              "id": "turns-north-wall-south",
+              "directoryName": "🧭turns-north-wall-south"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-inclination-deg",
+          "sourceMutationDirectoryName": "📐change-element-inclination-deg",
+          "mutationDirectoryName": "📐change-element-inclination-deg",
+          "scenarios": [
+            {
+              "id": "tilts-north-wall-to-45-degrees",
+              "directoryName": "📐tilts-north-wall-to-45-degrees"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-delta-ug",
+          "sourceMutationDirectoryName": "📈️change-element-delta-ug",
+          "mutationDirectoryName": "📈️change-element-delta-ug",
+          "scenarios": [
+            {
+              "id": "raises-glazing-delta-ug",
+              "directoryName": "📈️raises-glazing-delta-ug"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-delta-uf",
+          "sourceMutationDirectoryName": "📈️change-element-delta-uf",
+          "mutationDirectoryName": "📈️change-element-delta-uf",
+          "scenarios": [
+            {
+              "id": "raises-frame-delta-uf",
+              "directoryName": "📈️raises-frame-delta-uf"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-delta-ur",
+          "sourceMutationDirectoryName": "📈️change-element-delta-ur",
+          "mutationDirectoryName": "📈️change-element-delta-ur",
+          "scenarios": [
+            {
+              "id": "raises-roof-delta-ur",
+              "directoryName": "📈️raises-roof-delta-ur"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-thermal-bridge-bb2-type",
+          "sourceMutationDirectoryName": "🏷change-thermal-bridge-bb2-type",
+          "mutationDirectoryName": "🏷change-thermal-bridge-bb2-type",
+          "scenarios": [
+            {
+              "id": "reclassifies-reveal-bridge",
+              "directoryName": "🏷️reclassifies-reveal-bridge"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-window-orientation",
+          "sourceMutationDirectoryName": "🧭change-zone-window-orientation",
+          "mutationDirectoryName": "🧭change-zone-window-orientation",
+          "scenarios": [
+            {
+              "id": "turns-south-window-west",
+              "directoryName": "🧭turns-south-window-west"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-window-inclination-deg",
+          "sourceMutationDirectoryName": "📐change-zone-window-inclination-deg",
+          "mutationDirectoryName": "📐change-zone-window-inclination-deg",
+          "scenarios": [
+            {
+              "id": "tilts-south-window-to-60-degrees",
+              "directoryName": "📐tilts-south-window-to-60-degrees"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-layer-application-type",
+          "sourceMutationDirectoryName": "🏷️change-layer-application-type",
+          "mutationDirectoryName": "🏷️change-layer-application-type",
+          "scenarios": [
+            {
+              "id": "reclassifies-eps-as-wab",
+              "directoryName": "🏷️reclassifies-eps-as-wab"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-layer-compressive-class",
+          "sourceMutationDirectoryName": "🏷️change-layer-compressive-class",
+          "mutationDirectoryName": "🏷️change-layer-compressive-class",
+          "scenarios": [
+            {
+              "id": "raises-eps-compressive-class",
+              "directoryName": "🏷️raises-eps-compressive-class"
             }
           ]
         }
       ],
       "kinds": [
-        "change-category",
-        "change-climate",
-        "change-airtightness-n50",
-        "change-psi-times-l-sum",
-        "change-rh-int",
-        "change-catalog-id",
-        "change-material-id",
-        "change-airtightness-class",
+        "change-climate-zone",
+        "change-usage",
         "change-t-int-c",
-        "change-solar-absorptance",
-        "change-irradiance-wm2",
-        "change-moisture-mu-exterior",
-        "change-moisture-mu-interior",
-        "change-envelope-area-m2",
+        "change-rh-int",
+        "change-airtightness-n50",
+        "change-has-mechanical-ventilation",
         "change-bb2-details-conform",
-        "change-application-type",
-        "change-declared-application-class",
+        "insert-zone",
+        "remove-zone",
+        "change-zone-floor-area",
+        "change-zone-heaviness",
+        "change-zone-night-ventilation",
+        "insert-zone-window",
+        "remove-zone-window",
+        "change-zone-window-area",
+        "change-zone-window-g-value",
+        "change-zone-window-shading-fc",
+        "insert-element",
+        "remove-element",
+        "change-element-area",
+        "change-element-adjacent",
+        "change-element-kind",
         "insert-layer",
         "remove-layer",
         "reorder-layers",
         "change-layer-thickness",
-        "change-layer-lambda"
+        "change-layer-lambda",
+        "change-layer-mu",
+        "change-layer-material-id",
+        "insert-thermal-bridge",
+        "remove-thermal-bridge",
+        "change-thermal-bridge-psi",
+        "change-thermal-bridge-length",
+        "change-element-orientation-deg",
+        "change-element-inclination-deg",
+        "change-element-delta-ug",
+        "change-element-delta-uf",
+        "change-element-delta-ur",
+        "change-thermal-bridge-bb2-type",
+        "change-zone-window-orientation",
+        "change-zone-window-inclination-deg",
+        "change-layer-application-type",
+        "change-layer-compressive-class"
       ]
     }
   ],
@@ -384,28 +636,7 @@
       "subsetDirectoryName": "✳️any",
       "mutations": [
         {
-          "id": "change-airtightness-class",
-          "capability": "din4108-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-airtightness-class",
-            "bridgeVersion": 1,
-            "variant": "ChangeAirtightnessClass"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din4108-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "envelope"
-        },
-        {
-          "id": "change-airtightness-n50",
+          "id": "change-climate-zone",
           "capability": "din4108-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -414,146 +645,19 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-airtightness-n50",
+            "operation": "change-climate-zone",
             "bridgeVersion": 1,
-            "variant": "ChangeAirtightnessN50"
+            "variant": "ChangeClimateZone"
           },
           "oracleRequirements": [
             {
               "capability": "din4108-1-mutate",
               "qualifyingKind": "verified-native-second-implementation"
             }
-          ],
-          "subset": "envelope"
+          ]
         },
         {
-          "id": "change-application-type",
-          "capability": "din4108-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-application-type",
-            "bridgeVersion": 1,
-            "variant": "ChangeApplicationType"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din4108-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "envelope"
-        },
-        {
-          "id": "change-bb2-details-conform",
-          "capability": "din4108-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-bb2-details-conform",
-            "bridgeVersion": 1,
-            "variant": "ChangeBb2DetailsConform"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din4108-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "envelope"
-        },
-        {
-          "id": "change-catalog-id",
-          "capability": "din4108-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-catalog-id",
-            "bridgeVersion": 1,
-            "variant": "ChangeCatalogId"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din4108-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "envelope"
-        },
-        {
-          "id": "change-category",
-          "capability": "din4108-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-category",
-            "bridgeVersion": 1,
-            "variant": "ChangeCategory"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din4108-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "envelope"
-        },
-        {
-          "id": "change-climate",
-          "capability": "din4108-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-climate",
-            "bridgeVersion": 1,
-            "variant": "ChangeClimate"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din4108-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "envelope"
-        },
-        {
-          "id": "change-declared-application-class",
-          "capability": "din4108-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-declared-application-class",
-            "bridgeVersion": 1,
-            "variant": "ChangeDeclaredApplicationClass"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din4108-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "envelope"
-        },
-        {
-          "id": "change-envelope-area-m2",
+          "id": "change-usage",
           "capability": "din4108-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -562,214 +666,16 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-envelope-area-m2",
+            "operation": "change-usage",
             "bridgeVersion": 1,
-            "variant": "ChangeEnvelopeAreaM2"
+            "variant": "ChangeUsage"
           },
           "oracleRequirements": [
             {
               "capability": "din4108-1-mutate",
               "qualifyingKind": "verified-native-second-implementation"
             }
-          ],
-          "subset": "envelope"
-        },
-        {
-          "id": "change-irradiance-wm2",
-          "capability": "din4108-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-irradiance-wm2",
-            "bridgeVersion": 1,
-            "variant": "ChangeIrradianceWM2"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din4108-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "envelope"
-        },
-        {
-          "id": "change-layer-lambda",
-          "capability": "din4108-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-layer-lambda",
-            "bridgeVersion": 1,
-            "variant": "ChangeLayerLambda"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din4108-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "layers"
-        },
-        {
-          "id": "change-layer-thickness",
-          "capability": "din4108-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-layer-thickness",
-            "bridgeVersion": 1,
-            "variant": "ChangeLayerThickness"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din4108-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "layers"
-        },
-        {
-          "id": "change-material-id",
-          "capability": "din4108-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-material-id",
-            "bridgeVersion": 1,
-            "variant": "ChangeMaterialId"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din4108-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "envelope"
-        },
-        {
-          "id": "change-moisture-mu-exterior",
-          "capability": "din4108-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-moisture-mu-exterior",
-            "bridgeVersion": 1,
-            "variant": "ChangeMoistureMuExterior"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din4108-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "envelope"
-        },
-        {
-          "id": "change-moisture-mu-interior",
-          "capability": "din4108-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-moisture-mu-interior",
-            "bridgeVersion": 1,
-            "variant": "ChangeMoistureMuInterior"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din4108-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "envelope"
-        },
-        {
-          "id": "change-psi-times-l-sum",
-          "capability": "din4108-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-psi-times-l-sum",
-            "bridgeVersion": 1,
-            "variant": "ChangePsiTimesLSum"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din4108-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "envelope"
-        },
-        {
-          "id": "change-rh-int",
-          "capability": "din4108-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-rh-int",
-            "bridgeVersion": 1,
-            "variant": "ChangeRhInt"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din4108-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "envelope"
-        },
-        {
-          "id": "change-solar-absorptance",
-          "capability": "din4108-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-solar-absorptance",
-            "bridgeVersion": 1,
-            "variant": "ChangeSolarAbsorptance"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din4108-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "envelope"
+          ]
         },
         {
           "id": "change-t-int-c",
@@ -790,8 +696,406 @@
               "capability": "din4108-1-mutate",
               "qualifyingKind": "verified-native-second-implementation"
             }
+          ]
+        },
+        {
+          "id": "change-rh-int",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
           ],
-          "subset": "envelope"
+          "productionDispatch": {
+            "operation": "change-rh-int",
+            "bridgeVersion": 1,
+            "variant": "ChangeRhInt"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-airtightness-n50",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-airtightness-n50",
+            "bridgeVersion": 1,
+            "variant": "ChangeAirtightnessN50"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-has-mechanical-ventilation",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-has-mechanical-ventilation",
+            "bridgeVersion": 1,
+            "variant": "ChangeHasMechanicalVentilation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bb2-details-conform",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-bb2-details-conform",
+            "bridgeVersion": 1,
+            "variant": "ChangeBb2DetailsConform"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-zone",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-zone",
+            "bridgeVersion": 1,
+            "variant": "InsertZone"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-zone",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-zone",
+            "bridgeVersion": 1,
+            "variant": "RemoveZone"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-floor-area",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-floor-area",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneFloorArea"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-heaviness",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-heaviness",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneHeaviness"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-night-ventilation",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-night-ventilation",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneNightVentilation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-zone-window",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-zone-window",
+            "bridgeVersion": 1,
+            "variant": "InsertZoneWindow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-zone-window",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-zone-window",
+            "bridgeVersion": 1,
+            "variant": "RemoveZoneWindow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-window-area",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-window-area",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneWindowArea"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-window-g-value",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-window-g-value",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneWindowGValue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-window-shading-fc",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-window-shading-fc",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneWindowShadingFc"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-element",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-element",
+            "bridgeVersion": 1,
+            "variant": "InsertElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-element",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-element",
+            "bridgeVersion": 1,
+            "variant": "RemoveElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-area",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-area",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementArea"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-adjacent",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-adjacent",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementAdjacent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-kind",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
         },
         {
           "id": "insert-layer",
@@ -799,6 +1103,7 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
+            "no-op",
             "rejected"
           ],
           "productionDispatch": {
@@ -811,16 +1116,16 @@
               "capability": "din4108-1-mutate",
               "qualifyingKind": "verified-native-second-implementation"
             }
-          ],
-          "subset": "layers"
+          ]
         },
         {
           "id": "remove-layer",
           "capability": "din4108-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-layer",
@@ -832,8 +1137,7 @@
               "capability": "din4108-1-mutate",
               "qualifyingKind": "verified-native-second-implementation"
             }
-          ],
-          "subset": "layers"
+          ]
         },
         {
           "id": "reorder-layers",
@@ -854,46 +1158,387 @@
               "capability": "din4108-1-mutate",
               "qualifyingKind": "verified-native-second-implementation"
             }
+          ]
+        },
+        {
+          "id": "change-layer-thickness",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
           ],
-          "subset": "layers"
+          "productionDispatch": {
+            "operation": "change-layer-thickness",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerThickness"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-layer-lambda",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-lambda",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerLambda"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-layer-mu",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-mu",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerMu"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-layer-material-id",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-material-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerMaterialId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-thermal-bridge",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-thermal-bridge",
+            "bridgeVersion": 1,
+            "variant": "InsertThermalBridge"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-thermal-bridge",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-thermal-bridge",
+            "bridgeVersion": 1,
+            "variant": "RemoveThermalBridge"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-thermal-bridge-psi",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-thermal-bridge-psi",
+            "bridgeVersion": 1,
+            "variant": "ChangeThermalBridgePsi"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-thermal-bridge-length",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-thermal-bridge-length",
+            "bridgeVersion": 1,
+            "variant": "ChangeThermalBridgeLength"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-orientation-deg",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-orientation-deg",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementOrientationDeg"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-inclination-deg",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-inclination-deg",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementInclinationDeg"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-delta-ug",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-delta-ug",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementDeltaUg"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-delta-uf",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-delta-uf",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementDeltaUf"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-delta-ur",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-delta-ur",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementDeltaUr"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-thermal-bridge-bb2-type",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-thermal-bridge-bb2-type",
+            "bridgeVersion": 1,
+            "variant": "ChangeThermalBridgeBb2Type"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-window-orientation",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-window-orientation",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneWindowOrientation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-window-inclination-deg",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-window-inclination-deg",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneWindowInclinationDeg"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-layer-application-type",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-application-type",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerApplicationType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-layer-compressive-class",
+          "capability": "din4108-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-compressive-class",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerCompressiveClass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din4108-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
         }
       ]
     }
-  ],
-  "family": "din4108-1-any",
-  "kinds": [
-    "change-climate-zone",
-    "change-usage",
-    "change-t-int-c",
-    "change-rh-int",
-    "change-airtightness-n50",
-    "change-has-mechanical-ventilation",
-    "change-bb2-details-conform",
-    "insert-zone",
-    "remove-zone",
-    "change-zone-floor-area",
-    "change-zone-heaviness",
-    "change-zone-night-ventilation",
-    "insert-zone-window",
-    "remove-zone-window",
-    "change-zone-window-area",
-    "change-zone-window-g-value",
-    "change-zone-window-shading-fc",
-    "insert-element",
-    "remove-element",
-    "change-element-area",
-    "change-element-adjacent",
-    "change-element-kind",
-    "insert-layer",
-    "remove-layer",
-    "reorder-layers",
-    "change-layer-thickness",
-    "change-layer-lambda",
-    "change-layer-mu",
-    "change-layer-material-id",
-    "insert-thermal-bridge",
-    "remove-thermal-bridge",
-    "change-thermal-bridge-psi",
-    "change-thermal-bridge-length"
   ]
 }

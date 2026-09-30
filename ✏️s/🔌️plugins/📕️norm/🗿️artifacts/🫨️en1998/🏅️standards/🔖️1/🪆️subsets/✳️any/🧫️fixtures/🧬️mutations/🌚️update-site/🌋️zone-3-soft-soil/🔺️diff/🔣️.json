@@ -1,0 +1,18 @@
+{
+  "artifact": null,
+  "annex": null,
+  "site": {
+    "seismicZone": "zone3",
+    "aGr": 0.8,
+    "deGroundCombo": "C-S",
+    "importanceClass": "II"
+  },
+  "buildings": null,
+  "bridges": null,
+  "assessments": null,
+  "silos": null,
+  "tanks": null,
+  "foundations": null,
+  "retainingWalls": null,
+  "towers": null
+}

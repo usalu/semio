@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeLightingGainWattsPerArea, base: &EnergyModelS
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Lighting Gain {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_watts_per_area.is_finite() || payload.new_watts_per_area < 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Lighting Gain {}: installed power density (W/m²) must be a finite non-negative value, got {}.", payload.id.0, payload.new_watts_per_area), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Lighting Gain {}: installed power density (W/m²) must be a finite non-negative value, got {}.", payload.id.0, payload.new_watts_per_area), [payload.id.0.to_string()]);
     }
     if existing.watts_per_area == payload.new_watts_per_area {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Lighting Gain {} already carries this installed power density (W/m²): {}.", payload.id.0, payload.new_watts_per_area));

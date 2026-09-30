@@ -158,8 +158,7 @@ fn encode_data_periods_line(d: &EpwDataPeriods) -> String {
 
 //#region 🔖️Record
 /// 📐️ One data record: exactly 35 comma-separated columns, spec order — no defaults, no
-/// coercion; a wrong column count is a hard decode error (contrast with energy's plugin-side
-/// `EpwWeather::parse`, which silently defaults short/malformed rows).
+/// coercion; a wrong column count is a hard decode error.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_record_line(line: &str) -> Result<EpwRecord, String> {
     let fields: Vec<&str> = line.split(',').collect();

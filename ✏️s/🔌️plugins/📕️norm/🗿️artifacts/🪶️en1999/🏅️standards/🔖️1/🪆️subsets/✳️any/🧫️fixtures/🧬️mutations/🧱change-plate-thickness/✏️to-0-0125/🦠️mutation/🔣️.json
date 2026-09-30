@@ -1,0 +1,6 @@
+{
+  "mutation": "changePlateThickness",
+  "sectionId": "sec-i120",
+  "elementId": "flange-top",
+  "newThickness": 0.0125
+}

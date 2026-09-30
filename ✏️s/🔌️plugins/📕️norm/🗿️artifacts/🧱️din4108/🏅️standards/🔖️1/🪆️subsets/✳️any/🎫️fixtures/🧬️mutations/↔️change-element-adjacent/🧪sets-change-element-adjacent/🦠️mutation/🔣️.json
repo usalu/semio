@@ -1,6 +1,0 @@
-{
-  "ChangeElementAdjacent": {
-    "elementId": "wall-north",
-    "newAdjacent": "unheated"
-  }
-}

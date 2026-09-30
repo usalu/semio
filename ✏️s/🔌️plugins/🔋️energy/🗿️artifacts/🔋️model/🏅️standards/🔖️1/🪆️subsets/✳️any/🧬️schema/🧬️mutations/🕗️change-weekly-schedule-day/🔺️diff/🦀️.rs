@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeWeeklyScheduleDay, base: &EnergyModelSnapshot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Weekly schedule {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if payload.day_index > 6 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("A week has seven days indexed 0 to 6, got {}.", payload.day_index), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("A week has seven days indexed 0 to 6, got {}.", payload.day_index), [payload.id.0.to_string()]);
     }
     if !base.model.schedules.daily.iter().any(|row| row.id == payload.new_daily_schedule_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Daily schedule {} does not exist.", payload.new_daily_schedule_id.0), [payload.new_daily_schedule_id.0.to_string()]);

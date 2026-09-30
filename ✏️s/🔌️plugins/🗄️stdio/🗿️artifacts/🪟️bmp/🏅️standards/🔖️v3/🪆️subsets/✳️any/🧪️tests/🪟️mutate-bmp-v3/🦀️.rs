@@ -159,12 +159,12 @@ mod subject {
 /// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("mutate-raster", mutate_oracle);
-    built = built.oracle("inverse", inverse_oracle).oracle("inverse-raster", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle);
+    built = built.oracle("inverse", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("mutate-raster", subject::mutate);
-        built = built.subject("inverse", subject::undo).subject("inverse-raster", subject::undo);
+        built = built.subject("mutate", subject::mutate);
+        built = built.subject("inverse", subject::undo);
     }
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]

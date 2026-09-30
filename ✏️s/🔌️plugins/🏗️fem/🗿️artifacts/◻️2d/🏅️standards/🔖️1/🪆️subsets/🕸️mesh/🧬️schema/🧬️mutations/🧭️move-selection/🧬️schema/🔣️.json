@@ -1,0 +1,257 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/move-selection/schema.json",
+  "title": "MoveSelection",
+  "description": "The `move-selection` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"moveSelection\"`, camelCase throughout. Its hard bounds (positive factors, targets named once) state exactly the payload-intrinsic breaches the diff refuses as `mutation.invariant`, so every such payload fails this schema; refusals that depend on the base (no named target exists) belong to the diff alone.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "nodeIds",
+    "regionIds",
+    "pivotX",
+    "pivotY",
+    "dx",
+    "dy",
+    "angle",
+    "sx",
+    "sy"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "moveSelection",
+      "description": "The internally tagged discriminator `#[value(tag = \"mutation\")]` puts on the wire.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "nodeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Nodes",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Nodes the transform moves; missing ones are skipped.",
+          "de": "Knoten, die die Transformation bewegt; fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": [
+            "node"
+          ],
+          "domain": "fem2d",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "regionIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Regions",
+          "de": "Bereiche"
+        },
+        "description": {
+          "en": "Regions whose outline and holes the transform moves; missing ones are skipped.",
+          "de": "Bereiche, deren Umriss und Aussparungen die Transformation bewegt; fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": [
+            "region"
+          ],
+          "domain": "fem2d",
+          "granularity": "region"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "pivotX": {
+      "type": "number",
+      "format": "double",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Pivot X",
+          "de": "Drehpunkt X"
+        },
+        "unit": "m",
+        "step": 0.1,
+        "precision": 3,
+        "description": {
+          "en": "Centre of the rotation and scaling.",
+          "de": "Zentrum der Drehung und Skalierung."
+        },
+        "group": "pivot",
+        "order": 90
+      }
+    },
+    "pivotY": {
+      "type": "number",
+      "format": "double",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Pivot Y",
+          "de": "Drehpunkt Y"
+        },
+        "unit": "m",
+        "step": 0.1,
+        "precision": 3,
+        "group": "pivot",
+        "order": 100
+      }
+    },
+    "dx": {
+      "type": "number",
+      "format": "double",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset X",
+          "de": "Versatz X"
+        },
+        "unit": "m",
+        "step": 0.1,
+        "precision": 3,
+        "snapSource": {
+          "step": true
+        },
+        "group": "offset",
+        "order": 30
+      }
+    },
+    "dy": {
+      "type": "number",
+      "format": "double",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset Y",
+          "de": "Versatz Y"
+        },
+        "unit": "m",
+        "step": 0.1,
+        "precision": 3,
+        "snapSource": {
+          "step": true
+        },
+        "group": "offset",
+        "order": 40
+      }
+    },
+    "angle": {
+      "type": "number",
+      "format": "double",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Angle",
+          "de": "Winkel"
+        },
+        "description": {
+          "en": "Counter-clockwise rotation about the pivot.",
+          "de": "Drehung gegen den Uhrzeigersinn um den Drehpunkt."
+        },
+        "unit": "rad",
+        "displayUnit": "deg",
+        "displayFactor": 57.29577951308232,
+        "step": 0.017453292519943295,
+        "softMin": -3.141592653589793,
+        "softMax": 3.141592653589793,
+        "snaps": [
+          -3.141592653589793,
+          -1.5707963267948966,
+          0,
+          1.5707963267948966,
+          3.141592653589793
+        ],
+        "group": "rotation",
+        "order": 50
+      }
+    },
+    "sx": {
+      "type": "number",
+      "format": "double",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Scale X",
+          "de": "Skalierung X"
+        },
+        "description": {
+          "en": "Factor along x about the pivot; 1 keeps the size.",
+          "de": "Faktor in x-Richtung um den Drehpunkt; 1 behält die Größe."
+        },
+        "softMin": 0.1,
+        "softMax": 10,
+        "step": 0.01,
+        "precision": 3,
+        "scale": "log",
+        "snaps": [
+          0.5,
+          1,
+          2
+        ],
+        "group": "scale",
+        "order": 60
+      }
+    },
+    "sy": {
+      "type": "number",
+      "format": "double",
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Scale Y",
+          "de": "Skalierung Y"
+        },
+        "description": {
+          "en": "Factor along y about the pivot; 1 keeps the size.",
+          "de": "Faktor in y-Richtung um den Drehpunkt; 1 behält die Größe."
+        },
+        "softMin": 0.1,
+        "softMax": 10,
+        "step": 0.01,
+        "precision": 3,
+        "scale": "log",
+        "snaps": [
+          0.5,
+          1,
+          2
+        ],
+        "group": "scale",
+        "order": 70
+      }
+    }
+  }
+}

@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeInfiltrationConstantTermCoefficient, base: &E
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Infiltration {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_constant_term_coefficient.is_finite() || payload.new_constant_term_coefficient < 0.0 {
-        return protocol::MutationOutcome::error(
+        return protocol::MutationOutcome::fatal(
             "mutation.invariant",
             format!("Infiltration {}: the constant term coefficient A must be a finite non-negative value, got {}.", payload.id.0, payload.new_constant_term_coefficient),
             [payload.id.0.to_string()],

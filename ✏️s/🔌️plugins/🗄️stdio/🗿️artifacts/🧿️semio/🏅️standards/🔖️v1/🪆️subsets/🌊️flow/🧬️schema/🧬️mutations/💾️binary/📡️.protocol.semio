@@ -35,3 +35,5 @@ record set-edge-endpoints tag=10
 field payload bytes
 record set-edge-kind tag=11
 field payload bytes
+record drag-nodes tag=12
+field payload bytes

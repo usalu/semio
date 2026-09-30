@@ -10,10 +10,10 @@ pub fn diff(payload: &super::RenameElectricalLoadCenter, base: &EnergyModelSnaps
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Electrical load center {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if payload.new_name.trim().is_empty() {
-        return protocol::MutationOutcome::error("mutation.invariant", "A electrical load center name must not be blank.", [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "A electrical load center name must not be blank.", [payload.id.0.to_string()]);
     }
     if base.model.electrical_load_centers.iter().any(|other| other.id != payload.id && other.name == payload.new_name) {
-        return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Another electrical load center is already named \"{}\".", payload.new_name), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Another electrical load center is already named \"{}\".", payload.new_name), [payload.id.0.to_string()]);
     }
     if existing.name == payload.new_name {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Electrical load center {} already carries this name: {}.", payload.id.0, payload.new_name));

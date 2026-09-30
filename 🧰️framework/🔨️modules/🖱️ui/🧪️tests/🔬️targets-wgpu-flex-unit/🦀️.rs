@@ -23,7 +23,7 @@ impl Fixture {
     fn push(&mut self, kind: LayoutNodeKind, parent: Option<usize>, authored: Option<&LayoutSpec>) -> usize {
         let index = self.children.len();
         let parent_kind = parent.map(|parent| self.kinds[parent]);
-        assert!(self.flex.push(kind, parent, authored, &self.metrics, parent_kind), "push {index}");
+        assert!(self.flex.push(kind, parent, authored, &self.metrics, parent_kind, None), "push {index}");
         self.children.push(Vec::new());
         self.parents.push(parent);
         self.kinds.push(kind);
@@ -474,7 +474,7 @@ fn the_flex_tree_releases_exactly_one_node_per_close_grant() {
     let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
     let mut flex = FlexTree::new();
     for index in 0..4 {
-        assert!(flex.push(LayoutNodeKind::Leaf, if index == 0 { None } else { Some(0) }, None, &metrics, None));
+        assert!(flex.push(LayoutNodeKind::Leaf, if index == 0 { None } else { Some(0) }, None, &metrics, None, None));
     }
     for step in (1..=4).rev() {
         assert_eq!(flex.len(), step);

@@ -2,7 +2,9 @@ use super::*;
 
 #[test]
 fn authored_slider_labels_survive_json_dag_and_chrome() {
-    let fixture = crate::os_pack::json::parse(include_str!("../../../../../../../../../../../✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🏷️slider-labels.json")).unwrap();
+    let fixture = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🏷️slider-labels.json")).unwrap();
+    let third_party: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏷️slider-labels.json")).unwrap();
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&crate::os_pack::json::to_json_string(&fixture)).unwrap(), third_party);
     for row in fixture.get("cases").and_then(crate::os_pack::json::Value::as_array).unwrap() {
         let widget_value = row.get("widget").cloned().expect("fixture widget");
         let widget: Widget = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(&widget_value)).unwrap();

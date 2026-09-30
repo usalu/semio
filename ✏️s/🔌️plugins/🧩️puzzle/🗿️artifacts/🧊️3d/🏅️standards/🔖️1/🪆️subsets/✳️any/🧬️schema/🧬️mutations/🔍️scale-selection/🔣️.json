@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection",
+  "semanticKind": "scale-selection",
+  "displayName": "Scale Selection",
+  "emoji": "🔍️",
+  "aggregateVariant": "ScaleSelection",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "scale-selection",
+  "binaryTag": 37,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

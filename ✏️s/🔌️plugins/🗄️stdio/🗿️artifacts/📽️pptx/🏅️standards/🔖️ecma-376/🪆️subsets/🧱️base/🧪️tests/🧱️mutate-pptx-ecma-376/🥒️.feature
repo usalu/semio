@@ -50,7 +50,7 @@ Feature: Apply every typed PPTX ECMA-376 mutation to a real-world presentation
   so no scenario can pass merely because the reference composition declined to error.
   `mutate-<kind>` fails unless the mutation MOVES the very projection the case is compared through:
   a kind that applies cleanly and changes nothing observable would otherwise report a green for a
-  mutation nobody watched, and until this wave all nine of them did exactly that. `inverse-<kind>`
+  mutation nobody watched, and until wave 14 every one of them did exactly that. `inverse-<kind>`
   applies the mutation, applies its own independently computed inverse, and fails with the first
   diverging field unless the result projects onto exactly what the original presentation projects
   onto. `identity-round-trip` fails unless the rebuilt archive differs from the input AND its
@@ -64,6 +64,14 @@ Feature: Apply every typed PPTX ECMA-376 mutation to a real-world presentation
   ../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🦀️component.rs, which READS this table rather
   than restating it, so the two can never drift apart.
 
+  Every `params` cell is the leaf's own wire payload, exactly what `PptxMutation::payload_value()`
+  emits: shapes are the tagged `PptxShape` wire (`shapeKind`, a `textFrame` of paragraphs and runs,
+  an EMU `position`), shape targets are `slideIndex`/`shapeIndex`, and `set-snapshot` carries a whole
+  replacement `PptxSnapshot` whose typed presentation is one slide with one text box. Both
+  implementations read that one wire: the reference by field name, the subject through
+  `Mutation::from_payload_value`, whose re-emitted payload must equal the row exactly; the subject
+  undoes every kind with `Mutation::inverse` itself.
+
   @id-mutate
   @level-exhaustive
   @mode-differential
@@ -76,26 +84,15 @@ Feature: Apply every typed PPTX ECMA-376 mutation to a real-world presentation
     Then the oracle and the subject agree on the semantic projection
 
     Examples:
-      | id                  | params                                                                                                             |
-      | set-snapshot         | {"slides": [{"shapes": [{"kind": "textBox", "text": "Replacement Deck", "position": {"x": 0, "y": 0, "cx": 100, "cy": 100}}]}]} |
-      | insert-slide         | {"index": 3, "slide": {"shapes": [{"kind": "textBox", "text": "Inserted Slide", "position": {"x": 457200, "y": 274638, "cx": 8229600, "cy": 1143000}}]}} |
-      | remove-slide         | {"index": 2}                                                                                                      |
-      | move-slide           | {"from": 0, "to": 6}                                                                                              |
-      | insert-shape         | {"slideIndex": 0, "shapeIndex": 2, "shape": {"kind": "textBox", "text": "Added Shape", "position": {"x": 100, "y": 100, "cx": 500, "cy": 300}}} |
-      | remove-shape         | {"slideIndex": 1, "shapeIndex": 2}                                                                                |
-      | set-shape-text       | {"slideIndex": 0, "shapeIndex": 0, "text": "Changed Title"}                                                      |
-      | set-shape-position   | {"slideIndex": 6, "shapeIndex": 1, "position": {"x": 1, "y": 2, "cx": 3, "cy": 4}}                                |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real presentation
-    Given the real input presentation shared://📽️.pptx
-    When the no-mutation mutation is applied with its parameters
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the oracle and the subject agree on the semantic projection
+      | id                 | params |
+      | set-snapshot       | {"snapshot":{"schema":"stdio.pptx","opc":{"parts":[],"contentTypes":{"defaults":[["rels","application/vnd.openxmlformats-package.relationships+xml"],["xml","application/xml"]],"overrides":[["/ppt/presentation.xml","application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"]]},"relationships":{},"comment":""},"xmlParts":[],"presentation":{"slides":[{"shapes":[{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Replacement Deck","bold":false,"italic":false}]}],"position":{"x":0,"y":0,"cx":100,"cy":100}}]}]}}} |
+      | insert-slide       | {"index":3,"slide":{"shapes":[{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Inserted Slide","bold":false,"italic":false}]}],"position":{"x":457200,"y":274638,"cx":8229600,"cy":1143000}}]}} |
+      | remove-slide       | {"index":2} |
+      | move-slide         | {"from":0,"to":6} |
+      | insert-shape       | {"slideIndex":0,"shapeIndex":2,"shape":{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Added Shape","bold":false,"italic":false}]}],"position":{"x":100,"y":100,"cx":500,"cy":300}}} |
+      | remove-shape       | {"slideIndex":1,"shapeIndex":2} |
+      | set-shape-text     | {"slideIndex":0,"shapeIndex":0,"textFrame":[{"runs":[{"text":"Changed Title","bold":false,"italic":false}]}]} |
+      | set-shape-position | {"slideIndex":6,"shapeIndex":1,"position":{"x":1,"y":2,"cx":3,"cy":4}} |
 
   @id-inverse
   @level-exhaustive
@@ -109,26 +106,15 @@ Feature: Apply every typed PPTX ECMA-376 mutation to a real-world presentation
     Then the restored presentation's semantic projection matches what the original presentation's does
 
     Examples:
-      | id                  | params                                                                                                             |
-      | set-snapshot         | {"slides": [{"shapes": [{"kind": "textBox", "text": "Replacement Deck", "position": {"x": 0, "y": 0, "cx": 100, "cy": 100}}]}]} |
-      | insert-slide         | {"index": 3, "slide": {"shapes": [{"kind": "textBox", "text": "Inserted Slide", "position": {"x": 457200, "y": 274638, "cx": 8229600, "cy": 1143000}}]}} |
-      | remove-slide         | {"index": 2}                                                                                                      |
-      | move-slide           | {"from": 0, "to": 6}                                                                                              |
-      | insert-shape         | {"slideIndex": 0, "shapeIndex": 2, "shape": {"kind": "textBox", "text": "Added Shape", "position": {"x": 100, "y": 100, "cx": 500, "cy": 300}}} |
-      | remove-shape         | {"slideIndex": 1, "shapeIndex": 2}                                                                                |
-      | set-shape-text       | {"slideIndex": 0, "shapeIndex": 0, "text": "Changed Title"}                                                      |
-      | set-shape-position   | {"slideIndex": 6, "shapeIndex": 1, "position": {"x": 1, "y": 2, "cx": 3, "cy": 4}}                                |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-property
-  Scenario: Undoing no-mutation restores the presentation
-    Given the real input presentation shared://📽️.pptx
-    When the no-mutation mutation is applied and then undone with its own inverse
-      """
-      {"kind": "no-mutation", "params": {}}
-      """
-    Then the restored presentation's semantic projection matches what the original presentation's does
+      | id                 | params |
+      | set-snapshot       | {"snapshot":{"schema":"stdio.pptx","opc":{"parts":[],"contentTypes":{"defaults":[["rels","application/vnd.openxmlformats-package.relationships+xml"],["xml","application/xml"]],"overrides":[["/ppt/presentation.xml","application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"]]},"relationships":{},"comment":""},"xmlParts":[],"presentation":{"slides":[{"shapes":[{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Replacement Deck","bold":false,"italic":false}]}],"position":{"x":0,"y":0,"cx":100,"cy":100}}]}]}}} |
+      | insert-slide       | {"index":3,"slide":{"shapes":[{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Inserted Slide","bold":false,"italic":false}]}],"position":{"x":457200,"y":274638,"cx":8229600,"cy":1143000}}]}} |
+      | remove-slide       | {"index":2} |
+      | move-slide         | {"from":0,"to":6} |
+      | insert-shape       | {"slideIndex":0,"shapeIndex":2,"shape":{"shapeKind":"textBox","textFrame":[{"runs":[{"text":"Added Shape","bold":false,"italic":false}]}],"position":{"x":100,"y":100,"cx":500,"cy":300}}} |
+      | remove-shape       | {"slideIndex":1,"shapeIndex":2} |
+      | set-shape-text     | {"slideIndex":0,"shapeIndex":0,"textFrame":[{"runs":[{"text":"Changed Title","bold":false,"italic":false}]}]} |
+      | set-shape-position | {"slideIndex":6,"shapeIndex":1,"position":{"x":1,"y":2,"cx":3,"cy":4}} |
 
   @id-identity-round-trip
   @level-long

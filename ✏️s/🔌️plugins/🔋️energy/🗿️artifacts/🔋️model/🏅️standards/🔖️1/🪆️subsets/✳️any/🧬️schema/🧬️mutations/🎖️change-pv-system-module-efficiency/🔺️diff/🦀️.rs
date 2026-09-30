@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangePvSystemModuleEfficiency, base: &EnergyModelS
         return protocol::MutationOutcome::error("mutation.target-missing", format!("PV system {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !(payload.new_module_efficiency > 0.0 && payload.new_module_efficiency <= 1.0) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("PV system {}: module efficiency must be a fraction in (0, 1], got {}.", payload.id.0, payload.new_module_efficiency), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("PV system {}: module efficiency must be a fraction in (0, 1], got {}.", payload.id.0, payload.new_module_efficiency), [payload.id.0.to_string()]);
     }
     if existing.module_efficiency == payload.new_module_efficiency {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("PV system {} already carries this module efficiency: {}.", payload.id.0, payload.new_module_efficiency));

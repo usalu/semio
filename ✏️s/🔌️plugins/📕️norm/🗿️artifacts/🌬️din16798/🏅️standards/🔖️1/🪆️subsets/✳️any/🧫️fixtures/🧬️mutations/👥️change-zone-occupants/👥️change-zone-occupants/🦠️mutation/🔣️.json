@@ -1,0 +1,6 @@
+{
+  "ChangeZoneOccupants": {
+    "zoneId": "zone-office",
+    "newOccupants": 24
+  }
+}

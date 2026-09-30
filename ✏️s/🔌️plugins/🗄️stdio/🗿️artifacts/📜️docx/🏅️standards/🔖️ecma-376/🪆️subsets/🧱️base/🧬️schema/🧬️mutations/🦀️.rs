@@ -164,7 +164,7 @@ pub fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation)
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 
@@ -172,6 +172,13 @@ pub fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation)
 /// `🥒️.feature` row carries — through the derive's generic `from_payload_value`.
 pub fn decode_docx_mutation_payload(kind: &str, payload: &str) -> Result<DocxMutation, String> {
     protocol::os_pack::from_json_str(payload).and_then(|value| <DocxMutation as Mutation<DocxSnapshot>>::from_payload_value(kind, value)).map_err(|error| error.to_string())
+}
+
+/// 🔙️ The operations that undo `mutation` on `base` — the aggregate's own leaf-owned `Mutation::inverse`, the law a
+/// case's inverse scenario holds this implementation to.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_docx_mutation(mutation: &DocxMutation, base: &DocxSnapshot) -> Vec<DocxMutation> {
+    <DocxMutation as Mutation<DocxSnapshot>>::inverse(mutation, base)
 }
 //#endregion 🔖️Apply
 
@@ -443,7 +450,7 @@ pub(crate) fn agg_diff(this: &DocxMutation, base: &DocxSnapshot) -> protocol::Mu
     if is_addressed_xml_mutation(this) {
         return match prepare_addressed_xml_mutation(base, this) {
             Ok(prepared) => protocol::MutationOutcome::new(prepared.diff),
-            Err(message) => protocol::MutationOutcome::error("stdio.docx.xml-address.invalid", message, mutation_target(this)),
+            Err(message) => protocol::MutationOutcome::error("mutation.target-mismatch", message, mutation_target(this)),
         };
     }
     protocol::MutationOutcome::new(apply_to_snapshot(base, this).map_or_else(DocxDiff::default, |next| diff_set_snapshot(base, &next)))
@@ -1036,22 +1043,3 @@ mod tests;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
-
-#[cfg(test)]
-mod w2w_debug_probe {
-    use super::*;
-    #[test]
-    fn debug_w2w_wire_probe() {
-        let readme = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(include_bytes!("../../🧫️fixtures/📜️example-readme.docx")).expect("readme");
-        let address = docx_block_run_address(&readme, &DocxBlockPath { segments: vec![], index: 177 }, 0).expect("run 177/0");
-        println!("[DEBUG] w2w address177 {}", protocol::os_pack::to_json_string(&address));
-        for op in demo_mutation_cases() {
-            println!("[DEBUG] w2w demo {} {}", op.descriptor().semantic_kind, protocol::os_pack::to_json_string(&op));
-        }
-        let strict = crate::standards::v_ecma_376::subsets::strict::schema::mutations::DocxStrictMutation::SetSnapshot(crate::standards::v_ecma_376::subsets::strict::schema::mutations::set_snapshot::SetSnapshot { snapshot: crate::standards::v_ecma_376::subsets::strict::schema::mutations::stamp_conformance_class(DocxSnapshot::default(), true) });
-        println!("[DEBUG] w2w strict-snapshot {}", protocol::os_pack::to_json_string(&strict));
-        let transitional = crate::standards::v_ecma_376::subsets::transitional::schema::mutations::DocxTransitionalMutation::SetSnapshot(crate::standards::v_ecma_376::subsets::transitional::schema::mutations::set_snapshot::SetSnapshot { snapshot: crate::standards::v_ecma_376::subsets::transitional::schema::mutations::stamp_conformance_class(DocxSnapshot::default(), false) });
-        println!("[DEBUG] w2w transitional-snapshot {}", protocol::os_pack::to_json_string(&transitional));
-        println!("[DEBUG] w2w vml-markup {}", protocol::os_pack::to_json_string(&crate::standards::v_ecma_376::subsets::strict::schema::mutations::vml_markup()));
-    }
-}

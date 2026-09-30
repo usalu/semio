@@ -754,7 +754,7 @@ describe("shell channel payload codec", () => {
       { kind: "transactionRedone", groupId: "edit_8" },
       { kind: "artifact", pack: Uint8Array.from([1, 2, 3, 4]), spr: Uint8Array.from([5, 6]) },
       { kind: "exported", port: "pdf", descriptor: Uint8Array.from([1]), data: Uint8Array.from([2, 3]) },
-      { kind: "error", code: "mutation.rejected", message: "the document is read-only for this actor" },
+      { kind: "error", code: "app.command.rejected", message: "the document is read-only for this actor" },
     ];
     for (const frame of frames) expect(shellAppFrameToJson(frame)).toEqual(appPayload(frame.kind));
     expect(frames.length).toBe(appPayloadFixtures.filter((row) => row.direction === "shell_to_gateway").length);

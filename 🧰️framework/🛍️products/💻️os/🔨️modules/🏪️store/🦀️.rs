@@ -1639,7 +1639,7 @@ where
                     return Err("displaced envelope reached initial snapshot handoff without an exact terminal structural shell".into());
                 }
                 let envelope = self.envelope.take().expect("displaced envelope authority remains present");
-                let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, edit_messages, conflicts, transitions } = envelope.into_owners();
+                let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, edit_messages, conflicts, transitions, history_shape: _ } = envelope.into_owners();
                 let ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives } = vcs;
                 assert!(
                     schema.is_empty()
@@ -2766,6 +2766,10 @@ pub struct ArtifactEnvelopeOwners<P, Mutation> {
     /// `active_alternative_id` and the change/checkpoint/alternative ledgers are its projection
     /// (`crate::os_spr::fold_history`), never an independent source of truth.
     pub transitions: Vec<crate::os_spr::MutationEnvelope>,
+    /// 🗂️ The transitions this history holds ([`crate::os_spr::HistoryShape`]): a config store's history holds undo and
+    /// redo only, so its store refuses every other transition at dispatch and at remote admission — the same law its
+    /// retained loader applies.
+    pub history_shape: crate::os_spr::HistoryShape,
 }
 
 /// 📸️ One immutable envelope observation; cursor and every history ledger share one captured decision.
@@ -2882,7 +2886,7 @@ impl<P, Mutation> ArtifactEnvelope<P, Mutation> {
     where
         Mutation: self::Mutation<P>,
     {
-        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, mut edit_messages, conflicts, transitions } = self.into_owners();
+        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, mut edit_messages, conflicts, transitions, history_shape: _ } = self.into_owners();
         let ArtifactVcs { initial_snapshot, mut edits, mut changes, mut checkpoints, mut alternatives } = vcs;
         while let Some(edit) = edits.pop() {
             retire_scratch_edits::<P, Mutation>([edit]);
@@ -2917,7 +2921,7 @@ impl<P, Mutation> ArtifactEnvelope<P, Mutation> {
         {
             return Err(self);
         }
-        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, edit_messages, conflicts, transitions } = self.into_owners();
+        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, edit_messages, conflicts, transitions, history_shape: _ } = self.into_owners();
         let ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives } = vcs;
         drop((schema, id, edits, changes, checkpoints, alternatives, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, edit_messages, conflicts, transitions));
         Ok(initial_snapshot)
@@ -3106,6 +3110,22 @@ impl<Mutation> ArtifactCommand<Mutation> {
             Self::SetMergePolicy { .. } => Some(ArtifactProjectionCause::PolicyChange),
             Self::ResolveConflict { .. } => Some(ArtifactProjectionCause::RemoteIngest),
             Self::Supersede { .. } | Self::CreateAlternativeWithSupersede { .. } => Some(ArtifactProjectionCause::Replay),
+        }
+    }
+
+    /// 🏷️ Every kind of history transition this command may author, in authoring order: what the store's
+    /// [`crate::os_spr::HistoryShape`] must admit before the command runs.
+    pub fn history_transition_kinds(&self) -> &'static [crate::os_spr::HistoryTransitionKind] {
+        use crate::os_spr::HistoryTransitionKind::{Branch, Checkout, Commit, Reinstate, Revert, Supersede};
+        match self {
+            Self::Undo | Self::UndoWithPolicy { .. } | Self::UndoInLane { .. } => &[Revert],
+            Self::Redo | Self::RedoInLane { .. } => &[Reinstate],
+            Self::CommitCheckpoint { .. } => &[Commit],
+            Self::CreateAlternative { .. } => &[Commit, Branch],
+            Self::SwitchAlternative { .. } | Self::CheckoutCheckpoint { .. } => &[Checkout],
+            Self::Supersede { .. } => &[Supersede],
+            Self::CreateAlternativeWithSupersede { .. } => &[Commit, Branch, Supersede],
+            Self::Apply { .. } | Self::ApplyInLane { .. } | Self::AmendLast { .. } | Self::AmendLastInLane { .. } | Self::IngestRemote { .. } | Self::PruneDrafts | Self::SetMergePolicy { .. } | Self::ResolveConflict { .. } => &[],
         }
     }
 }
@@ -4869,12 +4889,12 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
         P: Send + Sync + 'static,
     {
         if self.close_started {
-            return Err(crate::os_spr::MutationApplyError::new("presence.store.closed", "presence store no longer admits local mutations"));
+            return Err(crate::os_spr::MutationApplyError::new("mutation.apply.store-closed", "presence store no longer admits local mutations"));
         }
         if mutations.is_empty() {
             return Ok(());
         }
-        let previous = self.local_read().map_err(|reason| crate::os_spr::MutationApplyError::new("presence.local.owner", reason))?;
+        let previous = self.local_read().map_err(|reason| crate::os_spr::MutationApplyError::new("mutation.apply.local-owner", reason))?;
         let mut candidate = self.local.as_ref().clone();
         for mutation in mutations {
             candidate = mutation.diff(&candidate).diff().apply(&candidate)?;
@@ -10330,6 +10350,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDecoder<P
                 edit_messages: ArtifactEditMessageLedger::new(),
                 conflicts: Vec::new(),
                 transitions: Vec::new(),
+                history_shape: crate::os_spr::HistoryShape::Document,
             });
             self.pending_completed = Some(Box::new(ArtifactEnvelopeCompletedRecordOwner::new(envelope, Arc::clone(&self.initial_snapshot_factory), Arc::clone(&self.mutation_factory))));
         }
@@ -11467,11 +11488,15 @@ where
 pub type ConfigEnvelope<C, ConfigMutation> = ArtifactEnvelope<C, ConfigMutation>;
 pub type ConfigStore<C, ConfigMutation> = ArtifactStore<C, ConfigMutation>;
 
+/// 🎚️ A config store's envelope: a document envelope whose history holds undo and redo only
+/// ([`crate::os_spr::HistoryShape::Config`]).
 pub async fn create_config_envelope<C, ConfigMutation>(schema: &str, id: &str, initial_snapshot: C, backbone: Option<ArtifactBackboneRef>) -> ConfigEnvelope<C, ConfigMutation>
 where
     C: Clone,
 {
-    create_document_envelope(schema, id, initial_snapshot, backbone)
+    let mut envelope = create_document_envelope(schema, id, initial_snapshot, backbone);
+    envelope.history_shape = crate::os_spr::HistoryShape::Config;
+    envelope
 }
 
 /// 🧮️ Config snapshots use the same DSL law as documents — `ConfigRecord` marks config types.
@@ -11521,6 +11546,7 @@ where
         edit_messages: ArtifactEditMessageLedger::new(),
         conflicts: Vec::new(),
         transitions: Vec::new(),
+        history_shape: crate::os_spr::HistoryShape::Document,
     })
 }
 
@@ -12322,15 +12348,10 @@ fn mutation_meta_from_history_op_meta(meta: crate::os_spr::HistoryOpMeta) -> Res
     ))
 }
 
+/// ⚖️ Persistence admits exactly the frozen outcome vocabulary ([`protocol::OUTCOME_CODES`] plus the
+/// `mutation.apply.<detail>` family), each code at the one level it fixes.
 async fn expected_mutation_message_level(code: &str) -> Option<crate::os_dsl::Severity> {
-    match code {
-        "mutation.target-missing" => Some(crate::os_dsl::Severity::Error),
-        "mutation.no-op" | "mutation.partial" | "mutation.clamped" => Some(crate::os_dsl::Severity::Warning),
-        "mutation.duplicate-id" | "mutation.invariant" => Some(crate::os_dsl::Severity::Fatal),
-        "mutation.cascade" => Some(crate::os_dsl::Severity::Info),
-        code if code.starts_with("mutation.apply.") => Some(crate::os_dsl::Severity::Fatal),
-        _ => None,
-    }
+    protocol::outcome_code_level(code)
 }
 
 async fn validate_persisted_message(message: &crate::os_spr::MutationMessage, operation_count: Option<usize>) -> Result<(), VcsError> {
@@ -12935,6 +12956,7 @@ where
         edit_messages: ArtifactEditMessageLedger::from_preflighted_entries(edit_messages),
         conflicts,
         transitions,
+        history_shape: crate::os_spr::HistoryShape::Document,
     });
     let composed = match &log.composition {
         Some(composition) => apply_history_composition(&mut envelope, composition).await.map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1))),
@@ -13146,6 +13168,7 @@ where
         edit_messages: ArtifactEditMessageLedger::from_preflighted_entries(edit_messages),
         conflicts,
         transitions,
+        history_shape: crate::os_spr::HistoryShape::Document,
     });
     settle_parsed_envelope(envelope).await
 }
@@ -13370,9 +13393,21 @@ fn print_supersede_inputs<Op: OpText>(out: &mut String, inputs: &[SupersedeInput
     Ok(())
 }
 
-/// 📥️ Parses the indented input lines [`print_supersede_inputs`] prints; at least one input is required.
-fn parse_supersede_inputs<Op: OpText>(lines: &[&str]) -> Result<Vec<SupersedeInput<Op>>, TextError> {
+/// 📥️ Parses the indented input lines [`print_supersede_inputs`] prints; at least one input is required. All-or-nothing:
+/// on any failure every replacement parsed so far retires through its technology's cold disposal.
+fn parse_supersede_inputs<P, Op: OpText + self::Mutation<P>>(lines: &[&str]) -> Result<Vec<SupersedeInput<Op>>, TextError> {
     let mut inputs: Vec<SupersedeInput<Op>> = Vec::new();
+    match parse_supersede_input_lines(lines, &mut inputs) {
+        Ok(()) => Ok(inputs),
+        Err(error) => {
+            retire_supersede_inputs::<P, Op>(inputs);
+            Err(error)
+        }
+    }
+}
+
+/// 📥️ Parses supersede input lines into `inputs`, leaving every parsed input there on failure.
+fn parse_supersede_input_lines<Op: OpText>(lines: &[&str], inputs: &mut Vec<SupersedeInput<Op>>) -> Result<(), TextError> {
     let mut awaiting_replacement = false;
     for raw in lines {
         if let Some(operation) = raw.strip_prefix("    ") {
@@ -13404,7 +13439,7 @@ fn parse_supersede_inputs<Op: OpText>(lines: &[&str]) -> Result<Vec<SupersedeInp
     if inputs.is_empty() {
         return Err(crate::os_dsl::__rt::field_error("supersede requires at least one input line"));
     }
-    Ok(inputs)
+    Ok(())
 }
 
 /// 🎯️ Binary twin of [`print_supersede_inputs`]: `count varint | (target str | 0 u8 | op len varint | op bytes | 1 u8)*`.
@@ -13425,22 +13460,35 @@ fn write_supersede_inputs<Op: OpBinary>(out: &mut Vec<u8>, inputs: &[SupersedeIn
     Ok(())
 }
 
-fn read_supersede_inputs<Op: OpBinary>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Vec<SupersedeInput<Op>>, crate::os_spr::ProtocolError> {
+/// 📥️ Reads a supersede command's inputs all-or-nothing: on any failure every replacement decoded so far retires through
+/// its technology's cold disposal, so a refused command never drops a live operation.
+fn read_supersede_inputs<P, Op: OpBinary + self::Mutation<P>>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Vec<SupersedeInput<Op>>, CommandDecodeError> {
     let count = reader.read_varint_u64()?;
-    let mut inputs = Vec::with_capacity(count.min(1_024) as usize);
-    for _ in 0..count {
-        let target = MutationId(read_command_str(reader)?);
-        let replacement = match reader.read_u8()? {
-            0 => {
-                let len = reader.read_varint_u64()?;
-                Some(Op::decode_op(reader.read_bytes(len as usize)?)?)
+    let mut inputs = Vec::with_capacity(count.min(reader.remaining() as u64) as usize);
+    for index in 0..count as usize {
+        match read_supersede_input(reader) {
+            Ok(input) => inputs.push(input),
+            Err(error) => {
+                retire_supersede_inputs::<P, Op>(inputs);
+                return Err(match error {
+                    CommandDecodeError::Operation { error, .. } => CommandDecodeError::Operation { index, error },
+                    layout => layout,
+                });
             }
-            1 => None,
-            tag => return Err(crate::os_spr::ProtocolError::Malformed { what: "supersede input tag", offset: 0, detail: format!("unknown supersede input tag {tag}") }),
-        };
-        inputs.push(SupersedeInput { target, replacement });
+        }
     }
     Ok(inputs)
+}
+
+/// 📥️ One supersede input: its target and its replacement operation or withdrawal tag.
+fn read_supersede_input<Op: OpBinary>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<SupersedeInput<Op>, CommandDecodeError> {
+    let target = MutationId(read_command_str(reader)?);
+    let replacement = match reader.read_u8()? {
+        0 => Some(read_command_op(reader).map_err(|error| CommandDecodeError::Operation { index: 0, error })?),
+        1 => None,
+        tag => return Err(crate::os_spr::ProtocolError::Malformed { what: "supersede input tag", offset: reader.position() as u64, detail: format!("unknown supersede input tag {tag}") }.into()),
+    };
+    Ok(SupersedeInput { target, replacement })
 }
 
 //#region 🔖️OpCodec
@@ -13640,13 +13688,21 @@ async fn print_indented_ops<Op: OpText>(out: &mut String, mutations: &[Op]) -> R
 
 /// 📥️ Parses every already-2-space-indented body line of an `apply`/`amend` command as one
 /// operation each — the command-level twin of `replay_ops`'s indented-op-line branch.
-async fn parse_indented_ops<Op: OpText>(body_lines: &[&str]) -> Result<Vec<Op>, TextError> {
+/// All-or-nothing: on any failure every operation parsed so far retires through its technology's cold disposal.
+async fn parse_indented_ops<P, Op: OpText + self::Mutation<P>>(body_lines: &[&str]) -> Result<Vec<Op>, TextError> {
     let mut mutations = Vec::with_capacity(body_lines.len());
     for raw in body_lines {
-        if !raw.starts_with("  ") {
-            return Err(crate::os_dsl::__rt::field_error(format!("expected a 2-space-indented op line, got: {raw:?}")));
+        let parsed = match raw.starts_with("  ") {
+            true => Op::parse_op(raw.trim()),
+            false => Err(crate::os_dsl::__rt::field_error(format!("expected a 2-space-indented op line, got: {raw:?}"))),
+        };
+        match parsed {
+            Ok(operation) => mutations.push(operation),
+            Err(error) => {
+                retire_operations::<P, Op>(mutations);
+                return Err(error);
+            }
         }
-        mutations.push(Op::parse_op(raw.trim())?);
     }
     Ok(mutations)
 }
@@ -13771,7 +13827,7 @@ pub async fn print_command<Op: OpText>(command: &ArtifactCommand<Op>) -> Result<
 
 /// 📥️ Parses a `print_command`-produced (or hand-authored) command text back into a
 /// `ArtifactCommand`. LAW: `parse_command(&print_command(c)?) == Ok(c)` for every `c`.
-pub async fn parse_command<Op: OpText>(text: &str) -> Result<ArtifactCommand<Op>, TextError> {
+pub async fn parse_command<P, Op: OpText + self::Mutation<P>>(text: &str) -> Result<ArtifactCommand<Op>, TextError> {
     let all_lines: Vec<&str> = text.lines().collect();
     let mut header: Option<(u32, &str)> = None;
     let mut body_start = all_lines.len();
@@ -13791,7 +13847,7 @@ pub async fn parse_command<Op: OpText>(text: &str) -> Result<ArtifactCommand<Op>
     match header_line {
         CommandHeaderLine::Apply { description, transaction, tool } => {
             let transaction = transaction_from_text(transaction, tool)?;
-            let mutations = parse_indented_ops(&body_lines).await?;
+            let mutations = parse_indented_ops::<P, Op>(&body_lines).await?;
             if mutations.is_empty() {
                 return Err(crate::os_dsl::__rt::field_error("apply requires at least one operation line"));
             }
@@ -13804,7 +13860,7 @@ pub async fn parse_command<Op: OpText>(text: &str) -> Result<ArtifactCommand<Op>
                 None
             } else {
                 let dedented = dedent_command_lines(&body_lines).await?;
-                Some(Box::new(Box::pin(parse_command::<Op>(&dedented)).await?))
+                Some(Box::new(Box::pin(parse_command::<P, Op>(&dedented)).await?))
             };
             Ok(ArtifactCommand::UndoWithPolicy { policy, semantic_command })
         }
@@ -13814,7 +13870,7 @@ pub async fn parse_command<Op: OpText>(text: &str) -> Result<ArtifactCommand<Op>
         CommandHeaderLine::SwitchAlternative { id } => Ok(ArtifactCommand::SwitchAlternative { alternative_id: id }),
         CommandHeaderLine::Checkout { id } => Ok(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: id }),
         CommandHeaderLine::Amend { key } => {
-            let mutations = parse_indented_ops(&body_lines).await?;
+            let mutations = parse_indented_ops::<P, Op>(&body_lines).await?;
             if mutations.is_empty() {
                 return Err(crate::os_dsl::__rt::field_error("amend requires at least one operation line"));
             }
@@ -13823,25 +13879,27 @@ pub async fn parse_command<Op: OpText>(text: &str) -> Result<ArtifactCommand<Op>
         CommandHeaderLine::PruneDrafts => Ok(ArtifactCommand::PruneDrafts),
         CommandHeaderLine::ApplyInLane { description, lane, transaction, tool } => {
             let transaction = transaction_from_text(transaction, tool)?;
-            let mutations = parse_indented_ops(&body_lines).await?;
+            let lane = parse_history_lane_token(&lane).await?;
+            let mutations = parse_indented_ops::<P, Op>(&body_lines).await?;
             if mutations.is_empty() {
                 return Err(crate::os_dsl::__rt::field_error("apply-in-lane requires at least one operation line"));
             }
-            Ok(ArtifactCommand::ApplyInLane { mutations, description, lane: parse_history_lane_token(&lane).await?, transaction })
+            Ok(ArtifactCommand::ApplyInLane { mutations, description, lane, transaction })
         }
         CommandHeaderLine::AmendInLane { key, lane } => {
-            let mutations = parse_indented_ops(&body_lines).await?;
+            let lane = parse_history_lane_token(&lane).await?;
+            let mutations = parse_indented_ops::<P, Op>(&body_lines).await?;
             if mutations.is_empty() {
                 return Err(crate::os_dsl::__rt::field_error("amend-in-lane requires at least one operation line"));
             }
-            Ok(ArtifactCommand::AmendLastInLane { mutations, coalesce_key: key, lane: parse_history_lane_token(&lane).await? })
+            Ok(ArtifactCommand::AmendLastInLane { mutations, coalesce_key: key, lane })
         }
         CommandHeaderLine::UndoInLane { lane } => Ok(ArtifactCommand::UndoInLane { lane: parse_history_lane_token(&lane).await? }),
         CommandHeaderLine::RedoInLane { lane } => Ok(ArtifactCommand::RedoInLane { lane: parse_history_lane_token(&lane).await? }),
         CommandHeaderLine::SetMergePolicy { policy } => Ok(ArtifactCommand::SetMergePolicy { policy: parse_merge_policy_token(&policy).await? }),
         CommandHeaderLine::ResolveConflict { conflict_id, resolution } => Ok(ArtifactCommand::ResolveConflict { conflict_id, resolution: parse_conflict_resolution_token(&resolution).await? }),
-        CommandHeaderLine::Supersede { scope } => Ok(ArtifactCommand::Supersede { scope, inputs: parse_supersede_inputs(&body_lines)? }),
-        CommandHeaderLine::CreateAlternativeWithSupersede { name } => Ok(ArtifactCommand::CreateAlternativeWithSupersede { name, inputs: parse_supersede_inputs(&body_lines)? }),
+        CommandHeaderLine::Supersede { scope } => Ok(ArtifactCommand::Supersede { scope, inputs: parse_supersede_inputs::<P, Op>(&body_lines)? }),
+        CommandHeaderLine::CreateAlternativeWithSupersede { name } => Ok(ArtifactCommand::CreateAlternativeWithSupersede { name, inputs: parse_supersede_inputs::<P, Op>(&body_lines)? }),
     }
 }
 
@@ -13904,15 +13962,91 @@ fn write_command_ops<Op: OpBinary>(out: &mut Vec<u8>, mutations: &[Op]) -> Resul
     Ok(())
 }
 
-fn read_command_ops<Op: OpBinary>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Vec<Op>, crate::os_spr::ProtocolError> {
+/// 🧩️ Reads a command's operation list all-or-nothing: on any failure every operation decoded so far retires through its
+/// technology's cold disposal, so a refused list never drops a live operation.
+fn read_command_ops<P, Op: OpBinary + self::Mutation<P>>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Vec<Op>, CommandDecodeError> {
     let count = reader.read_varint_u64()?;
-    let mut mutations = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        let len = reader.read_varint_u64()?;
-        let bytes = reader.read_bytes(len as usize)?;
-        mutations.push(Op::decode_op(bytes)?);
+    let mut mutations = Vec::with_capacity(count.min(reader.remaining() as u64) as usize);
+    for index in 0..count as usize {
+        match read_command_op(reader) {
+            Ok(operation) => mutations.push(operation),
+            Err(error) => {
+                retire_operations::<P, Op>(mutations);
+                return Err(CommandDecodeError::Operation { index, error });
+            }
+        }
     }
     Ok(mutations)
+}
+
+/// 🧩️ One length-prefixed operation of a command.
+fn read_command_op<Op: OpBinary>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Op, crate::os_spr::ProtocolError> {
+    let len = reader.read_varint_u64()?;
+    Op::decode_op(reader.read_bytes(len as usize)?)
+}
+
+/// 🧯️ Why a binary [`ArtifactCommand`] did not decode ([`ArtifactCommand::decode_command`]). Decoding is all-or-nothing:
+/// every operation decoded before the failure retired through its technology's cold disposal.
+#[derive(Clone, Debug, PartialEq)]
+pub enum CommandDecodeError {
+    /// 📐️ The command's own layout — its format, ordinal, a field, the framing of a list, or bytes past its end.
+    Layout(crate::os_spr::ProtocolError),
+    /// 🧩️ Entry `index` of the command's operation list or supersede inputs does not decode as one operation.
+    Operation { index: usize, error: crate::os_spr::ProtocolError },
+}
+
+impl std::fmt::Display for CommandDecodeError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Layout(error) => write!(formatter, "command layout: {error}"),
+            Self::Operation { index, error } => write!(formatter, "command operation {index}: {error}"),
+        }
+    }
+}
+
+impl std::error::Error for CommandDecodeError {}
+
+impl From<crate::os_spr::ProtocolError> for CommandDecodeError {
+    fn from(error: crate::os_spr::ProtocolError) -> Self {
+        Self::Layout(error)
+    }
+}
+
+impl From<crate::os_pack::PackError> for CommandDecodeError {
+    fn from(error: crate::os_pack::PackError) -> Self {
+        Self::Layout(error.into())
+    }
+}
+
+protocol::fault_from_error!(CommandDecodeError, crate::os_dsl::FaultOrigin::Module, "module.store.command");
+
+/// 🧊️ Retires operations nobody will apply through their technology's cold disposal.
+fn retire_operations<P, Op: self::Mutation<P>>(operations: impl IntoIterator<Item = Op>) {
+    for operation in operations {
+        Op::retire_cold(operation);
+    }
+}
+
+/// 🧊️ Retires every operation a command owns — its operation list, its supersede replacements, its nested command.
+fn retire_command<P, Op: self::Mutation<P>>(command: ArtifactCommand<Op>) {
+    match command {
+        ArtifactCommand::Apply { mutations, .. } | ArtifactCommand::ApplyInLane { mutations, .. } | ArtifactCommand::AmendLast { mutations, .. } | ArtifactCommand::AmendLastInLane { mutations, .. } => retire_operations::<P, Op>(mutations),
+        ArtifactCommand::Supersede { inputs, .. } | ArtifactCommand::CreateAlternativeWithSupersede { inputs, .. } => retire_supersede_inputs::<P, Op>(inputs),
+        ArtifactCommand::UndoWithPolicy { semantic_command: Some(nested), .. } => retire_command::<P, Op>(*nested),
+        ArtifactCommand::UndoWithPolicy { semantic_command: None, .. }
+        | ArtifactCommand::Undo
+        | ArtifactCommand::Redo
+        | ArtifactCommand::UndoInLane { .. }
+        | ArtifactCommand::RedoInLane { .. }
+        | ArtifactCommand::CommitCheckpoint { .. }
+        | ArtifactCommand::CreateAlternative { .. }
+        | ArtifactCommand::SwitchAlternative { .. }
+        | ArtifactCommand::CheckoutCheckpoint { .. }
+        | ArtifactCommand::IngestRemote { .. }
+        | ArtifactCommand::PruneDrafts
+        | ArtifactCommand::SetMergePolicy { .. }
+        | ArtifactCommand::ResolveConflict { .. } => {}
+    }
 }
 
 /// 🎯️ B-R6 "one documented generic impl": `ArtifactCommand<Op>` cannot go through
@@ -13925,9 +14059,11 @@ fn read_command_ops<Op: OpBinary>(reader: &mut crate::os_pack::ByteReader<'_>) -
 /// (=1, see `COMMAND_BINARY_FORMAT`) | variant ordinal varint (`ArtifactCommand` declaration order,
 /// numerically identical to the old hand-rolled tag byte for these 9 variants since LEB128 varints
 /// under 128 are single bytes) | body`. The binary twin of `print_command`/`parse_command`. LAW:
-/// `ArtifactCommand::decode_op(&command.encode_op()?) == Ok(command)`.
-impl<Op: OpBinary> OpBinary for ArtifactCommand<Op> {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+/// `ArtifactCommand::decode_command(&command.encode_command()?) == Ok(command)`. Not an `OpBinary`: decoding needs the
+/// operations' projection `P` to retire what a refused command decoded, which the P-agnostic `OpBinary` cannot name.
+impl<Op: OpBinary> ArtifactCommand<Op> {
+    /// 📤️ The command's binary form.
+    pub fn encode_command(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
         let mut out = vec![COMMAND_BINARY_FORMAT];
         match self {
             ArtifactCommand::Apply { mutations, description, transaction } => {
@@ -13946,7 +14082,7 @@ impl<Op: OpBinary> OpBinary for ArtifactCommand<Op> {
                 out.push(undo_policy_ordinal(*policy));
                 out.push(if semantic_command.is_some() { 0b01 } else { 0 });
                 if let Some(nested) = semantic_command {
-                    let nested_bytes = nested.encode_op()?;
+                    let nested_bytes = nested.encode_command()?;
                     crate::os_pack::write_varint_u64(&mut out, nested_bytes.len() as u64);
                     out.extend_from_slice(&nested_bytes);
                 }
@@ -14044,19 +14180,38 @@ impl<Op: OpBinary> OpBinary for ArtifactCommand<Op> {
         Ok(out)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+    /// 📥️ Decodes one whole binary command, all-or-nothing: bytes past its end refuse it, and every operation decoded
+    /// before a failure retires through its technology's cold disposal — a refusal never drops a live operation.
+    pub fn decode_command<P>(bytes: &[u8]) -> Result<Self, CommandDecodeError>
+    where
+        Op: self::Mutation<P>,
+    {
         let mut reader = crate::os_pack::ByteReader::new(bytes);
+        let command = Self::read_command::<P>(&mut reader)?;
+        if reader.remaining() != 0 {
+            let detail = format!("{} bytes past the command's end", reader.remaining());
+            retire_command::<P, Op>(command);
+            return Err(CommandDecodeError::Layout(crate::os_spr::ProtocolError::Malformed { what: "command", offset: reader.position() as u64, detail }));
+        }
+        Ok(command)
+    }
+
+    /// 📖️ The command at `reader`; its operation lists come last, so nothing can fail after one was decoded.
+    fn read_command<P>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Self, CommandDecodeError>
+    where
+        Op: self::Mutation<P>,
+    {
         let format = reader.read_u8()?;
         if format != COMMAND_BINARY_FORMAT {
-            return Err(crate::os_spr::ProtocolError::Malformed { what: "command format", offset: 0, detail: format!("unsupported command format {format}") });
+            return Err(crate::os_spr::ProtocolError::Malformed { what: "command format", offset: 0, detail: format!("unsupported command format {format}") }.into());
         }
         let ordinal = reader.read_varint_u64()?;
         match ordinal {
             0 => {
                 let presence = reader.read_u8()?;
-                let description = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
-                let transaction = read_command_transaction(&mut reader, presence)?;
-                let mutations = read_command_ops(&mut reader)?;
+                let description = if presence & 0b01 != 0 { Some(read_command_str(reader)?) } else { None };
+                let transaction = read_command_transaction(reader, presence)?;
+                let mutations = read_command_ops::<P, Op>(reader)?;
                 Ok(ArtifactCommand::Apply { mutations, description, transaction })
             }
             1 => Ok(ArtifactCommand::Undo),
@@ -14067,7 +14222,7 @@ impl<Op: OpBinary> OpBinary for ArtifactCommand<Op> {
                 let semantic_command = if presence & 0b01 != 0 {
                     let len = reader.read_varint_u64()?;
                     let nested_bytes = reader.read_bytes(len as usize)?;
-                    Some(Box::new(ArtifactCommand::<Op>::decode_op(nested_bytes)?))
+                    Some(Box::new(ArtifactCommand::<Op>::decode_command::<P>(nested_bytes)?))
                 } else {
                     None
                 };
@@ -14075,23 +14230,23 @@ impl<Op: OpBinary> OpBinary for ArtifactCommand<Op> {
             }
             4 => {
                 let presence = reader.read_u8()?;
-                let message = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
+                let message = if presence & 0b01 != 0 { Some(read_command_str(reader)?) } else { None };
                 let author_count = reader.read_varint_u64()?;
                 let mut authors = Vec::with_capacity(author_count as usize);
                 for _ in 0..author_count {
-                    let id = read_command_str(&mut reader)?;
-                    let name = read_command_str(&mut reader)?;
+                    let id = read_command_str(reader)?;
+                    let name = read_command_str(reader)?;
                     authors.push(Author { id, name, avatar: None });
                 }
                 Ok(ArtifactCommand::CommitCheckpoint { message, authors })
             }
-            5 => Ok(ArtifactCommand::CreateAlternative { name: read_command_str(&mut reader)? }),
-            6 => Ok(ArtifactCommand::SwitchAlternative { alternative_id: read_command_str(&mut reader)? }),
-            7 => Ok(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: read_command_str(&mut reader)? }),
+            5 => Ok(ArtifactCommand::CreateAlternative { name: read_command_str(reader)? }),
+            6 => Ok(ArtifactCommand::SwitchAlternative { alternative_id: read_command_str(reader)? }),
+            7 => Ok(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: read_command_str(reader)? }),
             8 => {
                 let presence = reader.read_u8()?;
-                let coalesce_key = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
-                let mutations = read_command_ops(&mut reader)?;
+                let coalesce_key = if presence & 0b01 != 0 { Some(read_command_str(reader)?) } else { None };
+                let mutations = read_command_ops::<P, Op>(reader)?;
                 Ok(ArtifactCommand::AmendLast { mutations, coalesce_key })
             }
             9 => {
@@ -14104,17 +14259,17 @@ impl<Op: OpBinary> OpBinary for ArtifactCommand<Op> {
             10 => Ok(ArtifactCommand::PruneDrafts),
             11 => {
                 let presence = reader.read_u8()?;
-                let description = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
-                let transaction = read_command_transaction(&mut reader, presence)?;
+                let description = if presence & 0b01 != 0 { Some(read_command_str(reader)?) } else { None };
+                let transaction = read_command_transaction(reader, presence)?;
                 let lane = history_lane_from_ordinal(reader.read_u8()?)?;
-                let mutations = read_command_ops(&mut reader)?;
+                let mutations = read_command_ops::<P, Op>(reader)?;
                 Ok(ArtifactCommand::ApplyInLane { mutations, description, lane, transaction })
             }
             12 => {
                 let presence = reader.read_u8()?;
-                let coalesce_key = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
+                let coalesce_key = if presence & 0b01 != 0 { Some(read_command_str(reader)?) } else { None };
                 let lane = history_lane_from_ordinal(reader.read_u8()?)?;
-                let mutations = read_command_ops(&mut reader)?;
+                let mutations = read_command_ops::<P, Op>(reader)?;
                 Ok(ArtifactCommand::AmendLastInLane { mutations, coalesce_key, lane })
             }
             13 => Ok(ArtifactCommand::UndoInLane { lane: history_lane_from_ordinal(reader.read_u8()?)? }),
@@ -14124,20 +14279,20 @@ impl<Op: OpBinary> OpBinary for ArtifactCommand<Op> {
                 Ok(ArtifactCommand::SetMergePolicy { policy })
             }
             16 => {
-                let conflict_id = read_command_str(&mut reader)?;
+                let conflict_id = read_command_str(reader)?;
                 let resolution = conflict_resolution_from_ordinal(reader.read_u8()?)?;
                 Ok(ArtifactCommand::ResolveConflict { conflict_id, resolution })
             }
             17 => {
                 let presence = reader.read_u8()?;
-                let scope = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
-                Ok(ArtifactCommand::Supersede { scope, inputs: read_supersede_inputs(&mut reader)? })
+                let scope = if presence & 0b01 != 0 { Some(read_command_str(reader)?) } else { None };
+                Ok(ArtifactCommand::Supersede { scope, inputs: read_supersede_inputs::<P, Op>(reader)? })
             }
             18 => {
-                let name = read_command_str(&mut reader)?;
-                Ok(ArtifactCommand::CreateAlternativeWithSupersede { name, inputs: read_supersede_inputs(&mut reader)? })
+                let name = read_command_str(reader)?;
+                Ok(ArtifactCommand::CreateAlternativeWithSupersede { name, inputs: read_supersede_inputs::<P, Op>(reader)? })
             }
-            other => Err(crate::os_spr::ProtocolError::Malformed { what: "command variant", offset: 1, detail: format!("unknown command ordinal {other}") }),
+            other => Err(crate::os_spr::ProtocolError::Malformed { what: "command variant", offset: 1, detail: format!("unknown command ordinal {other}") }.into()),
         }
     }
 }
@@ -14162,8 +14317,15 @@ pub struct HistoryColumn {
     pub alternative_ids: Vec<String>,
 }
 
+/// 🌿️ The branched alternatives of `envelope`: every listed alternative but the trunk, whose checkpoints are the main line
+/// the history view draws on lane 0.
+fn branched_alternatives<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> impl Iterator<Item = &Alternative> {
+    let trunk = crate::os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()));
+    envelope.vcs.alternatives.iter().filter(move |alternative| alternative.id != trunk)
+}
+
 async fn checkpoint_alternatives<'a, P, Mutation>(envelope: &'a ArtifactEnvelope<P, Mutation>, checkpoint_id: &str) -> Vec<&'a Alternative> {
-    envelope.vcs.alternatives.iter().filter(|alternative| alternative.checkpoint_ids.iter().any(|id| id == checkpoint_id)).collect()
+    branched_alternatives(envelope).filter(|alternative| alternative.checkpoint_ids.iter().any(|id| id == checkpoint_id)).collect()
 }
 
 async fn is_checkpoint_main_only<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, checkpoint_id: &str) -> bool {
@@ -14184,13 +14346,13 @@ async fn has_main_only_descendant<P, Mutation>(envelope: &ArtifactEnvelope<P, Mu
     false
 }
 
-/// 🛤️ Assigns each checkpoint a swimlane: alternatives get lanes `1..n` in array order, lane
+/// 🛤️ Assigns each checkpoint a swimlane: branched alternatives get lanes `1..n` in array order, lane
 /// `0` is the main trunk. A checkpoint sits on lane 0 if it belongs to no alternative or has any
 /// main-only descendant (cycle-guarded DFS); otherwise it takes its single alternative's lane, or
 /// the minimum lane among several. Mirrors premigration `assignHistoryCheckpointLanes`.
 async fn assign_history_checkpoint_lanes<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> HashMap<String, usize> {
     let mut lane_by_alternative: HashMap<String, usize> = HashMap::new();
-    for (index, alternative) in envelope.vcs.alternatives.iter().enumerate() {
+    for (index, alternative) in branched_alternatives(envelope).enumerate() {
         lane_by_alternative.insert(alternative.id.clone(), index + 1);
     }
     let mut children_of: HashMap<String, Vec<String>> = HashMap::new();
@@ -17592,7 +17754,7 @@ where
         };
         self.envelope_detached = true;
         let envelope = unsafe { std::mem::ManuallyDrop::take(&mut self.envelope) };
-        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, edit_messages, conflicts, transitions } = envelope.into_owners();
+        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, edit_messages, conflicts, transitions, history_shape: _ } = envelope.into_owners();
         let ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives } = vcs;
         assert!(
             schema.is_empty()
@@ -17775,6 +17937,22 @@ where
     }
 
     //#region 🔖️TimeTravelReads
+    /// 🌳️ The id of this document's trunk — the implicit root line, a first-class alternative listed first in
+    /// `envelope().vcs.alternatives` (with an empty name the UI localizes) once a commit made on it gives it a chain.
+    pub fn trunk_alternative_id(&self) -> String {
+        crate::os_spr::trunk_alternative_id(&ArtifactId(self.envelope.id.clone()))
+    }
+
+    /// 🚉️ The line the document is on: the active branched alternative, or the trunk while none is.
+    pub fn active_line_id(&self) -> String {
+        self.envelope.active_alternative_id.clone().unwrap_or_else(|| self.trunk_alternative_id())
+    }
+
+    /// 🔖️ `alternative_id` as a `Checkout` names it: `None` for the trunk (the log never names it), the id otherwise.
+    fn branched_alternative(&self, alternative_id: String) -> Option<String> {
+        (alternative_id != self.trunk_alternative_id()).then_some(alternative_id)
+    }
+
     /// 🗺️ The effective supersessions the live projection folds with.
     pub fn supersessions(&self) -> &EffectiveSupersessions {
         &self.supersessions
@@ -18698,9 +18876,9 @@ where
     async fn admit_remote_transitions(&mut self, transitions: Vec<crate::os_spr::MutationEnvelope>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
         let mut admitted: Vec<MutationId> = Vec::new();
         for envelope in transitions {
-            if let Err(error) = crate::os_spr::history_transition_from_envelope(&envelope) {
+            if let Err(error) = self.admit_history_shape(std::slice::from_ref(&envelope)) {
                 self.envelope.transitions.retain(|known| !admitted.contains(&known.mutation_id));
-                return Err(VcsError::Deserialize(error.to_string()));
+                return Err(error);
             }
             if let Some(known) = self.envelope.transitions.iter().find(|known| known.mutation_id == envelope.mutation_id) {
                 if !Self::same_operation_identity_and_payload(known, &envelope) {
@@ -18719,6 +18897,48 @@ where
                 Err(error)
             }
         }
+    }
+
+    /// 🗂️ Refuses the first of `envelopes` whose transition this store's [`crate::os_spr::HistoryShape`] does not hold —
+    /// with `HistoryShape` — or that does not decode, before any of them is recorded.
+    fn admit_history_shape(&self, envelopes: &[crate::os_spr::MutationEnvelope]) -> Result<(), VcsError> {
+        let shape = self.envelope.history_shape;
+        for envelope in envelopes {
+            if let Some(kind) = crate::os_spr::history_transition_from_envelope(envelope).map_err(|error| VcsError::Deserialize(error.to_string()))?.map(|transition| transition.kind()).filter(|kind| !shape.admits(*kind)) {
+                return Err(VcsError::HistoryShape { shape, kind });
+            }
+        }
+        Ok(())
+    }
+
+    /// 🖊️ The actor this replica authors its history transitions as.
+    fn transition_actor(&self) -> ActorId {
+        ActorId((*self.local_actor_id).clone().unwrap_or_else(|| "local".to_string()))
+    }
+
+    /// 🔙️ `BackboneMessage::Retract`: removes from the event log every transition this replica authored that `refused`
+    /// names, with every transition of this replica causally depending on one ([`transition_retraction_closure`]), and
+    /// folds the projection again — transactional: a log that would not fold keeps every transition. A name this log does
+    /// not hold, or one another replica authored, retracts nothing: only this replica's own speculative head can be
+    /// refused to it. Answers the retracted ids.
+    async fn retract_transitions(&mut self, refused: &[String]) -> Result<Vec<String>, VcsError> {
+        let actor = self.transition_actor();
+        let own: Vec<&crate::os_spr::MutationEnvelope> = self.envelope.transitions.iter().filter(|transition| transition.actor == actor).collect();
+        let retracted = transition_retraction_closure(&own, |transition| transition.mutation_id.0.as_str(), |transition| transition.dependencies.iter().map(|dependency| dependency.0.as_str()).collect(), refused);
+        if retracted.is_empty() {
+            return Ok(retracted);
+        }
+        let removed: Vec<crate::os_spr::MutationEnvelope> = self.envelope.transitions.iter().filter(|transition| retracted.contains(&transition.mutation_id.0)).cloned().collect();
+        self.envelope.transitions.retain(|transition| !retracted.contains(&transition.mutation_id.0));
+        if let Err(error) = self.reproject().await {
+            for envelope in removed {
+                self.insert_transition(envelope);
+            }
+            return Err(error);
+        }
+        self.last_projection_cause = Some(ArtifactProjectionCause::RemoteIngest);
+        self.bump()?;
+        Ok(retracted)
     }
 
     /// 📎️ Records `envelope` in the transition log at its `(hlc, id)` position.
@@ -18740,7 +18960,7 @@ where
 
     /// 📧️ The envelope of one locally authored transition at `timestamp`, declaring `target` as the address it writes.
     fn transition_envelope(&self, transition: &crate::os_spr::HistoryTransition, dependencies: Vec<MutationId>, target: Vec<String>, timestamp: HybridLogicalTimestamp) -> crate::os_spr::MutationEnvelope {
-        let actor = ActorId((*self.local_actor_id).clone().unwrap_or_else(|| "local".to_string()));
+        let actor = self.transition_actor();
         let mut envelope = crate::os_spr::history_transition_envelope(transition, &ArtifactId(self.envelope.id.clone()), &actor, dependencies, timestamp);
         if matches!(transition, crate::os_spr::HistoryTransition::Supersede(_)) {
             envelope.observed = self.observed_foreign_operation(&actor.0);
@@ -18753,6 +18973,10 @@ where
     /// is the Report replay of exactly the resulting log, replaying otherwise. All of them leave in this dispatch's outbound
     /// batch, or none is recorded.
     async fn install_transitions(&mut self, envelopes: Vec<crate::os_spr::MutationEnvelope>, clock: HybridLogicalTimestamp, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<(), VcsError> {
+        if let Err(error) = self.admit_history_shape(&envelopes) {
+            drop(replayed);
+            return Err(error);
+        }
         let identities: Vec<MutationId> = envelopes.iter().map(|envelope| envelope.mutation_id.clone()).collect();
         for envelope in &envelopes {
             self.insert_transition(envelope.clone());
@@ -19124,10 +19348,15 @@ where
         Ok(())
     }
 
-    /// 🏛️ Materializes the fold's change/checkpoint/alternative facts into the history
-    /// ledgers: new facts are inserted, a re-identified (repinned) checkpoint is renamed in place,
-    /// and every alternative's chain follows the fold.
+    /// 🏛️ Materializes the fold's change/checkpoint/alternative facts into the history ledgers: a re-identified
+    /// (repinned) checkpoint is renamed in place, every alternative's chain follows the fold, facts the fold no longer
+    /// holds (a retracted transition's) leave, and new facts are inserted.
     fn adopt_history_facts(&mut self, fold: &crate::os_spr::HistoryFold) -> Result<(), VcsError> {
+        let shrank = |fault: crate::os_vcs::ArtifactHistoryReservationFault| VcsError::ValidationFailed(format!("a history ledger cannot follow its fold: {fault:?}"));
+        let stale_change = |known: &Change| !fold.changes.iter().any(|change| change.id == known.id);
+        if self.envelope.vcs.changes.iter().any(stale_change) {
+            self.envelope.vcs.changes.extract_if(stale_change).map_err(shrank)?;
+        }
         for change in &fold.changes {
             if self.envelope.vcs.changes.iter().any(|known| known.id == change.id) {
                 continue;
@@ -19135,6 +19364,7 @@ where
             let reservation = self.reserve_change_history_slot()?;
             self.insert_reserved_change_history(reservation, Change { id: change.id.clone(), edit_ids: change.edit_ids.clone(), description: change.description.clone(), saved_at: change.saved_at.clone() })?;
         }
+        let mut fresh = Vec::new();
         for checkpoint in &fold.checkpoints {
             let mut pins = Vec::with_capacity(checkpoint.pins.len());
             for pin in &checkpoint.pins {
@@ -19143,22 +19373,33 @@ where
             let known_position = self.envelope.vcs.checkpoints.iter().position(|known| known.id == checkpoint.id).or_else(|| {
                 self.envelope.vcs.checkpoints.iter().position(|known| known.parent_id == checkpoint.parent_id && known.change_ids == checkpoint.change_ids && !fold.checkpoints.iter().any(|folded| folded.id == known.id))
             });
-            if let Some(position) = known_position {
-                let known = &mut self.envelope.vcs.checkpoints[position];
-                if known.id != checkpoint.id {
-                    known.id = checkpoint.id.clone();
-                }
-                if known.composition_pins != pins {
-                    known.composition_pins = pins;
-                }
+            let Some(position) = known_position else {
+                fresh.push((checkpoint, pins));
                 continue;
+            };
+            let known = &mut self.envelope.vcs.checkpoints[position];
+            if known.id != checkpoint.id {
+                known.id = checkpoint.id.clone();
             }
+            if known.composition_pins != pins {
+                known.composition_pins = pins;
+            }
+        }
+        let stale_checkpoint = |known: &Checkpoint| !fold.checkpoints.iter().any(|checkpoint| checkpoint.id == known.id);
+        if self.envelope.vcs.checkpoints.iter().any(stale_checkpoint) {
+            self.envelope.vcs.checkpoints.extract_if(stale_checkpoint).map_err(shrank)?;
+        }
+        for (checkpoint, pins) in fresh {
             let authors = checkpoint.authors.iter().map(|author| Author { id: author.id.clone(), name: author.name.clone(), avatar: author.avatar.clone() }).collect();
             let reservation = self.reserve_checkpoint_history_slot()?;
             self.insert_reserved_checkpoint_history(
                 reservation,
                 Checkpoint { id: checkpoint.id.clone(), change_ids: checkpoint.change_ids.clone(), parent_id: checkpoint.parent_id.clone(), authors, message: checkpoint.message.clone(), timestamp: checkpoint.timestamp.clone(), composition_pins: pins },
             )?;
+        }
+        let stale_alternative = |known: &Alternative| !fold.alternatives.iter().any(|alternative| alternative.id == known.id);
+        if self.envelope.vcs.alternatives.iter().any(stale_alternative) {
+            self.envelope.vcs.alternatives.extract_if(stale_alternative).map_err(shrank)?;
         }
         for alternative in &fold.alternatives {
             if let Some(known) = self.envelope.vcs.alternatives.iter_mut().find(|known| known.id == alternative.id) {
@@ -19180,6 +19421,13 @@ where
     where
         P: Sync,
     {
+        let shape = self.envelope.history_shape;
+        if let Some(kind) = command.history_transition_kinds().iter().copied().find(|kind| !shape.admits(*kind)) {
+            if let ArtifactCommand::Supersede { inputs, .. } | ArtifactCommand::CreateAlternativeWithSupersede { inputs, .. } = command {
+                retire_supersede_inputs::<P, Mutation>(inputs);
+            }
+            return Err(VcsError::HistoryShape { shape, kind });
+        }
         match command {
             ArtifactCommand::Undo => self.undo_with_policy(UndoPolicy::TransformAgainstConcurrent, None).await,
             ArtifactCommand::UndoWithPolicy { policy, semantic_command } => self.undo_with_policy(policy, semantic_command).await,
@@ -19218,13 +19466,14 @@ where
                     return Err(VcsError::NoCheckpoint);
                 }
                 let dependencies = self.checkpoint_origin(&checkpoint_id).into_iter().collect();
-                self.commit_transition(crate::os_spr::HistoryTransition::Checkout { checkpoint_id, alternative_id: Some(alternative_id) }, dependencies).await
+                let alternative_id = self.branched_alternative(alternative_id);
+                self.commit_transition(crate::os_spr::HistoryTransition::Checkout { checkpoint_id, alternative_id }, dependencies).await
             }
             ArtifactCommand::CheckoutCheckpoint { checkpoint_id } => {
                 if !self.envelope.vcs.checkpoints.iter().any(|checkpoint| checkpoint.id == checkpoint_id) {
                     return Err(VcsError::UnknownChange(checkpoint_id));
                 }
-                let alternative_id = self.envelope.vcs.alternatives.iter().find(|alternative| alternative.checkpoint_ids.last() == Some(&checkpoint_id)).map(|alternative| alternative.id.clone());
+                let alternative_id = self.envelope.vcs.alternatives.iter().find(|alternative| alternative.checkpoint_ids.last() == Some(&checkpoint_id)).and_then(|alternative| self.branched_alternative(alternative.id.clone()));
                 let dependencies = self.checkpoint_origin(&checkpoint_id).into_iter().collect();
                 self.commit_transition(crate::os_spr::HistoryTransition::Checkout { checkpoint_id, alternative_id }, dependencies).await
             }
@@ -19256,15 +19505,12 @@ where
     /// ✏️ `Supersede`: supersedes typed inputs in every alternative or within one existing alternative
     /// ([`Self::author_supersession`]).
     async fn supersede_command(&mut self, scope: Option<String>, inputs: Vec<SupersedeInput<Mutation>>) -> Result<(), VcsError> {
+        let trunk = self.trunk_alternative_id();
         let scope = match scope {
             None => SupersedeScope::Document,
-            Some(alternative) if self.envelope.vcs.alternatives.iter().any(|known| known.id == alternative) => SupersedeScope::Alternative(alternative),
+            Some(alternative) if alternative == trunk || self.envelope.vcs.alternatives.iter().any(|known| known.id == alternative) => SupersedeScope::Alternative(alternative),
             Some(alternative) => {
-                for input in inputs {
-                    if let Some(replacement) = input.replacement {
-                        self::Mutation::<P>::retire_cold(replacement);
-                    }
-                }
+                retire_supersede_inputs::<P, Mutation>(inputs);
                 return Err(VcsError::UnknownAlternative(alternative));
             }
         };
@@ -19379,7 +19625,7 @@ where
     fn prospective_fold(&self, candidates: &[crate::os_spr::MutationEnvelope]) -> Result<crate::os_spr::HistoryFold, VcsError> {
         let mut transitions = self.envelope.transitions.clone();
         transitions.extend(candidates.iter().cloned());
-        fold_event_log::<P, Mutation>(&self.envelope.vcs.edits.iter().collect::<Vec<_>>(), &transitions, &self.envelope.conflicts)
+        fold_event_log::<P, Mutation>(&self.envelope.id, &self.envelope.vcs.edits.iter().collect::<Vec<_>>(), &transitions, &self.envelope.conflicts)
     }
 
     /// 🧪️ The Report replay of everything `fold` changes against the live projection, driven to completion, touching nothing.
@@ -19470,11 +19716,7 @@ where
             }
         }
         if let Some(error) = failure {
-            for input in typed {
-                if let Some(replacement) = input.replacement {
-                    self::Mutation::<P>::retire_cold(replacement);
-                }
-            }
+            retire_supersede_inputs::<P, Mutation>(typed);
             return Err(error);
         }
         self.supersede_inputs(typed)
@@ -19848,7 +20090,7 @@ where
         Mutation: OpText,
         P: Sync,
     {
-        let command = parse_command(command_text).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let command = parse_command::<P, Mutation>(command_text).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
         self.dispatch(command).await
     }
 
@@ -19859,7 +20101,7 @@ where
         Mutation: OpBinary,
         P: Sync,
     {
-        let command = <ArtifactCommand<Mutation> as OpBinary>::decode_op(command_bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let command = ArtifactCommand::<Mutation>::decode_command::<P>(command_bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         self.dispatch(command).await
     }
 
@@ -20535,7 +20777,7 @@ where
         conflicts[index].status = crate::os_spr::ConflictStatus::Accepted;
         let mut edits: Vec<&Edit<Mutation>> = self.envelope.vcs.edits.iter().collect();
         edits.extend(admitted.iter());
-        let fold = match fold_event_log::<P, Mutation>(&edits, &self.envelope.transitions, &conflicts) {
+        let fold = match fold_event_log::<P, Mutation>(&self.envelope.id, &edits, &self.envelope.transitions, &conflicts) {
             Ok(fold) => fold,
             Err(error) => {
                 retire_scratch_edits::<P, Mutation>(admitted);
@@ -20630,6 +20872,9 @@ where
                 }
                 member @ BackboneMessage::Member { .. } => self.member_inbox.push_back(member),
                 BackboneMessage::Ack { .. } => {}
+                BackboneMessage::Retract { mutation_ids } => {
+                    self.retract_transitions(&mutation_ids).await?;
+                }
             }
         }
         if !acked_op_ids.is_empty() {
@@ -20988,6 +21233,46 @@ where
 
 /// 🧊️ Cold-retires a scratch edit copy — a decoded arrival that history already holds, a replay
 /// lookup clone, a conflict listing — through its operations' [`Mutation::retire_cold`].
+/// 🔗️ Every transition among `transitions` that `refused` names or that causally depends — through `dependencies`,
+/// transitively — on one that does, as ids in log order: what one refusal retracts. One law for a store's event log and a
+/// persisted `.spr` log ([`retract_history_transitions_from_spr`]), so both retract exactly the same transitions.
+pub fn transition_retraction_closure<'a, T>(transitions: &'a [T], identity: impl Fn(&'a T) -> &'a str, dependencies: impl Fn(&'a T) -> Vec<&'a str>, refused: &[String]) -> Vec<String> {
+    let mut retracted: HashSet<&'a str> = transitions.iter().map(&identity).filter(|id| refused.iter().any(|name| name == id)).collect();
+    loop {
+        let before = retracted.len();
+        for transition in transitions {
+            if dependencies(transition).into_iter().any(|dependency| retracted.contains(dependency)) {
+                retracted.insert(identity(transition));
+            }
+        }
+        if retracted.len() == before {
+            break;
+        }
+    }
+    transitions.iter().map(&identity).filter(|id| retracted.contains(id)).map(str::to_string).collect()
+}
+
+/// 🔙️ The `.spr` byte log without the transitions `refused` retracts ([`transition_retraction_closure`]) — what a sync
+/// actor persists after the hub refused them — and the retracted ids.
+pub async fn retract_history_transitions_from_spr(spr: &[u8], refused: &[String]) -> Result<(Vec<u8>, Vec<String>), VcsError> {
+    let mut log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let retracted = transition_retraction_closure(&log.transitions, |record| record.id.as_str(), |record| record.dependencies.iter().map(String::as_str).collect(), refused);
+    log.transitions.retain(|record| !retracted.contains(&record.id));
+    let options = crate::os_spr::EncodeOptions { write_backwards_section: true, ..crate::os_spr::EncodeOptions::default() };
+    let bytes = crate::os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))?;
+    Ok((bytes, retracted))
+}
+
+/// 🧹️ Retires every typed replacement of a refused supersession's `inputs`, none of which was encoded.
+fn retire_supersede_inputs<P, Mutation>(inputs: Vec<SupersedeInput<Mutation>>)
+where
+    Mutation: self::Mutation<P>,
+{
+    for replacement in inputs.into_iter().filter_map(|input| input.replacement) {
+        self::Mutation::<P>::retire_cold(replacement);
+    }
+}
+
 fn retire_scratch_edits<P, Mutation>(edits: impl IntoIterator<Item = Edit<Mutation>>)
 where
     Mutation: self::Mutation<P>,
@@ -21005,13 +21290,13 @@ pub fn fold_envelope_history<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, M
 where
     Mutation: self::Mutation<P>,
 {
-    fold_event_log::<P, Mutation>(&envelope.vcs.edits.iter().collect::<Vec<_>>(), &envelope.transitions, &envelope.conflicts)
+    fold_event_log::<P, Mutation>(&envelope.id, &envelope.vcs.edits.iter().collect::<Vec<_>>(), &envelope.transitions, &envelope.conflicts)
 }
 
 /// 🧮️ [`fold_envelope_history`] over the bare event log: `edits`, `transitions` and the
 /// `conflicts` whose quarantine withholds edits — for document shapes that hold the log without a
 /// full envelope.
-pub fn fold_event_log<P, Mutation>(edits: &[&Edit<Mutation>], transitions: &[crate::os_spr::MutationEnvelope], conflicts: &[crate::os_spr::Conflict]) -> Result<crate::os_spr::HistoryFold, VcsError>
+pub fn fold_event_log<P, Mutation>(document_id: &str, edits: &[&Edit<Mutation>], transitions: &[crate::os_spr::MutationEnvelope], conflicts: &[crate::os_spr::Conflict]) -> Result<crate::os_spr::HistoryFold, VcsError>
 where
     Mutation: self::Mutation<P>,
 {
@@ -21033,7 +21318,7 @@ where
             excluded.extend(envelopes.iter().filter_map(|quarantined| owners.get(&quarantined.mutation_id.0).cloned()));
         }
     }
-    crate::os_spr::fold_history(&folded, transitions, &excluded).map_err(|error| VcsError::ValidationFailed(error.to_string()))
+    crate::os_spr::fold_history(&ArtifactId(document_id.to_string()), &folded, transitions, &excluded).map_err(|error| VcsError::ValidationFailed(error.to_string()))
 }
 
 /// 🗣️ `<document schema>#<semantic kind>` of the leaf `operation` is — what `MutationMeta.semantic_kind` records.
@@ -21962,6 +22247,11 @@ pub enum BackboneMessage {
         #[dsl(base64)]
         envelopes: Vec<u8>,
     },
+    /// 🔙️ Retracts history transitions this replica authored and the hub refused (actor→store): each leaves the store's
+    /// event log with every local transition causally depending on it ([`transition_retraction_closure`]), and the
+    /// projection follows — the author converges with the hub, which never took them. No inverse exists for a
+    /// transition; a retraction is the refusal's exact compensation.
+    Retract { mutation_ids: Vec<String> },
 }
 
 //#region 🔖️OpCodec
@@ -22504,9 +22794,9 @@ impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
                         return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                     }
                 }
-                BackboneMessage::Ack { op_ids } => {
-                    if let Some(op_id) = op_ids.pop() {
-                        *self.bytes = Some(op_id.into_bytes());
+                BackboneMessage::Ack { op_ids: ids } | BackboneMessage::Retract { mutation_ids: ids } => {
+                    if let Some(id) = ids.pop() {
+                        *self.bytes = Some(id.into_bytes());
                         return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                     }
                 }
@@ -25399,21 +25689,21 @@ pub mod test_support {
     }
 
     /// ⚖️ Asserts command text and command binary are two encodings of the SAME command:
-    /// `ArtifactCommand::decode_op(&c.encode_op()) == parse_command(print_command(c)) == c`, and the
+    /// `ArtifactCommand::decode_command(&c.encode_command()) == parse_command(print_command(c)) == c`, and the
     /// binary encoding is deterministic. The compile-time validation ground truth for
     /// `ArtifactCommand`'s text/binary pair — the command-level mirror of
     /// `assert_op_text_binary_equivalence`.
-    pub async fn assert_command_text_binary_equivalence<Op>(command: &ArtifactCommand<Op>)
+    pub async fn assert_command_text_binary_equivalence<P, Op>(command: &ArtifactCommand<Op>)
     where
-        Op: OpText + OpBinary + Clone + PartialEq + std::fmt::Debug,
+        Op: OpText + OpBinary + self::Mutation<P> + PartialEq + std::fmt::Debug,
     {
         let printed = print_command(command).await.unwrap_or_else(|error| panic!("command print failed: {error}"));
-        let parsed: ArtifactCommand<Op> = parse_command(&printed).await.unwrap_or_else(|error| panic!("command parse failed: {error}"));
+        let parsed: ArtifactCommand<Op> = parse_command::<P, Op>(&printed).await.unwrap_or_else(|error| panic!("command parse failed: {error}"));
         assert_eq!(&parsed, command, "command text round trip diverged; printed:\n{printed}");
-        let encoded = command.encode_op().unwrap_or_else(|error| panic!("command encode failed: {error}"));
-        let encoded_again = command.encode_op().unwrap_or_else(|error| panic!("command re-encode failed: {error}"));
+        let encoded = command.encode_command().unwrap_or_else(|error| panic!("command encode failed: {error}"));
+        let encoded_again = command.encode_command().unwrap_or_else(|error| panic!("command re-encode failed: {error}"));
         assert_eq!(encoded, encoded_again, "command binary encoding is not deterministic");
-        let decoded: ArtifactCommand<Op> = ArtifactCommand::<Op>::decode_op(&encoded).unwrap_or_else(|error| panic!("command decode failed: {error}"));
+        let decoded: ArtifactCommand<Op> = ArtifactCommand::<Op>::decode_command::<P>(&encoded).unwrap_or_else(|error| panic!("command decode failed: {error}"));
         assert_eq!(&decoded, command, "command binary round trip diverged from source command");
     }
 

@@ -29,7 +29,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for MovePage {
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         if !self.valid(base) {
-            return MutationOutcome::error("stdio.pdf.move-page.invalid-target", "Page target or geometry is outside the PDF 1.4 domain", self.target());
+            return MutationOutcome::error("mutation.target-missing", "Page target or geometry is outside the PDF 1.4 domain", self.target());
         }
         if self.from == self.to {
             return MutationOutcome::new(PdfDiff::default());

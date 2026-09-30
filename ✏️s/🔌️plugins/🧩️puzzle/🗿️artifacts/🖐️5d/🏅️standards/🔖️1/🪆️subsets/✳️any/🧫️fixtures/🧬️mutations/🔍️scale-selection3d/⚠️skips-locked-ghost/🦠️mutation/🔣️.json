@@ -1,0 +1,13 @@
+{
+  "factors": [
+    3.0,
+    3.0,
+    3.0
+  ],
+  "mutation": "scaleSelection3d",
+  "targets": [
+    "part-b",
+    "part-c",
+    "part-ghost"
+  ]
+}

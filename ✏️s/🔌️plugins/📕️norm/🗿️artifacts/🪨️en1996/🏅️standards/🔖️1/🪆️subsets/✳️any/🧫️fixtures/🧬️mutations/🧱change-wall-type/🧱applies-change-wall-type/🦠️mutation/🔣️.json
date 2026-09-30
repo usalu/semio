@@ -1,0 +1,6 @@
+{
+  "ChangeWallType": {
+    "index": 0,
+    "newWallType": "Shear"
+  }
+}

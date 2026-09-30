@@ -1,0 +1,6 @@
+{
+  "ChangeVentFilterSup": {
+    "ventId": "vent-central",
+    "newFilterSupClass": "ePM1_80"
+  }
+}

@@ -1,4 +1,4 @@
-"""🧪️ Writes the six W1-E conformance corpus cases (snapshot + expectation) and registers them in the catalog.
+"""🧪️ Writes the seven W1-E conformance corpus cases (snapshot + expectation) and registers them in the catalog.
 
 Run from the repo root: `python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/w1e-conformance-cases.py`.
 """
@@ -57,6 +57,35 @@ CASES = {
             node(1, "swatch", {"type": "input", "kind": "color", "value": "#ff8000"}, accessibility={"label": "Tint"}, bindings=[action("setTint", "change")]),
             node(2, "hex", {"type": "input", "value": "#ff800080", "commit": "blur"}, accessibility={"label": "Hex"}, bindings=[action("setTint", "change")]),
             node(3, "alpha", {"type": "slider", "value": 0.5, "min": 0.0, "max": 1.0, "step": 0.01}, accessibility={"label": "Alpha"}, bindings=[action("setTintAlpha", "change")]),
+        ],
+    ),
+    ("🖥️composite", "tree-row-recipes", "🌲️tree-row-recipes"): (
+        "Tree rows whose content is a recipe or more than one node — a colour input, a vector input, a reference list, and a text with a progress bar — rendered in the row's value column by every renderer.",
+        [
+            node(0, "#0", {"type": "tree"}, layout=stack("vertical"), children=[1]),
+            node(1, "inputs", {"type": "treeSection", "label": "Inputs", "defaultOpen": True}, layout=stack("vertical"), children=[2, 7, 13, 21]),
+            node(2, "tint.row", {"type": "treeItem", "label": "Tint"}, layout=stack("vertical"), accessibility={"label": "Tint"}, children=[3]),
+            node(3, "tint", {"type": "container", "role": "group", "label": "Tint"}, layout=stack("horizontal", gap="sm", wrap=True), children=[4, 5, 6]),
+            node(4, "swatch", {"type": "input", "kind": "color", "value": "#ff8000"}, accessibility={"label": "Tint"}, bindings=[action("setTint", "change")]),
+            node(5, "hex", {"type": "input", "value": "#ff800080", "commit": "blur"}, accessibility={"label": "Hex"}, bindings=[action("setTint", "change")]),
+            node(6, "alpha", {"type": "slider", "value": 0.5, "min": 0.0, "max": 1.0, "step": 0.01}, accessibility={"label": "Alpha"}, bindings=[action("setTintAlpha", "change")]),
+            node(7, "offset.row", {"type": "treeItem", "label": "Offset"}, layout=stack("vertical"), accessibility={"label": "Offset"}, children=[8]),
+            node(8, "offset", {"type": "container", "role": "group", "label": "Offset"}, layout=stack("horizontal", gap="sm", wrap=True), children=[9, 11]),
+            node(9, "dx.axis", {"type": "container", "role": "field", "label": "X", "description": "mm"}, layout=stack("vertical"), children=[10]),
+            node(10, "dx", {"type": "input", "kind": "number", "value": "1.3", "commit": "blur", "step": 0.5, "precision": 1, "snaps": [0.0]}, accessibility={"label": "X"}, bindings=[action("setDx", "commit")]),
+            node(11, "dy.axis", {"type": "container", "role": "field", "label": "Y", "description": "mm"}, layout=stack("vertical"), children=[12]),
+            node(12, "dy", {"type": "input", "kind": "number", "value": "-3.0", "commit": "blur", "step": 0.5, "precision": 1, "snaps": [0.0]}, accessibility={"label": "Y"}, bindings=[action("setDy", "commit")]),
+            node(13, "targets.row", {"type": "treeItem", "label": "Targets"}, layout=stack("vertical"), accessibility={"label": "Targets"}, children=[14]),
+            node(14, "targets", {"type": "container", "role": "group", "label": "Targets"}, layout=stack("vertical", gap="xs"), children=[15, 18]),
+            node(15, "chips", {"type": "container", "role": "toolbar", "label": "Targets"}, layout=stack("horizontal", gap="xs", wrap=True), children=[16, 17]),
+            node(16, "piece-3", {"type": "button", "icon": "x", "label": "Piece 3"}, style={"variant": "outline"}, accessibility={"label": "Remove Piece 3"}, bindings=[action("removeTarget")]),
+            node(17, "piece-7", {"type": "button", "icon": "x", "label": "Piece 7"}, style={"variant": "outline"}, accessibility={"label": "Remove Piece 7"}, bindings=[action("removeTarget")]),
+            node(18, "actions", {"type": "container"}, layout=stack("horizontal", gap="xs", wrap=True), children=[19, 20]),
+            node(19, "useSelection", {"type": "button", "icon": "crosshair", "label": "Use selection"}, accessibility={"label": "Use selection"}, bindings=[action("useSelection")]),
+            node(20, "candidates", {"type": "select", "value": "", "items": [{"value": "piece-9", "label": "Piece 9"}], "placeholder": "Add target"}, accessibility={"label": "Add target"}, bindings=[action("addTarget", "change")]),
+            node(21, "replay.row", {"type": "treeItem", "label": "Replay"}, layout=stack("vertical"), accessibility={"label": "Replay"}, children=[22, 23]),
+            node(22, "replay.text", {"type": "text", "value": "Replaying 3 of 7"}),
+            node(23, "replay.progress", {"type": "progress", "completed": 3.0, "total": 7.0, "valueText": "3 of 7"}, accessibility={"label": "Replay progress"}),
         ],
     ),
     ("🖥️composite", "reference-list", "🧷️reference-list"): (

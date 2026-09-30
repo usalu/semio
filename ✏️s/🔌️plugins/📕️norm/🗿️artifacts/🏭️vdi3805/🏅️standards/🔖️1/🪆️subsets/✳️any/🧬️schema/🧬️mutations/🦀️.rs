@@ -181,9 +181,6 @@ mod tests;
 // inline module's own name out of the base directory, so every leaf path below is read
 // straight off this `🧬️mutations/` directory (ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION,
 // contract D1).
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
 //#endregion 🧪️FixtureTests
 
 //#region 🌉️ExternalCodecBridge
@@ -223,3 +220,10 @@ pub fn inverse_vdi3805_mutation(mutation: &Vdi3805Mutation, base: &Vdi3805Snapsh
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
 //#endregion 🧪️KindsCatalog
+
+
+//#region 🧫️Vectors
+#[cfg(test)]
+#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
+mod fixture_tests;
+//#endregion 🧫️Vectors

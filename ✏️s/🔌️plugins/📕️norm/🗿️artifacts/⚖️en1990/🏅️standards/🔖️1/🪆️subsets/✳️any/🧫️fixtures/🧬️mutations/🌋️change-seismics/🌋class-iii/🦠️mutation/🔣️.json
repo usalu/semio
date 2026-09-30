@@ -1,0 +1,10 @@
+{
+  "mutation": "changeSeismics",
+  "newSeismics": [
+    {
+      "aEk": 60000.0,
+      "id": "E-1",
+      "importanceClass": "III"
+    }
+  ]
+}

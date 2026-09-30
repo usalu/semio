@@ -1,0 +1,54 @@
+{
+  "artifact": null,
+  "annex": null,
+  "materials": null,
+  "sections": null,
+  "members": [
+    {
+      "id": "post-chs",
+      "sectionId": "sec-chs168",
+      "materialId": "mat-6082",
+      "length": 3.0,
+      "support": "cantilever",
+      "bucklingLengthY": 3.0,
+      "bucklingLengthZ": 3.0,
+      "bucklingLengthT": 3.0,
+      "ltbLength": 3.0,
+      "c1": 1.0,
+      "restrainedLtb": false,
+      "actions": [
+        {
+          "id": "G-post",
+          "kind": "permanent",
+          "category": "self",
+          "source": "external",
+          "gKLine": 50.0,
+          "qKLine": 0.0,
+          "nK": -8000.0,
+          "vYK": 20.0,
+          "vZK": 80.0,
+          "mYK": 120.0,
+          "mZK": 15.0
+        },
+        {
+          "id": "Q-post",
+          "kind": "imposed",
+          "category": "office",
+          "source": "external",
+          "gKLine": 0.0,
+          "qKLine": 40.0,
+          "nK": -2000.0,
+          "vYK": 15.0,
+          "vZK": 40.0,
+          "mYK": 50.0,
+          "mZK": 10.0
+        }
+      ]
+    }
+  ],
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": null
+}

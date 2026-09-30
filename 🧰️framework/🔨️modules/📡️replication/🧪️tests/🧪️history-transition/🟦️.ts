@@ -5,12 +5,19 @@ type TestSource = { readonly directory: string; readonly url: string };
 /** 🔀️ Validates the neutral `semio.history.transition` payload corpus against its JSON Schema (Ajv) and
  * re-encodes every accepted case with an encoder written from the wire grammar alone, so the corpus is
  * pinned by three independent implementations (the Python generator `./🐍️.py`, the Rust codec, this one). */
-export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, source: TestSource, diffSchema: string, dependencies: Pick<typeof import("../../🟦️.ts"), "historyTransitionId">): Promise<void> {
-  const { historyTransitionId } = dependencies;
+export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, source: TestSource, diffSchema: string, dependencies: Pick<typeof import("../../🟦️.ts"), "historyTransitionId" | "trunkAlternativeId" | "historyShapeAdmits" | "HISTORY_TRANSITION_KINDS">): Promise<void> {
+  const { historyTransitionId, trunkAlternativeId, historyShapeAdmits, HISTORY_TRANSITION_KINDS } = dependencies;
   const { describe, expect, it } = vitest;
 
   type Transition = Readonly<Record<string, any>>;
-  type Fixture = Readonly<{ schema: string; diffSchema: string; idClock: Readonly<{ actor: number; physicalMs: number; logical: number }>; cases: readonly Readonly<{ id: string; payloadHex: string; expect: Readonly<{ outcome: "accepted" | "malformed"; transition?: Transition; transitionId?: string; detail?: string }> }>[] }>;
+  type Fixture = Readonly<{
+    schema: string;
+    diffSchema: string;
+    idClock: Readonly<{ actor: number; physicalMs: number; logical: number }>;
+    cases: readonly Readonly<{ id: string; payloadHex: string; expect: Readonly<{ outcome: "accepted" | "malformed"; transition?: Transition; transitionId?: string; detail?: string }> }>[];
+    trunks: readonly Readonly<{ documentId: string; alternativeId: string }>[];
+    shapes: readonly Readonly<{ shape: "document" | "config"; admits: readonly string[] }>[];
+  }>;
 
   const varint = (value: number): number[] => {
     const out: number[] = [];
@@ -93,6 +100,8 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(toHex(encode(row.expect.transition!)), row.id).toBe(row.payloadHex);
         expect(historyTransitionId(clock, hex(row.payloadHex)), row.id).toBe(row.expect.transitionId);
       }
+      for (const trunk of fixture.trunks) expect(trunkAlternativeId(trunk.documentId), trunk.documentId).toBe(trunk.alternativeId);
+      for (const row of fixture.shapes) expect(HISTORY_TRANSITION_KINDS.filter((kind) => historyShapeAdmits(row.shape, kind)), row.shape).toEqual(row.admits);
     });
 
     it("refuses a transition shape the wire grammar does not define", async () => {

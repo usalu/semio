@@ -1,0 +1,49 @@
+{
+  "artifact": null,
+  "annex": null,
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "loadCases": null,
+  "memberActions": {
+    "values": [
+      {
+        "id": "act-b1-uls",
+        "memberId": "member-b1",
+        "loadCaseId": "uls-1",
+        "action": {
+          "n": 200000.0,
+          "vy": 0.0,
+          "vz": 50000.0,
+          "my": 120000.0,
+          "mz": 0.0,
+          "t": 0.0
+        }
+      },
+      {
+        "id": "act-b1-sls",
+        "memberId": "member-b1",
+        "loadCaseId": "sls-1",
+        "action": {
+          "n": 0.0,
+          "vy": 0.0,
+          "vz": 30000.0,
+          "my": 45000.0,
+          "mz": 0.0,
+          "t": 0.0
+        }
+      }
+    ]
+  },
+  "joints": null,
+  "fatigueDetails": null,
+  "fireExposures": null,
+  "coldFormedMembers": null,
+  "platedPanels": null,
+  "siloShells": null,
+  "tensionComponents": null,
+  "bridgeFatigue": null,
+  "towerLegs": null,
+  "piles": null,
+  "craneRunways": null
+}

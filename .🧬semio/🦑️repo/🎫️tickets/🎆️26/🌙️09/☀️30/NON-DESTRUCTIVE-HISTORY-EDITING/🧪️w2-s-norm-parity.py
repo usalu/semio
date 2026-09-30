@@ -625,8 +625,45 @@ def build_snapshot(artifact, builder, documents):
     scoped = {**documents, "__artifact__": artifact.key}
     for name, generated in builder.defs.items():
         defs[name] = merge_definition(generated, defs.get(name), table.get(name), options.get(name), scoped, name)
+    root = labels.SNAPSHOT_ROOT_FROM_RUST.get(artifact.key)
+    if root:
+        generated = builder.definition(root)
+        old_properties = facet.get("properties", OrderedDict())
+        facet["additionalProperties"] = False
+        facet["required"] = generated["required"]
+        facet["properties"] = OrderedDict((wire, merge_property(node, OrderedDict((key, value) for key, value in (old_properties.get(wire) or {}).items() if key in ANNOTATIONS), scoped)) for wire, node in generated["properties"].items())
+    for name in list(defs):
+        defs[name] = declared_formats(artifact, name, defs[name])
     facet["$defs"] = defs
     return facet
+
+
+FORMAT_FILES = (("🦀️rust", "🦀️.rs"), ("🟦️typescript", "🟦️.ts"), ("🔗️graphql", "🔗️.graphql"), ("🛰️protobuf", "🛰️.proto"))
+
+
+def declares(format_id, source, name):
+    """🔎️ The schema checker's presence rule (`declaresSchemaExport`) for one twin format."""
+    escaped = re.escape(name)
+    patterns = {
+        "🛰️protobuf": rf"^\s*message\s+{escaped}\b",
+        "🔗️graphql": rf"^\s*(?:type|input|enum|interface|union|scalar)\s+{escaped}\b",
+        "🦀️rust": rf"^\s*pub\s+(?:struct|enum|type)\s+{escaped}\b|^\s*pub\s+use\s+(?![^;\n]*[{{*])[A-Za-z_][A-Za-z0-9_]*(?:\s*::\s*[A-Za-z_][A-Za-z0-9_]*)*\s*::\s*(?:{escaped}|[A-Za-z_][A-Za-z0-9_]*\s+as\s+{escaped})\s*;",
+        "🟦️typescript": rf"^\s*export\s+(?:interface|type|const|class)\s+{escaped}\b",
+    }
+    return re.search(patterns[format_id], source, flags=re.M) is not None
+
+
+def declared_formats(artifact, name, node):
+    """🏷️ `x-semio-formats` of one snapshot-facet export: the normative JSON Schema plus exactly the twin formats that declare it."""
+    folder = os.path.dirname(os.path.join(REPO, artifact.snapshot_path))
+    formats = ["🔣️jsonschema"]
+    for format_id, filename in FORMAT_FILES:
+        path = os.path.join(folder, filename)
+        if os.path.exists(path) and declares(format_id, open(path, encoding="utf-8").read(), name):
+            formats.append(format_id)
+    node = OrderedDict((key, value) for key, value in node.items() if key != "x-semio-formats")
+    node["x-semio-formats"] = formats
+    return order_node(node)
 #endregion 🔖️Definitions
 
 
@@ -664,6 +701,9 @@ def plan(selected=None):
             for field, wire, required in leaf_fields(leaf):
                 builder.schema(field["type"], False, os.path.dirname(os.path.join(REPO, leaf.rust_file)))
         builder.drain()
+        if labels.SNAPSHOT_ROOT_FROM_RUST.get(artifact.key):
+            builder.definition(labels.SNAPSHOT_ROOT_FROM_RUST[artifact.key])
+            builder.drain()
         documents = {}
         if artifact.snapshot_path:
             snapshot = build_snapshot(artifact, builder, {})

@@ -23,7 +23,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for PatchSnapshot {
     fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<<JpgMutation as Mutation<JpgSnapshot>>::Diff> {
         match editing::apply_snapshot_patch(base, &self.patch) {
             Ok(next) => protocol::MutationOutcome::new(<JpgDiff as DiffAlgebra<JpgSnapshot>>::between(base, &next)),
-            Err(error) => protocol::MutationOutcome::error(error.code, error.message, [error.path]),
+            Err(error) => protocol::MutationOutcome::refuse(error.outcome_code(), format!("{}: {}", error.code, error.message), [error.path]),
         }
     }
 

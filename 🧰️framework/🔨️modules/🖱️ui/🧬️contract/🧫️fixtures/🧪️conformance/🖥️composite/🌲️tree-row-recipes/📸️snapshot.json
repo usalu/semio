@@ -1,0 +1,692 @@
+{
+  "surface": "conformance.composite.tree-row-recipes",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "tree"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        1
+      ]
+    },
+    {
+      "id": 1,
+      "key": "inputs",
+      "component": {
+        "type": "treeSection",
+        "label": "Inputs",
+        "defaultOpen": true
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        2,
+        7,
+        13,
+        21
+      ]
+    },
+    {
+      "id": 2,
+      "key": "tint.row",
+      "component": {
+        "type": "treeItem",
+        "label": "Tint"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Tint"
+      },
+      "children": [
+        3
+      ]
+    },
+    {
+      "id": 3,
+      "key": "tint",
+      "component": {
+        "type": "container",
+        "role": "group",
+        "label": "Tint"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "horizontal",
+        "gap": "sm",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": true
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "id": 4,
+      "key": "swatch",
+      "component": {
+        "type": "input",
+        "kind": "color",
+        "value": "#ff8000"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Tint"
+      },
+      "bindings": [
+        {
+          "trigger": "change",
+          "action": {
+            "scope": "app",
+            "name": "setTint",
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "key": "hex",
+      "component": {
+        "type": "input",
+        "value": "#ff800080",
+        "commit": "blur"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Hex"
+      },
+      "bindings": [
+        {
+          "trigger": "change",
+          "action": {
+            "scope": "app",
+            "name": "setTint",
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "key": "alpha",
+      "component": {
+        "type": "slider",
+        "value": 0.5,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.01
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Alpha"
+      },
+      "bindings": [
+        {
+          "trigger": "change",
+          "action": {
+            "scope": "app",
+            "name": "setTintAlpha",
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "key": "offset.row",
+      "component": {
+        "type": "treeItem",
+        "label": "Offset"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Offset"
+      },
+      "children": [
+        8
+      ]
+    },
+    {
+      "id": 8,
+      "key": "offset",
+      "component": {
+        "type": "container",
+        "role": "group",
+        "label": "Offset"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "horizontal",
+        "gap": "sm",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": true
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        9,
+        11
+      ]
+    },
+    {
+      "id": 9,
+      "key": "dx.axis",
+      "component": {
+        "type": "container",
+        "role": "field",
+        "label": "X",
+        "description": "mm"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        10
+      ]
+    },
+    {
+      "id": 10,
+      "key": "dx",
+      "component": {
+        "type": "input",
+        "kind": "number",
+        "value": "1.3",
+        "commit": "blur",
+        "step": 0.5,
+        "precision": 1,
+        "snaps": [
+          0.0
+        ]
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "X"
+      },
+      "bindings": [
+        {
+          "trigger": "commit",
+          "action": {
+            "scope": "app",
+            "name": "setDx",
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "key": "dy.axis",
+      "component": {
+        "type": "container",
+        "role": "field",
+        "label": "Y",
+        "description": "mm"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        12
+      ]
+    },
+    {
+      "id": 12,
+      "key": "dy",
+      "component": {
+        "type": "input",
+        "kind": "number",
+        "value": "-3.0",
+        "commit": "blur",
+        "step": 0.5,
+        "precision": 1,
+        "snaps": [
+          0.0
+        ]
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Y"
+      },
+      "bindings": [
+        {
+          "trigger": "commit",
+          "action": {
+            "scope": "app",
+            "name": "setDy",
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "key": "targets.row",
+      "component": {
+        "type": "treeItem",
+        "label": "Targets"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Targets"
+      },
+      "children": [
+        14
+      ]
+    },
+    {
+      "id": 14,
+      "key": "targets",
+      "component": {
+        "type": "container",
+        "role": "group",
+        "label": "Targets"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "xs",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        15,
+        18
+      ]
+    },
+    {
+      "id": 15,
+      "key": "chips",
+      "component": {
+        "type": "container",
+        "role": "toolbar",
+        "label": "Targets"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "horizontal",
+        "gap": "xs",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": true
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        16,
+        17
+      ]
+    },
+    {
+      "id": 16,
+      "key": "piece-3",
+      "component": {
+        "type": "button",
+        "icon": "x",
+        "label": "Piece 3"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {
+        "variant": "outline"
+      },
+      "activity": "idle",
+      "accessibility": {
+        "label": "Remove Piece 3"
+      },
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "app",
+            "name": "removeTarget",
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "key": "piece-7",
+      "component": {
+        "type": "button",
+        "icon": "x",
+        "label": "Piece 7"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {
+        "variant": "outline"
+      },
+      "activity": "idle",
+      "accessibility": {
+        "label": "Remove Piece 7"
+      },
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "app",
+            "name": "removeTarget",
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "key": "actions",
+      "component": {
+        "type": "container"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "horizontal",
+        "gap": "xs",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": true
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        19,
+        20
+      ]
+    },
+    {
+      "id": 19,
+      "key": "useSelection",
+      "component": {
+        "type": "button",
+        "icon": "crosshair",
+        "label": "Use selection"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Use selection"
+      },
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "app",
+            "name": "useSelection",
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "key": "candidates",
+      "component": {
+        "type": "select",
+        "value": "",
+        "items": [
+          {
+            "value": "piece-9",
+            "label": "Piece 9"
+          }
+        ],
+        "placeholder": "Add target"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Add target"
+      },
+      "bindings": [
+        {
+          "trigger": "change",
+          "action": {
+            "scope": "app",
+            "name": "addTarget",
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "key": "replay.row",
+      "component": {
+        "type": "treeItem",
+        "label": "Replay"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Replay"
+      },
+      "children": [
+        22,
+        23
+      ]
+    },
+    {
+      "id": 22,
+      "key": "replay.text",
+      "component": {
+        "type": "text",
+        "value": "Replaying 3 of 7"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    },
+    {
+      "id": 23,
+      "key": "replay.progress",
+      "component": {
+        "type": "progress",
+        "completed": 3.0,
+        "total": 7.0,
+        "valueText": "3 of 7"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Replay progress"
+      }
+    }
+  ],
+  "layoutEpoch": 0
+}

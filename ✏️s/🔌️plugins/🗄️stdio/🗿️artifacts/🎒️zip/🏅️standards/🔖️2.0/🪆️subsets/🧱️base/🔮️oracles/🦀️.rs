@@ -147,7 +147,7 @@ mod live {
             }
             "rename-entry" => {
                 let name = params.str("name");
-                let new_name = params.str("new_name");
+                let new_name = params.str("newName");
                 match archive.entries.iter_mut().find(|entry| entry.name == name) {
                     Some(entry) => {
                         entry.name = new_name;
@@ -203,7 +203,7 @@ mod live {
             }
             "rename-entry" => {
                 let name = params.str("name");
-                let new_name = params.str("new_name");
+                let new_name = params.str("newName");
                 let mut restored = mutated;
                 match restored.entries.iter_mut().find(|entry| entry.name == new_name) {
                     Some(entry) => {

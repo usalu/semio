@@ -89,8 +89,8 @@ describe("framework renderer wgpu plugin bridge", () => {
 
   it("hands the guest's last ephemeral frame to Rust as bytes, and nothing before the guest published one", async () => {
     const { wgpuEphemeralSnapshot } = await import("../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts");
-    const published = pluginHandleForBridge(fakeHandle({ ephemeralSnapshot: (instanceId) => (instanceId === 7 ? wgpuEphemeralSnapshot({ presence: [1, 2], presenceGeneration: 3, interaction: [4] }) : null) }));
-    expect(published.ephemeralSnapshot(7)).toEqual({ presence: Uint8Array.from([1, 2]), presenceGeneration: 3, interaction: Uint8Array.from([4]) });
+    const published = pluginHandleForBridge(fakeHandle({ ephemeralSnapshot: (instanceId) => (instanceId === 7 ? wgpuEphemeralSnapshot({ presence: [1, 2], presenceGeneration: 3, interaction: [4], toolRun: [5], historyEdit: [6, 7] }) : null) }));
+    expect(published.ephemeralSnapshot(7), "the guest's own tool run and history edit ride along for the presence heartbeat").toEqual({ presence: Uint8Array.from([1, 2]), presenceGeneration: 3, interaction: Uint8Array.from([4]), toolRun: Uint8Array.from([5]), historyEdit: Uint8Array.from([6, 7]) });
     expect(published.ephemeralSnapshot(8), "an instance whose guest published nothing carries no app presence").toBeNull();
     expect(wgpuEphemeralSnapshot(null)).toBeNull();
   });

@@ -4,8 +4,10 @@
 //! `mutation.target-missing`, a node that ALREADY equals the captured `original` is Warning
 //! `mutation.no-op`. Otherwise the diff is a `Replace` carrying the payload's whole captured node.
 //! `unflatten` is the only leaf in this subset whose payload embeds an entire `DrawNode` as
-//! restore data — it is the undo half of `flatten`, and its OWN inverse is `flatten` again.
+//! restore data — it is the undo half of `flatten`, and its OWN inverse captures the node it
+//! overwrites, because `flatten` restores only a node that was the flattening of `original`.
 
+use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
 use crate::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
 use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
@@ -42,21 +44,38 @@ async fn restores_the_nested_structure_from_the_captured_node() {
     assert_eq!(children[0], base_children[0], "the sibling nodes must be byte-identical");
 }
 
-/// ↩️ `unflatten`'s undo is a bare `flatten` at the same path — no capture needed, because
-/// flattening the restored hierarchy reproduces the flat node deterministically.
+/// ↩️ `unflatten`'s undo captures the node it overwrites and puts exactly that node back.
 #[semio_framework_async_macros::async_test]
-async fn the_undo_flatten_needs_no_capture_of_its_own() {
+async fn the_undo_restores_the_overwritten_node() {
     let base = before();
     let mutation = mutation();
     let undo = mutation.inverse(&base);
-    assert_eq!(undo.len(), 1, "unflatten undoes as exactly one flatten");
-    let SemioDrawingMutation::FlattenNode(reflatten) = &undo[0] else { panic!("unflatten must undo as flatten") };
-    assert_eq!(reflatten.at.path, vec![2usize], "the undo addresses the very same node path");
+    assert_eq!(undo.len(), 1, "unflatten undoes as exactly one capture of the overwritten node");
+    let SemioDrawingMutation::UnflattenNode(restore) = &undo[0] else { panic!("unflatten must undo as the captured node's own restore") };
+    let DrawNode::Group { children, .. } = &base.layers[0].root else { panic!("the layer root is a group") };
+    assert_eq!(restore.at.path, vec![2usize], "the undo addresses the very same node path");
+    assert_eq!(restore.original, children[2], "the undo carries the node the restore overwrites");
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward unflatten applies");
     for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo flatten applies");
+        current = step.diff(&current).diff().apply(&current).expect("the undo applies");
     }
     assert_eq!(current, base, "unflatten/restores-the-captured-hierarchy-over-the-flat-group: the undo did not restore the before-snapshot");
+}
+
+/// 🔁️ Restoring over a node that is NOT the flattening of `original` is undone exactly too — the case a bare
+/// `flatten` could never undo, since flattening the replacement does not bring the replaced node back.
+#[semio_framework_async_macros::async_test]
+async fn the_undo_restores_a_node_that_was_not_the_flattening() {
+    let base = expected_after();
+    let replacement = DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Group { transform: SemioTransform::identity(), children: Vec::new() }] };
+    let SemioDrawingMutation::UnflattenNode(payload) = mutation() else { panic!("the committed payload is an unflatten") };
+    let mutation = SemioDrawingMutation::UnflattenNode(crate::standards::v1::subsets::drawing::schema::mutations::unflatten_node::UnflattenNode { at: payload.at, original: replacement });
+    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward unflatten applies");
+    assert_ne!(current, base, "the replacement moves the drawing");
+    for step in &mutation.inverse(&base) {
+        current = step.diff(&current).diff().apply(&current).expect("the undo applies");
+    }
+    assert_eq!(current, base, "undoing a restore over a nested hierarchy puts that hierarchy back");
 }
 
 /// 🔣️ Snapshots and the payload are canonical — the payload embeds a whole `DrawNode`, so the recursive `kind`-tagged encoding appears inside the mutation itself.

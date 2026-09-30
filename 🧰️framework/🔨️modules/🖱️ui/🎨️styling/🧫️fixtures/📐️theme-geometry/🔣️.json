@@ -1,0 +1,800 @@
+{
+  "cases": [
+    {
+      "name": "canonical",
+      "compact": "0.2rem",
+      "rootRemPx": 16,
+      "metrics": {
+        "chrome": {
+          "navbarHeightUiSpacing": 9.0,
+          "footerHeightUiSpacing": 9.0,
+          "panelHeaderHeightUiSpacing": 7.0,
+          "controlHeightUiSpacing": 7.0,
+          "controlHeightSmallUiSpacing": 5.0,
+          "gapStandardUiSpacing": 1.0,
+          "paddingStandardUiSpacing": 1.0,
+          "panelInsetUiSpacing": 1.0
+        },
+        "dom": {
+          "treeRowUiSpacing": 7.5,
+          "treeIndentPerLevelUiSpacing": 3.125,
+          "treeToggleUiSpacing": 4.375,
+          "layoutPanelMinUiSpacing": 46.875,
+          "layoutPanelMaxUiSpacing": 150.0,
+          "layoutPanelRailUiSpacing": 93.75,
+          "layoutEngagementMaxUiSpacing": 140.0
+        },
+        "typography": {
+          "textSmPx": 12.8,
+          "textXsPx": 11.2,
+          "textBasePx": 14.4
+        }
+      },
+      "expectedSpacingPx": 3.2,
+      "expected": {
+        "navbar_height": 28.8,
+        "footer_height": 28.8,
+        "panel_header_height": 22.400000000000002,
+        "control_height": 22.400000000000002,
+        "control_height_small": 16.0,
+        "gap_standard": 3.2,
+        "padding_standard": 3.2,
+        "panel_inset": 3.2,
+        "tree_row_height": 24.0,
+        "tree_indent_per_level": 10.0,
+        "tree_toggle_width": 14.0,
+        "panel_min_width": 150.0,
+        "panel_max_width": 480.0,
+        "window_measures_default_width": 300.0,
+        "window_engagement_max_width": 448.0,
+        "font_size_body": 12.8,
+        "font_size_small": 11.2,
+        "font_size_emphasized": 14.4
+      }
+    },
+    {
+      "name": "custom-rem",
+      "compact": "0.25rem",
+      "rootRemPx": 16,
+      "metrics": {
+        "chrome": {
+          "navbarHeightUiSpacing": 9.0,
+          "footerHeightUiSpacing": 9.0,
+          "panelHeaderHeightUiSpacing": 7.0,
+          "controlHeightUiSpacing": 7.0,
+          "controlHeightSmallUiSpacing": 5.0,
+          "gapStandardUiSpacing": 1.0,
+          "paddingStandardUiSpacing": 1.0,
+          "panelInsetUiSpacing": 1.0
+        },
+        "dom": {
+          "treeRowUiSpacing": 7.5,
+          "treeIndentPerLevelUiSpacing": 3.125,
+          "treeToggleUiSpacing": 4.375,
+          "layoutPanelMinUiSpacing": 46.875,
+          "layoutPanelMaxUiSpacing": 150.0,
+          "layoutPanelRailUiSpacing": 93.75,
+          "layoutEngagementMaxUiSpacing": 140.0
+        },
+        "typography": {
+          "textSmPx": 12.8,
+          "textXsPx": 11.2,
+          "textBasePx": 14.4
+        }
+      },
+      "expectedSpacingPx": 4.0,
+      "expected": {
+        "navbar_height": 36.0,
+        "footer_height": 36.0,
+        "panel_header_height": 28.0,
+        "control_height": 28.0,
+        "control_height_small": 20.0,
+        "gap_standard": 4.0,
+        "padding_standard": 4.0,
+        "panel_inset": 4.0,
+        "tree_row_height": 30.0,
+        "tree_indent_per_level": 12.5,
+        "tree_toggle_width": 17.5,
+        "panel_min_width": 187.5,
+        "panel_max_width": 600.0,
+        "window_measures_default_width": 375.0,
+        "window_engagement_max_width": 560.0,
+        "font_size_body": 12.8,
+        "font_size_small": 11.2,
+        "font_size_emphasized": 14.4
+      }
+    },
+    {
+      "name": "custom-px",
+      "compact": "5px",
+      "rootRemPx": 16,
+      "metrics": {
+        "chrome": {
+          "navbarHeightUiSpacing": 9.0,
+          "footerHeightUiSpacing": 9.0,
+          "panelHeaderHeightUiSpacing": 7.0,
+          "controlHeightUiSpacing": 7.0,
+          "controlHeightSmallUiSpacing": 5.0,
+          "gapStandardUiSpacing": 1.0,
+          "paddingStandardUiSpacing": 1.0,
+          "panelInsetUiSpacing": 1.0
+        },
+        "dom": {
+          "treeRowUiSpacing": 7.5,
+          "treeIndentPerLevelUiSpacing": 3.125,
+          "treeToggleUiSpacing": 4.375,
+          "layoutPanelMinUiSpacing": 46.875,
+          "layoutPanelMaxUiSpacing": 150.0,
+          "layoutPanelRailUiSpacing": 93.75,
+          "layoutEngagementMaxUiSpacing": 140.0
+        },
+        "typography": {
+          "textSmPx": 12.8,
+          "textXsPx": 11.2,
+          "textBasePx": 14.4
+        }
+      },
+      "expectedSpacingPx": 5.0,
+      "expected": {
+        "navbar_height": 45.0,
+        "footer_height": 45.0,
+        "panel_header_height": 35.0,
+        "control_height": 35.0,
+        "control_height_small": 25.0,
+        "gap_standard": 5.0,
+        "padding_standard": 5.0,
+        "panel_inset": 5.0,
+        "tree_row_height": 37.5,
+        "tree_indent_per_level": 15.625,
+        "tree_toggle_width": 21.875,
+        "panel_min_width": 234.375,
+        "panel_max_width": 750.0,
+        "window_measures_default_width": 468.75,
+        "window_engagement_max_width": 700.0,
+        "font_size_body": 12.8,
+        "font_size_small": 11.2,
+        "font_size_emphasized": 14.4
+      }
+    },
+    {
+      "name": "custom-root",
+      "compact": "0.2rem",
+      "rootRemPx": 20,
+      "metrics": {
+        "chrome": {
+          "navbarHeightUiSpacing": 9.0,
+          "footerHeightUiSpacing": 9.0,
+          "panelHeaderHeightUiSpacing": 7.0,
+          "controlHeightUiSpacing": 7.0,
+          "controlHeightSmallUiSpacing": 5.0,
+          "gapStandardUiSpacing": 1.0,
+          "paddingStandardUiSpacing": 1.0,
+          "panelInsetUiSpacing": 1.0
+        },
+        "dom": {
+          "treeRowUiSpacing": 7.5,
+          "treeIndentPerLevelUiSpacing": 3.125,
+          "treeToggleUiSpacing": 4.375,
+          "layoutPanelMinUiSpacing": 46.875,
+          "layoutPanelMaxUiSpacing": 150.0,
+          "layoutPanelRailUiSpacing": 93.75,
+          "layoutEngagementMaxUiSpacing": 140.0
+        },
+        "typography": {
+          "textSmPx": 12.8,
+          "textXsPx": 11.2,
+          "textBasePx": 14.4
+        }
+      },
+      "expectedSpacingPx": 4.0,
+      "expected": {
+        "navbar_height": 36.0,
+        "footer_height": 36.0,
+        "panel_header_height": 28.0,
+        "control_height": 28.0,
+        "control_height_small": 20.0,
+        "gap_standard": 4.0,
+        "padding_standard": 4.0,
+        "panel_inset": 4.0,
+        "tree_row_height": 30.0,
+        "tree_indent_per_level": 12.5,
+        "tree_toggle_width": 17.5,
+        "panel_min_width": 187.5,
+        "panel_max_width": 600.0,
+        "window_measures_default_width": 375.0,
+        "window_engagement_max_width": 560.0,
+        "font_size_body": 12.8,
+        "font_size_small": 11.2,
+        "font_size_emphasized": 14.4
+      }
+    },
+    {
+      "name": "independent-metrics",
+      "compact": "0.25rem",
+      "rootRemPx": 16,
+      "metrics": {
+        "chrome": {
+          "navbarHeightUiSpacing": 20,
+          "footerHeightUiSpacing": 11,
+          "panelHeaderHeightUiSpacing": 7.0,
+          "controlHeightUiSpacing": 8,
+          "controlHeightSmallUiSpacing": 5.0,
+          "gapStandardUiSpacing": 2,
+          "paddingStandardUiSpacing": 3,
+          "panelInsetUiSpacing": 2
+        },
+        "dom": {
+          "treeRowUiSpacing": 7.5,
+          "treeIndentPerLevelUiSpacing": 3.125,
+          "treeToggleUiSpacing": 4.375,
+          "layoutPanelMinUiSpacing": 46.875,
+          "layoutPanelMaxUiSpacing": 150.0,
+          "layoutPanelRailUiSpacing": 80,
+          "layoutEngagementMaxUiSpacing": 140.0
+        },
+        "typography": {
+          "textSmPx": 15,
+          "textXsPx": 11.2,
+          "textBasePx": 14.4
+        }
+      },
+      "expectedSpacingPx": 4.0,
+      "expected": {
+        "navbar_height": 80.0,
+        "footer_height": 44.0,
+        "panel_header_height": 28.0,
+        "control_height": 32.0,
+        "control_height_small": 20.0,
+        "gap_standard": 8.0,
+        "padding_standard": 12.0,
+        "panel_inset": 8.0,
+        "tree_row_height": 30.0,
+        "tree_indent_per_level": 12.5,
+        "tree_toggle_width": 17.5,
+        "panel_min_width": 187.5,
+        "panel_max_width": 600.0,
+        "window_measures_default_width": 320.0,
+        "window_engagement_max_width": 560.0,
+        "font_size_body": 15,
+        "font_size_small": 11.2,
+        "font_size_emphasized": 14.4
+      }
+    },
+    {
+      "name": "zero-spacing",
+      "compact": "0px",
+      "rootRemPx": 16,
+      "metrics": {
+        "chrome": {
+          "navbarHeightUiSpacing": 9.0,
+          "footerHeightUiSpacing": 9.0,
+          "panelHeaderHeightUiSpacing": 7.0,
+          "controlHeightUiSpacing": 7.0,
+          "controlHeightSmallUiSpacing": 5.0,
+          "gapStandardUiSpacing": 1.0,
+          "paddingStandardUiSpacing": 1.0,
+          "panelInsetUiSpacing": 1.0
+        },
+        "dom": {
+          "treeRowUiSpacing": 7.5,
+          "treeIndentPerLevelUiSpacing": 3.125,
+          "treeToggleUiSpacing": 4.375,
+          "layoutPanelMinUiSpacing": 46.875,
+          "layoutPanelMaxUiSpacing": 150.0,
+          "layoutPanelRailUiSpacing": 93.75,
+          "layoutEngagementMaxUiSpacing": 140.0
+        },
+        "typography": {
+          "textSmPx": 12.8,
+          "textXsPx": 11.2,
+          "textBasePx": 14.4
+        }
+      },
+      "expectedSpacingPx": 0.0,
+      "expected": {
+        "navbar_height": 0.0,
+        "footer_height": 0.0,
+        "panel_header_height": 0.0,
+        "control_height": 0.0,
+        "control_height_small": 0.0,
+        "gap_standard": 0.0,
+        "padding_standard": 0.0,
+        "panel_inset": 0.0,
+        "tree_row_height": 0.0,
+        "tree_indent_per_level": 0.0,
+        "tree_toggle_width": 0.0,
+        "panel_min_width": 0.0,
+        "panel_max_width": 0.0,
+        "window_measures_default_width": 0.0,
+        "window_engagement_max_width": 0.0,
+        "font_size_body": 12.8,
+        "font_size_small": 11.2,
+        "font_size_emphasized": 14.4
+      }
+    },
+    {
+      "name": "leading-dot",
+      "compact": ".25rem",
+      "rootRemPx": 16,
+      "metrics": {
+        "chrome": {
+          "navbarHeightUiSpacing": 9.0,
+          "footerHeightUiSpacing": 9.0,
+          "panelHeaderHeightUiSpacing": 7.0,
+          "controlHeightUiSpacing": 7.0,
+          "controlHeightSmallUiSpacing": 5.0,
+          "gapStandardUiSpacing": 1.0,
+          "paddingStandardUiSpacing": 1.0,
+          "panelInsetUiSpacing": 1.0
+        },
+        "dom": {
+          "treeRowUiSpacing": 7.5,
+          "treeIndentPerLevelUiSpacing": 3.125,
+          "treeToggleUiSpacing": 4.375,
+          "layoutPanelMinUiSpacing": 46.875,
+          "layoutPanelMaxUiSpacing": 150.0,
+          "layoutPanelRailUiSpacing": 93.75,
+          "layoutEngagementMaxUiSpacing": 140.0
+        },
+        "typography": {
+          "textSmPx": 12.8,
+          "textXsPx": 11.2,
+          "textBasePx": 14.4
+        }
+      },
+      "expectedSpacingPx": 4,
+      "expected": {
+        "navbar_height": 36.0,
+        "footer_height": 36.0,
+        "panel_header_height": 28.0,
+        "control_height": 28.0,
+        "control_height_small": 20.0,
+        "gap_standard": 4.0,
+        "padding_standard": 4.0,
+        "panel_inset": 4.0,
+        "tree_row_height": 30.0,
+        "tree_indent_per_level": 12.5,
+        "tree_toggle_width": 17.5,
+        "panel_min_width": 187.5,
+        "panel_max_width": 600.0,
+        "window_measures_default_width": 375.0,
+        "window_engagement_max_width": 560.0,
+        "font_size_body": 12.8,
+        "font_size_small": 11.2,
+        "font_size_emphasized": 14.4
+      }
+    },
+    {
+      "name": "whitespace",
+      "compact": " 5px ",
+      "rootRemPx": 16,
+      "metrics": {
+        "chrome": {
+          "navbarHeightUiSpacing": 9.0,
+          "footerHeightUiSpacing": 9.0,
+          "panelHeaderHeightUiSpacing": 7.0,
+          "controlHeightUiSpacing": 7.0,
+          "controlHeightSmallUiSpacing": 5.0,
+          "gapStandardUiSpacing": 1.0,
+          "paddingStandardUiSpacing": 1.0,
+          "panelInsetUiSpacing": 1.0
+        },
+        "dom": {
+          "treeRowUiSpacing": 7.5,
+          "treeIndentPerLevelUiSpacing": 3.125,
+          "treeToggleUiSpacing": 4.375,
+          "layoutPanelMinUiSpacing": 46.875,
+          "layoutPanelMaxUiSpacing": 150.0,
+          "layoutPanelRailUiSpacing": 93.75,
+          "layoutEngagementMaxUiSpacing": 140.0
+        },
+        "typography": {
+          "textSmPx": 12.8,
+          "textXsPx": 11.2,
+          "textBasePx": 14.4
+        }
+      },
+      "expectedSpacingPx": 5,
+      "expected": {
+        "navbar_height": 45.0,
+        "footer_height": 45.0,
+        "panel_header_height": 35.0,
+        "control_height": 35.0,
+        "control_height_small": 25.0,
+        "gap_standard": 5.0,
+        "padding_standard": 5.0,
+        "panel_inset": 5.0,
+        "tree_row_height": 37.5,
+        "tree_indent_per_level": 15.625,
+        "tree_toggle_width": 21.875,
+        "panel_min_width": 234.375,
+        "panel_max_width": 750.0,
+        "window_measures_default_width": 468.75,
+        "window_engagement_max_width": 700.0,
+        "font_size_body": 12.8,
+        "font_size_small": 11.2,
+        "font_size_emphasized": 14.4
+      }
+    },
+    {
+      "name": "css-number",
+      "compact": "+2.5e-1REM",
+      "rootRemPx": 16,
+      "metrics": {
+        "chrome": {
+          "navbarHeightUiSpacing": 9.0,
+          "footerHeightUiSpacing": 9.0,
+          "panelHeaderHeightUiSpacing": 7.0,
+          "controlHeightUiSpacing": 7.0,
+          "controlHeightSmallUiSpacing": 5.0,
+          "gapStandardUiSpacing": 1.0,
+          "paddingStandardUiSpacing": 1.0,
+          "panelInsetUiSpacing": 1.0
+        },
+        "dom": {
+          "treeRowUiSpacing": 7.5,
+          "treeIndentPerLevelUiSpacing": 3.125,
+          "treeToggleUiSpacing": 4.375,
+          "layoutPanelMinUiSpacing": 46.875,
+          "layoutPanelMaxUiSpacing": 150.0,
+          "layoutPanelRailUiSpacing": 93.75,
+          "layoutEngagementMaxUiSpacing": 140.0
+        },
+        "typography": {
+          "textSmPx": 12.8,
+          "textXsPx": 11.2,
+          "textBasePx": 14.4
+        }
+      },
+      "expectedSpacingPx": 4,
+      "expected": {
+        "navbar_height": 36.0,
+        "footer_height": 36.0,
+        "panel_header_height": 28.0,
+        "control_height": 28.0,
+        "control_height_small": 20.0,
+        "gap_standard": 4.0,
+        "padding_standard": 4.0,
+        "panel_inset": 4.0,
+        "tree_row_height": 30.0,
+        "tree_indent_per_level": 12.5,
+        "tree_toggle_width": 17.5,
+        "panel_min_width": 187.5,
+        "panel_max_width": 600.0,
+        "window_measures_default_width": 375.0,
+        "window_engagement_max_width": 560.0,
+        "font_size_body": 12.8,
+        "font_size_small": 11.2,
+        "font_size_emphasized": 14.4
+      }
+    },
+    {
+      "name": "unitless-zero",
+      "compact": "0",
+      "rootRemPx": 16,
+      "metrics": {
+        "chrome": {
+          "navbarHeightUiSpacing": 9.0,
+          "footerHeightUiSpacing": 9.0,
+          "panelHeaderHeightUiSpacing": 7.0,
+          "controlHeightUiSpacing": 7.0,
+          "controlHeightSmallUiSpacing": 5.0,
+          "gapStandardUiSpacing": 1.0,
+          "paddingStandardUiSpacing": 1.0,
+          "panelInsetUiSpacing": 1.0
+        },
+        "dom": {
+          "treeRowUiSpacing": 7.5,
+          "treeIndentPerLevelUiSpacing": 3.125,
+          "treeToggleUiSpacing": 4.375,
+          "layoutPanelMinUiSpacing": 46.875,
+          "layoutPanelMaxUiSpacing": 150.0,
+          "layoutPanelRailUiSpacing": 93.75,
+          "layoutEngagementMaxUiSpacing": 140.0
+        },
+        "typography": {
+          "textSmPx": 12.8,
+          "textXsPx": 11.2,
+          "textBasePx": 14.4
+        }
+      },
+      "expectedSpacingPx": 0,
+      "expected": {
+        "navbar_height": 0.0,
+        "footer_height": 0.0,
+        "panel_header_height": 0.0,
+        "control_height": 0.0,
+        "control_height_small": 0.0,
+        "gap_standard": 0.0,
+        "padding_standard": 0.0,
+        "panel_inset": 0.0,
+        "tree_row_height": 0.0,
+        "tree_indent_per_level": 0.0,
+        "tree_toggle_width": 0.0,
+        "panel_min_width": 0.0,
+        "panel_max_width": 0.0,
+        "window_measures_default_width": 0.0,
+        "window_engagement_max_width": 0.0,
+        "font_size_body": 12.8,
+        "font_size_small": 11.2,
+        "font_size_emphasized": 14.4
+      }
+    },
+    {
+      "name": "calc-root",
+      "compact": "calc(1px + 0.2rem)",
+      "rootRemPx": 16,
+      "metrics": {
+        "chrome": {
+          "navbarHeightUiSpacing": 9.0,
+          "footerHeightUiSpacing": 9.0,
+          "panelHeaderHeightUiSpacing": 7.0,
+          "controlHeightUiSpacing": 7.0,
+          "controlHeightSmallUiSpacing": 5.0,
+          "gapStandardUiSpacing": 1.0,
+          "paddingStandardUiSpacing": 1.0,
+          "panelInsetUiSpacing": 1.0
+        },
+        "dom": {
+          "treeRowUiSpacing": 7.5,
+          "treeIndentPerLevelUiSpacing": 3.125,
+          "treeToggleUiSpacing": 4.375,
+          "layoutPanelMinUiSpacing": 46.875,
+          "layoutPanelMaxUiSpacing": 150.0,
+          "layoutPanelRailUiSpacing": 93.75,
+          "layoutEngagementMaxUiSpacing": 140.0
+        },
+        "typography": {
+          "textSmPx": 12.8,
+          "textXsPx": 11.2,
+          "textBasePx": 14.4
+        }
+      },
+      "expectedSpacingPx": 4.2,
+      "expected": {
+        "navbar_height": 37.800000000000004,
+        "footer_height": 37.800000000000004,
+        "panel_header_height": 29.400000000000002,
+        "control_height": 29.400000000000002,
+        "control_height_small": 21.0,
+        "gap_standard": 4.2,
+        "padding_standard": 4.2,
+        "panel_inset": 4.2,
+        "tree_row_height": 31.5,
+        "tree_indent_per_level": 13.125,
+        "tree_toggle_width": 18.375,
+        "panel_min_width": 196.875,
+        "panel_max_width": 630.0,
+        "window_measures_default_width": 393.75,
+        "window_engagement_max_width": 588.0,
+        "font_size_body": 12.8,
+        "font_size_small": 11.2,
+        "font_size_emphasized": 14.4
+      }
+    },
+    {
+      "name": "nested-arithmetic",
+      "compact": "calc((2px + .25rem) * 2 / 3)",
+      "rootRemPx": 16,
+      "metrics": {
+        "chrome": {
+          "navbarHeightUiSpacing": 9.0,
+          "footerHeightUiSpacing": 9.0,
+          "panelHeaderHeightUiSpacing": 7.0,
+          "controlHeightUiSpacing": 7.0,
+          "controlHeightSmallUiSpacing": 5.0,
+          "gapStandardUiSpacing": 1.0,
+          "paddingStandardUiSpacing": 1.0,
+          "panelInsetUiSpacing": 1.0
+        },
+        "dom": {
+          "treeRowUiSpacing": 7.5,
+          "treeIndentPerLevelUiSpacing": 3.125,
+          "treeToggleUiSpacing": 4.375,
+          "layoutPanelMinUiSpacing": 46.875,
+          "layoutPanelMaxUiSpacing": 150.0,
+          "layoutPanelRailUiSpacing": 93.75,
+          "layoutEngagementMaxUiSpacing": 140.0
+        },
+        "typography": {
+          "textSmPx": 12.8,
+          "textXsPx": 11.2,
+          "textBasePx": 14.4
+        }
+      },
+      "expectedSpacingPx": 4,
+      "expected": {
+        "navbar_height": 36.0,
+        "footer_height": 36.0,
+        "panel_header_height": 28.0,
+        "control_height": 28.0,
+        "control_height_small": 20.0,
+        "gap_standard": 4.0,
+        "padding_standard": 4.0,
+        "panel_inset": 4.0,
+        "tree_row_height": 30.0,
+        "tree_indent_per_level": 12.5,
+        "tree_toggle_width": 17.5,
+        "panel_min_width": 187.5,
+        "panel_max_width": 600.0,
+        "window_measures_default_width": 375.0,
+        "window_engagement_max_width": 560.0,
+        "font_size_body": 12.8,
+        "font_size_small": 11.2,
+        "font_size_emphasized": 14.4
+      }
+    },
+    {
+      "name": "min-max",
+      "compact": "max(1px, min(0.5rem, 6px))",
+      "rootRemPx": 16,
+      "metrics": {
+        "chrome": {
+          "navbarHeightUiSpacing": 9.0,
+          "footerHeightUiSpacing": 9.0,
+          "panelHeaderHeightUiSpacing": 7.0,
+          "controlHeightUiSpacing": 7.0,
+          "controlHeightSmallUiSpacing": 5.0,
+          "gapStandardUiSpacing": 1.0,
+          "paddingStandardUiSpacing": 1.0,
+          "panelInsetUiSpacing": 1.0
+        },
+        "dom": {
+          "treeRowUiSpacing": 7.5,
+          "treeIndentPerLevelUiSpacing": 3.125,
+          "treeToggleUiSpacing": 4.375,
+          "layoutPanelMinUiSpacing": 46.875,
+          "layoutPanelMaxUiSpacing": 150.0,
+          "layoutPanelRailUiSpacing": 93.75,
+          "layoutEngagementMaxUiSpacing": 140.0
+        },
+        "typography": {
+          "textSmPx": 12.8,
+          "textXsPx": 11.2,
+          "textBasePx": 14.4
+        }
+      },
+      "expectedSpacingPx": 6,
+      "expected": {
+        "navbar_height": 54.0,
+        "footer_height": 54.0,
+        "panel_header_height": 42.0,
+        "control_height": 42.0,
+        "control_height_small": 30.0,
+        "gap_standard": 6.0,
+        "padding_standard": 6.0,
+        "panel_inset": 6.0,
+        "tree_row_height": 45.0,
+        "tree_indent_per_level": 18.75,
+        "tree_toggle_width": 26.25,
+        "panel_min_width": 281.25,
+        "panel_max_width": 900.0,
+        "window_measures_default_width": 562.5,
+        "window_engagement_max_width": 840.0,
+        "font_size_body": 12.8,
+        "font_size_small": 11.2,
+        "font_size_emphasized": 14.4
+      }
+    },
+    {
+      "name": "clamp",
+      "compact": "clamp(2px, calc(.25rem + 1px), 8px)",
+      "rootRemPx": 16,
+      "metrics": {
+        "chrome": {
+          "navbarHeightUiSpacing": 9.0,
+          "footerHeightUiSpacing": 9.0,
+          "panelHeaderHeightUiSpacing": 7.0,
+          "controlHeightUiSpacing": 7.0,
+          "controlHeightSmallUiSpacing": 5.0,
+          "gapStandardUiSpacing": 1.0,
+          "paddingStandardUiSpacing": 1.0,
+          "panelInsetUiSpacing": 1.0
+        },
+        "dom": {
+          "treeRowUiSpacing": 7.5,
+          "treeIndentPerLevelUiSpacing": 3.125,
+          "treeToggleUiSpacing": 4.375,
+          "layoutPanelMinUiSpacing": 46.875,
+          "layoutPanelMaxUiSpacing": 150.0,
+          "layoutPanelRailUiSpacing": 93.75,
+          "layoutEngagementMaxUiSpacing": 140.0
+        },
+        "typography": {
+          "textSmPx": 12.8,
+          "textXsPx": 11.2,
+          "textBasePx": 14.4
+        }
+      },
+      "expectedSpacingPx": 5,
+      "expected": {
+        "navbar_height": 45.0,
+        "footer_height": 45.0,
+        "panel_header_height": 35.0,
+        "control_height": 35.0,
+        "control_height_small": 25.0,
+        "gap_standard": 5.0,
+        "padding_standard": 5.0,
+        "panel_inset": 5.0,
+        "tree_row_height": 37.5,
+        "tree_indent_per_level": 15.625,
+        "tree_toggle_width": 21.875,
+        "panel_min_width": 234.375,
+        "panel_max_width": 750.0,
+        "window_measures_default_width": 468.75,
+        "window_engagement_max_width": 700.0,
+        "font_size_body": 12.8,
+        "font_size_small": 11.2,
+        "font_size_emphasized": 14.4
+      }
+    },
+    {
+      "name": "absolute-unit",
+      "compact": "calc(1in / 96 + 1pt * 3)",
+      "rootRemPx": 16,
+      "metrics": {
+        "chrome": {
+          "navbarHeightUiSpacing": 9.0,
+          "footerHeightUiSpacing": 9.0,
+          "panelHeaderHeightUiSpacing": 7.0,
+          "controlHeightUiSpacing": 7.0,
+          "controlHeightSmallUiSpacing": 5.0,
+          "gapStandardUiSpacing": 1.0,
+          "paddingStandardUiSpacing": 1.0,
+          "panelInsetUiSpacing": 1.0
+        },
+        "dom": {
+          "treeRowUiSpacing": 7.5,
+          "treeIndentPerLevelUiSpacing": 3.125,
+          "treeToggleUiSpacing": 4.375,
+          "layoutPanelMinUiSpacing": 46.875,
+          "layoutPanelMaxUiSpacing": 150.0,
+          "layoutPanelRailUiSpacing": 93.75,
+          "layoutEngagementMaxUiSpacing": 140.0
+        },
+        "typography": {
+          "textSmPx": 12.8,
+          "textXsPx": 11.2,
+          "textBasePx": 14.4
+        }
+      },
+      "expectedSpacingPx": 5,
+      "expected": {
+        "navbar_height": 45.0,
+        "footer_height": 45.0,
+        "panel_header_height": 35.0,
+        "control_height": 35.0,
+        "control_height_small": 25.0,
+        "gap_standard": 5.0,
+        "padding_standard": 5.0,
+        "panel_inset": 5.0,
+        "tree_row_height": 37.5,
+        "tree_indent_per_level": 15.625,
+        "tree_toggle_width": 21.875,
+        "panel_min_width": 234.375,
+        "panel_max_width": 750.0,
+        "window_measures_default_width": 468.75,
+        "window_engagement_max_width": 700.0,
+        "font_size_body": 12.8,
+        "font_size_small": 11.2,
+        "font_size_emphasized": 14.4
+      }
+    }
+  ],
+  "invalid": [
+    "-1px",
+    "1em",
+    "NaNpx",
+    "var(--spacing)",
+    "1vw",
+    "-0.25rem",
+    "Infinitypx",
+    "calc(1px + 1)",
+    "calc(1px / 0)",
+    "calc(1px * 2px)",
+    "calc(2px - 3px)",
+    "calc(1px+2px)",
+    "clamp(1px, 2px)",
+    "min(1px, 1em)"
+  ]
+}

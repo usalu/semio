@@ -1,5 +1,0 @@
-type ChangeActionVEd {
-  memberId: String!
-  actionId: String!
-  newValue: Float!
-}

@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeBatteryMaxCharge, base: &EnergyModelSnapshot)
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Battery {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_max_charge_w.is_finite() || payload.new_max_charge_w <= 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Battery {}: maximum charge power (W) must be a positive finite value, got {}.", payload.id.0, payload.new_max_charge_w), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Battery {}: maximum charge power (W) must be a positive finite value, got {}.", payload.id.0, payload.new_max_charge_w), [payload.id.0.to_string()]);
     }
     if existing.max_charge_w == payload.new_max_charge_w {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Battery {} already carries this maximum charge power (W): {}.", payload.id.0, payload.new_max_charge_w));

@@ -1,0 +1,172 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.charlie",
+  "artifact": "charlie",
+  "directory": "charlie",
+  "dependencies": [
+    "s.stdio.alpha"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.charlie.standard.raw",
+      "revision": "raw",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.charlie.standard.raw.profile.any",
+      "standard": "s.stdio.charlie.standard.raw",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.charlie.standard.raw.dialect.source",
+      "standard": "s.stdio.charlie.standard.raw",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.charlie.standard.raw.representation.document",
+      "standard": "s.stdio.charlie.standard.raw",
+      "representation": "document",
+      "mimes": [
+        "application/x-charlie"
+      ],
+      "extensions": [
+        ".charlie"
+      ],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.charlie.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.charlie.localization.en",
+      "locale": "en",
+      "name": "Binary",
+      "description": "Binary artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.charlie.localization.de",
+      "locale": "de",
+      "name": "Binärdaten",
+      "description": "Binärdaten-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.charlie.conformance-suite.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.charlie.composer.dialect-s-stdio-charlie-raw.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.charlie@raw/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.charlie@raw/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.charlie.inference.schema-s-stdio-charlie-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.charlie.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.charlie.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.charlie.schema.schema-s-stdio-charlie.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.charlie",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.charlie"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.charlie.standard.raw.codec.codec-stdio-charlie-extension-bin.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:12:stdio.charlie:bin|codec:stdio.charlie",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.charlie"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "12:stdio.charlie:bin"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.charlie.standard.raw.representation.mime-application-octet-stream-extension-bin",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:application/x-charlie|extension:.charlie",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "application/x-charlie"
+        },
+        {
+          "namespace": "extension",
+          "value": ".charlie"
+        }
+      ]
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.charlie.standard.raw.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

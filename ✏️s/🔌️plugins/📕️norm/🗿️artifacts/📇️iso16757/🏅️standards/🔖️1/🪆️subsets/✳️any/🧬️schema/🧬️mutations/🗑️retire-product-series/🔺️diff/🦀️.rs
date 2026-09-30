@@ -5,8 +5,8 @@ use crate::{Iso16757Diff, Iso16757Snapshot};
 
 pub fn diff(payload: &RetireProductSeries, base: &Iso16757Snapshot) -> protocol::MutationOutcome<Iso16757Diff> {
     if base.catalogue.product_series.iter().all(|item| item.id != payload.id) {
-        return protocol::MutationOutcome::fatal(
-            "mutation.missing-id",
+        return protocol::MutationOutcome::error(
+            "mutation.target-missing",
             format!("No entity with id \"{}\" exists.", payload.id),
             [payload.id.clone()],
         );

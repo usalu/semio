@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeZoneEquipmentCoolingCapacity, base: &EnergyMo
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Zone equipment {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_cooling_capacity_w.is_finite() || payload.new_cooling_capacity_w < 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("A cooling capacity must be a non-negative finite number, got {}.", payload.new_cooling_capacity_w), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("A cooling capacity must be a non-negative finite number, got {}.", payload.new_cooling_capacity_w), [payload.id.0.to_string()]);
     }
     if existing.cooling_capacity_w == payload.new_cooling_capacity_w {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Zone equipment {} already has that cooling capacity.", payload.id.0));

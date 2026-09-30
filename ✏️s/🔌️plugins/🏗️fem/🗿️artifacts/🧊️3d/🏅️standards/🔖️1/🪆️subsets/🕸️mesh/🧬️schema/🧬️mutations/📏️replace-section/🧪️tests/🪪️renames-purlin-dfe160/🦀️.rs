@@ -51,8 +51,8 @@ fn the_refusal_is_the_declared_diagnostic() {
     assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "replace-section/renames-purlin-dfe160: a refused mutation must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "replace-section/renames-purlin-dfe160: exactly one diagnostic is expected, got {messages:?}");
-    assert_eq!(messages[0].code.0, "mutation.id-mismatch", "replace-section/renames-purlin-dfe160: the refusal is reported as mutation.id-mismatch");
-    assert_eq!(messages[0].level, protocol::Severity::Fatal, "replace-section/renames-purlin-dfe160: renaming a record is an identity breach, the same Fatal level a duplicate identity raises");
+    assert_eq!(messages[0].code.0, "mutation.target-mismatch", "replace-section/renames-purlin-dfe160: the refusal is reported as mutation.target-mismatch");
+    assert_eq!(messages[0].level, protocol::Severity::Error, "replace-section/renames-purlin-dfe160: renaming a record contradicts the target the replace selects, the state-dependent Error");
     assert_eq!(messages[0].target, vec!["sec_pur".to_string(), "sec_pur_v2".to_string()], "replace-section/renames-purlin-dfe160: the diagnostic addresses exactly \"sec_pur\", \"sec_pur_v2\"");
 }
 

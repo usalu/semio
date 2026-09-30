@@ -1,16 +1,16 @@
 /** 📐️ Complete layer-transform mutation contracts with independent JSON patch application. */
 import {expect,test} from "bun:test";
-import Ajv from "ajv";
+import {semioSchemaAjvV1} from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
 import patch from "fast-json-patch";
 import schema from "../🧬️schema/🔣️.json";
 import documentSchema from "../../../🔣️.json";
 import fixture from "./🔣️.json";
 import {parseChangeLayerTransform} from "../🟦️.ts";
 import {parseRasterLayerPatch} from "../../../🔺️diff/🟦️.ts";
-const validate=new Ajv({strict:false,validateFormats:false}).addSchema({$id:documentSchema.$id,$defs:{RasterTransform:documentSchema.$defs.RasterTransform}}).compile(schema);
+const validate=semioSchemaAjvV1({allErrors:true}).addSchema({$id:documentSchema.$id,$defs:{RasterTransform:documentSchema.$defs.RasterTransform}}).compile(schema);
 for(const row of fixture.cases)test("layer transform "+row.name,()=>{
   const payload={layerId:"paint",expected:fixture.identity,transform:row.transform};
-  expect(validate(payload)).toBe(true);expect(parseChangeLayerTransform(payload)).toEqual(payload);
+  expect(validate({mutation:"changeLayerTransform",...payload})).toBe(true);expect(validate(payload)).toBe(false);expect(parseChangeLayerTransform(payload)).toEqual(payload);
   const parsed=parseRasterLayerPatch({transform:row.transform});expect(parsed.transform).toEqual(row.transform);
   const before={kind:"group",id:"paint",transform:fixture.identity};
   const reference=patch.applyPatch(before,[{op:"replace",path:"/transform",value:row.transform}],true,false).newDocument;
@@ -19,7 +19,7 @@ for(const row of fixture.cases)test("layer transform "+row.name,()=>{
 });
 test("layer transform payload refuses missing coordinates and singular maps",()=>{
   const payload={layerId:"paint",expected:fixture.identity,transform:fixture.identity};
-  for(const key of ["x","y","a","b","c","d"]){const transform:Record<string,number>={...fixture.identity};delete transform[key];expect(validate({...payload,transform})).toBe(false);expect(()=>parseChangeLayerTransform({...payload,transform})).toThrow();}
+  for(const key of ["x","y","a","b","c","d"]){const transform:Record<string,number>={...fixture.identity};delete transform[key];expect(validate({mutation:"changeLayerTransform",...payload,transform})).toBe(false);expect(()=>parseChangeLayerTransform({...payload,transform})).toThrow();}
   expect(()=>parseChangeLayerTransform({...payload,transform:{...fixture.identity,d:0}})).toThrow();
   expect(()=>parseRasterLayerPatch({transform:{...fixture.identity,d:0}})).toThrow();
   expect(()=>parseChangeLayerTransform({...payload,layerId:""})).toThrow();

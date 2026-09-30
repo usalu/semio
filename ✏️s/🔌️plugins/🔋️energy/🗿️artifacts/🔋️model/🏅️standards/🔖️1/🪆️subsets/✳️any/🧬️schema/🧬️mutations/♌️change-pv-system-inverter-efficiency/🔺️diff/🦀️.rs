@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangePvSystemInverterEfficiency, base: &EnergyMode
         return protocol::MutationOutcome::error("mutation.target-missing", format!("PV system {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !(payload.new_inverter_efficiency > 0.0 && payload.new_inverter_efficiency <= 1.0) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("PV system {}: inverter efficiency must be a fraction in (0, 1], got {}.", payload.id.0, payload.new_inverter_efficiency), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("PV system {}: inverter efficiency must be a fraction in (0, 1], got {}.", payload.id.0, payload.new_inverter_efficiency), [payload.id.0.to_string()]);
     }
     if existing.inverter_efficiency == payload.new_inverter_efficiency {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("PV system {} already carries this inverter efficiency: {}.", payload.id.0, payload.new_inverter_efficiency));

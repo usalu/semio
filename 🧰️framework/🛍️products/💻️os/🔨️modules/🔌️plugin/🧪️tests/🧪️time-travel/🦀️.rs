@@ -25,6 +25,11 @@ fn dsl(value: &Value) -> DslValue {
 }
 
 //#region 🧸️ToyHistoryApp
+thread_local! {
+    /// 📨️ Every host event the toy app received on this test thread, in order.
+    static TOY_HOST_EVENTS: std::cell::RefCell<Vec<HostEvent>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
 #[derive(Default)]
 struct ToyHistoryApp;
 
@@ -46,6 +51,11 @@ impl ArtifactApp for ToyHistoryApp {
 
     fn mutation_label(op: &TestMutation) -> Option<LocalizedLabel> {
         Some(protocol::SemanticMutation::label(op))
+    }
+
+    fn host_event(event: &HostEvent) -> Option<TestMutation> {
+        TOY_HOST_EVENTS.with(|events| events.borrow_mut().push(event.clone()));
+        None
     }
 
     async fn initial_snapshot() -> TestSnapshot {
@@ -435,6 +445,11 @@ async fn a_committed_tool_transaction_is_one_row_with_its_reference_and_mutation
     assert!(row.mutations.iter().all(|mutation| mutation.editable), "both leaves declare an input schema");
     assert_eq!(row.label.resolve(Terminology::Native, Locale::En), "Set count to 2 (+1)", "the row reads its mutations' labels");
     assert_eq!(row.key(), format!("edit:{}", row.edit_id.as_deref().expect("edit id")));
+    assert!(!row.op_lines.is_empty(), "the wire row keeps its printed operations");
+    let history = render_history(&mut app, Locale::En).await;
+    let mut rendered = find_node(&history, &format!("framework.history.entry.{}", row.seq)).unwrap_or_else(|| panic!("the transaction row: {history}")).clone();
+    rendered.as_object_mut().expect("a node").remove("children");
+    assert!(row.op_lines.iter().all(|line| !rendered.to_string().contains(line.as_str())), "labelled mutation children replace the raw op-lines description: {rendered}");
     let coalesced = Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { coalesce_key: Some("drag".into()), ..Emit::commit_transaction(transaction, vec![SetCount { value: 3 }.into()]) };
     assert_eq!(app.dispatch_emit("select", coalesced, &meta(&fixture)).await.err().map(|fault| fault.code), Some(FaultCode::new("toolTransaction.shape")));
     close(&mut app);
@@ -609,6 +624,82 @@ async fn a_nullable_input_offers_a_clear_control_that_drafts_null() {
     close(&mut app);
 }
 
+/// 🌲️ LAW: the band and the draft editor speak the one tree vocabulary both hosts mount — tree sections of rows, each row
+/// holding at most one child that is not a row, and that child one single control (the kinds a wgpu row mounts as its
+/// control; React mounts any): no text, progress bar or group is a row's child, and a second control is a nested row.
+#[semio_framework_async_macros::async_test]
+async fn the_band_and_the_editor_rows_hold_at_most_one_single_control() {
+    const SINGLE_CONTROLS: [&str; 9] = ["input", "select", "toggle", "button", "keyValueList", "slider", "numberStepper", "ring", "iconSelect"];
+    fn violations(node: &Value, found: &mut Vec<String>) {
+        let children = node["children"].as_array().map(Vec::as_slice).unwrap_or_default();
+        if node["component"]["type"].as_str() == Some("treeItem") {
+            let controls: Vec<&str> = children.iter().filter_map(|child| child["component"]["type"].as_str()).filter(|kind| *kind != "treeItem").collect();
+            if controls.len() > 1 || controls.iter().any(|kind| !SINGLE_CONTROLS.contains(kind)) {
+                found.push(format!("{}: {controls:?}", node["key"]));
+            }
+        }
+        for child in children {
+            violations(child, found);
+        }
+    }
+    fn sections(history: &Value) -> Vec<String> {
+        let mut found = Vec::new();
+        for key in ["framework.history.timeTravel", "framework.history.editor", "framework.history.editor.inputs"] {
+            if let Some(section) = find_node(history, key) {
+                assert_eq!(section["component"]["type"].as_str(), Some("treeSection"), "{key} is a tree section");
+                violations(section, &mut found);
+            }
+        }
+        found
+    }
+    let fixture = fixture();
+    let mut app = seeded_app(&fixture).await;
+    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 })).await;
+    let editor = app.time_travel.editor_mut().expect("the draft editor");
+    editor.inputs = vec![semio_framework::ActionArgDef { nullable: true, ..semio_framework::ActionArgDef::number("/scale", LocalizedLabel::native("Scale", "Maßstab")) }, semio_framework::ActionArgDef::number("/width", LocalizedLabel::native("Width", "Breite"))];
+    editor.value = dsl(&serde_json::json!({ "scale": 2.0, "width": 1.0 }));
+    let history = render_history(&mut app, Locale::En).await;
+    assert!(find_node(&history, "framework.history.editor.input.scale.clear").is_some(), "the nullable input keeps its Clear: {history}");
+    assert_eq!(sections(&history), Vec::<String>::new(), "editing rows");
+    verb(&mut app, &fixture, "historyEditExit", Vec::new()).await;
+    for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } }), serde_json::json!({ "accept": null }), serde_json::json!({ "replay": "clean" })] {
+        run_step(&mut app, &fixture, &step).await;
+    }
+    let history = render_history(&mut app, Locale::De).await;
+    assert!(find_node(&history, "framework.history.timeTravel.finalize").is_some(), "the review offers Finalize: {history}");
+    assert_eq!(sections(&history), Vec::<String>::new(), "reviewing rows");
+    verb(&mut app, &fixture, "historyEditExit", Vec::new()).await;
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work()).await;
+    close(&mut app);
+}
+
+/// ⚖️ LAW (design §7): while a history edit is open the body leads with the session band and the draft editor, then the
+/// alternatives, the actions and the commands; without a session the actions lead. The editor's inputs are never windowed:
+/// the section carries no window, so every input row is materialised the moment it shows.
+#[semio_framework_async_macros::async_test]
+async fn the_session_leads_the_history_body_and_the_editor_inputs_are_all_materialised() {
+    fn sections(body: &Value) -> Vec<&str> {
+        body["children"].as_array().expect("sections").iter().filter_map(|section| section["key"].as_str()).collect()
+    }
+    let fixture = fixture();
+    let mut app = seeded_app(&fixture).await;
+    assert_eq!(sections(&render_history(&mut app, Locale::En).await), ["framework.history.actions", "framework.history.commands"]);
+    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 })).await;
+    let editor = app.time_travel.editor_mut().expect("the draft editor");
+    editor.inputs = ["/dx", "/dy", "/dz"].map(|pointer| semio_framework::ActionArgDef::number(pointer, LocalizedLabel::native(pointer, pointer))).to_vec();
+    editor.value = dsl(&serde_json::json!({ "dx": 1.0, "dy": 2.0, "dz": 3.0 }));
+    let body = render_history(&mut app, Locale::En).await;
+    assert_eq!(sections(&body), ["framework.history.timeTravel", "framework.history.editor", "framework.history.editor.inputs", "framework.history.actions", "framework.history.commands"]);
+    let inputs = find_node(&body, "framework.history.editor.inputs").expect("the inputs section");
+    assert!(inputs["component"]["window"].is_null(), "the inputs are never windowed: {inputs}");
+    for pointer in ["dx", "dy", "dz"] {
+        assert!(find_node(inputs, &format!("framework.history.editor.input.{pointer}.row")).is_some(), "the {pointer} row is materialised: {inputs}");
+    }
+    verb(&mut app, &fixture, "historyEditExit", Vec::new()).await;
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work()).await;
+    close(&mut app);
+}
+
 /// 🧯️ LAW: the input path fails closed — when the edited leaf's payload schema compiles no validator, a draft is refused
 /// with the typed `timeTravel.schema-unavailable` naming the reason on the editor, and the draft and session stay
 /// untouched; never an unvalidated payload.
@@ -670,6 +761,118 @@ async fn replay_progress_rides_the_unsolicited_ui_frame_with_the_session_status(
     close(&mut app);
 }
 
+/// ⚖️ LAW: a stage change ships its session status in the turn it happens — Begin from a review bumps the generation,
+/// and the editing stage with that generation rides both the command reply and the unsolicited UI progress frame of the
+/// same turn (the one carrier of a retained-surface intent, whose reply has no patch), even while the review's snapshots
+/// still retire; a verb stamped with the published generation applies, one stamped with the previous is stale.
+#[semio_framework_async_macros::async_test]
+async fn a_stage_change_ships_its_generation_in_the_same_turn_and_a_verb_stamped_with_it_applies() {
+    let fixture = fixture();
+    let mut app = seeded_app(&fixture).await;
+    for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } }), serde_json::json!({ "accept": null }), serde_json::json!({ "replay": "clean" })] {
+        run_step(&mut app, &fixture, &step).await;
+    }
+    assert_eq!(app.time_travel.session().stage, TimeTravelStage::Reviewing);
+    while app.take_typed_operation_ui_progress().is_some() {}
+    let reviewed = app.time_travel.session().generation;
+    let mutation = seeded_mutation(&app, 2);
+    let begun = verb(&mut app, &fixture, "historyEditBegin", vec![("mutationId".into(), DslValue::String(mutation))]).await;
+    let generation = app.time_travel.session().generation;
+    assert_ne!(generation, reviewed, "Begin from a review bumps the generation");
+    let status = |patch: &semio_framework::kernel::HistoryPatch| patch.time_travel.as_ref().map(|status| (status.stage, status.generation));
+    let editing = Some((semio_framework::kernel::HistoryTimeTravelStage::Editing, generation));
+    assert_eq!(begun.history_patch.as_ref().and_then(status), editing, "the reply publishes the new generation with the stage");
+    let progress = app.take_typed_operation_ui_progress().expect("the stage change owes this turn a UI progress frame");
+    assert_eq!(progress.history_patch.as_ref().and_then(status), editing, "the progress frame publishes it before any driver turn");
+    assert!(progress.history_patch.as_ref().is_some_and(|patch| !patch.upserts.is_empty()), "it carries the rows the session overlay moved");
+    assert!(app.time_travel.has_pending_work(), "the review's snapshots still retire behind it");
+    let generation_arg = |value: u32| vec![(semio_framework::HISTORY_EDIT_ARG_GENERATION.to_string(), DslValue::uint(u64::from(value)))];
+    let stale = verb(&mut app, &fixture, "historyEditDiscard", generation_arg(reviewed)).await;
+    assert_eq!(rejected(&stale), Some("timeTravel.stale"), "the previous generation is stale");
+    let discarded = verb(&mut app, &fixture, "historyEditDiscard", generation_arg(generation)).await;
+    assert_eq!(rejected(&discarded), None, "the published generation applies: {:?}", discarded.output);
+    assert_eq!(app.time_travel.session().stage, TimeTravelStage::Reviewing);
+    let progress = app.take_typed_operation_ui_progress().expect("the return to the review ships at once too");
+    assert_eq!(progress.history_patch.as_ref().and_then(status), Some((semio_framework::kernel::HistoryTimeTravelStage::Reviewing, app.time_travel.session().generation)));
+    verb(&mut app, &fixture, "historyEditExit", Vec::new()).await;
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work()).await;
+    close(&mut app);
+}
+
+/// 🌿️ LAW: the history body lists every line — the trunk (read "Main line", the original history) and the alternative a
+/// finalize kept — with its current marker, author and branch time and whether it carries history edits, in English and
+/// German; the other line offers Switch, whose rendered target dispatches `switchAlternative{alternativeId}`, and
+/// switching reprojects: the edited alternative applies its history edit, the trunk shows the original.
+#[semio_framework_async_macros::async_test]
+async fn the_alternatives_section_lists_each_alternative_and_switching_reprojects_its_history_edits() {
+    let fixture = fixture();
+    let actor = text(&fixture["actor"]).to_string();
+    let (mut app, probe) = replica(&fixture, "history-alternatives", &actor, true).await;
+    commit_scenario(&mut app, &fixture, "a-new-alternative-keeps-the-original").await;
+    assert_eq!(head(&app).1, "b", "the edited alternative is current");
+    let history = app.test_history().await;
+    let listed: Vec<(&str, bool, bool)> = history.alternatives.iter().map(|alternative| (alternative.name.as_str(), alternative.current, alternative.edited)).collect();
+    assert_eq!(listed, vec![("", false, false), ("Variant", true, true)], "the trunk first, then the kept edit");
+    let (trunk, variant) = (history.alternatives[0].id.clone(), history.alternatives[1].id.clone());
+    assert_eq!(history.alternatives[1].author.as_deref(), Some(actor.as_str()));
+    assert!(history.alternatives[1].branched_at.as_deref().is_some_and(|at| at.ends_with('Z')), "{:?}", history.alternatives[1]);
+    let row_key = |id: &str| format!("framework.history.alternative.{id}");
+    for (locale, main_line, current, edited, switch) in [(Locale::En, "Main line", "Current", "Edited history", "Switch"), (Locale::De, "Hauptlinie", "Aktuell", "Bearbeiteter Verlauf", "Wechseln")] {
+        let body = render_history(&mut app, locale).await;
+        let section = find_node(&body, "framework.history.alternatives").unwrap_or_else(|| panic!("the alternatives section: {body}"));
+        assert_eq!(section["component"]["type"].as_str(), Some("treeSection"));
+        let trunk_row = find_node(section, &row_key(&trunk)).expect("the trunk row");
+        assert!(trunk_row.to_string().contains(main_line), "{locale:?}: {trunk_row}");
+        let action = &trunk_row["component"]["rowActions"][0];
+        assert_eq!((action["verb"].as_str(), action["label"].as_str()), (Some(semio_framework::SWITCH_ALTERNATIVE_ACTION_ID), Some(switch)), "{locale:?}: {trunk_row}");
+        assert_eq!(trunk_row["component"]["target"]["activation"].as_str(), Some(semio_framework::SWITCH_ALTERNATIVE_ACTION_ID), "Enter on the row switches");
+        let variant_row = find_node(section, &row_key(&variant)).expect("the variant row");
+        assert!(variant_row.to_string().contains(current) && variant_row.to_string().contains(edited) && variant_row.to_string().contains(&actor), "{locale:?}: {variant_row}");
+        assert!(variant_row["component"]["rowActions"].as_array().is_none_or(Vec::is_empty), "the current line offers no switch");
+    }
+    let body = render_history(&mut app, Locale::En).await;
+    let args = find_node(&body, &row_key(&trunk)).expect("the trunk row")["component"]["target"]["args"].clone();
+    assert_eq!(args[semio_framework::SWITCH_ALTERNATIVE_ARG_ALTERNATIVE_ID].as_str(), Some(trunk.as_str()));
+    history_verb(&mut app, &actor, semio_framework::SWITCH_ALTERNATIVE_ACTION_ID, Some(dsl(&args))).await;
+    assert_eq!(head(&app).1, "a", "the trunk shows the original history");
+    let history = app.test_history().await;
+    assert_eq!(history.alternatives.iter().map(|alternative| alternative.current).collect::<Vec<_>>(), vec![true, false]);
+    history_verb(&mut app, &actor, semio_framework::SWITCH_ALTERNATIVE_ACTION_ID, Some(dsl(&serde_json::json!({ "alternativeId": variant })))).await;
+    assert_eq!(head(&app).1, "b", "switching back applies the history edit again");
+    drop(probe);
+    close(&mut app);
+}
+
+/// 📨️ LAW: opening a history edit delivers `TimeTravelFrozen` to every window of the view once (retargeting the open
+/// session delivers none), and a remote edit moving the base delivers `BaseMoved` to every window of the last roster.
+#[semio_framework_async_macros::async_test]
+async fn opening_a_history_edit_and_a_remote_edit_deliver_host_events_to_every_window() {
+    let fixture = fixture();
+    let actor = text(&fixture["actor"]).to_string();
+    let (mut local, mut local_probe) = replica(&fixture, "host-events-local", &actor, true).await;
+    let (mut remote, mut remote_probe) = replica(&fixture, "host-events-remote", "remote", false).await;
+    relay(&mut local_probe, &mut remote_probe, &mut remote).await;
+    let roster = vec![semio_framework::ViewWindowInstance { id: "pane-a".into(), window_kind_id: "main".into() }, semio_framework::ViewWindowInstance { id: "pane-b".into(), window_kind_id: "main".into() }];
+    let under = ActionMeta { view_state: Some(ViewModel { window_instances: roster, ..ViewModel::default() }), ..artifact_app_laws::meta(&actor) };
+    let every = |event: fn(String) -> HostEvent| vec![event("pane-a".into()), event("pane-b".into())];
+    TOY_HOST_EVENTS.with(|events| events.borrow_mut().clear());
+    for index in [0, 1] {
+        let mutation = seeded_mutation(&local, index);
+        let begun = local.handle_action("historyEditBegin", Some(&DslValue::Object(vec![("mutationId".into(), DslValue::String(mutation))])), &under).await.expect("begin");
+        assert_eq!(rejected(&begun), None);
+    }
+    assert_eq!(TOY_HOST_EVENTS.with(|events| std::mem::take(&mut *events.borrow_mut())), every(|window_id| HostEvent::TimeTravelFrozen { window_id }), "only opening the session freezes the windows");
+    local.handle_action("historyEditExit", None, &under).await.expect("exit");
+    pump_until(&mut local, "retirement settles", |app| !app.time_travel.has_pending_work()).await;
+    remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 9 }.into()], description: None, transaction: None }).await.expect("a remote edit");
+    TOY_HOST_EVENTS.with(|events| events.borrow_mut().clear());
+    relay(&mut remote_probe, &mut local_probe, &mut local).await;
+    assert_eq!(TOY_HOST_EVENTS.with(|events| std::mem::take(&mut *events.borrow_mut())), every(|window_id| HostEvent::BaseMoved { window_id }), "the remote edit moved the base");
+    drop((local_probe, remote_probe));
+    close(&mut local);
+    close(&mut remote);
+}
+
 /// ⚖️ LAW: a noted shell command keeps its label in every locale (an `{en, de}` pair), plain text stays data, a
 /// detail is appended in every locale; undo is enabled wherever its chord is, even with nothing local to undo.
 #[semio_framework_async_macros::async_test]
@@ -698,7 +901,7 @@ async fn noted_shell_commands_keep_every_locale_and_undo_matches_its_chord() {
 /// typed `ledger-not-replayable` naming only its blocking messages; any other refusal keeps its own fault.
 #[test]
 fn a_blocking_ledger_replay_crosses_the_guest_boundary_as_ledger_not_replayable() {
-    let fault = replay_envelopes_fault(store::VcsError::Rejected { policy: protocol::MergePolicy::Normal, messages: vec![protocol::MutationMessage::fatal("mutation.target-missing", "gone"), protocol::MutationMessage::warn("mutation.clamped", "clamped")] });
+    let fault = replay_envelopes_fault(store::VcsError::Rejected { policy: protocol::MergePolicy::Normal, messages: vec![protocol::MutationMessage::error("mutation.target-missing", "gone"), protocol::MutationMessage::warn("mutation.clamped", "clamped")] });
     assert_eq!(fault.code, FaultCode::new("ledger-not-replayable"));
     assert!(fault.message.contains("mutation.target-missing") && !fault.message.contains("mutation.clamped"), "{}", fault.message);
     assert_ne!(replay_envelopes_fault(store::VcsError::Deserialize("malformed".into())).code, FaultCode::new("ledger-not-replayable"));

@@ -8,12 +8,12 @@ use crate::standards::v1::subsets::any::schema::{find_layer,layer_locked};
 pub struct ChangeLayerLocked {pub layer_id:String,pub expected:bool,pub locked:bool}
 pub fn validate(payload:&ChangeLayerLocked,base:&RasterSnapshot)->Result<(),&'static str> {
     let layer=find_layer(&base.layers,&payload.layer_id).ok_or("mutation.target-missing")?;
-    if layer_locked(layer)!=payload.expected {return Err("mutation.lock-conflict");}Ok(())
+    if layer_locked(layer)!=payload.expected {return Err("mutation.target-mismatch");}Ok(())
 }
 impl protocol::MutationKind<RasterSnapshot,RasterMutation> for ChangeLayerLocked {
     const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor {verb:"change",entity:"layer-lock",kind:"change-layer-locked",record:"ChangedLayerLocked"};
     fn diff(&self,base:&RasterSnapshot)->protocol::MutationOutcome<RasterDiff> {
-        if let Err(code)=validate(self,base){return protocol::MutationOutcome::error(code,"Layer protection changed before this edit.",[self.layer_id.clone()]);}
+        if let Err(code)=validate(self,base){return protocol::MutationOutcome::refuse(code,"Layer protection changed before this edit.",[self.layer_id.clone()]);}
         protocol::MutationOutcome::new(diff_patch_layer(&self.layer_id,RasterLayerPatch {locked:Some(self.locked),..Default::default()}))
     }
     fn inverse(&self,base:&RasterSnapshot)->Vec<RasterMutation> {

@@ -86,7 +86,7 @@ pub fn diff_replace_content(nodes: Vec<DagNodeSpec>, edges: Vec<DagHostSnapshotE
 impl DagDiff {
     /// 🧬️ Applies sparse document fields onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &DagArtifact) -> protocol::MutationApplyResult<DagArtifact> {
-        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.child-identity".into(), message, target: Vec::new() })?;
+        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.apply.child-identity".into(), message, target: Vec::new() })?;
         Ok({
             let mut next = artifact.clone();
             if let Some(schema) = &self.schema {
@@ -102,7 +102,7 @@ impl DagDiff {
 
 impl MutationDiff<DagSnapshot> for DagDiff {
     fn apply(&self, snapshot: &DagSnapshot) -> protocol::MutationApplyResult<DagSnapshot> {
-        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.child-identity".into(), message, target: Vec::new() })?;
+        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.apply.child-identity".into(), message, target: Vec::new() })?;
         Ok({
             let mut next = snapshot.clone();
             if let Some(schema) = &self.schema {

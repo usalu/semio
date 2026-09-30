@@ -1,6 +1,0 @@
-{
-  "ChangeElementKind": {
-    "elementId": "wall-north",
-    "newKind": "frameOpaque"
-  }
-}

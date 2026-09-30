@@ -152,6 +152,7 @@
       "items": {
         "type": "string",
         "contentEncoding": "base64",
+        "pattern": "^[A-Za-z0-9+/]*={0,2}$",
         "maxLength": 5464
       },
       "x-semio-ui": {

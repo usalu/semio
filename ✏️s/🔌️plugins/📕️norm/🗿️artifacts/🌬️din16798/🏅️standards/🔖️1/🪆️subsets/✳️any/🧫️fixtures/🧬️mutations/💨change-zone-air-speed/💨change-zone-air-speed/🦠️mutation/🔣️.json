@@ -1,0 +1,6 @@
+{
+  "ChangeZoneAirSpeed": {
+    "zoneId": "zone-office",
+    "newAirSpeedMS": 0.15
+  }
+}

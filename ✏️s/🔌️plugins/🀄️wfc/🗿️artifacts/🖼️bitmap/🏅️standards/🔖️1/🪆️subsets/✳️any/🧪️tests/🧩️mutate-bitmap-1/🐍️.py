@@ -103,7 +103,7 @@ def apply_mutation(document, mutation):
         if payload["x"] + width > document["input"]["width"] or payload["y"] + height > document["input"]["height"]:
             raise Fatal("mutation.invariant")
         if any(index >= len(document["input"]["palette"]) for index in region):
-            raise Fatal("mutation.unknown-palette-color")
+            raise Fatal("mutation.target-missing")
         buffer = indices(document)
         prior = bytearray()
         for row in range(height):
@@ -133,7 +133,7 @@ def apply_mutation(document, mutation):
         index = payload["index"]
         palette = document["input"]["palette"]
         if index >= len(palette):
-            raise Fatal("mutation.missing-target")
+            raise Fatal("mutation.target-missing")
         if palette[index] == payload["color"]:
             return document, ["mutation.no-op"]
         palette[index] = payload["color"]
@@ -142,13 +142,13 @@ def apply_mutation(document, mutation):
         index = payload["index"]
         palette = document["input"]["palette"]
         if index >= len(palette):
-            raise Fatal("mutation.missing-target")
+            raise Fatal("mutation.target-missing")
         if len(palette) == 1:
             raise Fatal("mutation.invariant")
         buffer = indices(document)
         used = set(buffer) | {pin["color"] for pin in document.get("pinned", [])}
         if index in used:
-            raise Fatal("mutation.colour-in-use")
+            raise Fatal("mutation.target-referenced")
         palette.pop(index)
         for position, value in enumerate(buffer):
             if value > index:
@@ -174,7 +174,7 @@ def apply_mutation(document, mutation):
             raise Fatal("mutation.invariant")
         ground = payload.get("ground")
         if ground is not None and ground >= len(document["input"]["palette"]):
-            raise Fatal("mutation.unknown-palette-color")
+            raise Fatal("mutation.target-missing")
         model = {"patternSize": payload["patternSize"], "symmetry": payload["symmetry"], "periodicInput": payload["periodicInput"]}
         if ground is not None:
             model["ground"] = ground
@@ -186,7 +186,7 @@ def apply_mutation(document, mutation):
         if payload["x"] >= document["output"]["width"] or payload["y"] >= document["output"]["height"]:
             raise Fatal("mutation.invariant")
         if payload["color"] >= len(document["input"]["palette"]):
-            raise Fatal("mutation.unknown-palette-color")
+            raise Fatal("mutation.target-missing")
         pins = document.setdefault("pinned", [])
         for pin in pins:
             if (pin["x"], pin["y"]) == (payload["x"], payload["y"]):
@@ -201,7 +201,7 @@ def apply_mutation(document, mutation):
         pins = document.setdefault("pinned", [])
         remaining = [pin for pin in pins if (pin["x"], pin["y"]) != (payload["x"], payload["y"])]
         if len(remaining) == len(pins):
-            raise Fatal("mutation.missing-target")
+            raise Fatal("mutation.target-missing")
         document["pinned"] = remaining
         return document, []
     raise ValueError("unknown mutation kind " + kind)

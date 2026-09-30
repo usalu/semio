@@ -22,7 +22,7 @@ export default defineConfig({
       { find: "@semio-tech/presentation-react", replacement: resolve(repoRoot, "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️.tsx") },
       { find: "@semio-tech/presentation", replacement: resolve(repoRoot, "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts") },
       {
-        find: "@semio-tech/mit-bestand-praesentation-projektetage-spec",
+        find: "@semio-tech/mit-bestand-praesentation-projektetage/spec",
         replacement: resolve(dir, "🔖️spec.ts"),
       },
     ],

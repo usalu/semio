@@ -79,14 +79,12 @@ export function stdioOwnerRoot(repoRoot: string, entries?: readonly PluginRegist
 }
 
 
-/** 🗄️ Locates the first-party native-codec factory manifest under the stdio registry. */
+/** 🗄️ Locates the authored native-codec projection at the concrete Stdio composition owner. */
 export function stdioNativeCodecFactoriesPath(stdioRoot: string): string {
-  const registry = readdirSync(stdioRoot).find((name) => name.endsWith("registry"));
-  if (!registry) throw new Error("stdio registry directory is absent");
-  const registryDir = join(stdioRoot, registry);
-  const file = readdirSync(registryDir).find((name) => name.endsWith("native-codec-factories.json"));
+  const catalogDir = join(stdioRoot, "🔌️plugin", "📇️catalog");
+  const file = readdirSync(catalogDir).find((name) => name.endsWith("native-codec-factories.json"));
   if (!file) throw new Error("stdio native-codec-factories.json is absent");
-  return join(registryDir, file);
+  return join(catalogDir, file);
 }
 
 

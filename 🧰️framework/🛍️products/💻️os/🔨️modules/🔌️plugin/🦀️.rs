@@ -359,7 +359,7 @@ pub mod app {
             InvocationResult, KernelMutation, MutationId, PastePlacement, Rights, SchemaId, Scope, UndoGroup, UndoPolicy,
         },
         note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
-        start_tutorial_action_definition, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppIo, CapabilityAudience, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition, Fault, FaultCode,
+        start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppIo, CapabilityAudience, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition, Fault, FaultCode,
         FaultFrom, FaultOrigin, IconName, InteractionDefinition, InteractionRef, InteractionVerb, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup,
         PanelTabDefinition, PanelTabKind, PluginManifest, ToolDefinition, ToolRef, ToolRunTraceCursor, TreeWindowRequest, TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, CLEAR_SELECTION_ACTION_ID,
         INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SELECT_ALL_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
@@ -6120,7 +6120,7 @@ pub mod app {
                 command_grammar: self.command_grammar,
                 io: self.io,
             };
-            for action in semio_framework::interaction_action_definitions(&definition).into_iter().chain(semio_framework::tool_run_action_definitions(&definition)).chain([crate::app::operation_progress::cancellation_action_definition()]).chain(semio_framework::document_transfer_action_definitions()) {
+            for action in semio_framework::interaction_action_definitions(&definition).into_iter().chain(semio_framework::tool_run_action_definitions(&definition)).chain([crate::app::operation_progress::cancellation_action_definition(), semio_framework::host_event_action_definition()]).chain(semio_framework::document_transfer_action_definitions()) {
                 if declared_action_ids.insert(action.id.clone()) {
                     if let Some(keys) = &action.keys {
                         if bound_keys.insert(keys.clone()) {
@@ -7429,6 +7429,11 @@ pub mod app {
     #[path = "🧪️tests/🔬️tool-run/🦀️.rs"]
     mod tool_run_tests;
 
+    #[path = "🛠️tool-machine/🦀️.rs"]
+    pub mod tool_machine;
+    use tool_machine::ScrubDispatch;
+    pub use tool_machine::{ScrubRuntime, ScrubTag};
+
     #[path = "⏪️time-travel/🦀️.rs"]
     pub mod time_travel;
     pub use time_travel::{history_mutation_entry, is_time_travel_action_id, SupersedeLedger, SupersedeRecord, SupersedeRole, TimeTravelActionOutcome, TimeTravelActionRefusal, TimeTravelEditor, TimeTravelEditorPanel, TimeTravelLedger, TimeTravelPanel, HISTORY_ROW_MUTATION_ROWS, TIME_TRAVEL_TURN_WALL_US};
@@ -7440,6 +7445,10 @@ pub mod app {
     #[cfg(test)]
     #[path = "🧪️tests/🧪️supersede-ledger/🦀️.rs"]
     mod supersede_ledger_tests;
+
+    #[cfg(test)]
+    #[path = "🧪️tests/🧪️history-alternatives/🦀️.rs"]
+    mod history_alternatives_tests;
 
     //#region 🔖️ArtifactAppLaws
     #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -8147,7 +8156,7 @@ pub mod app {
                 "setInteractionGranularity",
             ];
             for action in definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)) {
-                if skip.contains(&action.id.as_str()) || crate::is_tool_run_action_id(&action.id) || crate::is_time_travel_action_id(&action.id) || action.id == crate::plugin_app_close_prelude::CANCEL_TYPED_OPERATION_ACTION_ID {
+                if skip.contains(&action.id.as_str()) || crate::is_tool_run_action_id(&action.id) || crate::is_time_travel_action_id(&action.id) || action.id == crate::plugin_app_close_prelude::CANCEL_TYPED_OPERATION_ACTION_ID || action.id == semio_framework::HOST_EVENT_ACTION_ID {
                     continue;
                 }
                 if matches!(action.id.as_str(), "replace-text" | "set-cell" | "set-node") {
@@ -12104,6 +12113,28 @@ pub mod app {
     /// 📜️ Operations a history row previews: its edit's newest ones (see `CommandView::op_lines`).
     pub const HISTORY_ROW_OPERATION_PREVIEW: usize = 8;
 
+    /// 🏷️ A history row labelled by its edit's first leaf: the leaf's own localized label (`SemanticMutation::label`, resolved
+    /// at projection time so a reload keeps every locale), with `(+N)` for the edit's other operations.
+    // 🚫️async: a pure label composition.
+    pub fn history_leaf_row_label(leaf: &LocalizedLabel, op_count: usize) -> LocalizedLabel {
+        let (leaf, more) = (leaf.clone(), op_count.saturating_sub(1));
+        LocalizedLabel::from_fn(move |terminology, locale| {
+            let first = leaf.resolve(terminology, locale);
+            if more > 0 { format!("{first} (+{more})") } else { first.to_string() }
+        })
+    }
+
+    /// 🙈️ Whether a dispatch of `kind` is a history row: never an interaction verb, and a `View` only when it edited a
+    /// store (`edited`) or carries an inverse — a pure view verb changes no history and undo cannot reach it.
+    // 🚫️async: a pure total predicate over the dispatch's own facts.
+    pub fn history_row_is_recorded(kind: ActionKind, edited: bool, inverse: bool) -> bool {
+        match kind {
+            ActionKind::Interaction => false,
+            ActionKind::View => edited || inverse,
+            ActionKind::Mutation | ActionKind::History | ActionKind::Clipboard | ActionKind::Shell => true,
+        }
+    }
+
     /// 📜️ Checkpoint/alternative history summary exposed to apps — the swimlane columns, the
     /// undo/redo availability, the current checkout position, and the merged command+operation timeline.
     /// Built once per store generation.
@@ -12113,6 +12144,8 @@ pub mod app {
         pub can_undo: bool,
         pub can_redo: bool,
         pub active_alternative_id: Option<String>,
+        /// 🌿️ Every alternative of the artifact's history, in declaration order ([`history_alternative_views`]).
+        pub alternatives: Vec<AlternativeView>,
         pub current_checkpoint_id: Option<String>,
         /// 📜️ The session command log merged with live VCS op-text, newest first. Every edit in
         /// `envelope.vcs.edits` is referenced by exactly one entry (see `VcsArtifactApp::backfill_command_log`).
@@ -12123,8 +12156,53 @@ pub mod app {
     impl HistoryView {
         /// 🕳️ An empty view for hand-built test/fixture `ArtifactView`s that don't exercise history.
         pub fn empty() -> Self {
-            Self { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, commands: Vec::new(), command_filter: HistoryCommandFilter::default() }
+            Self { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, alternatives: Vec::new(), current_checkpoint_id: None, commands: Vec::new(), command_filter: HistoryCommandFilter::default() }
         }
+    }
+
+    /// 🌿️ One alternative of the artifact's history as the history body lists it: its id and name, whether it is the
+    /// current one, who branched it and when (its `Branch` transition's actor and HLC wall time as RFC 3339 UTC; `None`
+    /// when the log holds no branch of it) and whether history edits were kept as it (scoped `Supersede` transitions).
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct AlternativeView {
+        pub id: String,
+        pub name: String,
+        pub current: bool,
+        pub author: Option<String>,
+        pub branched_at: Option<String>,
+        pub edited: bool,
+    }
+
+    /// 🧾️ One history transition as the alternatives list reads it: a branch naming its alternative, author and wall
+    /// time, or a supersession with its scope.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum AlternativeFact<'a> {
+        Branch { alternative_id: &'a str, actor: &'a str, physical_ms: u64 },
+        Supersede { scope: Option<&'a str> },
+    }
+
+    /// 🌿️ The alternatives list of the history body over `(id, name)` pairs in declaration order (the trunk first, with the
+    /// empty name the history body localizes) and the log's `facts` in HLC order: current when it is the `active` line,
+    /// authored by the first branch naming it, edited when a supersession is scoped to it. Twin: `🧪️tests/🧪️history-alternatives/🟦️.ts` over `🧫️fixtures/🧫️history-alternatives/🔣️.json`.
+    // 🚫️async: a pure projection over already-decoded facts.
+    pub fn history_alternative_views<'a>(alternatives: impl IntoIterator<Item = (&'a str, &'a str)>, active: Option<&str>, facts: &[AlternativeFact<'_>]) -> Vec<AlternativeView> {
+        alternatives
+            .into_iter()
+            .map(|(id, name)| {
+                let branch = facts.iter().find_map(|fact| match fact {
+                    AlternativeFact::Branch { alternative_id, actor, physical_ms } if *alternative_id == id => Some((*actor, *physical_ms)),
+                    _ => None,
+                });
+                AlternativeView {
+                    id: id.to_string(),
+                    name: name.to_string(),
+                    current: active == Some(id),
+                    author: branch.map(|(actor, _)| actor.to_string()),
+                    branched_at: branch.map(|(_, physical_ms)| protocol::scalar::format_rfc3339_ms(i64::try_from(physical_ms).unwrap_or(i64::MAX))),
+                    edited: facts.iter().any(|fact| matches!(fact, AlternativeFact::Supersede { scope: Some(scope) } if *scope == id)),
+                }
+            })
+            .collect()
     }
     //#endregion 🔖️CommandLog
 
@@ -12198,8 +12276,10 @@ pub mod app {
     ///
     /// ⏪️ While a history edit is open (`time_travel`), the body leads with the session band
     /// (`framework.history.timeTravel`) and, while a mutation is being edited, its draft editor
-    /// (`framework.history.editor`); the history-lane actions and the per-row revert are frozen, and every
-    /// row's mutations carry the session overlay (replay outcome, pending, edited).
+    /// (`framework.history.editor` and its unwindowed inputs), then the alternatives, the actions and the commands;
+    /// otherwise the actions lead, then the alternatives and the commands. The history-lane actions and the per-row
+    /// revert are frozen during the edit, and every row's mutations carry the session overlay (replay outcome,
+    /// pending, edited).
     ///
     /// ↩️ Undo is enabled exactly where its chord and palette entry are: for every editor outside a history edit. The
     /// host routes an `undo` to a remote (inference) history it owns, which this guest cannot see, and an undo with
@@ -12260,7 +12340,7 @@ pub mod app {
             let worst = mutations.iter().filter_map(|mutation| mutation.worst).max();
             let mut builder = ui::tree_item(Label(label)).icon(ui_text(history_panel_icon_id(entry.kind).as_str(), "history-panel.command-icon")?);
             builder = builder.try_id(&id).map_err(|_| ui_assembly_error("history-panel.command-id"))?;
-            let mut description = entry.op_lines.join(" \u{b7} ");
+            let mut description = if entry.mutations.is_empty() { entry.op_lines.join(" \u{b7} ") } else { String::new() };
             if let Some(worst) = worst {
                 let severity = time_travel::history_severity_text(worst, locale);
                 description = if description.is_empty() { severity.to_string() } else { format!("{severity} \u{b7} {description}") };
@@ -12322,21 +12402,65 @@ pub mod app {
         let actions_builder = tree_section(ui_label(text_of(time_travel::HistoryPanelText::Actions), "history-panel.actions-label")?).default_open(true);
         let actions_builder = actions_builder.try_id("framework.history.actions").map_err(|_| ui_assembly_error("history-panel.actions-id"))?;
         let actions_section = actions_builder.try_children(action_items).map_err(|_| ui_assembly_error("history-panel.actions"))?.try_build().map_err(|_| ui_assembly_error("history-panel.actions-build"))?;
+        let alternatives_section = if history.alternatives.is_empty() {
+            None
+        } else {
+            Some(tree_window_section(&windows, "framework.history.alternatives", ui_label(text_of(time_travel::HistoryPanelText::Alternatives), "history-panel.alternatives-label")?, true, &history.alternatives, |alternative| history_panel_alternative_row(alternative, controller_id, locale, mutable))?)
+        };
         let mut sections = BuiltChildren::default();
-        if let Some(panel) = time_travel {
-            sections.try_push(time_travel::time_travel_band_section(panel, controller_id, locale)?).map_err(|_| ui_assembly_error("history-panel.sections"))?;
-            if let Some(editor) = panel.editor.as_ref().filter(|_| !read_only) {
-                sections.try_push(time_travel::time_travel_editor_section(panel, editor, controller_id, locale, &windows)?).map_err(|_| ui_assembly_error("history-panel.sections"))?;
+        let ordered: Vec<BuiltNode> = match time_travel {
+            Some(panel) => {
+                let mut session = vec![time_travel::time_travel_band_section(panel, controller_id, locale)?];
+                if let Some(editor) = panel.editor.as_ref().filter(|_| !read_only) {
+                    session.extend(time_travel::time_travel_editor_sections(panel, editor, controller_id, locale)?);
+                }
+                session.into_iter().chain(alternatives_section).chain([actions_section, commands_section]).collect()
             }
+            None => std::iter::once(actions_section).chain(alternatives_section).chain([commands_section]).collect(),
+        };
+        for section in ordered {
+            sections.try_push(section).map_err(|_| ui_assembly_error("history-panel.sections"))?;
         }
-        sections.try_push(actions_section).map_err(|_| ui_assembly_error("history-panel.sections"))?;
-        sections.try_push(commands_section).map_err(|_| ui_assembly_error("history-panel.sections"))?;
         tree().try_children(sections).map_err(|_| ui_assembly_error("history-panel.sections"))?.try_build().map_err(|_| ui_assembly_error("history-panel.build"))
     }
 
     /// ✏️ Mutation children one history row shows at most (flagged ones first); the wire carries up to
     /// [`HISTORY_ROW_MUTATION_ROWS`].
     pub const HISTORY_PANEL_MUTATION_ROWS: usize = 8;
+
+    /// 🌿️ One alternative row: its name (the trunk's empty one reads "Main line"), a check icon and "Current" when it is the
+    /// current one, who branched it and when,
+    /// and "Edited history" when history edits were kept as it; every other alternative switches on activation and by its
+    /// Switch row action (`switchAlternative{alternativeId}`) unless the panel is read-only or frozen by a history edit.
+    fn history_panel_alternative_row(alternative: &AlternativeView, controller_id: &str, locale: Locale, mutable: bool) -> UiAssemblyResult<BuiltNode> {
+        let text = |text: time_travel::HistoryPanelText| text.text(locale);
+        let id = UiText::try_format(format_args!("framework.history.alternative.{}", alternative.id)).ok_or_else(|| ui_assembly_error("history-panel.alternative-id"))?;
+        let icon = if alternative.current { IconName::Check } else { IconName::GitBranch };
+        let name = if alternative.name.is_empty() { text(time_travel::HistoryPanelText::Trunk) } else { alternative.name.as_str() };
+        let mut builder = ui::tree_item(Label(UiText::clipped(name))).icon(ui_text(icon.as_str(), "history-panel.alternative-icon")?);
+        builder = builder.try_id(&id).map_err(|_| ui_assembly_error("history-panel.alternative-id"))?;
+        let mut parts: Vec<String> = Vec::new();
+        if alternative.current {
+            parts.push(text(time_travel::HistoryPanelText::Current).to_string());
+        }
+        if let (Some(author), Some(at)) = (alternative.author.as_deref(), alternative.branched_at.as_deref()) {
+            let when = at.get(..16).map_or_else(|| at.to_string(), |minute| format!("{} UTC", minute.replacen('T', " ", 1)));
+            parts.push(text(time_travel::HistoryPanelText::BranchedBy).replace("{author}", author).replace("{time}", &when));
+        }
+        if alternative.edited {
+            parts.push(text(time_travel::HistoryPanelText::EditedHistory).to_string());
+        }
+        if !parts.is_empty() {
+            builder = builder.description(UiText::clipped(&parts.join(" \u{b7} ")));
+        }
+        if !alternative.current && mutable {
+            let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("history-panel.alternative-args"))?;
+            args.push(semio_framework::SWITCH_ALTERNATIVE_ARG_ALTERNATIVE_ID.to_owned(), UiValue::Text(UiText::clipped(&alternative.id))).map_err(|_| ui_assembly_error("history-panel.alternative-args"))?;
+            let switch = row_action(IconName::GitBranch.as_str(), text(time_travel::HistoryPanelText::Switch), semio_framework::SWITCH_ALTERNATIVE_ACTION_ID, RowActionPlacement::Row)?;
+            builder = builder.try_row_action(switch).map_err(|_| ui_assembly_error("history-panel.alternative-actions"))?.target(row_target(controller_id, Some(UiValue::Map(args.finish())), Some(semio_framework::SWITCH_ALTERNATIVE_ACTION_ID))?);
+        }
+        builder.try_build().map_err(|_| ui_assembly_error("history-panel.alternative-build"))
+    }
 
     /// ✏️ One mutation child of a history row: label, state-and-severity description in words, tone and icon by
     /// severity, and Edit (`historyEditBegin{mutationId}`, also its activation) when editable and not a viewer.
@@ -13278,6 +13402,42 @@ pub mod app {
     include!("🧪️tests/🔬️app-app-commands/🦀️.rs");
     //#endregion 🔖️AppCommands
 
+    //#region 🔖️HostEvents
+    /// 📨️ A host fact an app may answer with one of its own typed commands ([`ArtifactApp::host_event`]). Every event
+    /// names the window it concerns: a host forwards a window's blur, pointer-capture loss and closing
+    /// (`hostEvent{windowId, kind}`), and the runtime delivers a utility switch it sees in a dispatch's view, the start
+    /// of a history edit and a remote edit moving the base to every open window.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub enum HostEvent {
+        WindowBlurred { window_id: String },
+        PointerCaptureLost { window_id: String },
+        UtilityChanged { window_id: String, from: Option<String>, to: Option<String> },
+        TimeTravelFrozen { window_id: String },
+        BaseMoved { window_id: String },
+        Retiring { window_id: String },
+    }
+
+    impl HostEvent {
+        /// 🪟️ The window instance this event concerns.
+        pub fn window_id(&self) -> &str {
+            match self {
+                Self::WindowBlurred { window_id } | Self::PointerCaptureLost { window_id } | Self::UtilityChanged { window_id, .. } | Self::TimeTravelFrozen { window_id } | Self::BaseMoved { window_id } | Self::Retiring { window_id } => window_id,
+            }
+        }
+
+        /// 📨️ The event a host forwards as `hostEvent{windowId, kind}`; `None` for an unknown kind.
+        pub fn forwarded(window_id: &str, kind: &str) -> Option<Self> {
+            let window_id = window_id.to_string();
+            match kind {
+                semio_framework::HOST_EVENT_KIND_BLUR => Some(Self::WindowBlurred { window_id }),
+                semio_framework::HOST_EVENT_KIND_CAPTURE_LOST => Some(Self::PointerCaptureLost { window_id }),
+                semio_framework::HOST_EVENT_KIND_RETIRING => Some(Self::Retiring { window_id }),
+                _ => None,
+            }
+        }
+    }
+    //#endregion 🔖️HostEvents
+
     /// 🧩️ Typed, per-app author surface. An app declares its `Snapshot` and `Mutation` (a
     /// `store::Mutation<Snapshot>`), mutates nothing directly, and returns an {@link ActionEmit} whose
     /// operations flow through a persistent `ArtifactStore` owned by {@link VcsArtifactApp}. Ephemeral
@@ -13400,6 +13560,18 @@ pub mod app {
         /// Only the app knows which of its bodies render a hover or a selection, so only the app can
         /// answer; the framework owns the verbs and the default.
         fn interaction_scope(_verb: InteractionVerb, _domains: &[&str]) -> Option<UiDirtyScope> {
+            None
+        }
+        /// ⏳️ What a typed operation's progress change or retirement dirties in THIS app: the bodies that render
+        /// `ArtifactView::operations`. Only the app knows which of its bodies show them, so the default refreshes
+        /// nothing — an operation's progress never widens the dirty scope its own result declared.
+        fn operation_progress_scope() -> UiDirtyScope {
+            UiDirtyScope::None
+        }
+        /// 📨️ The typed command this app answers a [`HostEvent`] with: the runtime dispatches it to the event's window
+        /// through the ordinary typed pipeline, and a command that edits no store is never a history row. `None` (the
+        /// default) ignores the event.
+        fn host_event(_event: &HostEvent) -> Option<Self::Command> {
             None
         }
         /// 🧳️ Builds one operation owner retained by the concrete VCS app instance. The owner is
@@ -15962,6 +16134,14 @@ pub mod app {
             bounded
         }
 
+        /// 🧾️ Recovers the canonical reducer refusal before retaining its bounded publication frame.
+        fn from_retained_fault(detail: &semio_framework_job::RetainedJobPayload) -> Self {
+            let payload = Self::from_payload(detail);
+            let (code, message) = decode_typed_operation_fault_page(payload.as_bytes());
+            let fault = crate::retained_command::reducer_fault_of_detail(&message).unwrap_or_else(|| Fault::new(FaultOrigin::Framework, code, message));
+            Self::from_fault(&fault)
+        }
+
         fn from_fault(fault: &Fault) -> Self {
             let mut bounded = Self { bytes: [0; TYPED_OPERATION_FAULT_BYTES], len: 0, code: [0; TYPED_OPERATION_FAULT_CODE_BYTES], code_len: 0 };
             for scalar in fault.message.chars() {
@@ -18194,7 +18374,7 @@ pub mod app {
                 }
                 FrameworkConfigurationBinaryStage::Decode => {
                     cx.set_stage("framework-configuration-binary-decode");
-                    let decoded = <ArtifactCommand<A::ConfigMutation> as ::protocol::OpBinary>::decode_op(&self.raw).map_err(|error| error.into_fault());
+                    let decoded = ArtifactCommand::<A::ConfigMutation>::decode_command::<A::Config>(&self.raw).map_err(|error| error.into_fault());
                     if let Some(output) = self.decoded.as_ref() {
                         *output.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(decoded);
                     }
@@ -20476,7 +20656,7 @@ pub mod app {
                         return Ok(PluginCloseStep::Blocked { reason: "typed operation checked-out outcome changed during one mounted turn" });
                     };
                     if let semio_framework_job::StepOutcome::Fault(fault) = &outcome {
-                        self.terminal_fault = Some(ArtifactBoundedToolFault::from_payload(&fault.detail));
+                        self.terminal_fault = Some(ArtifactBoundedToolFault::from_retained_fault(&fault.detail));
                     }
                     if matches!(outcome, semio_framework_job::StepOutcome::Cancelled | semio_framework_job::StepOutcome::Fault(_)) {
                         if let Some(lease) = self.cancellation_lease.as_ref() {
@@ -23567,6 +23747,14 @@ pub mod app {
         close_interaction_disposer: std::mem::ManuallyDrop<ArtifactDisposal<ConfigStore<protocol::InteractionState, InteractionConfigMutation>>>,
         close_cache: std::mem::ManuallyDrop<Option<ArtifactCacheRetirement<A>>>,
         invocation_kind: Option<ActionKind>,
+        /// 🧰️ The utility each window last showed in a dispatch's view, so a switch becomes a [`HostEvent::UtilityChanged`].
+        host_event_utilities: HashMap<String, Option<String>>,
+        /// 🪟️ The window roster the last dispatch's view carried: the windows an instance-wide [`HostEvent`] reaches.
+        host_event_roster: Vec<semio_framework::ViewWindowInstance>,
+        /// 📨️ The typed operations a [`HostEvent`] admitted: never history rows of their own.
+        host_event_operations: HashSet<u64>,
+        /// 🔁️ Set while a host event dispatches, so its own dispatch delivers none.
+        delivering_host_event: bool,
         /// 🧾️ Append-only session command log — see `🔖️CommandLog`. Never persisted, never
         /// truncated: undo/redo/revert push entries, they never remove any.
         command_log: Vec<CommandLogEntry>,
@@ -23690,6 +23878,9 @@ pub mod app {
         /// 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): drafts previewed and replayed beside the store, never touching it
         /// until the one finalize commit.
         pub(crate) time_travel: TimeTravelLedger<A>,
+        /// 🎚️ Every window's open continuous-control press (design §13.1): provisional leaves overlaid on every render,
+        /// published as ONE transaction on the release, zero trace on any host abort.
+        pub(crate) scrubs: ScrubRuntime<A::Snapshot, A::Mutation>,
         /// ✏️ Every `Supersede` transition of the store's event log, classified per author (history edit, its undo, its
         /// redo) — derived from the transitions, so the history rows and undo of history edits survive reload.
         pub(crate) supersedes: SupersedeLedger,
@@ -23817,6 +24008,7 @@ pub mod app {
             || is_tool_run_action_id(action)
             || is_time_travel_action_id(action)
             || action == CANCEL_TYPED_OPERATION_ACTION_ID
+            || action == semio_framework::HOST_EVENT_ACTION_ID
             || matches!(action, REVERT_TO_COMMAND_ACTION_ID | SET_HISTORY_COMMAND_FILTER_ACTION_ID | NOTE_SHELL_COMMAND_ACTION_ID | RECORD_TUTORIAL_ACTION_ID)
             || matches!(action, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID)
     }
@@ -23828,7 +24020,7 @@ pub mod app {
         if CLIPBOARD_ACTION_IDS.contains(&action) {
             return Some(ActionKind::Clipboard);
         }
-        if INTERACTION_ACTION_IDS.contains(&action) {
+        if INTERACTION_ACTION_IDS.contains(&action) || action == semio_framework::HOST_EVENT_ACTION_ID {
             return Some(ActionKind::Interaction);
         }
         if action == SET_HISTORY_COMMAND_FILTER_ACTION_ID || action == CANCEL_TYPED_OPERATION_ACTION_ID {
@@ -23850,12 +24042,12 @@ pub mod app {
     //#region 🔖️ViewerGuard
     /// 🔒️ Contract §2.3: the string-action verbs a `Viewer`-role instance must reject at
     /// `dispatch_action`'s entry — `import` is not a string action (see `PluginApp::import_media`'s
-    /// own check in `dispatch_import_media`), so it is not in this list. `checkoutCheckpoint`/
-    /// `switchAlternative` are deliberately absent: they move the read cursor across ALREADY-EXISTING
-    /// history and never create new content, so a viewer may still browse checkpoints/alternatives.
+    /// own check in `dispatch_import_media`), so it is not in this list. `checkoutCheckpoint` and
+    /// `switchAlternative` are rejected too: each commits a `Checkout` history transition to the shared event log, which
+    /// moves the head (and the scoped history edits it projects) for every replica, so it is a write, not a read cursor.
     /// `try_build_definition` never declares these on a viewer app, so no host offers or binds them to a
     /// Spectator; this guard is the backstop for a dispatch no manifest offered.
-    const VIEWER_REJECTED_ACTION_IDS: [&str; 7] = ["undo", "redo", "commitCheckpoint", "createAlternative", REVERT_TO_COMMAND_ACTION_ID, "cut", "paste"];
+    const VIEWER_REJECTED_ACTION_IDS: [&str; 9] = ["undo", "redo", "commitCheckpoint", "createAlternative", semio_framework::SWITCH_ALTERNATIVE_ACTION_ID, "checkoutCheckpoint", REVERT_TO_COMMAND_ACTION_ID, "cut", "paste"];
 
     /// 🔒️ Whether a `Viewer`-role instance rejects `action`: the [`VIEWER_REJECTED_ACTION_IDS`] and every history-edit
     /// verb (editing history supersedes inputs, which a viewer never may).
@@ -24741,6 +24933,10 @@ pub mod app {
                 close_interaction_disposer: std::mem::ManuallyDrop::new(Some(Box::new(ArtifactDocumentStoreDisposer::<protocol::InteractionState, InteractionConfigMutation>::new()))),
                 close_cache: std::mem::ManuallyDrop::new(None),
                 invocation_kind: None,
+                host_event_utilities: HashMap::new(),
+                host_event_roster: Vec::new(),
+                host_event_operations: HashSet::new(),
+                delivering_host_event: false,
                 command_log: Vec::new(),
                 next_command_seq: 0,
                 log_generation: 0,
@@ -24779,6 +24975,7 @@ pub mod app {
                 presence_marked_keys: std::collections::BTreeMap::new(),
                 tool_runs: ToolRunLedger::default(),
                 time_travel: TimeTravelLedger::default(),
+                scrubs: ScrubRuntime::default(),
                 supersedes: SupersedeLedger::default(),
             };
             this.seed_genesis_children().await.expect("ArtifactApp::genesis_child_pack members must open cleanly onto a freshly constructed store");
@@ -25541,6 +25738,7 @@ pub mod app {
                 self.child_content_generation = next_content_generation.expect("candidate generation exhaustion was rejected before commit");
                 self.commit_document_window_reset(window_reset);
                 self.cache = None;
+                self.retire_displaced_document_rows();
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if matches!(state, ActiveArtifactStoreReplacementState::RetiringCommittedStore | ActiveArtifactStoreReplacementState::RetiringRejectedCandidate) {
@@ -26337,6 +26535,84 @@ pub mod app {
             }
         }
 
+        /// 📨️ Delivers `event` to the app: its typed answer ([`ArtifactApp::host_event`]) dispatches to the event's window —
+        /// addressed through `meta`'s view when it holds that window, else through the last roster — as an ordinary typed
+        /// operation that is never a history row of its own. An event the app ignores, or for a window no view holds,
+        /// dispatches nothing.
+        async fn deliver_host_event(&mut self, event: HostEvent, meta: &ActionMeta) -> Result<(), Fault> {
+            let Some(command) = A::host_event(&event) else { return Ok(()) };
+            let window_id = event.window_id();
+            let view = meta.view_state.as_ref().and_then(|view| view.for_window_instance(window_id)).or_else(|| ViewModel { window_instances: self.host_event_roster.clone(), ..ViewModel::default() }.for_window_instance(window_id));
+            let Some(view) = view else { return Ok(()) };
+            let window_meta = ActionMeta { view_state: Some(view), ..meta.clone() };
+            let verb = A::command_id(&command).await;
+            let payload = ::protocol::OpBinary::encode_op(&command).map_err(|error| error.into_fault())?;
+            let admission = self.admit_command_wire(verb, &payload, 1).await?;
+            self.delivering_host_event = true;
+            let result = Box::pin(self.dispatch_typed_command_inner(Box::new(command), admission, &window_meta)).await;
+            self.delivering_host_event = false;
+            result.map(|_| ())
+        }
+
+        /// 🧰️ Delivers [`HostEvent::UtilityChanged`] for every window whose utility `meta`'s view moved since a dispatch
+        /// last showed it — the targeted window reads the per-call overlay, every other one the view's map, and a window
+        /// the view names no utility for is unknown, never a switch — and remembers the view's window roster.
+        async fn deliver_utility_host_events(&mut self, meta: &ActionMeta) -> Result<(), Fault> {
+            let Some(view) = meta.view_state.as_ref().filter(|_| !self.delivering_host_event) else { return Ok(()) };
+            if !view.window_instances.is_empty() && self.host_event_roster != view.window_instances {
+                self.host_event_roster = view.window_instances.clone();
+                self.host_event_utilities.retain(|window_id, _| view.window_instances.iter().any(|window| window.id == *window_id));
+            }
+            let mut switched = Vec::new();
+            for window in &view.window_instances {
+                let utility = if view.window_id.as_deref() == Some(window.id.as_str()) { Some(view.active_utility_id.as_deref()) } else { view.active_utility_by_window_id.get(&window.id).map(|utility| Some(utility.as_str())) };
+                let Some(utility) = utility else { continue };
+                match self.host_event_utilities.get_mut(&window.id) {
+                    Some(previous) if previous.as_deref() == utility => {}
+                    Some(previous) => {
+                        let from = std::mem::replace(previous, utility.map(str::to_string));
+                        switched.push(HostEvent::UtilityChanged { window_id: window.id.clone(), from, to: utility.map(str::to_string) });
+                    }
+                    None => {
+                        self.host_event_utilities.insert(window.id.clone(), utility.map(str::to_string));
+                    }
+                }
+            }
+            for event in switched {
+                self.deliver_host_event(event, meta).await?;
+            }
+            Ok(())
+        }
+
+        /// 🌐️ Delivers one instance-wide event, built per window, to every window of `meta`'s view, else of the last roster.
+        pub(crate) async fn deliver_host_event_to_every_window(&mut self, event: impl Fn(String) -> HostEvent, meta: &ActionMeta) -> Result<(), Fault> {
+            let roster = meta.view_state.as_ref().map(|view| view.window_instances.as_slice()).filter(|roster| !roster.is_empty()).unwrap_or(&self.host_event_roster);
+            let windows: Vec<String> = roster.iter().map(|window| window.id.clone()).collect();
+            for window_id in windows {
+                self.deliver_host_event(event(window_id), meta).await?;
+            }
+            Ok(())
+        }
+
+        /// 🌐️ Delivers [`HostEvent::BaseMoved`] to every window once a remote edit moved the base, as the local actor.
+        async fn deliver_base_moved(&mut self) -> Result<(), Fault> {
+            let (Some(instance_id), Some(actor)) = (self.live_runtime_instance_id, self.store.local_actor_id()) else { return Ok(()) };
+            let meta = ActionMeta { actor: actor.to_string(), instance_id, view_state: None };
+            self.deliver_host_event_to_every_window(|window_id| HostEvent::BaseMoved { window_id }, &meta).await
+        }
+
+        /// 📨️ `hostEvent{windowId, kind}`: the host-forwarded window fact, delivered at once; an unknown kind or a
+        /// missing window is refused.
+        async fn dispatch_host_event_action(&mut self, args: Option<&DslValue>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            let text = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_str);
+            let event = text(semio_framework::HOST_EVENT_ARG_WINDOW_ID).zip(text(semio_framework::HOST_EVENT_ARG_KIND)).and_then(|(window_id, kind)| HostEvent::forwarded(window_id, kind));
+            let Some(event) = event else {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("hostEvent.invalid"), "hostEvent requires a windowId and a kind of blur, captureLost or retiring"));
+            };
+            self.deliver_host_event(event, meta).await?;
+            Ok(Self::empty_result(semio_framework::HOST_EVENT_ACTION_ID, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await)
+        }
+
         /// 🧾️ A settled typed operation that published no document lane and no shared-config lane still
         /// owes the history panel one row, on the admitting completion: `dispatch_emit`'s empty
         /// `artifact_mutations` branch files the verb under its declared kind (`View` for `select`,
@@ -26347,6 +26623,12 @@ pub mod app {
         /// Silent for a faulted operation, exactly as `dispatch_emit`'s `Err` path is, and for a `View`
         /// whose only durable emission is the per-window config lane — an orbit tick is not a command.
         fn record_settled_typed_operation_command(&mut self, operation_id: u64) {
+            if self.host_event_operations.remove(&operation_id) {
+                if let Some(operation) = self.tool_operations.get_mut(operation_id) {
+                    operation.command_logged = true;
+                }
+                return;
+            }
             let logged = {
                 let Some(operation) = self.tool_operations.get(operation_id) else { return };
                 if operation.command_logged || operation.terminal_fault.is_some() || operation.published_artifact || operation.published_config {
@@ -26886,11 +27168,18 @@ pub mod app {
         /// row keeps its original inverse, since inverse on a folded "×N" row must undo the whole run,
         /// not just the last dispatch that folded into it.
         ///
+        /// 🙈️ Interaction verbs (hover, pick, clear selection) and pure view verbs (a `View` that edited no store and
+        /// carries no inverse) are never rows: they change no history and undo cannot reach them
+        /// ([`history_row_is_recorded`]).
+        ///
         /// 🌐️ The row keeps the action's FULL locale matrix — no resolve happens here, so the
         /// History panel renders every row in whatever locale the shell is showing right now.
         /// A row with no declaring definition falls back to its `action_id`, which is
         /// locale-invariant data, not untranslated English.
         fn record_command(&mut self, action_id: &str, kind: ActionKind, label: Option<LocalizedLabel>, edit_id: Option<String>, config_edit_id: Option<String>, inverse: Option<InverseAction>) {
+            if !history_row_is_recorded(kind, edit_id.is_some() || config_edit_id.is_some(), inverse.is_some()) {
+                return;
+            }
             let label = match label {
                 Some(label) => label,
                 None => match self.registry.get(action_id) {
@@ -27102,6 +27391,7 @@ pub mod app {
             }
             let supersede_author = self.supersede_author();
             let applied_entries = self.supersedes.applied_entries(self.store.supersessions().iter());
+            let app_id = self.app.instance_id().await;
             let mut commands: Vec<CommandView> = Vec::with_capacity(self.command_log.len());
             for entry in self.command_log.iter() {
                 if let Some((index, record)) = entry.transition_id.as_deref().and_then(|transition_id| self.supersedes.record(transition_id)) {
@@ -27150,14 +27440,12 @@ pub mod app {
                     || (entry.inverse.is_some() && !self.shell_undone.contains(&entry.seq));
                 let mutations = entry.edit_id.as_deref().and_then(|edit_id| ops_by_edit.get(edit_id)).map_or_else(Vec::new, |ops| time_travel::history_mutation_views::<A>(ops, &outcomes, &labelled));
                 let transaction = edit.and_then(|edit| edit.mutation_meta.first()).and_then(|meta| meta.transaction.clone());
+                let tool_run_label = transaction.as_ref().and_then(|transaction| self.tool_run_transaction_label(app_id, transaction));
+                let leaf_label = entry.edit_id.as_deref().and_then(|edit_id| ops_by_edit.get(edit_id)).and_then(|ops| ops.first()).and_then(|op| A::mutation_label(op.operation));
                 let label = match (edit, mutations.first()) {
-                    (Some(edit), Some(first)) if transaction.is_some() && edit.description.is_none() => {
-                        let more = op_count.saturating_sub(1);
-                        LocalizedLabel::from_fn(|terminology, locale| {
-                            let first = first.label.resolve(terminology, locale);
-                            if more > 0 { format!("{first} (+{more})") } else { first.to_string() }
-                        })
-                    }
+                    (Some(edit), _) if edit.description.is_none() && tool_run_label.is_some() => tool_run_label.expect("tool run label checked above"),
+                    (Some(edit), Some(first)) if transaction.is_some() && edit.description.is_none() => history_leaf_row_label(&first.label, op_count),
+                    (Some(edit), _) if edit.description.is_none() && (op_count == 1 || entry.action_id == "apply") && leaf_label.is_some() => history_leaf_row_label(&leaf_label.expect("leaf label checked above"), op_count),
                     _ => entry.label.clone(),
                 };
                 commands.push(CommandView {
@@ -27190,6 +27478,19 @@ pub mod app {
                     || self.supersede_can_undo(),
                 can_redo: !self.store.redo_edit_ids().is_empty() || child_has_redo_tail || !self.shell_redo.is_empty() || self.supersede_redo_target().is_some(),
                 active_alternative_id: envelope.active_alternative_id.clone(),
+                alternatives: {
+                    let transitions: Vec<(&store::os_spr::MutationEnvelope, store::os_spr::HistoryTransition)> = envelope.transitions.iter().filter_map(|transition| store::os_spr::history_transition_from_envelope(transition).ok().flatten().map(|decoded| (transition, decoded))).collect();
+                    let facts: Vec<AlternativeFact<'_>> = transitions
+                        .iter()
+                        .filter_map(|(transition, decoded)| match decoded {
+                            store::os_spr::HistoryTransition::Branch { alternative_id, .. } => Some(AlternativeFact::Branch { alternative_id, actor: &transition.actor.0, physical_ms: transition.timestamp.physical_ms }),
+                            store::os_spr::HistoryTransition::Supersede(supersede) => Some(AlternativeFact::Supersede { scope: supersede.scope.as_deref() }),
+                            _ => None,
+                        })
+                        .collect();
+                    let line = self.store.active_line_id();
+                    history_alternative_views(envelope.vcs.alternatives.iter().map(|alternative| (alternative.id.as_str(), alternative.name.as_str())), Some(line.as_str()), &facts)
+                },
                 current_checkpoint_id: self.store.current_checkpoint_id().map(str::to_string),
                 commands,
                 command_filter: self.history_filter,
@@ -27305,6 +27606,7 @@ pub mod app {
                 retained => std::sync::Arc::new(self.build_history_view(retained.as_ref().map(|(_, _, _, history)| history.as_ref())).await),
             };
             self.cache = Some((key, snapshot, config, history));
+            self.follow_scrubs(false);
             Ok(())
         }
 
@@ -27345,7 +27647,7 @@ pub mod app {
 
         async fn record_rejected_dispatch(&mut self, policy: protocol::MergePolicy, messages: Vec<protocol::MutationMessage>) -> Fault {
             self.dispatch_report = protocol::DispatchReport { policy, worst: protocol::worst_level(&messages), messages };
-            Fault::new(FaultOrigin::App, FaultCode::new("mutation.rejected"), "mutation rejected by the active merge policy")
+            Fault::new(FaultOrigin::App, FaultCode::new("app.command.rejected"), "mutation rejected by the active merge policy")
         }
 
         async fn apply_merge_policy(&mut self, policy: protocol::MergePolicy) {
@@ -29744,6 +30046,10 @@ pub mod app {
                 return Err(viewer_read_only_fault(action));
             }
             if action==CANCEL_TYPED_OPERATION_ACTION_ID {return self.dispatch_operation_cancellation(args,meta).await;}
+            Box::pin(self.deliver_utility_host_events(meta)).await?;
+            if action == semio_framework::HOST_EVENT_ACTION_ID {
+                return Box::pin(self.dispatch_host_event_action(args, meta)).await;
+            }
             if matches!(action, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("framework.document-transfer.shell-owned"), format!("{action} is performed by the shell, never by the program")));
             }
@@ -29751,6 +30057,7 @@ pub mod app {
                 return self.dispatch_tool_run_action(action, args, meta).await;
             }
             if is_time_travel_action_id(action) {
+                self.freeze_scrubs();
                 return Box::pin(self.dispatch_time_travel_action(action, args, meta)).await;
             }
             if is_framework_reserved_action_id(action) {
@@ -29765,6 +30072,12 @@ pub mod app {
             }
             let definition = self.registry.get(action).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unknown-key"), format!("UI dispatch rejected unknown action key '{action}' before command construction")))?;
             validate_ui_dispatch_classification("action", action, definition.semantics.execution.interactive_job)?;
+            let definition_kind = definition.kind;
+            let scrub = match Box::pin(self.admit_scrub_dispatch(action, args, meta)).await {
+                ScrubDispatch::Plain => None,
+                ScrubDispatch::Press(tag) => Some(tag),
+                ScrubDispatch::Settled(result) => return result,
+            };
             let whole_import = match self.import_staging.admit_args(args).map_err(|refusal| Fault::new(FaultOrigin::Framework, FaultCode::new(refusal.code()), refusal.message()))? {
                 semio_framework::kernel::ImportArguments::Staged { .. } => return Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await),
                 semio_framework::kernel::ImportArguments::Whole(whole) => Some(whole),
@@ -29778,12 +30091,12 @@ pub mod app {
                 if encoded.len() > admission.proof.contract().max_output_bytes {
                     return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.host-configuration-output"), format!("host configuration action '{action}' exceeds its exact output cap")));
                 }
-                let previous_kind = self.invocation_kind.replace(definition.kind);
+                let previous_kind = self.invocation_kind.replace(definition_kind);
                 let result = self.dispatch_emit(action, Emit::config(vec![config_mutation]), meta).await;
                 self.invocation_kind = previous_kind;
                 result
             } else if matches!(action, SET_ACTIVE_TOOL_ACTION_ID | SET_ACTIVE_UTILITY_ACTION_ID) {
-                let previous_kind = self.invocation_kind.replace(definition.kind);
+                let previous_kind = self.invocation_kind.replace(definition_kind);
                 let result = self.dispatch_emit(action, Emit::default(), meta).await;
                 self.invocation_kind = previous_kind;
                 result
@@ -29792,7 +30105,10 @@ pub mod app {
                 let wire = <A::Command as ::protocol::OpBinary>::encode_op(&command).map_err(|error| error.into_fault())?;
                 let admission = self.admit_command_wire(action, &wire, 1).await?;
                 self.require_complete_tool_operation_pipeline(&admission)?;
-                self.dispatch_typed_command_inner(command, admission, meta).await
+                self.scrubs.ingress = scrub;
+                let result = self.dispatch_typed_command_inner(command, admission, meta).await;
+                self.scrubs.ingress = None;
+                result
             }
         }
 
@@ -31010,6 +31326,7 @@ pub mod app {
                 let Some(completion) = mounted.completion.as_ref() else { return Err(plugin_sdk_fault("typed-operation completion owner was retired before publication")) };
                 let Some(mut publication) = completion.take()? else { return Ok(()) };
                 mounted.ui_pending = matches!(publication, ArtifactToolCompletionValue::Emit(Ok(_), _));
+                self.settle_scrub_operation(mounted, &mut publication)?;
                 if let ArtifactToolCompletionValue::Emit(Ok(emit), _) = &mut publication {
                     let verbs = take_inline_interaction_verbs(&mut emit.effects);
                     if !verbs.is_empty() {
@@ -31111,7 +31428,11 @@ pub mod app {
             let token = mounted.next_token();
             let publication_lanes = mounted.publication_lanes;
             let page = match mounted.publication.as_mut().expect("publication owner was installed") {
-                ArtifactToolCompletionValue::Emit(Err(fault), _) | ArtifactToolCompletionValue::Download(Err(fault), _) => TypedOperationResultPage::try_new(token, TypedOperationResultLane::Fault, fault.as_bytes())?,
+                ArtifactToolCompletionValue::Emit(Err(fault), _) | ArtifactToolCompletionValue::Download(Err(fault), _) => {
+                    let mut framed = [0; TYPED_OPERATION_FAULT_PAGE_BYTES];
+                    let len = fault.framed_page_bytes(&mut framed);
+                    TypedOperationResultPage::try_new(token, TypedOperationResultLane::Fault, &framed[..len])?
+                },
                 ArtifactToolCompletionValue::Download(Ok(download), ephemeral) => {
                     if (!ephemeral.presence.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Presence))
                         || (!ephemeral.transient.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Transient))
@@ -31482,6 +31803,7 @@ pub mod app {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.live-instance"), format!("typed command '{}' does not belong to the mounted live app instance", admission.verb)));
             }
             self.require_complete_tool_operation_pipeline(&admission)?;
+            self.deliver_utility_host_events(meta).await?;
             let verb = A::command_id(&command).await.to_string();
             if admission.verb != verb {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.command-identity"), format!("exact admitted command '{}' decoded as '{verb}'", admission.verb)));
@@ -31489,6 +31811,12 @@ pub mod app {
             let Some(operation_id) = self.admit_typed_operation_slot() else {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-capacity"), "every fixed typed-operation and segmented-output slot already owns a live operation"));
             };
+            if self.delivering_host_event {
+                self.host_event_operations.insert(operation_id.0);
+            }
+            if let Some(tag) = self.scrubs.ingress.take() {
+                self.scrubs.bind(operation_id.0, tag);
+            }
             if let QualifiedToolProof::AppOwned(registration) = &admission.proof {
                 if let Some(target) = (registration.latest_wins_target)(command.as_ref()) {
                     let disposer = (registration.latest_wins_command_disposer)()
@@ -33821,7 +34149,11 @@ pub mod app {
             self.typed_ui_outbox.pop().or_else(||self.take_operation_progress_scope())
         }
         fn take_typed_operation_ui_progress(&mut self) -> Option<TypedOperationUiProgress> {
-            let ui_scope = self.typed_ui_outbox.pop().or_else(||self.take_operation_progress_scope())?;
+            let ui_scope = match self.typed_ui_outbox.pop().or_else(|| self.take_operation_progress_scope()) {
+                Some(scope) => scope,
+                None if self.time_travel.has_patch() => UiDirtyScope::None,
+                None => return None,
+            };
             Some(TypedOperationUiProgress { ui_scope, leftover: self.typed_inline_interaction_leftover.take(), history_patch: self.time_travel.take_patch() })
         }
 
@@ -34428,10 +34760,14 @@ pub mod app {
         async fn ingest_operations(&mut self, mutations: &[u8]) -> Result<Vec<protocol::MergeReport>, Fault> {
             let envelopes = protocol::decode_envelopes(mutations).map_err(|error| error.into_fault())?;
             let mut reports = Vec::with_capacity(envelopes.len());
+            let generation = self.store.generation();
             for envelope in envelopes {
                 reports.push(self.store.ingest_remote(envelope).await.map_err(|error| error.into_fault())?);
             }
             self.cache = None;
+            if self.store.generation() != generation {
+                self.deliver_base_moved().await?;
+            }
             Ok(reports)
         }
 
@@ -34458,6 +34794,7 @@ pub mod app {
             self.store.reset(loaded_with_app_dialect::<A>(parsed.into_envelope())).await.map_err(|error| error.into_fault())?;
             self.commit_document_window_reset(window_reset);
             self.cache = None;
+            self.retire_displaced_document_rows();
             Ok(())
         }
 
@@ -34471,6 +34808,7 @@ pub mod app {
             self.store.reset(loaded_with_app_dialect::<A>(parsed.into_envelope())).await.map_err(|error| error.into_fault())?;
             self.commit_document_window_reset(window_reset);
             self.cache = None;
+            self.retire_displaced_document_rows();
             Ok(())
         }
 
@@ -34488,7 +34826,11 @@ pub mod app {
         }
 
         async fn tick_backbone(&mut self) -> Result<Vec<protocol::MergeReport>, Fault> {
+            let generation = self.store.generation();
             let reports = self.store.tick_backbone_reports().await.map_err(|error| error.into_fault())?;
+            if self.store.generation() != generation {
+                self.deliver_base_moved().await?;
+            }
             self.follow_derivable_children().await?;
             let folded_member_lanes = self.fold_member_inbound().await?;
             if !reports.is_empty() || folded_member_lanes != 0 {
@@ -34555,11 +34897,11 @@ pub mod app {
             let render_operation = self.live_render_operation();
             let parent_document_id = self.store.envelope().id.clone();
             let mut node = {
-                let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, time_travel, .. } = self;
+                let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, time_travel, scrubs, .. } = self;
                 let Some((_, snapshot, config, history)) = cache.as_ref() else {
                     return Err(plugin_sdk_fault("render cache unavailable after refresh"));
                 };
-                let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
+                let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, scrubs.overlay_or(snapshot)).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
                     .await
                     .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()))
                     .with_operations(&operation_progress);
@@ -34586,9 +34928,9 @@ pub mod app {
             let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
             let render_operation = self.live_render_operation();
             let parent_document_id = self.store.envelope().id.clone();
-            let VcsArtifactApp { window_config_store, window_transient_store, cache, child_content_root, transient_store, tool_runs, time_travel, .. } = self;
+            let VcsArtifactApp { window_config_store, window_transient_store, cache, child_content_root, transient_store, tool_runs, time_travel, scrubs, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
+            let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, scrubs.overlay_or(snapshot)).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
                 .await
                 .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
             let mut engagements = HashMap::new();
@@ -34623,9 +34965,9 @@ pub mod app {
             let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
             let render_operation = self.live_render_operation();
             let parent_document_id = self.store.envelope().id.clone();
-            let VcsArtifactApp { window_config_store, cache, child_content_root, tool_runs, time_travel, .. } = self;
+            let VcsArtifactApp { window_config_store, cache, child_content_root, tool_runs, time_travel, scrubs, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
+            let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, scrubs.overlay_or(snapshot)).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
                 .await
                 .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
             let mut measures = HashMap::new();
@@ -34654,9 +34996,9 @@ pub mod app {
             };
             let render_operation = self.live_render_operation();
             let parent_document_id = self.store.envelope().id.clone();
-            let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, time_travel, .. } = self;
+            let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, time_travel, scrubs, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, snapshot).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
+            let doc = ArtifactView::with_render_context(time_travel.render_snapshot_or(tool_runs, scrubs.overlay_or(snapshot)).as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None)
                 .await
                 .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()));
             let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
@@ -36416,6 +36758,18 @@ pub mod app {
             None
         }
 
+        /// ⏳️ This editor's operation-progress refresh scope — forwarded verbatim to
+        /// `ArtifactApp::operation_progress_scope` by `EditorApp<Self>`, where the contract lives.
+        fn operation_progress_scope() -> UiDirtyScope {
+            UiDirtyScope::None
+        }
+
+        /// 📨️ This editor's answer to a [`HostEvent`] — forwarded verbatim to `ArtifactApp::host_event` by
+        /// `EditorApp<Self>`, where the contract lives.
+        fn host_event(_event: &HostEvent) -> Option<Self::Command> {
+            None
+        }
+
         fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner> {
             Box::new(EmptyArtifactInstanceOperationOwner)
         }
@@ -37125,6 +37479,18 @@ pub mod app {
             None
         }
 
+        /// ⏳️ This viewer's operation-progress refresh scope — forwarded verbatim to
+        /// `ArtifactApp::operation_progress_scope` by `ViewerApp<Self>`, where the contract lives.
+        fn operation_progress_scope() -> UiDirtyScope {
+            UiDirtyScope::None
+        }
+
+        /// 📨️ This viewer's answer to a [`HostEvent`] — forwarded verbatim to `ArtifactApp::host_event` by
+        /// `ViewerApp<Self>`, where the contract lives.
+        fn host_event(_event: &HostEvent) -> Option<Self::Command> {
+            None
+        }
+
         fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner> {
             Box::new(EmptyArtifactInstanceOperationOwner)
         }
@@ -37418,6 +37784,12 @@ pub mod app {
         }
         fn interaction_scope(verb: InteractionVerb, domains: &[&str]) -> Option<UiDirtyScope> {
             E::interaction_scope(verb, domains)
+        }
+        fn operation_progress_scope() -> UiDirtyScope {
+            E::operation_progress_scope()
+        }
+        fn host_event(event: &HostEvent) -> Option<Self::Command> {
+            E::host_event(event)
         }
         fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner> {
             E::build_instance_operation_owner()
@@ -37809,6 +38181,12 @@ pub mod app {
         }
         fn interaction_scope(verb: InteractionVerb, domains: &[&str]) -> Option<UiDirtyScope> {
             V::interaction_scope(verb, domains)
+        }
+        fn operation_progress_scope() -> UiDirtyScope {
+            V::operation_progress_scope()
+        }
+        fn host_event(event: &HostEvent) -> Option<Self::Command> {
+            V::host_event(event)
         }
         fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner> {
             V::build_instance_operation_owner()
@@ -41051,7 +41429,7 @@ pub mod plugin_runtime {
             "catalog"
         } else if matches!(action_id, "copy" | "cut" | "paste") {
             "clipboard-instack"
-        } else if crate::app::is_tool_run_action_id(action_id) || crate::app::is_time_travel_action_id(action_id) || action_id == crate::app::CANCEL_TYPED_OPERATION_ACTION_ID {
+        } else if crate::app::is_tool_run_action_id(action_id) || crate::app::is_time_travel_action_id(action_id) || action_id == crate::app::CANCEL_TYPED_OPERATION_ACTION_ID || action_id == semio_framework::HOST_EVENT_ACTION_ID {
             "host-driven"
         } else {
             "spawn-admit"
@@ -45465,6 +45843,10 @@ pub use app::{
     FlowExtensionExecutableIdentity,
     FlowExtensionManifest,
     HistoryView,
+    HostEvent,
+    AlternativeView,
+    AlternativeFact,
+    history_alternative_views,
     HostMediaExecutableIdentity,
     HostMediaHandlerDeclaration,
     HostMediaHandlerDescriptor,

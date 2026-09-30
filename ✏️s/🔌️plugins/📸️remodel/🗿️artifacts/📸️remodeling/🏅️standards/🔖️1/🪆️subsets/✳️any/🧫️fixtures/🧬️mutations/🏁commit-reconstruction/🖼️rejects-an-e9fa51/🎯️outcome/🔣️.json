@@ -1,6 +1,6 @@
 {
   "status": "rejected",
-  "code": "mutation.invalid-reconstruction-asset",
+  "code": "mutation.target-mismatch",
   "path": [
     "orbit-frame-10"
   ]

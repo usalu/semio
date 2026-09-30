@@ -1,10 +1,9 @@
-//! ↩️ `insert-thermal-bridge` inverse via snapshot restore of list fields.
+//! ↩️ `insert-thermal-bridge` inverse — removes the inserted thermal bridge at its landing position, computed from BASE state; a missing target yields no step.
 
 use super::InsertThermalBridge;
+use crate::mutations::remove_thermal_bridge::RemoveThermalBridge;
 use crate::{Din4108Mutation, Din4108Snapshot};
 
-pub fn inverse(_payload: &InsertThermalBridge, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
-    // Whole-list restore is expressed by re-inserting base lists through set-like rebuilds in from_snapshot.
-    let _ = base;
-    Vec::new()
+pub fn inverse(payload: &InsertThermalBridge, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+    vec![Din4108Mutation::RemoveThermalBridge(RemoveThermalBridge { index: payload.index.min(base.thermal_bridges.len()) })]
 }

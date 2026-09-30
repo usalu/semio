@@ -399,7 +399,13 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "CoolingSystem": {
       "title": "CoolingSystem",
@@ -423,7 +429,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "MonthlyClimate": {
       "title": "MonthlyClimate",
@@ -475,7 +487,10 @@
             "step": 1
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "VentilationSystem": {
       "title": "VentilationSystem",
@@ -525,7 +540,13 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "AutomationClass": {
       "title": "AutomationClass",
@@ -555,7 +576,10 @@
             "de": "D — nicht energieeffizient"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "BuildingCategory": {
       "title": "BuildingCategory",
@@ -575,7 +599,10 @@
             "de": "Nichtwohngebäude"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "UseClass": {
       "title": "UseClass",
@@ -600,7 +627,10 @@
             "de": "Schule"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "LightingSystem": {
       "title": "LightingSystem",
@@ -621,7 +651,13 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "HeatingSystem": {
       "title": "HeatingSystem",
@@ -701,7 +737,13 @@
             "widget": "text"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "ThermalZone": {
       "title": "ThermalZone",
@@ -838,7 +880,13 @@
             "precision": 1
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "DhwSystem": {
       "title": "DhwSystem",
@@ -897,7 +945,13 @@
             "widget": "text"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "EnvelopeElement": {
       "title": "EnvelopeElement",
@@ -1029,7 +1083,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "CalculationMethod": {
       "title": "CalculationMethod",
@@ -1049,7 +1109,10 @@
             "de": "Tabellenverfahren"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "Attachment": {
       "title": "Attachment",
@@ -1079,7 +1142,10 @@
             "de": "Reihenmittelhaus"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "CoolingPlant": {
       "title": "CoolingPlant",
@@ -1111,7 +1177,13 @@
             "widget": "text"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "UsageProfile": {
       "title": "UsageProfile",
@@ -1136,7 +1208,10 @@
             "de": "Schule"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "ElementKind": {
       "title": "ElementKind",
@@ -1171,7 +1246,10 @@
             "de": "Fenster"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "Adjacency": {
       "title": "Adjacency",
@@ -1201,7 +1279,10 @@
             "de": "Beheizter Raum"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

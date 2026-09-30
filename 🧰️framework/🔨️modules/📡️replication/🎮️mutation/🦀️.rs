@@ -999,11 +999,39 @@ pub trait MutationLeaf {
 mod mutation_leaf_metadata_tests;
 
 //#region 🔖️Message
+/// 📖️ The frozen outcome-code vocabulary and the one level each code fixes — the table persistence validates
+/// against (`🏪️store` `expected_mutation_message_level`). Language-agnostic twin:
+/// `🧫️fixtures/🧫️outcome-code/🔣️.json` (schema `🧬️schema/🔣️outcome-code`). Closed: no per-plugin codes.
+pub const OUTCOME_CODES: [(&str, crate::diagnostic::Severity); 9] = [
+    ("mutation.target-missing", crate::diagnostic::Severity::Error),
+    ("mutation.target-referenced", crate::diagnostic::Severity::Error),
+    ("mutation.target-mismatch", crate::diagnostic::Severity::Error),
+    ("mutation.no-op", crate::diagnostic::Severity::Warning),
+    ("mutation.partial", crate::diagnostic::Severity::Warning),
+    ("mutation.clamped", crate::diagnostic::Severity::Warning),
+    ("mutation.duplicate-id", crate::diagnostic::Severity::Fatal),
+    ("mutation.invariant", crate::diagnostic::Severity::Fatal),
+    ("mutation.cascade", crate::diagnostic::Severity::Info),
+];
+
+/// 🧱️ Prefix of the apply-time rejection family `mutation.apply.<kebab-detail>`, always `Fatal`.
+pub const APPLY_OUTCOME_CODE_PREFIX: &str = "mutation.apply.";
+
+/// ⚖️ The level the frozen vocabulary fixes for `code`; `None` for any code outside it.
+pub fn outcome_code_level(code: &str) -> Option<crate::diagnostic::Severity> {
+    OUTCOME_CODES.iter().find(|(known, _)| *known == code).map(|(_, level)| *level).or_else(|| {
+        code.strip_prefix(APPLY_OUTCOME_CODE_PREFIX)
+            .filter(|detail| detail.split('-').all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())))
+            .map(|_| crate::diagnostic::Severity::Fatal)
+    })
+}
+
 /// 📨️ One outcome-carried diagnostic from a `Mutation`/`MutationKind::diff` — the level
 /// vocabulary is [`crate::diagnostic::Severity`] (`Info < Warning < Error < Fatal`, that declaration
-/// order IS the level order via `derive(Ord)`); `code` is one of the frozen seven `mutation.*`
+/// order IS the level order via `derive(Ord)`); `code` is one of the frozen nine `mutation.*`
 /// codes (`.🧬semio/🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/
-/// 📋️contract-freeze.md` §C2 — closed set, no per-plugin codes, ever); `message` is English prose
+/// 📋️contract-freeze.md` §C2, extended 2026-09-30 by the state-dependent `Error` codes `mutation.target-referenced` and
+/// `mutation.target-mismatch` — closed set, no per-plugin codes, ever); `message` is English prose
 /// (UI localizes by `code`, never by parsing `message`); `target` is the address of the offending
 /// element (outermost segment first, matching [`MutationKind::target`]'s convention); `op_index` is
 /// stamped by a batch replay ([`MutationOutcome::stamp_op_index`]) once this message's originating
@@ -1175,6 +1203,13 @@ impl<D: Default> MutationOutcome<D> {
     /// 🚫️ Empty diff with one `Error` message — the caller's `diff` leaf never touched `target`.
     pub fn error(code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>, target: impl IntoIterator<Item = impl Into<String>>) -> Self {
         Self { diff: D::default(), messages: vec![MutationMessage::error(code, message).at(target)] }
+    }
+
+    /// 🧭️ Empty diff with one message at the level [`outcome_code_level`] fixes for `code` — for a guard that
+    /// yields its code at runtime; a code outside the vocabulary is reported `Fatal`.
+    pub fn refuse(code: &'static str, message: impl Into<String>, target: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        let level = outcome_code_level(code).unwrap_or(crate::diagnostic::Severity::Fatal);
+        Self { diff: D::default(), messages: vec![MutationMessage::at_level(level, code, message).at(target)] }
     }
 }
 
@@ -1702,6 +1737,10 @@ impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
 #[cfg(test)]
 #[path = "🧪️tests/🧪️transaction-ref/🦀️.rs"]
 mod transaction_ref_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️outcome-code/🦀️.rs"]
+mod outcome_code_tests;
 //#endregion 🔖️Meta
 
 //#region 🔖️Origin

@@ -18,7 +18,8 @@
 // #region 🔌️Adapters
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import { core, renderer } from "@semio-tech/cad-js";
+import { core } from "@semio-tech/cad-js";
+import * as renderer from "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️.tsx";
 const { InteractionCanvas, InteractionSpatialView, r3fPreviewKernel, useInteractionRuntime, useInteractionSnapshot, useTessellation } = renderer;
 const { Model, loadSpatialInteraction, solidRef } = core;
 type InteractionRuntimeOptions = core.InteractionRuntimeOptions;

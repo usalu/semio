@@ -40,7 +40,10 @@ line = create object
      | change domain
      | connect kind compatibility
      | disconnect kind compatibility
-     | replace kind catalogs ;
+     | replace kind catalogs
+     | drag selection
+     | rotate selection
+     | scale selection ;
 create object = 'create-object', space, object block, space, index opt ;
 delete object = 'delete-object', space, id ;
 move object = 'move-object', space, id, space, number, space, number, space, number ;
@@ -76,6 +79,9 @@ change domain = 'change-domain', space, text ;
 connect kind compatibility = 'connect-kind-compatibility', space, id, space, id, space, boolean, space, boolean, space, specificity ;
 disconnect kind compatibility = 'disconnect-kind-compatibility', space, id, space, id ;
 replace kind catalogs = 'replace-kind-catalogs', space, catalogs block opt ;
+drag selection = 'drag-selection', space, id list, space, number, space, number, space, number ;
+rotate selection = 'rotate-selection', space, id list, space, number, space, number, space, number, space, number ;
+scale selection = 'scale-selection', space, id list, space, number, space, number, space, number ;
 object block = '{', newline, octet, { octet }, '}' ;
 vortex block = '{', newline, octet, { octet }, '}' ;
 volume block = '{', newline, octet, { octet }, '}' ;
@@ -84,7 +90,8 @@ source block = '{', newline, octet, { octet }, '}' ;
 catalogs block opt = ( '{', newline, octet, { octet }, '}' )
      | 'none' ;
 attraction fields = number, space, number, space, number, space, number, space, number, space, number, space, number, space, number ;
-full vortex id = octet, { octet } ;
+full vortex id list = '[', { id }, ']' ;
+id = octet, { octet } ;
 anchor = 'fixed'
      | 'derived' ;
 specificity = 'general'

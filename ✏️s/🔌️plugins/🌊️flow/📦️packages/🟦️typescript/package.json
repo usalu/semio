@@ -3,14 +3,11 @@
   "projectType": "library",
   "name": "@semio-tech/flow-js",
   "version": "0.1.0",
-  "description": "flow · TypeScript module surface (compute thread-pool helpers)",
+  "description": "@semio-tech/flow-js authored owner test infrastructure.",
   "type": "module",
   "semio": {
     "role": "plugin",
     "id": "flow-js"
-  },
-  "exports": {
-    ".": "./🟦️.ts"
   },
   "dependencies": {
     "@semio-tech/ui-react": "workspace:*"
@@ -30,5 +27,6 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript"
   },
-  "bundleKind": "library"
+  "bundleKind": "repo",
+  "private": true
 }

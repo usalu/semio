@@ -1,6 +1,6 @@
 /** 🎭️ Persisted mask metadata checked against the shared schema through Ajv. */
 import {expect,test} from "bun:test";
-import Ajv from "ajv";
+import {semioSchemaAjvV1} from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
 import sharp from "sharp";
 import schema from "../../🔣️.json";
 import fixture from "../../🧫️fixtures/🎭️mask/🔣️.json";
@@ -11,8 +11,8 @@ import {parseRasterLayerPatch} from "../../🔺️diff/🟦️.ts";
 import {parseRasterLayerMask,parseRasterTransform} from "../../🟦️.ts";
 import transforms from "../../🧫️fixtures/📐️transform/🔣️.json";
 
-const validate=new Ajv({strict:false,validateFormats:false}).compile({$ref:"#/$defs/RasterLayerMask",$defs:schema.$defs});
-const validateTransform=new Ajv({strict:false,validateFormats:false}).compile(schema.$defs.RasterTransform);
+const validate=semioSchemaAjvV1({allErrors:true}).compile({$ref:"#/$defs/RasterLayerMask",$defs:schema.$defs});
+const validateTransform=semioSchemaAjvV1({allErrors:true}).compile(schema.$defs.RasterTransform);
 for(const row of transforms.cases)test(`Persisted affine transform: ${row.name}`,()=>{
   expect(validateTransform(row.transform)).toBe(true);
   expect(parseRasterTransform(row.transform)).toEqual(row.transform);
@@ -21,12 +21,13 @@ for(const row of transforms.cases)test(`Persisted affine transform: ${row.name}`
     expect(validateTransform(missing)).toBe(false);expect(()=>parseRasterTransform(missing)).toThrow();
   }
 });
-const validatePatch=new Ajv({strict:false,validateFormats:false}).addSchema({$id:schema.$id,$defs:{RasterLayerMask:schema.$defs.RasterLayerMask,RasterTransform:schema.$defs.RasterTransform}}).compile({$ref:"#/$defs/RasterLayerPatch",$defs:diffSchema.$defs});
-const validateMutation=new Ajv({strict:false,validateFormats:false}).addSchema({$id:schema.$id,$defs:{RasterLayerMask:schema.$defs.RasterLayerMask,RasterTransform:schema.$defs.RasterTransform}}).compile(mutationSchema);
+const validatePatch=semioSchemaAjvV1({allErrors:true}).addSchema({$id:schema.$id,$defs:{RasterLayerMask:schema.$defs.RasterLayerMask,RasterTransform:schema.$defs.RasterTransform}}).compile({$ref:"#/$defs/RasterLayerPatch",$defs:diffSchema.$defs});
+const validateMutation=semioSchemaAjvV1({allErrors:true}).addSchema({$id:schema.$id,$defs:{RasterLayerMask:schema.$defs.RasterLayerMask,RasterTransform:schema.$defs.RasterTransform}}).compile(mutationSchema);
 test("mask mutation fixture conforms to the canonical nullable mask contract",()=>{
   for(const row of mutations.cases){
     const resolve=(key:string|null)=>key===null?null:mutations[key as "reveal"|"hidden"];
-    expect(validateMutation({layerId:"paint",expected:resolve(row.before),mask:resolve(row.after)})).toBe(true);
+    expect(validateMutation({mutation:"changeLayerMask",layerId:"paint",expected:resolve(row.before),mask:resolve(row.after)})).toBe(true);
+    expect(validateMutation({layerId:"paint",expected:resolve(row.before),mask:resolve(row.after)})).toBe(false);
   }
 });
 for(const row of fixture.cases)test(row.name,()=>{

@@ -47,11 +47,18 @@
     },
     "test-wire-retirement-source": {
       "executor": "nx:run-commands",
-      "options": {"cwd":"🧰️framework/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-wire-retirement-source"}
+      "options": {
+        "cwd": "🧰️framework/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-wire-retirement-source"
+      }
     },
     "test-wire-retirement-native": {
       "executor": "nx:run-commands",
-      "options": {"cwd":"🧰️framework/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-wire-retirement-native","forwardAllArgs":true}
+      "options": {
+        "cwd": "🧰️framework/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-wire-retirement-native",
+        "forwardAllArgs": true
+      }
     },
     "test": {
       "executor": "nx:run-commands",
@@ -122,6 +129,22 @@
         "cwd": "🧰️framework/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
         "forwardAllArgs": true
+      }
+    },
+    "test-fixture-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-fixture-ownership"
+      }
+    },
+    "test-fixture-ownership-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-fixture-ownership source"
       }
     }
   }

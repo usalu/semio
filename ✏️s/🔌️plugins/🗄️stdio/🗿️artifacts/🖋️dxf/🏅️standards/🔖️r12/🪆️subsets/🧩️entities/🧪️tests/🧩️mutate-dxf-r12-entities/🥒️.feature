@@ -3,7 +3,7 @@
 @comparison-semantic-dxf-r12-v1
 @mutations-dxf-r12-entities
 Feature: Apply every typed DXF R12 mutation to a real-world drawing
-  See ../📰️mutate-dxf-r12/🥒️.feature for the full fixture/provenance narrative -- this subset's own scenarios exercise only the mutation kinds `../../🏅️standards` places under this subset.
+  See ../../../📰️header/🧪️tests/📰️mutate-dxf-r12/🥒️.feature for the full fixture/provenance narrative -- this subset's own scenarios exercise only the mutation kinds `../../🏅️standards` places under this subset.
 
   @id-mutate
   @level-exhaustive
@@ -14,7 +14,7 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
       """
       {"kind": "<id>", "params": <params>}
       """
-    Then the oracle and the subject agree on the semantic projection
+    Then the dxf reader reads the oracle's and the subject's drawings as the same DXF
     Examples:
       | id                 | params                                                                                                                                          |
       | insert-entity      | {"index": 2, "entity": {"circle": {"center": [1200, 100, 0], "radius": 30, "layer": "0"}}} |
@@ -30,7 +30,7 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
       """
       {"kind": "<id>", "params": <params>}
       """
-    Then the oracle and the subject agree on the semantic projection
+    Then the dxf reader reads the oracle's and the subject's drawings as the same DXF
     Examples:
       | id                 | params                                                                                                                                          |
       | insert-entity      | {"index": 2, "entity": {"circle": {"center": [1200, 100, 0], "radius": 30, "layer": "0"}}} |

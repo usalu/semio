@@ -98,6 +98,7 @@ path = "💾️binary/🦀️.rs"
 required-features = ["native-bin"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-framework-schema = { workspace = true }
 # 🖥️ Native-only: it embeds wasmtime, and its `wasmtime-wasi` pulls tokio/mio, which hard-fails on
 # wasm32. Its only users here (`🎠️runtime`, `kernel_runtime`) are already `cfg(not(target_arch = "wasm32"))`;
 # the previous `not(target_os = "wasi")` gate admitted wasm32-unknown-unknown, whose target_os is "unknown".

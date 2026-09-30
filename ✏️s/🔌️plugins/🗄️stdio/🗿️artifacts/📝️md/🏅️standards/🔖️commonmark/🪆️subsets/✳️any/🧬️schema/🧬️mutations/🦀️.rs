@@ -93,7 +93,7 @@ pub fn apply_md_mutation(snapshot: &mut MdSnapshot, mutation: &MdMutation) -> pr
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 

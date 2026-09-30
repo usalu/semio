@@ -1,0 +1,7 @@
+{
+  "ChangeBarLayerDiameter": {
+    "memberId": "wall-W1",
+    "layerId": "vert",
+    "newDiameter": 0.02
+  }
+}

@@ -1,0 +1,2129 @@
+{
+  "schema": "semio.framework.tool-machine.scrub-law.v1",
+  "args": {
+    "gesture": "gesture",
+    "commit": "commit",
+    "abort": "abort"
+  },
+  "phases": [
+    {
+      "args": {},
+      "phase": null
+    },
+    {
+      "args": {
+        "gesture": ""
+      },
+      "phase": null
+    },
+    {
+      "args": {
+        "commit": true
+      },
+      "phase": null
+    },
+    {
+      "args": {
+        "gesture": "slider:1"
+      },
+      "phase": {
+        "kind": "tick",
+        "gesture": "slider:1"
+      }
+    },
+    {
+      "args": {
+        "gesture": "slider:1",
+        "commit": false
+      },
+      "phase": {
+        "kind": "tick",
+        "gesture": "slider:1"
+      }
+    },
+    {
+      "args": {
+        "gesture": "slider:1",
+        "commit": true
+      },
+      "phase": {
+        "kind": "commit",
+        "gesture": "slider:1"
+      }
+    },
+    {
+      "args": {
+        "gesture": "slider:1",
+        "abort": "blur"
+      },
+      "phase": {
+        "kind": "abort",
+        "gesture": "slider:1",
+        "reason": "blur"
+      }
+    },
+    {
+      "args": {
+        "gesture": "slider:1",
+        "commit": true,
+        "abort": "retired"
+      },
+      "phase": {
+        "kind": "abort",
+        "gesture": "slider:1",
+        "reason": "retired"
+      }
+    },
+    {
+      "args": {
+        "gesture": "slider:1",
+        "abort": "sideways"
+      },
+      "phase": null
+    }
+  ],
+  "chart": {
+    "id": "scrub",
+    "fingerprint": "16240238296638685209",
+    "manifestJson": "{\"id\":\"scrub\",\"states\":[{\"id\":\"root\",\"parent\":null},{\"id\":\"idle\",\"parent\":0},{\"id\":\"scrubbing\",\"parent\":0}],\"events\":[\"Tick\",\"Commit\"],\"transitionCount\":4}",
+    "states": [
+      "idle",
+      "scrubbing"
+    ],
+    "initial": "idle",
+    "events": [
+      "Tick",
+      "Commit"
+    ],
+    "transitions": [
+      {
+        "from": "idle",
+        "event": "Tick",
+        "guard": null,
+        "to": "scrubbing",
+        "action": "follow"
+      },
+      {
+        "from": "idle",
+        "event": "Commit",
+        "guard": null,
+        "to": "idle",
+        "action": "settle"
+      },
+      {
+        "from": "scrubbing",
+        "event": "Tick",
+        "guard": "sameGesture",
+        "to": "scrubbing",
+        "action": "follow"
+      },
+      {
+        "from": "scrubbing",
+        "event": "Commit",
+        "guard": "sameGesture",
+        "to": "idle",
+        "action": "settle"
+      }
+    ]
+  },
+  "actor": "actor-1",
+  "scenarios": [
+    {
+      "name": "one press is one transaction holding the net value; its late tick stays silent",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1001,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.2
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.2
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.2
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1002,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.4
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.4
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.4
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1003,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.6
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.6
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.6
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1004,
+          "input": {
+            "kind": "commit",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.7
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "committed",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              },
+              "mutations": [
+                {
+                  "set": "opacity",
+                  "target": "a",
+                  "value": 0.7
+                }
+              ]
+            },
+            "open": {},
+            "provisional": []
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1005,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.9
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "idle"
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a host abort leaves zero trace and closes the press",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1001,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.3
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.3
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.3
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1002,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.5
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.5
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.5
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "abort": {
+            "gesture": "g1",
+            "reason": "blur"
+          },
+          "expect": {
+            "step": {
+              "kind": "aborted",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              },
+              "reason": "blur"
+            },
+            "open": {},
+            "provisional": []
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1003,
+          "input": {
+            "kind": "commit",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.8
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "idle"
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "two presses are two transactions",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1001,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.1
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1002,
+          "input": {
+            "kind": "commit",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.2
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "committed",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              },
+              "mutations": [
+                {
+                  "set": "opacity",
+                  "target": "a",
+                  "value": 0.2
+                }
+              ]
+            },
+            "open": {},
+            "provisional": []
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1003,
+          "input": {
+            "kind": "tick",
+            "gesture": "g2",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.3
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-1349f1c374c91b0d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g2",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-1349f1c374c91b0d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.3
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.3
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1004,
+          "input": {
+            "kind": "commit",
+            "gesture": "g2",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.4
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "committed",
+              "transaction": {
+                "id": "tx-1349f1c374c91b0d",
+                "tool": "demo#setOpacity"
+              },
+              "mutations": [
+                {
+                  "set": "opacity",
+                  "target": "a",
+                  "value": 0.4
+                }
+              ]
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a release without a tick is a one-shot press",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1001,
+          "input": {
+            "kind": "commit",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.5
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "committed",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              },
+              "mutations": [
+                {
+                  "set": "opacity",
+                  "target": "a",
+                  "value": 0.5
+                }
+              ]
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a press whose leaves are empty publishes nothing",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1001,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": []
+          },
+          "expect": {
+            "step": {
+              "kind": "idle"
+            },
+            "open": {},
+            "provisional": []
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1002,
+          "input": {
+            "kind": "commit",
+            "gesture": "g1",
+            "leaves": []
+          },
+          "expect": {
+            "step": {
+              "kind": "idle"
+            },
+            "open": {},
+            "provisional": []
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1003,
+          "input": {
+            "kind": "tick",
+            "gesture": "g2",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.5
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-1349f1c374c91b0d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g2",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-1349f1c374c91b0d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.5
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.5
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1004,
+          "input": {
+            "kind": "commit",
+            "gesture": "g2",
+            "leaves": []
+          },
+          "expect": {
+            "step": {
+              "kind": "empty",
+              "transaction": {
+                "id": "tx-1349f1c374c91b0d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "each tick replaces the leaves by position, shrinking and growing",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1001,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              },
+              {
+                "set": "opacity",
+                "target": "b",
+                "value": 0.1
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.1
+                    }
+                  },
+                  {
+                    "key": "1",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "b",
+                      "value": 0.1
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              },
+              {
+                "set": "opacity",
+                "target": "b",
+                "value": 0.1
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1002,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "b",
+                "value": 0.2
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "b",
+                      "value": 0.2
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "b",
+                "value": 0.2
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1003,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "b",
+                "value": 0.3
+              },
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.3
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "b",
+                      "value": 0.3
+                    }
+                  },
+                  {
+                    "key": "1",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.3
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "b",
+                "value": 0.3
+              },
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.3
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1004,
+          "input": {
+            "kind": "commit",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "b",
+                "value": 0.4
+              },
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.4
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "committed",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              },
+              "mutations": [
+                {
+                  "set": "opacity",
+                  "target": "b",
+                  "value": 0.4
+                },
+                {
+                  "set": "opacity",
+                  "target": "a",
+                  "value": 0.4
+                }
+              ]
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "another press captures the window: the open one leaves zero trace",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1001,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.1
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1002,
+          "input": {
+            "kind": "tick",
+            "gesture": "g2",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "b",
+                "value": 0.2
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-533420631ed66854",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g2",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-533420631ed66854",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "b",
+                      "value": 0.2
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "b",
+                "value": 0.2
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1003,
+          "input": {
+            "kind": "commit",
+            "gesture": "g2",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "b",
+                "value": 0.3
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "committed",
+              "transaction": {
+                "id": "tx-533420631ed66854",
+                "tool": "demo#setOpacity"
+              },
+              "mutations": [
+                {
+                  "set": "opacity",
+                  "target": "b",
+                  "value": 0.3
+                }
+              ]
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a moved document reopens the press on the new revision",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1001,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.1
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r2",
+          "clock": 1002,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.2
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-533420631ed66854",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r2",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-533420631ed66854",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.2
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.2
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r2",
+          "clock": 1003,
+          "input": {
+            "kind": "commit",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.3
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "committed",
+              "transaction": {
+                "id": "tx-533420631ed66854",
+                "tool": "demo#setOpacity"
+              },
+              "mutations": [
+                {
+                  "set": "opacity",
+                  "target": "a",
+                  "value": 0.3
+                }
+              ]
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "another tool captures the window",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1001,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.1
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setWidth",
+          "base": "r1",
+          "clock": 1002,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "b",
+                "value": 2
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-f9bae42346abfcef",
+                "tool": "demo#setWidth"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setWidth",
+                "transaction": {
+                  "id": "tx-f9bae42346abfcef",
+                  "tool": "demo#setWidth"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "b",
+                      "value": 2
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "b",
+                "value": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "windows scrub independently and a freeze aborts them all",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1001,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.1
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          }
+        },
+        {
+          "window": "w2",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1002,
+          "input": {
+            "kind": "tick",
+            "gesture": "g2",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "b",
+                "value": 0.2
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-533420631ed66854",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.1
+                    }
+                  }
+                ]
+              },
+              "w2": {
+                "gesture": "g2",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-533420631ed66854",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "b",
+                      "value": 0.2
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              },
+              {
+                "set": "opacity",
+                "target": "b",
+                "value": 0.2
+              }
+            ]
+          }
+        },
+        {
+          "abortAll": "frozen",
+          "expect": {
+            "steps": [
+              {
+                "kind": "aborted",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "reason": "frozen"
+              },
+              {
+                "kind": "aborted",
+                "transaction": {
+                  "id": "tx-533420631ed66854",
+                  "tool": "demo#setOpacity"
+                },
+                "reason": "frozen"
+              }
+            ],
+            "open": {},
+            "provisional": []
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1003,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.3
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "idle"
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a window that left the roster retires its press",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1001,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.1
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          }
+        },
+        {
+          "window": "w2",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1002,
+          "input": {
+            "kind": "tick",
+            "gesture": "g2",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "b",
+                "value": 0.2
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-533420631ed66854",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.1
+                    }
+                  }
+                ]
+              },
+              "w2": {
+                "gesture": "g2",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-533420631ed66854",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "b",
+                      "value": 0.2
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              },
+              {
+                "set": "opacity",
+                "target": "b",
+                "value": 0.2
+              }
+            ]
+          }
+        },
+        {
+          "retain": [
+            "w1"
+          ],
+          "expect": {
+            "steps": [
+              {
+                "kind": "aborted",
+                "transaction": {
+                  "id": "tx-533420631ed66854",
+                  "tool": "demo#setOpacity"
+                },
+                "reason": "retired"
+              }
+            ],
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.1
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1003,
+          "input": {
+            "kind": "commit",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.4
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "committed",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              },
+              "mutations": [
+                {
+                  "set": "opacity",
+                  "target": "a",
+                  "value": 0.4
+                }
+              ]
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a stale abort of another press keeps the open one",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1001,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.1
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "abort": {
+            "gesture": "g0",
+            "reason": "blur"
+          },
+          "expect": {
+            "step": {
+              "kind": "idle"
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.1
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1002,
+          "input": {
+            "kind": "commit",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.2
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "committed",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              },
+              "mutations": [
+                {
+                  "set": "opacity",
+                  "target": "a",
+                  "value": 0.2
+                }
+              ]
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "an abort input drops the open press",
+      "steps": [
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1001,
+          "input": {
+            "kind": "tick",
+            "gesture": "g1",
+            "leaves": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          },
+          "expect": {
+            "step": {
+              "kind": "open",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              }
+            },
+            "open": {
+              "w1": {
+                "gesture": "g1",
+                "base": "r1",
+                "tool": "demo#setOpacity",
+                "transaction": {
+                  "id": "tx-c3a809d205e3a41d",
+                  "tool": "demo#setOpacity"
+                },
+                "entries": [
+                  {
+                    "key": "0",
+                    "mutation": {
+                      "set": "opacity",
+                      "target": "a",
+                      "value": 0.1
+                    }
+                  }
+                ]
+              }
+            },
+            "provisional": [
+              {
+                "set": "opacity",
+                "target": "a",
+                "value": 0.1
+              }
+            ]
+          }
+        },
+        {
+          "window": "w1",
+          "tool": "demo#setOpacity",
+          "base": "r1",
+          "clock": 1002,
+          "input": {
+            "kind": "abort",
+            "reason": "captureLost"
+          },
+          "expect": {
+            "step": {
+              "kind": "aborted",
+              "transaction": {
+                "id": "tx-c3a809d205e3a41d",
+                "tool": "demo#setOpacity"
+              },
+              "reason": "captureLost"
+            },
+            "open": {},
+            "provisional": []
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeMaterialSolarAbsorptance, base: &EnergyModelS
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Material {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !(0.0..=1.0).contains(&payload.new_solar_absorptance) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Material {}: solar absorptance must be a fraction in [0, 1], got {}.", payload.id.0, payload.new_solar_absorptance), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Material {}: solar absorptance must be a fraction in [0, 1], got {}.", payload.id.0, payload.new_solar_absorptance), [payload.id.0.to_string()]);
     }
     if existing.solar_absorptance == payload.new_solar_absorptance {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Material {} already carries this solar absorptance: {}.", payload.id.0, payload.new_solar_absorptance));

@@ -35,7 +35,7 @@ describe("linked codec ownership", async () => {
     });
   }
   it("stdio's committed descriptor declares no kind its linked registry does not own", () => {
-    const registry = JSON.parse(readFileSync(new URL("../../../✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json", import.meta.url), "utf8")) as { receipts: { artifact_kind: string; artifact_schema: string; pack_schema_sha256: string }[] };
+    const registry = JSON.parse(readFileSync(new URL("../../../✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json", import.meta.url), "utf8")) as { receipts: { artifact_kind: string; artifact_schema: string; pack_schema_sha256: string }[] };
     const descriptor = JSON.parse(readFileSync(new URL("../../../✏️s/🔌️plugins/🗄️stdio/🔣️.json", import.meta.url), "utf8")) as { manifest: { artifactKinds: { id: string; schema: string }[]; apps: { artifactKinds?: { id: string; schema: string }[] }[] } };
     const linked = registry.receipts.map((row) => ({ artifactKind: row.artifact_kind, artifactSchema: row.artifact_schema, packSchemaHash: row.pack_schema_sha256 }));
     const declared = [...descriptor.manifest.artifactKinds, ...descriptor.manifest.apps.flatMap((app) => app.artifactKinds ?? [])].map((kind) => [kind.id, kind.schema] as const);

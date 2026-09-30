@@ -41,8 +41,8 @@ fn fixture() -> Vec<u8> {
 /// ⚖️ The two laws `📑️mutate-pdf-1-7`'s adapter asserts in role, proven here against the real
 /// document without the runner: every declared kind moves the projection it is compared through
 /// (except the one [`UNOBSERVABLE`] names, with its reason), and every declared kind's own
-/// computed inverse lands back on the untouched document's projection (with
-/// [`regenerates_page_content`]'s single documented axis dropped for its three kinds).
+/// computed inverse lands back on the untouched document's projection — every axis, a page's
+/// content operators included, since the undo captures the page's own operators verbatim.
 #[test]
 fn every_declared_kind_is_observable_and_its_inverse_restores_the_document() {
     let original = fixture();
@@ -56,8 +56,7 @@ fn every_declared_kind_is_observable_and_its_inverse_restores_the_document() {
         }
         let restored = oracle_apply_mutation_inverse(&original, &forward).unwrap_or_else(|error| panic!("{kind}: inverse: {error}"));
         let recovered = project_pdf_1_7(&restored).unwrap_or_else(|error| panic!("{kind}: projecting the restored document failed: {error}"));
-        let (expected, actual) = if regenerates_page_content(kind) { (without_content_operators(&base), without_content_operators(&recovered)) } else { (base.clone(), recovered) };
-        assert_eq!(actual, expected, "{kind}: applying the mutation and then its own inverse must restore the document's projection");
+        assert_eq!(recovered, base, "{kind}: applying the mutation and then its own inverse must restore the document's projection");
     }
 }
 

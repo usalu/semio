@@ -1,0 +1,13 @@
+{
+  "InsertConcentrated": {
+    "wallIndex": 0,
+    "loadCaseIndex": 0,
+    "index": 0,
+    "load": {
+      "id": "beam-C",
+      "forceN": 20000.0,
+      "bearingAreaM2": 0.02,
+      "bearingLengthM": 0.15
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "artifact": null,
+  "annex": null,
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "loadCases": null,
+  "memberActions": null,
+  "joints": null,
+  "fatigueDetails": null,
+  "fireExposures": null,
+  "coldFormedMembers": null,
+  "platedPanels": null,
+  "siloShells": null,
+  "tensionComponents": null,
+  "bridgeFatigue": null,
+  "towerLegs": null,
+  "piles": null,
+  "craneRunways": {
+    "values": [
+      {
+        "id": "crane-1",
+        "memberId": "member-b1",
+        "wheelContactLength": 0.1,
+        "dispersion": 0.05,
+        "webThickness": 0.01,
+        "fy": 355000000.0,
+        "phi": 1.25,
+        "actions": [
+          {
+            "id": "cr-q",
+            "loadCaseId": "q-imposed",
+            "force": 50000.0
+          }
+        ]
+      },
+      {
+        "id": "crane-1-2",
+        "memberId": "member-b1",
+        "wheelContactLength": 0.1,
+        "dispersion": 0.05,
+        "webThickness": 0.01,
+        "fy": 355000000.0,
+        "phi": 1.25,
+        "actions": [
+          {
+            "id": "cr-q",
+            "loadCaseId": "q-imposed",
+            "force": 50000.0
+          }
+        ]
+      }
+    ]
+  }
+}

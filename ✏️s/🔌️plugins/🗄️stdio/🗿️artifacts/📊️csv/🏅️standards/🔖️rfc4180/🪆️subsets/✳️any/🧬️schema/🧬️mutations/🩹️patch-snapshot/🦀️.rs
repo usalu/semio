@@ -23,7 +23,7 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for PatchSnapshot {
     fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
         match editing::apply_snapshot_patch(base, &self.patch) {
             Ok(next) => protocol::MutationOutcome::new(<CsvDiff as DiffAlgebra<CsvSnapshot>>::between(base, &next)),
-            Err(error) => protocol::MutationOutcome::error(error.code, error.message, [error.path]),
+            Err(error) => protocol::MutationOutcome::refuse(error.outcome_code(), format!("{}: {}", error.code, error.message), [error.path]),
         }
     }
 

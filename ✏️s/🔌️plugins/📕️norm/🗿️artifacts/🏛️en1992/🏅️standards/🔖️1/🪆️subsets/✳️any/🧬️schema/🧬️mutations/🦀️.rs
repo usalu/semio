@@ -25,8 +25,8 @@ use super::change_member_fire_rating;
 use super::change_bar_layer_count;
 use super::change_bar_layer_diameter;
 use super::change_action_mk;
-use super::change_action_n_ed;
-use super::change_action_v_ed;
+use super::change_action_nk;
+use super::change_action_vk;
 use super::insert_anchor;
 use super::remove_anchor;
 use super::change_anchor_h_ef;
@@ -58,8 +58,8 @@ pub enum En1992Mutation {
     ChangeBarLayerCount(change_bar_layer_count::ChangeBarLayerCount),
     ChangeBarLayerDiameter(change_bar_layer_diameter::ChangeBarLayerDiameter),
     ChangeActionMk(change_action_mk::ChangeActionMk),
-    ChangeActionNEd(change_action_n_ed::ChangeActionNEd),
-    ChangeActionVEd(change_action_v_ed::ChangeActionVEd),
+    ChangeActionNk(change_action_nk::ChangeActionNk),
+    ChangeActionVk(change_action_vk::ChangeActionVk),
     InsertAnchor(insert_anchor::InsertAnchor),
     RemoveAnchor(remove_anchor::RemoveAnchor),
     ChangeAnchorHEf(change_anchor_h_ef::ChangeAnchorHEf),
@@ -89,8 +89,8 @@ pub const KINDS: &[&str] = &[
     "change-bar-layer-count",
     "change-bar-layer-diameter",
     "change-action-mk",
-    "change-action-n-ed",
-    "change-action-v-ed",
+    "change-action-nk",
+    "change-action-vk",
     "insert-anchor",
     "remove-anchor",
     "change-anchor-h-ef",
@@ -167,3 +167,10 @@ mod tests;
 mod kinds_catalog;
 
 //#endregion 🧪️Tests
+
+
+//#region 🧫️Vectors
+#[cfg(test)]
+#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
+mod fixture_tests;
+//#endregion 🧫️Vectors

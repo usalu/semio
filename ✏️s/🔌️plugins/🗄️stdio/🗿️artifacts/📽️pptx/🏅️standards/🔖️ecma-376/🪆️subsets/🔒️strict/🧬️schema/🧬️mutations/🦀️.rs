@@ -46,8 +46,6 @@ pub const STRICT_REL: &str = "http://purl.oclc.org/ooxml/officeDocument/relation
 /// 🔗️ The `officeDocument` relationships pair, `[transitional, strict]`.
 pub const RELATIONSHIP_NAMESPACES: [&str; 2] = [TRANSITIONAL_REL, STRICT_REL];
 
-/// 🧩️ The legacy VML namespace ISO/IEC 29500-1 Strict removes entirely.
-pub const VML_NS: &str = "urn:schemas-microsoft-com:vml";
 /// 🧩️ The content type a legacy VML drawing part resolves. `pptx_part_is_xml` classifies `.vml` as
 /// XML, so an inserted VML part belongs in `xml_parts`, never in `opc.parts` — `encode_pptx` refuses
 /// a package that stores an XML part as opaque OPC bytes.
@@ -120,7 +118,7 @@ pub fn apply_pptx_strict_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxSt
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -295,13 +293,6 @@ fn diff_conformance_attribute(base: &PptxSnapshot, value: Option<&str>) -> PptxD
         return PptxDiff::default();
     }
     PptxDiff { xml_parts: Some(parts), ..Default::default() }
-}
-
-/// 🧩️ The canonical legacy-VML part body this vocabulary inserts — real VML, so the namespace the
-/// 🔒️strict check scans a part for is genuinely present.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn vml_markup() -> String {
-    format!("<xml xmlns:v=\"{VML_NS}\"><v:shape id=\"legacyShape\" type=\"#_x0000_t202\"/></xml>")
 }
 
 /// 🔺️ The diff of adding a legacy VML drawing part together with its content-type override.

@@ -117,9 +117,9 @@ fn dispatch_faults_are_classified_the_way_reacts_three_call_sites_classify_them(
     assert_eq!(code, Some(VIEWER_READ_ONLY_FAULT_CODE));
     assert!(message.contains("read-only viewer"));
 
-    let (_, severity, code) = classify_dispatch_fault_notice("mutation.rejected: conflicting edit", Locale::En);
+    let (_, severity, code) = classify_dispatch_fault_notice("app.command.rejected: conflicting edit", Locale::En);
     assert_eq!(severity, Severity::Error);
-    assert_eq!(code, Some(MUTATION_REJECTED_FAULT_CODE));
+    assert_eq!(code, Some(COMMAND_REJECTED_FAULT_CODE));
 
     let (message, severity, code) = classify_dispatch_fault_notice("surface render failed", Locale::En);
     assert_eq!(severity, Severity::Error);

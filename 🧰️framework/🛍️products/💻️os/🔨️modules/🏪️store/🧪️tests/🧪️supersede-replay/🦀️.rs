@@ -510,13 +510,13 @@ async fn supersede_commands_round_trip_every_codec() {
     ];
     for command in commands {
         let text = print_command(&command).await.expect("prints");
-        assert_eq!(parse_command::<DemoMutation>(&text).await.expect("parses"), command, "{text}");
-        let bytes = command.encode_op().expect("encodes");
-        assert_eq!(ArtifactCommand::<DemoMutation>::decode_op(&bytes).expect("decodes"), command);
+        assert_eq!(parse_command::<DemoSnapshot, DemoMutation>(&text).await.expect("parses"), command, "{text}");
+        let bytes = command.encode_command().expect("encodes");
+        assert_eq!(ArtifactCommand::<DemoMutation>::decode_command::<DemoSnapshot>(&bytes).expect("decodes"), command);
         assert_eq!(ArtifactCommand::<DemoMutation>::from_value(command.to_value()).expect("value decodes"), command);
     }
-    assert!(parse_command::<DemoMutation>("supersede\n  replace m-1\n").await.is_err(), "a replace line needs its replacement");
-    assert!(parse_command::<DemoMutation>("supersede\n").await.is_err(), "a supersede needs an input");
+    assert!(parse_command::<DemoSnapshot, DemoMutation>("supersede\n  replace m-1\n").await.is_err(), "a replace line needs its replacement");
+    assert!(parse_command::<DemoSnapshot, DemoMutation>("supersede\n").await.is_err(), "a supersede needs an input");
 }
 //#endregion 🧪️Metadata
 
@@ -773,3 +773,313 @@ async fn a_supersession_of_a_redo_edit_keeps_revisions_order_independent() {
     assert_eq!(reloaded.0.content_revision(), late.0.content_revision(), "and a fresh load agrees");
 }
 //#endregion 🧪️FoldSiteLaws
+
+//#region 🧪️TrunkLaws
+/// 🚉️ The alternatives a store lists as `(id, name, chain length)` and the alternative it is on.
+fn alternative_view(store: &ArtifactStore<DemoSnapshot, DemoMutation>) -> (Vec<(String, String, usize)>, String) {
+    (store.envelope().vcs.alternatives.iter().map(|alternative| (alternative.id.clone(), alternative.name.clone(), alternative.checkpoint_ids.len())).collect(), store.active_line_id())
+}
+
+/// 🌳️ A new alternative preserves the trunk it branched from: after finalizing a history edit as a new alternative the
+/// trunk is listed first (empty name, localized by the UI), switching to it restores the original positions with only
+/// unscoped and trunk-scoped supersessions, switching back restores the edited ones, the log never names the trunk,
+/// replicas holding the same events agree, and `.spr` and `.ops` reloads keep all of it.
+#[semio_framework_async_macros::async_test]
+async fn a_new_alternative_preserves_the_trunk_it_branched_from() {
+    let mut store = demo_store("trunk", Some(0)).await;
+    apply(&mut store, vec![set(1)]).await;
+    apply(&mut store, vec![add(2)]).await;
+    let ids = operation_ids(&store);
+    let trunk = store.trunk_alternative_id();
+    assert_eq!(store.active_line_id(), trunk, "every document starts on its trunk");
+    assert!(store.envelope().vcs.alternatives.is_empty(), "a trunk without a checkpoint is not listed yet");
+    store.dispatch(ArtifactCommand::CreateAlternativeWithSupersede { name: "edited".into(), inputs: vec![input(&ids[0], Some(set(10)))] }).await.expect("finalize as a new alternative");
+    assert_eq!(store.snapshot_ref().n, Some(12));
+    let (alternatives, current) = alternative_view(&store);
+    assert_eq!(alternatives.iter().map(|(id, name, _)| (id.as_str(), name.as_str())).collect::<Vec<_>>()[0], (trunk.as_str(), ""), "the trunk is listed first");
+    let edited = alternatives.iter().find(|(_, name, _)| name == "edited").map(|(id, _, _)| id.clone()).expect("the new alternative");
+    assert_eq!(current, edited);
+    store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk.clone() }).await.expect("switch back to the trunk");
+    assert_eq!(store.snapshot_ref().n, Some(3), "the trunk keeps the original positions");
+    assert_eq!((store.active_line_id(), store.envelope().active_alternative_id.clone()), (trunk.clone(), None));
+    assert!(store.supersessions().is_empty(), "the edited alternative's scoped supersession stays on it");
+    let checkout = store.envelope().transitions.last().and_then(|envelope| crate::os_spr::history_transition_from_envelope(envelope).ok().flatten());
+    assert!(matches!(checkout, Some(crate::os_spr::HistoryTransition::Checkout { alternative_id: None, .. })), "the log never names the trunk: {checkout:?}");
+    store.dispatch(ArtifactCommand::Supersede { scope: Some(trunk.clone()), inputs: vec![input(&ids[1], Some(add(5)))] }).await.expect("a supersession scoped to the trunk");
+    assert_eq!(store.snapshot_ref().n, Some(6));
+    store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: edited.clone() }).await.expect("switch to the edited alternative");
+    assert_eq!(store.snapshot_ref().n, Some(12), "the edited alternative keeps its positions and ignores the trunk's edit");
+    store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk.clone() }).await.expect("and back again");
+    assert_eq!(store.snapshot_ref().n, Some(6));
+    let expected = alternative_view(&store);
+    let log = store.event_log().expect("log");
+    let mut peer = demo_store("trunk", Some(0)).await;
+    for event in log.iter().rev().cloned() {
+        peer.ingest_remote(event).await.expect("the peer ingests every event");
+    }
+    let mut other = demo_store("trunk", Some(0)).await;
+    for event in log {
+        other.ingest_remote(event).await.expect("another peer ingests them in authoring order");
+    }
+    for replica in [&peer, &other] {
+        assert_eq!(alternative_view(replica), expected, "replicas list the same alternatives and stand on the same one");
+        assert_eq!(replica.snapshot_ref().n, Some(6));
+        assert_eq!(replica.supersessions(), store.supersessions());
+    }
+    assert_eq!(peer.0.content_revision(), other.0.content_revision(), "arrival order never changes a replica's identity");
+    let files = print_document_pack(store.envelope()).await.expect("pair prints");
+    let mut reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("pair parses").into_envelope()).await;
+    assert_eq!(alternative_view(&reloaded), expected, ".spr keeps the trunk");
+    assert_eq!(reloaded.snapshot_ref().n, Some(6));
+    let text = print_document_text(store.envelope()).await.expect("text prints");
+    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops).await.expect("text parses").into_envelope()).await;
+    assert_eq!(alternative_view(&mirrored), expected, ".ops keeps the trunk");
+    assert_eq!(mirrored.snapshot_ref().n, Some(6));
+    reloaded.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: edited }).await.expect("a reloaded store switches to the edited alternative");
+    assert_eq!(reloaded.snapshot_ref().n, Some(12));
+}
+//#endregion 🧪️TrunkLaws
+
+//#region 🧪️HistoryShapeLaws
+/// 🗂️ A config store's history holds undo and redo only: every command authoring another transition is refused at
+/// dispatch with the typed `HistoryShape` refusal before anything runs — the store untouched, every replacement
+/// retired — and so is a remote transition of another kind; undo and redo keep working. The store refuses exactly the
+/// kinds the language-agnostic shape table excludes (`🧫️history-transition`, twinned in TypeScript and Python), and a
+/// document store admits all of them.
+#[semio_framework_async_macros::async_test]
+async fn a_config_store_holds_undo_and_redo_only() {
+    use crate::os_spr::HistoryTransitionKind::{Checkout, Commit, Supersede};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🧫️history-transition/🔣️.json")).expect("history transition fixture parses");
+    let admitted = |shape: &str| -> Vec<String> {
+        let row = fixture["shapes"].as_array().expect("shape rows").iter().find(|row| row["shape"] == shape).expect("a shape row");
+        row["admits"].as_array().expect("admits").iter().map(|kind| kind.as_str().expect("kind").to_string()).collect()
+    };
+    let mut config = ArtifactStore::new(create_config_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "config", DemoSnapshot { n: Some(0) }, None).await).await;
+    apply(&mut config, vec![set(1)]).await;
+    apply(&mut config, vec![add(2)]).await;
+    let ids = operation_ids(&config);
+    let trunk = config.trunk_alternative_id();
+    let untouched = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| (store.generation(), store.0.content_revision(), store.envelope().transitions.len(), store.snapshot_ref().n, store.supersessions().len());
+    let before = untouched(&config);
+    let refused = [
+        (ArtifactCommand::CommitCheckpoint { message: None, authors: Vec::new() }, Commit),
+        (ArtifactCommand::CreateAlternative { name: "b".into() }, Commit),
+        (ArtifactCommand::SwitchAlternative { alternative_id: trunk.clone() }, Checkout),
+        (ArtifactCommand::CheckoutCheckpoint { checkpoint_id: "c".into() }, Checkout),
+        (ArtifactCommand::Supersede { scope: None, inputs: vec![input(&ids[0], Some(set(9)))] }, Supersede),
+        (ArtifactCommand::Supersede { scope: Some(trunk), inputs: vec![input(&ids[1], None)] }, Supersede),
+        (ArtifactCommand::CreateAlternativeWithSupersede { name: "b".into(), inputs: vec![input(&ids[0], Some(set(9)))] }, Commit),
+    ];
+    for (command, kind) in refused {
+        let kinds = command.history_transition_kinds();
+        assert!(kinds.iter().any(|kind| !admitted("config").contains(&kind.name().to_string())), "{kinds:?}: the shape table excludes a kind");
+        assert!(kinds.iter().all(|kind| admitted("document").contains(&kind.name().to_string())), "{kinds:?}: a document holds every kind");
+        assert_eq!(config.dispatch(command).await.err(), Some(VcsError::HistoryShape { shape: crate::os_spr::HistoryShape::Config, kind }));
+        assert_eq!(untouched(&config), before, "a refused command leaves the store untouched");
+    }
+    let remote = remote_supersession("config", &ids[0], draft(Some(set(9))), 0);
+    assert_eq!(config.ingest_remote(remote).await.err(), Some(VcsError::HistoryShape { shape: crate::os_spr::HistoryShape::Config, kind: Supersede }));
+    assert_eq!(untouched(&config), before, "a refused remote transition is never recorded");
+    for command in [ArtifactCommand::<DemoMutation>::Undo, ArtifactCommand::Redo] {
+        assert!(command.history_transition_kinds().iter().all(|kind| admitted("config").contains(&kind.name().to_string())));
+    }
+    config.dispatch(ArtifactCommand::Undo).await.expect("a config store undoes");
+    assert_eq!(config.snapshot_ref().n, Some(1));
+    config.dispatch(ArtifactCommand::Redo).await.expect("and redoes");
+    assert_eq!(config.snapshot_ref().n, Some(3));
+    let mut document = demo_store("config", Some(0)).await;
+    apply(&mut document, vec![set(1)]).await;
+    let target = operation_ids(&document)[0].clone();
+    document.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![input(&target, Some(set(9)))] }).await.expect("a document store supersedes");
+    assert_eq!(document.snapshot_ref().n, Some(9));
+}
+//#endregion 🧪️HistoryShapeLaws
+
+//#region 🧪️CommandDecodeLaws
+std::thread_local! {
+    static WITNESS_RETIRED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static WITNESS_DROPPED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+/// 🧿️ A demo operation with a fail-closed owner's discipline: its cold disposal is counted, and a bare drop — what a
+/// partial decode used to do — is counted too, so a law can prove none happened.
+#[derive(Clone, Debug, PartialEq)]
+struct WitnessOp(DemoMutation, bool);
+
+impl WitnessOp {
+    fn live(operation: DemoMutation) -> Self {
+        Self(operation, true)
+    }
+
+    /// 📊️ `(retired, dropped)` so far on this thread.
+    fn tally() -> (usize, usize) {
+        (WITNESS_RETIRED.with(std::cell::Cell::get), WITNESS_DROPPED.with(std::cell::Cell::get))
+    }
+}
+
+impl Drop for WitnessOp {
+    fn drop(&mut self) {
+        if self.1 {
+            WITNESS_DROPPED.with(|dropped| dropped.set(dropped.get() + 1));
+        }
+    }
+}
+
+impl ToValue for WitnessOp {
+    fn to_value(&self) -> DslValue {
+        self.0.to_value()
+    }
+}
+
+impl FromValue for WitnessOp {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        DemoMutation::from_value(value).map(Self::live)
+    }
+}
+
+impl OpBinary for WitnessOp {
+    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+        self.0.encode_op()
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+        DemoMutation::decode_op(bytes).map(Self::live)
+    }
+}
+
+impl OpText for WitnessOp {
+    fn print_op(&self) -> String {
+        self.0.print_op()
+    }
+
+    fn parse_op(line: &str) -> Result<Self, TextError> {
+        DemoMutation::parse_op(line).map(Self::live)
+    }
+}
+
+impl Mutation<DemoSnapshot> for WitnessOp {
+    type Diff = <DemoMutation as Mutation<DemoSnapshot>>::Diff;
+    const DESCRIPTORS: &'static [crate::os_spr::MutationLeafDescriptor] = <DemoMutation as Mutation<DemoSnapshot>>::DESCRIPTORS;
+
+    fn descriptor(&self) -> &'static crate::os_spr::MutationLeafDescriptor {
+        self.0.descriptor()
+    }
+
+    fn diff(&self, base: &DemoSnapshot) -> crate::os_spr::MutationOutcome<Self::Diff> {
+        self.0.diff(base)
+    }
+
+    fn inverse(&self, base: &DemoSnapshot) -> Vec<Self> {
+        self.0.inverse(base).into_iter().map(Self::live).collect()
+    }
+
+    fn retire_cold(mut self) {
+        self.1 = false;
+        WITNESS_RETIRED.with(|retired| retired.set(retired.get() + 1));
+    }
+}
+
+/// 🧯️ Command decoding is all-or-nothing, binary and text alike: a command whose operation list, supersede inputs or
+/// nested command fails midway — or that carries bytes past its end — is refused with the typed `CommandDecodeError`
+/// naming the failing entry, and every operation decoded before the failure retires through the technology's cold
+/// disposal; none is ever dropped bare (audit F-m11b). A hostile operation count never allocates beyond the input.
+#[semio_framework_async_macros::async_test]
+async fn a_refused_command_decode_retires_every_operation_it_decoded() {
+    let binary = |command: ArtifactCommand<DemoMutation>| command.encode_command().expect("encodes");
+    let garbled = |command: ArtifactCommand<DemoMutation>, last: DemoMutation| {
+        let mut bytes = binary(command);
+        let at = bytes.len() - last.encode_op().expect("encodes").len();
+        bytes[at] = 0xff;
+        bytes
+    };
+    let decode = |bytes: &[u8]| ArtifactCommand::<WitnessOp>::decode_command::<DemoSnapshot>(bytes);
+    let apply = |mutations: Vec<DemoMutation>| ArtifactCommand::Apply { mutations, description: None, transaction: None };
+    let start = WitnessOp::tally();
+    let cases: Vec<(Vec<u8>, usize, Option<usize>)> = vec![
+        (garbled(apply(vec![set(1), add(2), set(3)]), set(3)), 2, Some(2)),
+        (garbled(ArtifactCommand::Supersede { scope: None, inputs: vec![input(&MutationId("m-1".into()), Some(set(9))), input(&MutationId("m-2".into()), None), input(&MutationId("m-3".into()), Some(add(4)))] }, add(4)), 1, Some(2)),
+        (garbled(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::TransformAgainstConcurrent, semantic_command: Some(Box::new(apply(vec![set(5), add(6)]))) }, add(6)), 1, Some(1)),
+        ([binary(apply(vec![set(7), add(8)])), vec![0]].concat(), 2, None),
+    ];
+    let mut retired = 0;
+    for (bytes, decoded, failing) in cases {
+        let refused = decode(&bytes).expect_err("a broken command is refused");
+        retired += decoded;
+        match failing {
+            Some(index) => assert!(matches!(refused, CommandDecodeError::Operation { index: at, .. } if at == index), "{refused:?}"),
+            None => assert!(matches!(refused, CommandDecodeError::Layout(_)), "{refused:?}"),
+        }
+        assert_eq!(WitnessOp::tally(), (start.0 + retired, start.1), "every decoded operation retired, none dropped");
+    }
+    let mut hostile = vec![COMMAND_BINARY_FORMAT, 0, 0];
+    crate::os_pack::write_varint_u64(&mut hostile, u64::MAX >> 1);
+    assert!(matches!(decode(&hostile), Err(CommandDecodeError::Operation { index: 0, .. })));
+    let one = print_command(&apply(vec![set(1)])).await.expect("prints");
+    let op_line = one.lines().find(|line| line.starts_with("  ")).expect("an op line").to_string();
+    for (command, decoded) in [(format!("{}\n{op_line}\n  not an operation\n", one.lines().next().unwrap()), 1), (format!("supersede\n  replace m-1\n  {op_line}\n  replace m-2\n    not an operation\n"), 1)] {
+        assert!(parse_command::<DemoSnapshot, WitnessOp>(&command).await.is_err(), "{command}");
+        retired += decoded;
+        assert_eq!(WitnessOp::tally(), (start.0 + retired, start.1), "{command}");
+    }
+    let accepted = decode(&binary(apply(vec![set(1), add(2)]))).expect("a whole command decodes");
+    assert_eq!(WitnessOp::tally(), (start.0 + retired, start.1), "an accepted command's operations stay live");
+    retire_command::<DemoSnapshot, WitnessOp>(accepted);
+    assert_eq!(WitnessOp::tally(), (start.0 + retired + 2, start.1));
+}
+//#endregion 🧪️CommandDecodeLaws
+
+//#region 🧪️RetractionLaws
+/// 🔙️ A hub-refused local transition retracts (audit F-m8): the author's refused supersession, its refused
+/// finalize-as-alternative (commit, branch, scoped supersession) and a later checkout depending on that commit all leave
+/// the author's log through `BackboneMessage::Retract` naming only the refused ones, and the author converges with the hub,
+/// which never took them — the same event log, snapshot, supersessions, alternatives and outcomes, and the author's own
+/// content revision from before its refused steps. Retracting again, retracting an unknown name or a transition another
+/// replica authored changes nothing, and a persisted `.spr` retracts exactly the same transitions.
+#[semio_framework_async_macros::async_test]
+async fn a_refused_local_transition_retracts_and_the_author_converges_with_the_hub() {
+    let (channel, remote) = ChannelBackbone::pair("retract").await;
+    let mut author = demo_store("retract", Some(0)).await;
+    author.attach_backbone(Backbones::Channel(channel)).await.expect("attach");
+    apply(&mut author, vec![set(1)]).await;
+    apply(&mut author, vec![add(2)]).await;
+    apply(&mut author, vec![add(3)]).await;
+    let ids = operation_ids(&author);
+    let mut hub = demo_store("retract", Some(0)).await;
+    for event in author.event_log().expect("log") {
+        hub.ingest_remote(event).await.expect("the hub takes the edits");
+    }
+    let foreign = remote_supersession("retract", &ids[2], draft(Some(add(30))), 0);
+    for replica in [&mut author, &mut hub] {
+        replica.ingest_remote(foreign.clone()).await.expect("a peer's accepted supersession reaches both");
+    }
+    let accepted = (author.0.content_revision(), author.snapshot_ref().n, author.envelope().transitions.len());
+    let before_refusal = print_document_pack(author.envelope()).await.expect("pair prints");
+    let known = author.envelope().transitions.len();
+    author.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![input(&ids[0], Some(set(10)))] }).await.expect("a local supersession");
+    author.dispatch(ArtifactCommand::CreateAlternativeWithSupersede { name: "edited".into(), inputs: vec![input(&ids[1], None)] }).await.expect("finalize as a new alternative");
+    let trunk = author.trunk_alternative_id();
+    author.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk }).await.expect("back to the trunk");
+    let authored: Vec<String> = author.envelope().transitions[known..].iter().map(|transition| transition.mutation_id.0.clone()).collect();
+    assert_eq!(authored.len(), 5, "supersede, commit, branch, scoped supersede, checkout");
+    let refused = authored[..4].to_vec();
+    let refused_log = print_document_pack(author.envelope()).await.expect("pair prints");
+    let _ = drain_channel_for_test(&remote).expect("drain outbound");
+    remote.push(BackboneMessage::Retract { mutation_ids: refused.clone() }).await.expect("push retraction");
+    author.tick().await.expect("tick");
+    let log_ids = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| store.event_log().expect("log").into_iter().map(|event| event.mutation_id.0).collect::<Vec<_>>();
+    assert_eq!(log_ids(&author), log_ids(&hub), "the dependent checkout retracts with the commit it checks out");
+    assert_eq!((author.0.content_revision(), author.snapshot_ref().n, author.envelope().transitions.len()), accepted, "the author is back where the hub took it");
+    assert_eq!(author.snapshot_ref().n, hub.snapshot_ref().n);
+    assert_eq!(author.supersessions(), hub.supersessions());
+    assert_eq!(alternative_view(&author), alternative_view(&hub));
+    assert_eq!(outcomes_by_mutation(&author.mutation_outcomes().expect("outcomes")), outcomes_by_mutation(&hub.mutation_outcomes().expect("outcomes")));
+    let generation = author.generation();
+    remote.push(BackboneMessage::Retract { mutation_ids: [refused.clone(), vec!["unknown".into(), foreign.mutation_id.0.clone()]].concat() }).await.expect("push again");
+    author.tick().await.expect("tick");
+    assert_eq!((author.generation(), author.0.content_revision(), log_ids(&author)), (generation, accepted.0, log_ids(&hub)), "a known, unknown or foreign name retracts nothing");
+    let (spr, retracted) = retract_history_transitions_from_spr(&refused_log.spr, &refused).await.expect("the persisted log retracts");
+    assert_eq!(retracted, authored, "the persisted log retracts the same closure");
+    let persisted = |bytes: Vec<u8>| async move { crate::os_spr::decode_history(&bytes, &crate::os_spr::DecodeOptions::default()).await.expect("log decodes").transitions.into_iter().map(|record| record.id).collect::<Vec<_>>() };
+    assert_eq!(persisted(spr).await, persisted(before_refusal.spr).await);
+}
+//#endregion 🧪️RetractionLaws

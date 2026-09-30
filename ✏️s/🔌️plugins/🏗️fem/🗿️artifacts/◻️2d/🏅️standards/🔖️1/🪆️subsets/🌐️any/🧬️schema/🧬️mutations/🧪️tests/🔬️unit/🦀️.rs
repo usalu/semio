@@ -407,12 +407,12 @@ fn refusal(base: &Fem2dSnapshot, mutation: &Fem2dMutation) -> (String, protocol:
 
 /// 🪪️ A `replace-` may not rename its target — that would orphan every referrer silently.
 #[semio_framework_async_macros::async_test]
-async fn replace_material_rename_is_id_mismatch() {
+async fn replace_material_rename_is_target_mismatch() {
     let base = simply_supported_beam_doc();
     let renamed = FemMaterial { id: "steel_v2".into(), name: "Steel S355".into(), e: 210e9, nu: 0.3, rho: 7850.0 };
     let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceMaterial(replace_material::ReplaceMaterial { id: "steel".into(), new_material: renamed }));
-    assert_eq!(code, "mutation.id-mismatch");
-    assert_eq!(level, protocol::Severity::Fatal, "a rename through a replace is an identity breach no merge policy may absorb");
+    assert_eq!(code, "mutation.target-mismatch");
+    assert_eq!(level, protocol::Severity::Error, "a rename through a replace contradicts the target it selects — the state-dependent Error");
     assert_eq!(target, vec!["steel".to_string(), "steel_v2".to_string()], "the diagnostic addresses the selected id first and the impostor second");
 }
 
@@ -515,21 +515,21 @@ async fn replace_element_dangling_section_is_error() {
 
 /// 🪪️ The rename law reaches the three new in-place verbs too — a node, a load and a combination.
 #[semio_framework_async_macros::async_test]
-async fn replace_node_rename_is_id_mismatch() {
+async fn replace_node_rename_is_target_mismatch() {
     let base = simply_supported_beam_doc();
     let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceNode(replace_node::ReplaceNode { id: "n2".into(), new_node: FemNode { id: "n2_b".into(), x: 6.0, y: 0.0 } }));
-    assert_eq!(code, "mutation.id-mismatch");
-    assert_eq!(level, protocol::Severity::Fatal);
+    assert_eq!(code, "mutation.target-mismatch");
+    assert_eq!(level, protocol::Severity::Error);
     assert_eq!(target, vec!["n2".to_string(), "n2_b".to_string()]);
 }
 
 #[semio_framework_async_macros::async_test]
-async fn replace_load_rename_is_id_mismatch() {
+async fn replace_load_rename_is_target_mismatch() {
     let base = simply_supported_beam_doc();
     let renamed = FemLoad::MemberUdl { id: "l1_b".into(), element_id: "e1".into(), wx: 0.0, wy: -10000.0 };
     let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceLoad(replace_load::ReplaceLoad { case_id: "dead".into(), load_id: "l1".into(), new_load: Box::new(renamed) }));
-    assert_eq!(code, "mutation.id-mismatch");
-    assert_eq!(level, protocol::Severity::Fatal);
+    assert_eq!(code, "mutation.target-mismatch");
+    assert_eq!(level, protocol::Severity::Error);
     assert_eq!(target, vec!["l1".to_string(), "l1_b".to_string()]);
 }
 

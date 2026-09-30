@@ -132,6 +132,10 @@ LABEL_DE = text("Label (German)", "Bezeichnung (Deutsch)")
 #endregion 🔖️Helpers
 
 
+#: 📸️ Snapshot facets whose top-level properties are rebuilt from the Rust snapshot struct (the ISO 16757 facet described the
+#: former snake_case serde twin, which now mirrors the camelCase value wire).
+SNAPSHOT_ROOT_FROM_RUST = {"iso16757": "Iso16757Snapshot"}
+
 #: 📏️ Hard bounds on snapshot-record fields that a committed refusal witnesses as a range invariant.
 DEF_BOUNDS = {"din18599": {"MonthlyClimate": {"gHWM2": {"items": {"minimum": 0}}}}}
 

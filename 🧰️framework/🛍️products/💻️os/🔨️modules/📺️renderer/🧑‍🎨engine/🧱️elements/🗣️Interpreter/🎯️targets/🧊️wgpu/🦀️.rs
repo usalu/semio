@@ -3724,6 +3724,12 @@ pub(crate) fn set_ui_document_flow(window_id: &str, flow: ui_contract::UiFlow) {
     UI_ENGINE.with(|cell| cell.borrow_mut().set_window_flow(window_id, flow));
 }
 
+/// 👥️ Hands every retained window the peers' notes by record key (sorted by key) — the wgpu twin of the host presence
+/// overlay React provides at the shell root. `true` when any window's notes changed.
+pub(crate) fn set_ui_presence_notes(notes: &[(String, String)]) -> bool {
+    UI_ENGINE.with(|cell| cell.borrow_mut().set_presence_notes(notes))
+}
+
 /// 🎯️ Stamps one reconciled Tree candidate's host-owned selected row through the retained presence
 /// channel. Structural document records stay immutable and a stale document generation is refused.
 pub(crate) fn stamp_ui_document_tree_selected_item(window_id: &str, generation: u64, selected_key: &str) -> bool {
@@ -5663,6 +5669,92 @@ fn build_mesh_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> Dump
 }
 //#endregion 🔬️MeshStats
 
+//#region 🔬️Board2dStats
+/// 🎥️ A board's published camera — `Board2dScene.camera_json` read as `{x, y, zoom}`.
+#[cfg(any(target_arch = "wasm32", test))]
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize)]
+struct DumpBoard2dCamera {
+    x: f64,
+    y: f64,
+    zoom: f64,
+}
+
+/// 🎲️ One `Board2d` surface's published board — the wgpu twin of React's Board2dHost `data-board-*` vitals
+/// (`board2dVitals`, `data-board-camera-json`, `data-board-selection-json`, `data-board-fixture-parsed`): where the
+/// pane sits on the page, the camera, every node's world position, the selection, and the fixture's node, edge and
+/// handle counts. A fixture that does not parse reads `parsed: false` with `-1` counts and no positions, as React's
+/// vitals do.
+#[cfg(any(target_arch = "wasm32", test))]
+#[derive(Debug, PartialEq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DumpBoard2dSurface {
+    surface_id: String,
+    window_id: String,
+    rect: [f32; 4],
+    camera: Option<DumpBoard2dCamera>,
+    positions: std::collections::BTreeMap<String, [f64; 2]>,
+    selection: Vec<String>,
+    nodes: i64,
+    edges: i64,
+    handles: i64,
+    parsed: bool,
+}
+
+/// 🎲️ The wire shape `dumpBoard2d()` answers.
+#[cfg(any(target_arch = "wasm32", test))]
+#[derive(Debug, PartialEq, serde::Serialize)]
+struct DumpBoard2d {
+    surfaces: Vec<DumpBoard2dSurface>,
+}
+
+/// 🎲️ One board scene's dump row at `rect` (page CSS px) inside `window_id`.
+#[cfg(any(target_arch = "wasm32", test))]
+fn board2d_surface(surface_id: &str, window_id: &str, board: &ui_wgpu::wgpu::Board2dScene, rect: [f32; 4]) -> DumpBoard2dSurface {
+    let fixture = serde_json::from_str::<Value>(&board.fixture_json).ok().filter(Value::is_object);
+    let nodes = fixture.as_ref().and_then(|fixture| fixture.get("nodes")).and_then(Value::as_array);
+    let positions = nodes.into_iter().flatten().filter_map(|node| Some((node.get("id")?.as_str()?.to_string(), [node.get("x")?.as_f64()?, node.get("y")?.as_f64()?]))).collect();
+    let camera = serde_json::from_str::<Value>(&board.camera_json).ok().and_then(|camera| Some(DumpBoard2dCamera { x: camera.get("x")?.as_f64()?, y: camera.get("y")?.as_f64()?, zoom: camera.get("zoom")?.as_f64()? }));
+    let selection = serde_json::from_str::<Value>(&board.selection_json).ok();
+    let selection = selection.as_ref().and_then(|selection| selection.as_array().or_else(|| selection.get("ids").and_then(Value::as_array))).map(|ids| ids.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default();
+    let count = |array: Option<&Vec<Value>>| array.map_or(0, |entries| entries.len() as i64);
+    let (node_count, edge_count, handle_count) = match &fixture {
+        Some(fixture) => (count(nodes), count(fixture.get("edges").and_then(Value::as_array)), nodes.into_iter().flatten().map(|node| count(node.get("handles").and_then(Value::as_array))).sum()),
+        None => (-1, -1, -1),
+    };
+    DumpBoard2dSurface { surface_id: surface_id.to_string(), window_id: window_id.to_string(), rect, camera, positions, selection, nodes: node_count, edges: edge_count, handles: handle_count, parsed: fixture.is_some() }
+}
+
+/// 🚶️ The same depth-first walk [`walk_mesh_stats`] runs, collecting every `Board2d` component scene of one window at
+/// the absolute page rect it was laid out at — the rect a pointer probe aims with.
+#[cfg(any(target_arch = "wasm32", test))]
+fn walk_board2d(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: f32, window_id: &str, surfaces: &mut Vec<DumpBoard2dSurface>) {
+    let Some(node) = tree.node(id) else { return };
+    let (layout_x, layout_y, layout_w, layout_h) = tree.mounted_layout(id).unwrap_or((node.layout.x, node.layout.y, node.layout.width, node.layout.height));
+    let abs_x = origin_x + layout_x;
+    let abs_y = origin_y + layout_y;
+    if let UiNode::ComponentScene(scene) = &node.spec.0 {
+        if let Some(board) = scene.board2d.as_ref() {
+            surfaces.push(board2d_surface(&scene.surface_id, window_id, board, [abs_x, abs_y, layout_w, layout_h]));
+        }
+    }
+    for child in tree.children(id) {
+        walk_board2d(tree, child, abs_x, abs_y, window_id, surfaces);
+    }
+}
+
+/// 🎲️ Every live window's boards, or the one window a caller names.
+#[cfg(any(target_arch = "wasm32", test))]
+fn build_board2d_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> DumpBoard2d {
+    let mut surfaces = Vec::new();
+    for window_id in dump_window_ids(engine).iter().filter(|live| requested.filter(|id| !id.is_empty()).is_none_or(|id| *live == id)) {
+        if let Some(root) = engine.tree(window_id).and_then(|tree| tree.root.map(|root| (tree, root))) {
+            walk_board2d(root.0, root.1, 0.0, 0.0, window_id, &mut surfaces);
+        }
+    }
+    DumpBoard2d { surfaces }
+}
+//#endregion 🔬️Board2dStats
+
 //#endregion 🔬️IntrospectionBuilders
 
 //#region 🎯️ChromeLedger
@@ -6481,6 +6573,16 @@ pub fn dump_frame_stats(window_id: Option<String>) -> String {
 pub fn dump_mesh_stats(window_id: Option<String>) -> String {
     let stats = UI_ENGINE.with(|cell| build_mesh_stats(&cell.borrow(), window_id.as_deref()));
     serde_json::to_string(&stats).unwrap_or_else(|_| "{}".to_string())
+}
+
+/// 🎲️📤️ `dumpBoard2d()` — every `Board2d` surface's published board (page rect, camera, node positions, selection, and
+/// the node, edge and handle counts), the wgpu twin of React's Board2dHost `data-board-*` vitals a browser probe reads.
+/// Read-only and answered on request only: nothing is collected per frame, so it costs production nothing.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = dumpBoard2d)]
+pub fn dump_board2d(window_id: Option<String>) -> String {
+    let dump = UI_ENGINE.with(|cell| build_board2d_dump(&cell.borrow(), window_id.as_deref()));
+    serde_json::to_string(&dump).unwrap_or_else(|_| "{}".to_string())
 }
 
 /// ♿️📤️ `dumpAccessibility()` — the app's accessibility tree (every live window, or the one a caller

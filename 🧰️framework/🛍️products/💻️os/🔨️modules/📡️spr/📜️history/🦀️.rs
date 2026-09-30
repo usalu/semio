@@ -91,7 +91,7 @@ pub struct HistoryConflict {
 
 /// 📨️ Durable form of `crate::os_spr::command::MutationMessage`: `level` is the numeric
 /// mirror of `crate::os_dsl::Severity` (`as_u8`/`from_u8`, 0..3), `code` is dict-interned (the
-/// frozen seven `mutation.*` codes repeat heavily across one document's history — see
+/// frozen nine `mutation.*` codes repeat heavily across one document's history — see
 /// `📋️contract-freeze.md` §C2), `message`/`target` are plain strings (English prose / element
 /// address, never interned — they vary per occurrence).
 #[derive(Clone, Debug, PartialEq)]
@@ -253,7 +253,7 @@ impl HistoryLog {
             }
         }
         let transitions: Vec<crate::os_spr::MutationEnvelope> = self.transitions.iter().map(|transition| transition.to_envelope(&self.doc_id)).collect();
-        crate::os_spr::fold_history(&edits, &transitions, &excluded)
+        crate::os_spr::fold_history(&crate::os_spr::ArtifactId(self.doc_id.clone()), &edits, &transitions, &excluded)
     }
 }
 //#endregion 🔖️Fold

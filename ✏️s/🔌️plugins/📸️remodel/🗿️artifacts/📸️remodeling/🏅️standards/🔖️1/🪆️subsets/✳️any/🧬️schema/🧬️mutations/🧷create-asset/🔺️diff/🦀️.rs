@@ -16,12 +16,12 @@ use crate::{durable_remodeling_asset, store_remodeling_asset, RemodelingSnapshot
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateAsset, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if crate::remodeling_content_handle_parts(&payload.asset.data).is_some() {
-        return protocol::MutationOutcome::error("mutation.invalid-asset-payload", "Durable content handles are bound only by CommitReconstruction.", [payload.key.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "Durable content handles are bound only by CommitReconstruction.", [payload.key.clone()]);
     }
     let mut assets = base.assets.clone();
     let handle = store_remodeling_asset(&payload.key, &payload.asset);
     let Some(artifact) = durable_remodeling_asset(&payload.asset) else {
-        return protocol::MutationOutcome::error("mutation.invalid-asset-payload", "The asset payload is malformed or exceeds its exact bounded envelope.", [payload.key.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "The asset payload is malformed or exceeds its exact bounded envelope.", [payload.key.clone()]);
     };
     let mut durable_artifacts = base.durable_artifacts.clone();
     if let Some(previous) = base.assets.get(&payload.key) {

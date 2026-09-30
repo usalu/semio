@@ -814,6 +814,7 @@ export const uiChromeTranslationBundles = {
           backboneFile: { label: { normal: "Dateisynchronisierung", beginner: "Mit einer Datei synchronisieren" } },
           backboneFolder: { label: { normal: "Ordnersynchronisierung", beginner: "Mit einem Ordner synchronisieren" } },
           backboneRemote: { label: { normal: "Hub-Synchronisierung", beginner: "Mit dem Hub synchronisieren" } },
+          documentUnidentified: { label: { normal: "Dieses Programm hat kein Dokument zum Verbinden", beginner: "Das gewählte Programm hat kein eigenes Dokument, das mit einem Ordner, einer Datei oder einem Hub verbunden werden kann." } },
         },
         ink: {
           link: { label: { normal: "Link", beginner: "Link" } },
@@ -865,12 +866,15 @@ export const uiChromeTranslationBundles = {
           },
           code: {
             targetMissing: { label: { normal: "Ziel fehlt", beginner: "Das Ziel dieser Änderung existiert nicht mehr." } },
+            targetReferenced: { label: { normal: "Ziel wird noch referenziert", beginner: "Das Ziel wird noch von anderen Elementen verwendet — löse diese Verweise zuerst." } },
+            targetMismatch: { label: { normal: "Widerspricht dem Ziel", beginner: "Die Änderung passt nicht zum aktuellen Zustand ihres Ziels." } },
             noOp: { label: { normal: "Keine Änderung", beginner: "Der Zustand war bereits so — nichts wurde geändert." } },
             partial: { label: { normal: "Teilweise angewendet", beginner: "Nur ein Teil der Änderung konnte angewendet werden." } },
             clamped: { label: { normal: "Begrenzt", beginner: "Ein Wert wurde auf den zulässigen Bereich begrenzt." } },
             duplicateId: { label: { normal: "ID bereits vergeben", beginner: "Es existiert bereits ein Element mit dieser ID." } },
             invariant: { label: { normal: "Ungültiger Zustand", beginner: "Diese Änderung würde einen ungültigen Zustand erzeugen." } },
             cascade: { label: { normal: "Folgeänderung", beginner: "Diese Änderung hat weitere Änderungen ausgelöst." } },
+            apply: { label: { normal: "Nicht anwendbar", beginner: "Die Änderung ließ sich nicht auf das aktuelle Dokument anwenden." } },
           },
           history: {
             foreignTransition: { label: { normal: "Änderung einer anderen Person", beginner: "Du kannst nur eigene Änderungen rückgängig machen oder wiederherstellen." } },
@@ -907,6 +911,15 @@ export const uiChromeTranslationBundles = {
           hubTransformed: { label: { normal: "Änderung angepasst", beginner: "Eine gleichzeitige Änderung hatte Vorrang; deine Änderung wurde angepasst übernommen." } },
           hubConcurrentEdit: { label: { normal: "Jemand anderes hat gleichzeitig dieselbe Stelle geändert", beginner: "Jemand anderes hat gleichzeitig dieselbe Stelle geändert; deine Änderung wurde nicht übernommen." } },
           hubConcurrentInvariant: { label: { normal: "Widerspricht einer gleichzeitigen Änderung", beginner: "Deine Änderung widerspricht einer gleichzeitigen Änderung einer anderen Person und wurde nicht übernommen." } },
+          local: {
+            readOnly: { label: { normal: "Änderung nicht übernommen: Dieses Dokument ist hier schreibgeschützt", beginner: "Du kannst dieses Dokument hier nur ansehen, deshalb wurde deine Änderung nicht übernommen." } },
+            queueFull: { label: { normal: "Änderung nicht übernommen: Zu viele Änderungen warten aufs Speichern", beginner: "Zu viele deiner Änderungen warten noch aufs Speichern; diese wurde nicht übernommen. Versuche es gleich noch einmal." } },
+            duplicate: { label: { normal: "Änderung nicht übernommen: Sie wartet bereits aufs Speichern", beginner: "Diese Änderung wartet bereits aufs Speichern, deshalb wurde sie nicht ein zweites Mal übernommen." } },
+            notReady: { label: { normal: "Änderung nicht übernommen: Das Dokument ist noch nicht bereit", beginner: "Das Dokument wird noch vorbereitet, deshalb wurde deine Änderung nicht übernommen. Versuche es gleich noch einmal." } },
+            foreignDocument: { label: { normal: "Änderung nicht übernommen: Sie gehört zu einem anderen Dokument", beginner: "Deine Änderung nennt ein anderes Dokument als das hier geöffnete, deshalb wurde sie nicht übernommen." } },
+            unreadable: { label: { normal: "Änderung nicht übernommen: Sie konnte nicht gelesen werden", beginner: "Deine Änderung konnte nicht gelesen werden, deshalb wurde sie nicht übernommen." } },
+            tooLarge: { label: { normal: "Änderung nicht übernommen: Sie ist zu groß zum Senden", beginner: "Deine Änderung ist zu groß, um sie in einem Stück zu senden, deshalb wurde sie nicht übernommen." } },
+          },
         },
         presence: {
           roster: { label: { normal: "Anwesende", beginner: "Anwesende" } },
@@ -1806,6 +1819,7 @@ export const uiChromeTranslationBundles = {
           backboneFile: { label: { normal: "File sync", beginner: "Sync with a file" } },
           backboneFolder: { label: { normal: "Folder sync", beginner: "Sync with a folder" } },
           backboneRemote: { label: { normal: "Hub sync", beginner: "Sync with the hub" } },
+          documentUnidentified: { label: { normal: "This program has no document to attach", beginner: "The selected program has no document of its own that could be attached to a folder, a file or a hub." } },
         },
         ink: {
           link: { label: { normal: "Link", beginner: "Link" } },
@@ -1857,12 +1871,15 @@ export const uiChromeTranslationBundles = {
           },
           code: {
             targetMissing: { label: { normal: "Target missing", beginner: "The target of this change no longer exists." } },
+            targetReferenced: { label: { normal: "Target still referenced", beginner: "Other elements still use the target — resolve those references first." } },
+            targetMismatch: { label: { normal: "Inconsistent with the target", beginner: "The change does not fit the current state of its target." } },
             noOp: { label: { normal: "No change", beginner: "Nothing changed — the state already matched." } },
             partial: { label: { normal: "Partially applied", beginner: "Only part of the change could be applied." } },
             clamped: { label: { normal: "Clamped", beginner: "A value was clamped to its valid range." } },
             duplicateId: { label: { normal: "Duplicate id", beginner: "An element with this id already exists." } },
             invariant: { label: { normal: "Invalid state", beginner: "This change would leave the document in an invalid state." } },
             cascade: { label: { normal: "Cascaded", beginner: "This change triggered further changes." } },
+            apply: { label: { normal: "Could not apply", beginner: "The change could not be applied to the current document." } },
           },
           history: {
             foreignTransition: { label: { normal: "Change belongs to another author", beginner: "You can only undo or redo your own changes." } },
@@ -1899,6 +1916,15 @@ export const uiChromeTranslationBundles = {
           hubTransformed: { label: { normal: "Change adjusted", beginner: "A concurrent change won; your change was applied in adjusted form." } },
           hubConcurrentEdit: { label: { normal: "Someone else changed the same part at the same time", beginner: "Someone else changed the same part at the same time; your change was not applied." } },
           hubConcurrentInvariant: { label: { normal: "Conflicts with a simultaneous change", beginner: "Your change conflicts with someone else's simultaneous change and was not applied." } },
+          local: {
+            readOnly: { label: { normal: "Change not applied: this document is read-only here", beginner: "You can only view this document here, so your change was not applied." } },
+            queueFull: { label: { normal: "Change not applied: too many changes are waiting to be saved", beginner: "Too many of your changes are still waiting to be saved; this one was not applied. Try again in a moment." } },
+            duplicate: { label: { normal: "Change not applied: it is already waiting to be saved", beginner: "This change is already waiting to be saved, so it was not applied a second time." } },
+            notReady: { label: { normal: "Change not applied: the document is not ready yet", beginner: "The document is still being prepared, so your change was not applied. Try again in a moment." } },
+            foreignDocument: { label: { normal: "Change not applied: it belongs to another document", beginner: "Your change names a different document than the one open here, so it was not applied." } },
+            unreadable: { label: { normal: "Change not applied: it could not be read", beginner: "Your change could not be read, so it was not applied." } },
+            tooLarge: { label: { normal: "Change not applied: it is too large to send", beginner: "Your change is too large to send in one piece, so it was not applied." } },
+          },
         },
         presence: {
           roster: { label: { normal: "People here", beginner: "People here" } },

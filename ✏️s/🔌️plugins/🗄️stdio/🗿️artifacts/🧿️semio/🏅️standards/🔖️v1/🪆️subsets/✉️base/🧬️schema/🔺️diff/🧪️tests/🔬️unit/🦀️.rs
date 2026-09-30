@@ -178,7 +178,7 @@ async fn malformed_cross_kind_diff_is_rejected_and_absorb_preserves_rejection() 
     let SemioDiff::Rejected(error) = &diff else {
         panic!("cross-kind absorb must preserve a typed rejection");
     };
-    assert_eq!(error.code, "mutation.absorb.kind-mismatch");
+    assert_eq!(error.code, "mutation.apply.kind-mismatch");
     assert!(diff.apply(&base).is_err());
 
     let text = diff.print_diff();

@@ -7,6 +7,7 @@
       "id": "beam-B1",
       "spanM": 8.0,
       "spacingM": 3.0,
+      "support": "simply_supported",
       "construction": "propped",
       "steel": {
         "designation": "HEB300",
@@ -39,11 +40,10 @@
       },
       "transverseAsM2PerM": 0.00025,
       "ltbLengthM": 4.0,
-      "nCycles": 2000000.0,
-      "support": "simply_supported",
       "asHoggingM2PerM": 0.0005,
       "barSpacingM": 0.15,
       "wkLimitM": 0.0003,
+      "nCycles": 2000000.0,
       "actions": [
         {
           "id": "G-steel",
@@ -123,6 +123,8 @@
       "id": "col-C1",
       "kind": "concrete_filled",
       "lengthM": 3.5,
+      "outerSizeM": 0.3,
+      "wallThicknessM": 0.01,
       "steelAM2": 0.0084,
       "steelFYPa": 355000000.0,
       "concreteAM2": 0.072,
@@ -131,24 +133,22 @@
       "reinforcementFYkPa": 500000000.0,
       "iM4": 0.00021,
       "bucklingCurve": "a",
-      "outerSizeM": 0.3,
-      "wallThicknessM": 0.01,
       "actions": [
         {
           "id": "G-col",
           "kind": "permanent",
           "category": "self",
           "stage": "composite",
-          "mKNm": 20000.0,
-          "nKN": 1200000.0
+          "nKN": 1200000.0,
+          "mKNm": 20000.0
         },
         {
           "id": "Q-col",
           "kind": "imposed",
           "category": "B",
           "stage": "composite",
-          "mKNm": 15000.0,
-          "nKN": 400000.0
+          "nKN": 400000.0,
+          "mKNm": 15000.0
         }
       ]
     }
@@ -157,6 +157,7 @@
     {
       "id": "slab-S1",
       "spanM": 3.0,
+      "support": "simply_supported",
       "sheeting": {
         "profile": "trapezoidal",
         "heightM": 0.055,
@@ -169,7 +170,6 @@
       "mFactor": 180.0,
       "kFactor": 0.05,
       "asM2PerM": 0.00025,
-      "support": "simply_supported",
       "actions": [
         {
           "id": "G-slab",

@@ -56,27 +56,90 @@
     "mono": "\"Share Tech Mono\", \"Noto Emoji\", \"Noto Emoji 0\", \"Noto Emoji 1\", \"Noto Emoji 2\", \"Noto Emoji 3\", \"Noto Emoji 4\", \"Noto Emoji 5\", \"Noto Emoji 6\", \"Noto Emoji 7\", \"Noto Emoji 8\", \"Noto Emoji 9\", \"Noto Emoji 10\", \"Noto Emoji 11\""
   },
   "fontFaces": [
-    { "family": "Anta", "src": "🔤️fonts/🚀️anta/🏛️latin/📖️regular/🗜️compressed.woff2" },
-    { "family": "Anta Extended", "src": "🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/🗜️compressed.woff2" },
-    { "family": "Anta Math", "src": "🔤️fonts/🚀️anta/🧮️math/📖️regular/🗜️compressed.woff2" },
-    { "family": "Anta Symbols", "src": "🔤️fonts/🚀️anta/🔣️symbols/📖️regular/🗜️compressed.woff2" },
-    { "family": "Kelly Slab", "src": "🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🗜️compressed.woff2" },
-    { "family": "Kelly Slab Extended", "src": "🔤️fonts/🧱️kelly-slab/➕️latin-ext/📖️regular/🗜️compressed.woff2" },
-    { "family": "Kelly Slab Cyrillic", "src": "🔤️fonts/🧱️kelly-slab/🪆️cyrillic/📖️regular/🗜️compressed.woff2" },
-    { "family": "Share Tech Mono", "src": "🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/🗜️compressed.woff2" },
-    { "family": "Noto Emoji", "src": "🔤️fonts/😀️noto-emoji/🌐️complete/📖️regular/🗜️compressed.woff2" },
-    { "family": "Noto Emoji 0", "src": "🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/🗜️compressed.woff2" },
-    { "family": "Noto Emoji 1", "src": "🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/🗜️compressed.woff2" },
-    { "family": "Noto Emoji 2", "src": "🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/🗜️compressed.woff2" },
-    { "family": "Noto Emoji 3", "src": "🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/🗜️compressed.woff2" },
-    { "family": "Noto Emoji 4", "src": "🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/🗜️compressed.woff2" },
-    { "family": "Noto Emoji 5", "src": "🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/🗜️compressed.woff2" },
-    { "family": "Noto Emoji 6", "src": "🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/🗜️compressed.woff2" },
-    { "family": "Noto Emoji 7", "src": "🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/🗜️compressed.woff2" },
-    { "family": "Noto Emoji 8", "src": "🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/🗜️compressed.woff2" },
-    { "family": "Noto Emoji 9", "src": "🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/🗜️compressed.woff2" },
-    { "family": "Noto Emoji 10", "src": "🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/🗜️compressed.woff2" },
-    { "family": "Noto Emoji 11", "src": "🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/🗜️compressed.woff2" }
+    {
+      "family": "Anta",
+      "src": "🔤️fonts/🚀️anta/🏛️latin/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Anta Extended",
+      "src": "🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Anta Math",
+      "src": "🔤️fonts/🚀️anta/🧮️math/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Anta Symbols",
+      "src": "🔤️fonts/🚀️anta/🔣️symbols/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Kelly Slab",
+      "src": "🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Kelly Slab Extended",
+      "src": "🔤️fonts/🧱️kelly-slab/➕️latin-ext/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Kelly Slab Cyrillic",
+      "src": "🔤️fonts/🧱️kelly-slab/🪆️cyrillic/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Share Tech Mono",
+      "src": "🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Noto Emoji",
+      "src": "🔤️fonts/😀️noto-emoji/🌐️complete/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Noto Emoji 0",
+      "src": "🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Noto Emoji 1",
+      "src": "🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Noto Emoji 2",
+      "src": "🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Noto Emoji 3",
+      "src": "🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Noto Emoji 4",
+      "src": "🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Noto Emoji 5",
+      "src": "🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Noto Emoji 6",
+      "src": "🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Noto Emoji 7",
+      "src": "🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Noto Emoji 8",
+      "src": "🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Noto Emoji 9",
+      "src": "🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Noto Emoji 10",
+      "src": "🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/🗜️compressed.woff2"
+    },
+    {
+      "family": "Noto Emoji 11",
+      "src": "🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/🗜️compressed.woff2"
+    }
   ],
   "canvasFonts": {
     "mapLabelSansFallback": "sans-serif",
@@ -99,7 +162,10 @@
     "wireHighlight": 2.85,
     "handle": 2.0,
     "selectionPreview": 1.5,
-    "selectionPreviewDash": [5.0, 4.0],
+    "selectionPreviewDash": [
+      5.0,
+      4.0
+    ],
     "gridLarge": 1.0,
     "gridMedium": 0.72,
     "gridSmall": 0.48,
@@ -291,7 +357,14 @@
       "previewMinSize": 20.0,
       "variadicPlusZoomThreshold": 1.5,
       "lodZoomShift": 0.25,
-      "lodBandFloorZoom": [0.05, 0.15, 0.35, 0.55, 1.25, 2.5],
+      "lodBandFloorZoom": [
+        0.05,
+        0.15,
+        0.35,
+        0.55,
+        1.25,
+        2.5
+      ],
       "minimapWidgetWidth": 160.0,
       "minimapWidgetHeight": 120.0,
       "minimapWidgetMargin": 12.0,
@@ -302,7 +375,16 @@
       "nodeTitleWidthFactor": 2.0
     },
     "map": {
-      "labelPxBands": [26, 26, 20, 14, 12.5, 12, 10.5, 10.5],
+      "labelPxBands": [
+        26,
+        26,
+        20,
+        14,
+        12.5,
+        12,
+        10.5,
+        10.5
+      ],
       "labelMaxMin": 48,
       "labelMaxMax": 140,
       "layerWeightMin": 0.25,
@@ -341,11 +423,13 @@
       "testingPulseMs": 900.0,
       "provisionalOpacity": 1.0,
       "provisionalOutlineWidth": 2.0,
-      "provisionalDash": [6.0, 4.0],
+      "provisionalDash": [
+        6.0,
+        4.0
+      ],
       "provisionalDashPeriodMs": 1200.0
     },
     "chrome": {
-      "uiSpacingCompactPx": 3.2,
       "navbarHeightUiSpacing": 9.0,
       "footerHeightUiSpacing": 9.0,
       "controlHeightUiSpacing": 7.0,
@@ -398,7 +482,14 @@
     }
   },
   "levels": {
-    "names": ["base", "window", "pane", "panel", "dialog", "menu"],
+    "names": [
+      "base",
+      "window",
+      "pane",
+      "panel",
+      "dialog",
+      "menu"
+    ],
     "shadeStepPercent": 5,
     "elementStepPercent": 6,
     "hoverStepPercent": 12,
@@ -411,219 +502,778 @@
     "zStep": 10
   },
   "presence": {
-    "hues": [0, 210, 120, 30, 270, 180, 330, 60, 240, 150, 300, 90],
-    "light": { "s": 0.68, "l": 0.32 },
-    "dark": { "s": 0.72, "l": 0.62 }
+    "hues": [
+      0,
+      210,
+      120,
+      30,
+      270,
+      180,
+      330,
+      60,
+      240,
+      150,
+      300,
+      90
+    ],
+    "light": {
+      "s": 0.68,
+      "l": 0.32
+    },
+    "dark": {
+      "s": 0.72,
+      "l": 0.62
+    }
   },
   "appearances": {
     "light": {
       "board": {
-        "rasterClear": { "token": "light-8-9" },
-        "gridMinorStroke": { "token": "gray", "alpha": 0.22 },
-        "edgeStroke": { "token": "gray" },
-        "edgeStrokeHovered": { "token": "dark" },
-        "edgeStrokeSelected": { "token": "primary" },
-        "edgeStrokeSelectionExit": { "token": "secondary" },
-        "edgeStrokeDisabled": { "mix": ["gray", "transparent", 0.38], "alpha": 0.38 },
-        "nodeFill": { "token": "l-l-l-g" },
-        "nodeStroke": { "token": "gray" },
-        "nodeFillHovered": { "token": "gray" },
-        "nodeStrokeHovered": { "token": "dark" },
-        "nodeFillSelected": { "token": "primary" },
-        "nodeStrokeSelected": { "token": "primary" },
-        "nodeFillSelectionExit": { "mix": ["secondary", "light-5-7", 0.24] },
-        "nodeStrokeSelectionExit": { "token": "secondary" },
-        "nodeFillDisabled": { "mix": ["light-5-7", "transparent", 0.5], "alpha": 0.5 },
-        "nodeStrokeDisabled": { "mix": ["gray", "transparent", 0.38], "alpha": 0.38 },
-        "nodeStrokeComputing": { "token": "secondary" },
-        "nodeStrokeStale": { "mix": ["warning", "gray", 0.35], "alpha": 0.9 },
-        "nodeStrokeError": { "token": "danger" },
-        "nodeStrokeBlocked": { "token": "gray" },
-        "indirectHandleFill": { "token": "indirect-handle" },
-        "indirectHandleStroke": { "token": "secondary" },
-        "handleFill": { "token": "light", "alpha": 0 },
-        "handleStroke": { "token": "gray" },
-        "handleFillHovered": { "token": "gray" },
-        "handleStrokeHovered": { "token": "gray" },
-        "handleFillSelected": { "token": "primary" },
-        "handleStrokeSelected": { "token": "primary" },
-        "handleFillSelectionExit": { "mix": ["secondary", "light-5-7", 0.24] },
-        "handleStrokeSelectionExit": { "token": "secondary" },
-        "handleFillDisabled": { "mix": ["light-5-7", "transparent", 0.5], "alpha": 0.5 },
-        "handleStrokeDisabled": { "mix": ["gray", "transparent", 0.38], "alpha": 0.38 },
-        "wireStroke": { "token": "gray" },
-        "wireStrokeHovered": { "token": "dark" },
-        "wireStrokeSelected": { "token": "primary" },
-        "wireStrokeHighlighted": { "token": "secondary" },
-        "wireStrokeDisabled": { "mix": ["gray", "transparent", 0.38], "alpha": 0.38 },
-        "selectionPreviewFill": { "mix": ["primary", "transparent", 0.12], "alpha": 0.12 },
-        "selectionPreviewStroke": { "token": "primary", "alpha": 0.7 },
-        "labelFill": { "token": "gray" },
-        "labelFillHovered": { "token": "dark" },
-        "labelHalo": { "token": "light-8-9", "alpha": 0.78 },
-        "minimapWidgetPanelFill": { "mix": ["light-8-9", "gray", 0.12], "alpha": 0.92 },
-        "minimapWidgetPanelStroke": { "token": "gray", "alpha": 0.65 },
-        "minimapWidgetViewportFill": { "mix": ["primary", "transparent", 0.08], "alpha": 0.08 },
-        "minimapWidgetViewportStroke": { "token": "primary", "alpha": 0.85 },
-        "minimapWidgetViewportStrokeHovered": { "token": "primary" }
+        "rasterClear": {
+          "token": "light-8-9"
+        },
+        "gridMinorStroke": {
+          "token": "gray",
+          "alpha": 0.22
+        },
+        "edgeStroke": {
+          "token": "gray"
+        },
+        "edgeStrokeHovered": {
+          "token": "dark"
+        },
+        "edgeStrokeSelected": {
+          "token": "primary"
+        },
+        "edgeStrokeSelectionExit": {
+          "token": "secondary"
+        },
+        "edgeStrokeDisabled": {
+          "mix": [
+            "gray",
+            "transparent",
+            0.38
+          ],
+          "alpha": 0.38
+        },
+        "nodeFill": {
+          "token": "l-l-l-g"
+        },
+        "nodeStroke": {
+          "token": "gray"
+        },
+        "nodeFillHovered": {
+          "token": "gray"
+        },
+        "nodeStrokeHovered": {
+          "token": "dark"
+        },
+        "nodeFillSelected": {
+          "token": "primary"
+        },
+        "nodeStrokeSelected": {
+          "token": "primary"
+        },
+        "nodeFillSelectionExit": {
+          "mix": [
+            "secondary",
+            "light-5-7",
+            0.24
+          ]
+        },
+        "nodeStrokeSelectionExit": {
+          "token": "secondary"
+        },
+        "nodeFillDisabled": {
+          "mix": [
+            "light-5-7",
+            "transparent",
+            0.5
+          ],
+          "alpha": 0.5
+        },
+        "nodeStrokeDisabled": {
+          "mix": [
+            "gray",
+            "transparent",
+            0.38
+          ],
+          "alpha": 0.38
+        },
+        "nodeStrokeComputing": {
+          "token": "secondary"
+        },
+        "nodeStrokeStale": {
+          "mix": [
+            "warning",
+            "gray",
+            0.35
+          ],
+          "alpha": 0.9
+        },
+        "nodeStrokeError": {
+          "token": "danger"
+        },
+        "nodeStrokeBlocked": {
+          "token": "gray"
+        },
+        "indirectHandleFill": {
+          "token": "indirect-handle"
+        },
+        "indirectHandleStroke": {
+          "token": "secondary"
+        },
+        "handleFill": {
+          "token": "light",
+          "alpha": 0
+        },
+        "handleStroke": {
+          "token": "gray"
+        },
+        "handleFillHovered": {
+          "token": "gray"
+        },
+        "handleStrokeHovered": {
+          "token": "gray"
+        },
+        "handleFillSelected": {
+          "token": "primary"
+        },
+        "handleStrokeSelected": {
+          "token": "primary"
+        },
+        "handleFillSelectionExit": {
+          "mix": [
+            "secondary",
+            "light-5-7",
+            0.24
+          ]
+        },
+        "handleStrokeSelectionExit": {
+          "token": "secondary"
+        },
+        "handleFillDisabled": {
+          "mix": [
+            "light-5-7",
+            "transparent",
+            0.5
+          ],
+          "alpha": 0.5
+        },
+        "handleStrokeDisabled": {
+          "mix": [
+            "gray",
+            "transparent",
+            0.38
+          ],
+          "alpha": 0.38
+        },
+        "wireStroke": {
+          "token": "gray"
+        },
+        "wireStrokeHovered": {
+          "token": "dark"
+        },
+        "wireStrokeSelected": {
+          "token": "primary"
+        },
+        "wireStrokeHighlighted": {
+          "token": "secondary"
+        },
+        "wireStrokeDisabled": {
+          "mix": [
+            "gray",
+            "transparent",
+            0.38
+          ],
+          "alpha": 0.38
+        },
+        "selectionPreviewFill": {
+          "mix": [
+            "primary",
+            "transparent",
+            0.12
+          ],
+          "alpha": 0.12
+        },
+        "selectionPreviewStroke": {
+          "token": "primary",
+          "alpha": 0.7
+        },
+        "labelFill": {
+          "token": "gray"
+        },
+        "labelFillHovered": {
+          "token": "dark"
+        },
+        "labelHalo": {
+          "token": "light-8-9",
+          "alpha": 0.78
+        },
+        "minimapWidgetPanelFill": {
+          "mix": [
+            "light-8-9",
+            "gray",
+            0.12
+          ],
+          "alpha": 0.92
+        },
+        "minimapWidgetPanelStroke": {
+          "token": "gray",
+          "alpha": 0.65
+        },
+        "minimapWidgetViewportFill": {
+          "mix": [
+            "primary",
+            "transparent",
+            0.08
+          ],
+          "alpha": 0.08
+        },
+        "minimapWidgetViewportStroke": {
+          "token": "primary",
+          "alpha": 0.85
+        },
+        "minimapWidgetViewportStrokeHovered": {
+          "token": "primary"
+        }
       },
       "map": {
-        "surfaceClear": { "token": "dark-6-7" },
-        "landFill": { "token": "dark-5-7" },
-        "landStroke": { "token": "gray-300", "alpha": 0.42 },
-        "labelFill": { "token": "light" },
-        "labelHalo": { "token": "dark-6-7", "alpha": 0.92 },
-        "regionFill": { "token": "secondary", "alpha": 0.22 },
-        "regionStroke": { "token": "secondary", "alpha": 0.9 },
-        "routeStroke": { "token": "tertiary", "alpha": 0.92 },
-        "positionFill": { "token": "primary" },
-        "positionStroke": { "token": "light" }
+        "surfaceClear": {
+          "token": "dark-6-7"
+        },
+        "landFill": {
+          "token": "dark-5-7"
+        },
+        "landStroke": {
+          "token": "gray-300",
+          "alpha": 0.42
+        },
+        "labelFill": {
+          "token": "light"
+        },
+        "labelHalo": {
+          "token": "dark-6-7",
+          "alpha": 0.92
+        },
+        "regionFill": {
+          "token": "secondary",
+          "alpha": 0.22
+        },
+        "regionStroke": {
+          "token": "secondary",
+          "alpha": 0.9
+        },
+        "routeStroke": {
+          "token": "tertiary",
+          "alpha": 0.92
+        },
+        "positionFill": {
+          "token": "primary"
+        },
+        "positionStroke": {
+          "token": "light"
+        }
       },
       "canvas": {
-        "rasterClear": { "token": "light-8-9" },
-        "iconFg": { "token": "black" },
-        "iconBg": { "token": "white" },
-        "labelFill": { "token": "dark" },
-        "labelHalo": { "token": "light" }
+        "rasterClear": {
+          "token": "light-8-9"
+        },
+        "iconFg": {
+          "token": "black"
+        },
+        "iconBg": {
+          "token": "white"
+        },
+        "labelFill": {
+          "token": "dark"
+        },
+        "labelHalo": {
+          "token": "light"
+        }
       },
       "chrome": {
-        "base": { "token": "light" },
-        "panel": { "token": "light-5-7" },
-        "foreground": { "token": "dark" },
-        "muted": { "token": "light-8-9" },
-        "mutedForeground": { "token": "dark-dark-gray-2" },
-        "accent": { "token": "primary" },
-        "accentForeground": { "token": "dark" },
-        "activeBase": { "token": "primary" },
-        "activeForeground": { "token": "dark" },
-        "activeHover": { "mix": ["primary", "light", 0.8] },
-        "hoverInteractiveFill": { "token": "gray" },
-        "borderNormal": { "token": "gray" },
-        "borderEmphasized": { "token": "dark" },
-        "borderElement": { "token": "gray" }
+        "base": {
+          "token": "light"
+        },
+        "panel": {
+          "token": "light-5-7"
+        },
+        "foreground": {
+          "token": "dark"
+        },
+        "muted": {
+          "token": "light-8-9"
+        },
+        "mutedForeground": {
+          "token": "dark-dark-gray-2"
+        },
+        "accent": {
+          "token": "primary"
+        },
+        "accentForeground": {
+          "token": "dark"
+        },
+        "activeBase": {
+          "token": "primary"
+        },
+        "activeForeground": {
+          "token": "dark"
+        },
+        "activeHover": {
+          "mix": [
+            "primary",
+            "light",
+            0.8
+          ]
+        },
+        "hoverInteractiveFill": {
+          "token": "gray"
+        },
+        "borderNormal": {
+          "token": "gray"
+        },
+        "borderEmphasized": {
+          "token": "dark"
+        },
+        "borderElement": {
+          "token": "gray"
+        }
       },
       "outcome": {
-        "error": { "token": "danger" },
-        "warning": { "token": "warning" },
-        "success": { "token": "success" },
-        "progress": { "token": "secondary" }
+        "error": {
+          "token": "danger"
+        },
+        "warning": {
+          "token": "warning"
+        },
+        "success": {
+          "token": "success"
+        },
+        "progress": {
+          "token": "secondary"
+        }
       },
       "diagram": {
-        "checkerLight": { "token": "gray-900" },
-        "checkerDark": { "token": "gray-700" },
-        "stroke": { "token": "secondary", "alpha": 0.95 },
-        "seam": { "token": "tertiary", "alpha": 0.95 },
-        "accent": { "mix": ["secondary", "gray", 0.55], "alpha": 0.9 },
-        "accentFill": { "mix": ["secondary", "gray", 0.35], "alpha": 0.8 },
-        "shapeOutline": { "token": "gray", "alpha": 0.9 },
-        "fieldResidual": { "token": "warning" },
-        "fieldReaction": { "token": "primary" },
-        "fieldDisplacement": { "token": "success" }
+        "checkerLight": {
+          "token": "gray-900"
+        },
+        "checkerDark": {
+          "token": "gray-700"
+        },
+        "stroke": {
+          "token": "secondary",
+          "alpha": 0.95
+        },
+        "seam": {
+          "token": "tertiary",
+          "alpha": 0.95
+        },
+        "accent": {
+          "mix": [
+            "secondary",
+            "gray",
+            0.55
+          ],
+          "alpha": 0.9
+        },
+        "accentFill": {
+          "mix": [
+            "secondary",
+            "gray",
+            0.35
+          ],
+          "alpha": 0.8
+        },
+        "shapeOutline": {
+          "token": "gray",
+          "alpha": 0.9
+        },
+        "fieldResidual": {
+          "token": "warning"
+        },
+        "fieldReaction": {
+          "token": "primary"
+        },
+        "fieldDisplacement": {
+          "token": "success"
+        }
       }
     },
     "dark": {
       "board": {
-        "rasterClear": { "token": "dark-6-7" },
-        "gridMinorStroke": { "token": "gray-400", "alpha": 0.22 },
-        "edgeStroke": { "token": "gray-600" },
-        "edgeStrokeHovered": { "token": "light" },
-        "edgeStrokeSelected": { "token": "primary" },
-        "edgeStrokeSelectionExit": { "token": "secondary" },
-        "edgeStrokeDisabled": { "mix": ["gray-400", "transparent", 0.38], "alpha": 0.38 },
-        "nodeFill": { "token": "dark-5-7" },
-        "nodeStroke": { "token": "gray-600" },
-        "nodeFillHovered": { "token": "gray-400" },
-        "nodeStrokeHovered": { "token": "light" },
-        "nodeFillSelected": { "token": "primary" },
-        "nodeStrokeSelected": { "token": "primary" },
-        "nodeFillSelectionExit": { "mix": ["secondary", "dark-5-7", 0.24] },
-        "nodeStrokeSelectionExit": { "token": "secondary" },
-        "nodeFillDisabled": { "mix": ["dark-5-7", "transparent", 0.5], "alpha": 0.5 },
-        "nodeStrokeDisabled": { "mix": ["gray-400", "transparent", 0.38], "alpha": 0.38 },
-        "nodeStrokeComputing": { "token": "secondary" },
-        "nodeStrokeStale": { "mix": ["warning", "gray-600", 0.35], "alpha": 0.9 },
-        "nodeStrokeError": { "token": "danger" },
-        "nodeStrokeBlocked": { "token": "gray-600" },
-        "indirectHandleFill": { "mix": ["secondary", "dark-5-7", 0.24] },
-        "indirectHandleStroke": { "token": "secondary" },
-        "handleFill": { "token": "dark-6-7", "alpha": 0 },
-        "handleStroke": { "token": "gray-600" },
-        "handleFillHovered": { "token": "gray-400" },
-        "handleStrokeHovered": { "token": "gray-600" },
-        "handleFillSelected": { "token": "primary" },
-        "handleStrokeSelected": { "token": "primary" },
-        "handleFillSelectionExit": { "mix": ["secondary", "dark-5-7", 0.24] },
-        "handleStrokeSelectionExit": { "token": "secondary" },
-        "handleFillDisabled": { "mix": ["dark-5-7", "transparent", 0.5], "alpha": 0.5 },
-        "handleStrokeDisabled": { "mix": ["gray-400", "transparent", 0.38], "alpha": 0.38 },
-        "wireStroke": { "token": "gray-600" },
-        "wireStrokeHovered": { "token": "light" },
-        "wireStrokeSelected": { "token": "primary" },
-        "wireStrokeHighlighted": { "token": "secondary" },
-        "wireStrokeDisabled": { "mix": ["gray-400", "transparent", 0.38], "alpha": 0.38 },
-        "selectionPreviewFill": { "mix": ["primary", "transparent", 0.12], "alpha": 0.12 },
-        "selectionPreviewStroke": { "token": "primary", "alpha": 0.7 },
-        "labelFill": { "token": "light-gray" },
-        "labelFillHovered": { "token": "light" },
-        "labelHalo": { "token": "dark-6-7", "alpha": 0.78 },
-        "minimapWidgetPanelFill": { "mix": ["dark-6-7", "gray-400", 0.18], "alpha": 0.94 },
-        "minimapWidgetPanelStroke": { "token": "gray-600", "alpha": 0.75 },
-        "minimapWidgetViewportFill": { "mix": ["primary", "transparent", 0.1], "alpha": 0.1 },
-        "minimapWidgetViewportStroke": { "token": "primary", "alpha": 0.9 },
-        "minimapWidgetViewportStrokeHovered": { "token": "primary" }
+        "rasterClear": {
+          "token": "dark-6-7"
+        },
+        "gridMinorStroke": {
+          "token": "gray-400",
+          "alpha": 0.22
+        },
+        "edgeStroke": {
+          "token": "gray-600"
+        },
+        "edgeStrokeHovered": {
+          "token": "light"
+        },
+        "edgeStrokeSelected": {
+          "token": "primary"
+        },
+        "edgeStrokeSelectionExit": {
+          "token": "secondary"
+        },
+        "edgeStrokeDisabled": {
+          "mix": [
+            "gray-400",
+            "transparent",
+            0.38
+          ],
+          "alpha": 0.38
+        },
+        "nodeFill": {
+          "token": "dark-5-7"
+        },
+        "nodeStroke": {
+          "token": "gray-600"
+        },
+        "nodeFillHovered": {
+          "token": "gray-400"
+        },
+        "nodeStrokeHovered": {
+          "token": "light"
+        },
+        "nodeFillSelected": {
+          "token": "primary"
+        },
+        "nodeStrokeSelected": {
+          "token": "primary"
+        },
+        "nodeFillSelectionExit": {
+          "mix": [
+            "secondary",
+            "dark-5-7",
+            0.24
+          ]
+        },
+        "nodeStrokeSelectionExit": {
+          "token": "secondary"
+        },
+        "nodeFillDisabled": {
+          "mix": [
+            "dark-5-7",
+            "transparent",
+            0.5
+          ],
+          "alpha": 0.5
+        },
+        "nodeStrokeDisabled": {
+          "mix": [
+            "gray-400",
+            "transparent",
+            0.38
+          ],
+          "alpha": 0.38
+        },
+        "nodeStrokeComputing": {
+          "token": "secondary"
+        },
+        "nodeStrokeStale": {
+          "mix": [
+            "warning",
+            "gray-600",
+            0.35
+          ],
+          "alpha": 0.9
+        },
+        "nodeStrokeError": {
+          "token": "danger"
+        },
+        "nodeStrokeBlocked": {
+          "token": "gray-600"
+        },
+        "indirectHandleFill": {
+          "mix": [
+            "secondary",
+            "dark-5-7",
+            0.24
+          ]
+        },
+        "indirectHandleStroke": {
+          "token": "secondary"
+        },
+        "handleFill": {
+          "token": "dark-6-7",
+          "alpha": 0
+        },
+        "handleStroke": {
+          "token": "gray-600"
+        },
+        "handleFillHovered": {
+          "token": "gray-400"
+        },
+        "handleStrokeHovered": {
+          "token": "gray-600"
+        },
+        "handleFillSelected": {
+          "token": "primary"
+        },
+        "handleStrokeSelected": {
+          "token": "primary"
+        },
+        "handleFillSelectionExit": {
+          "mix": [
+            "secondary",
+            "dark-5-7",
+            0.24
+          ]
+        },
+        "handleStrokeSelectionExit": {
+          "token": "secondary"
+        },
+        "handleFillDisabled": {
+          "mix": [
+            "dark-5-7",
+            "transparent",
+            0.5
+          ],
+          "alpha": 0.5
+        },
+        "handleStrokeDisabled": {
+          "mix": [
+            "gray-400",
+            "transparent",
+            0.38
+          ],
+          "alpha": 0.38
+        },
+        "wireStroke": {
+          "token": "gray-600"
+        },
+        "wireStrokeHovered": {
+          "token": "light"
+        },
+        "wireStrokeSelected": {
+          "token": "primary"
+        },
+        "wireStrokeHighlighted": {
+          "token": "secondary"
+        },
+        "wireStrokeDisabled": {
+          "mix": [
+            "gray-400",
+            "transparent",
+            0.38
+          ],
+          "alpha": 0.38
+        },
+        "selectionPreviewFill": {
+          "mix": [
+            "primary",
+            "transparent",
+            0.12
+          ],
+          "alpha": 0.12
+        },
+        "selectionPreviewStroke": {
+          "token": "primary",
+          "alpha": 0.7
+        },
+        "labelFill": {
+          "token": "light-gray"
+        },
+        "labelFillHovered": {
+          "token": "light"
+        },
+        "labelHalo": {
+          "token": "dark-6-7",
+          "alpha": 0.78
+        },
+        "minimapWidgetPanelFill": {
+          "mix": [
+            "dark-6-7",
+            "gray-400",
+            0.18
+          ],
+          "alpha": 0.94
+        },
+        "minimapWidgetPanelStroke": {
+          "token": "gray-600",
+          "alpha": 0.75
+        },
+        "minimapWidgetViewportFill": {
+          "mix": [
+            "primary",
+            "transparent",
+            0.1
+          ],
+          "alpha": 0.1
+        },
+        "minimapWidgetViewportStroke": {
+          "token": "primary",
+          "alpha": 0.9
+        },
+        "minimapWidgetViewportStrokeHovered": {
+          "token": "primary"
+        }
       },
       "map": {
-        "surfaceClear": { "token": "gray-100" },
-        "landFill": { "token": "dark-6-7" },
-        "landStroke": { "token": "gray-300", "alpha": 0.42 },
-        "labelFill": { "token": "light" },
-        "labelHalo": { "token": "gray-100", "alpha": 0.92 },
-        "regionFill": { "token": "secondary", "alpha": 0.22 },
-        "regionStroke": { "token": "secondary", "alpha": 0.9 },
-        "routeStroke": { "token": "tertiary", "alpha": 0.92 },
-        "positionFill": { "token": "primary" },
-        "positionStroke": { "token": "light" }
+        "surfaceClear": {
+          "token": "gray-100"
+        },
+        "landFill": {
+          "token": "dark-6-7"
+        },
+        "landStroke": {
+          "token": "gray-300",
+          "alpha": 0.42
+        },
+        "labelFill": {
+          "token": "light"
+        },
+        "labelHalo": {
+          "token": "gray-100",
+          "alpha": 0.92
+        },
+        "regionFill": {
+          "token": "secondary",
+          "alpha": 0.22
+        },
+        "regionStroke": {
+          "token": "secondary",
+          "alpha": 0.9
+        },
+        "routeStroke": {
+          "token": "tertiary",
+          "alpha": 0.92
+        },
+        "positionFill": {
+          "token": "primary"
+        },
+        "positionStroke": {
+          "token": "light"
+        }
       },
       "canvas": {
-        "rasterClear": { "token": "dark-6-7" },
-        "iconFg": { "token": "light" },
-        "iconBg": { "token": "dark" },
-        "labelFill": { "token": "light" },
-        "labelHalo": { "token": "dark-6-7" }
+        "rasterClear": {
+          "token": "dark-6-7"
+        },
+        "iconFg": {
+          "token": "light"
+        },
+        "iconBg": {
+          "token": "dark"
+        },
+        "labelFill": {
+          "token": "light"
+        },
+        "labelHalo": {
+          "token": "dark-6-7"
+        }
       },
       "chrome": {
-        "base": { "token": "dark" },
-        "panel": { "token": "dark-7-9" },
-        "foreground": { "token": "light" },
-        "muted": { "token": "dark-8-9" },
-        "mutedForeground": { "token": "light-5-9" },
-        "accent": { "token": "primary" },
-        "accentForeground": { "token": "dark" },
-        "activeBase": { "token": "primary" },
-        "activeForeground": { "token": "dark" },
-        "activeHover": { "mix": ["primary", "light", 0.8] },
-        "hoverInteractiveFill": { "token": "dark-4-7" },
-        "borderNormal": { "token": "gray" },
-        "borderEmphasized": { "token": "light" },
-        "borderElement": { "token": "gray" }
+        "base": {
+          "token": "dark"
+        },
+        "panel": {
+          "token": "dark-7-9"
+        },
+        "foreground": {
+          "token": "light"
+        },
+        "muted": {
+          "token": "dark-8-9"
+        },
+        "mutedForeground": {
+          "token": "light-5-9"
+        },
+        "accent": {
+          "token": "primary"
+        },
+        "accentForeground": {
+          "token": "dark"
+        },
+        "activeBase": {
+          "token": "primary"
+        },
+        "activeForeground": {
+          "token": "dark"
+        },
+        "activeHover": {
+          "mix": [
+            "primary",
+            "light",
+            0.8
+          ]
+        },
+        "hoverInteractiveFill": {
+          "token": "dark-4-7"
+        },
+        "borderNormal": {
+          "token": "gray"
+        },
+        "borderEmphasized": {
+          "token": "light"
+        },
+        "borderElement": {
+          "token": "gray"
+        }
       },
       "outcome": {
-        "error": { "token": "danger" },
-        "warning": { "token": "warning" },
-        "success": { "token": "success" },
-        "progress": { "token": "secondary" }
+        "error": {
+          "token": "danger"
+        },
+        "warning": {
+          "token": "warning"
+        },
+        "success": {
+          "token": "success"
+        },
+        "progress": {
+          "token": "secondary"
+        }
       },
       "diagram": {
-        "checkerLight": { "token": "dark-gray" },
-        "checkerDark": { "token": "dark-dark-gray" },
-        "stroke": { "token": "secondary", "alpha": 0.95 },
-        "seam": { "token": "tertiary", "alpha": 0.95 },
-        "accent": { "mix": ["secondary", "gray", 0.55], "alpha": 0.9 },
-        "accentFill": { "mix": ["secondary", "gray", 0.35], "alpha": 0.8 },
-        "shapeOutline": { "token": "gray", "alpha": 0.9 },
-        "fieldResidual": { "token": "warning" },
-        "fieldReaction": { "token": "primary" },
-        "fieldDisplacement": { "token": "success" }
+        "checkerLight": {
+          "token": "dark-gray"
+        },
+        "checkerDark": {
+          "token": "dark-dark-gray"
+        },
+        "stroke": {
+          "token": "secondary",
+          "alpha": 0.95
+        },
+        "seam": {
+          "token": "tertiary",
+          "alpha": 0.95
+        },
+        "accent": {
+          "mix": [
+            "secondary",
+            "gray",
+            0.55
+          ],
+          "alpha": 0.9
+        },
+        "accentFill": {
+          "mix": [
+            "secondary",
+            "gray",
+            0.35
+          ],
+          "alpha": 0.8
+        },
+        "shapeOutline": {
+          "token": "gray",
+          "alpha": 0.9
+        },
+        "fieldResidual": {
+          "token": "warning"
+        },
+        "fieldReaction": {
+          "token": "primary"
+        },
+        "fieldDisplacement": {
+          "token": "success"
+        }
       }
     }
   }

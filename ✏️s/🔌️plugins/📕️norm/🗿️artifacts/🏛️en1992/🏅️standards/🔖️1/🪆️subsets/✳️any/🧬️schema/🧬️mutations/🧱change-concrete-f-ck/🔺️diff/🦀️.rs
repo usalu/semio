@@ -5,7 +5,7 @@ use crate::En1992Snapshot;
 pub fn diff(payload: &ChangeConcreteFCk, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     let mut grades = base.concrete_grades.clone();
     let Some(g) = grades.iter_mut().find(|g| g.id == payload.grade_id) else {
-        return protocol::MutationOutcome::fatal("mutation.missing", format!("Grade {} not found.", payload.grade_id), Vec::<String>::new());
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Grade {} not found.", payload.grade_id), Vec::<String>::new());
     };
     if (g.f_ck - payload.new_f_ck).abs() < f64::EPSILON {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Value unchanged.");

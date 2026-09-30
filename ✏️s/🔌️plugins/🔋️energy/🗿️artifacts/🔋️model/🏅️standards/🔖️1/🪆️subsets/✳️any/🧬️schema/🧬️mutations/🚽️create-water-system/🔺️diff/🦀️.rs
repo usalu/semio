@@ -7,7 +7,7 @@ use crate::EnergyModelSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateWaterSystem, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
     if base.model.water_systems.iter().any(|item| item.id == payload.id) {
-        return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Water system {} already exists.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Water system {} already exists.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.water_systems.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} water_systems.", payload.index, base.model.water_systems.len()), [payload.id.0.to_string()]);

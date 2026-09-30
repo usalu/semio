@@ -356,3 +356,81 @@ audit §3 test gaps. Aliases as in the audit: `S` = `🏪️store/🦀️.rs`, `
     so the next field needs a second byte).
 - **Reruns pending on peers:** the plugin build after W2-A's time-travel test edit lands; the hub check-in tests after
   the stdio plugin edit lands.
+
+## Follow-up 2: the trunk as a first-class, switchable alternative (2026-09-30)
+
+Problem: after "finalize as new alternative", the original trunk was not listed and could not be switched back to.
+That defeated "a new alternative preserves the original".
+
+### Model
+
+- The implicit root line is an alternative with a deterministic id.
+  - Id: `trunk_alternative_id(document_id) = trunk-{hex16(blake3(str "semio.history.trunk" | str document_id))}`.
+  - Implemented in Rust (`R/🔗️causal/🔀️transition/🦀️.rs`) and the TS twin (`trunkAlternativeId`). The Python generator
+    emits `trunks` vectors in the history-transition corpus; the Rust test also cross-checks them against a
+    third-party `blake3`.
+- The log never names the trunk. The fold resolves it:
+  - `fold_history(document_id, edits, transitions, excluded)` now takes the document id and sets `HistoryFold.trunk`.
+  - Commits made while no branched alternative is active grow the trunk's chain.
+  - The trunk is listed first in `alternatives`, with an empty name (the UI localizes "Main"/"Hauptlinie"), once
+    its chain is non-empty. A document without checkpoints (a genesis or config store) still lists no alternatives.
+  - A `Checkout` naming the trunk, or naming none, activates it. `HistoryFold.alternative` stays `None` on the trunk.
+  - A supersession applies when its scope is `None` or equals the active line (the trunk's id on the trunk), so
+    trunk-scoped supersessions work.
+  - A `Branch` claiming the trunk id is a fold error. Repin re-identifies trunk checkpoints too.
+  - The TS `foldSupersessions(documentId, operations, events)` twins this and returns `trunk`.
+- Callers updated:
+  - `HistoryLog::fold`;
+  - `store::fold_event_log(document_id, …)` and its three store callers;
+  - `🖥️host` `BackboneDocument::applied_edit_ids` and the host test helper;
+  - the `HistoryFold` retire struct.
+
+### Store
+
+- `trunk_alternative_id()` and `active_line_id()` (the active branched alternative, or the trunk).
+- `SwitchAlternative { trunk }` and `CheckoutCheckpoint` of the trunk head write `Checkout { alternative_id: None }`.
+- `Supersede { scope: Some(trunk) }` is accepted.
+- The history columns keep the trunk on lane 0 through `branched_alternatives`.
+- W2-A was sent the exact API (`ac84cd80529822d7f`): pass `Some(store.active_line_id())` as the current alternative.
+
+### Laws and tests
+
+- **Replication (Rust):**
+  - `the_trunk_is_a_first_class_alternative` covers chain growth, listing, checkout by id or none, trunk-scoped
+    supersessions, switching back to the branch, branch refusal, and an unlisted empty trunk.
+  - The corpus test checks trunk vectors, first-party and third-party.
+  - The supersede-fold fixture gained 6 steps plus 1 refusal: a trunk-scoped supersession on the trunk, dropped on the
+    branch, and restored by a checkout naming the trunk id; a branch claiming the trunk is refused.
+  - `branch_commit_and_repin_track_alternative_chains` now expects the trunk first.
+- **Store:** `a_new_alternative_preserves_the_trunk_it_branched_from` checks that:
+  - `CreateAlternativeWithSupersede` lists the trunk first, and switching to the trunk gives the original positions;
+  - the log never names the trunk;
+  - a trunk-scoped supersession applies on the trunk only;
+  - switching back gives the edited positions, and switching again gives the trunk's;
+  - two replicas (reverse and authoring arrival order) list the same alternatives, stand on the same line, and share
+    one content revision;
+  - `.spr` and `.ops` reloads keep all of it, and a reloaded store switches.
+- **Existing store and spr tests** that indexed `alternatives[0]` as the branch now pick the branch explicitly and assert
+  the trunk.
+
+### Counts
+
+| Command | Result |
+|---|---|
+| `cargo test -p semio-framework-replication --lib` | 309 passed, 0 failed |
+| `bun ./📜️script.ts test` (replication TS) | 17 passed (history-transition corpus incl. trunk vectors, supersede fold twin incl. trunk steps) |
+| `python3 🧪️tests/🧪️history-transition/🐍️.py` | exit 0 (corpus regenerated with `--write`, then verified) |
+| Kernel per-test runner, `os_store:: os_vcs:: os_spr::` | **878 ok / 1 FAIL** (the pre-existing `retained_clone::…remain_grant_bounded`) |
+| `semio-framework-os-flow` (host) per test | 241 ok / 1 FAIL (`wasm_session::…hostile_source_census…`, a JS bundle census, unrelated) |
+| Plugin per test (`RUST_MIN_STACK=268435456`) | 918 ok / 13 FAIL, none from this work. The `window_config` reopen tests and the archive-supersession test now pass. The 13 are peer work: `merge_ui_values` ×4, `tool_run` ×4, `window_kits` ×2, `command_ingress_terminal`, `activated_tool_factory_keys…` (`hostEvent`), `neutral_checked_diff_boundaries…` (job-test code rename) |
+
+### Notes
+
+- The transition id no longer includes the actor string (`history_transition_id(timestamp, payload)` changed
+  meanwhile). The F-M5 open item about the actor-string content address is therefore resolved: the socket-subject
+  actor rewrite is fully fold-neutral, including `.ops` reload.
+- E2E R2-2 (folder reload collapsing history) is routed to W2-B. It has not asked about the archive yet. If it does, the
+  store side is:
+  - the `.spr` persists every edit and every transition;
+  - load (`settle_parsed_envelope`) re-folds the whole log and Report-replays it;
+  - hydration now does the same.

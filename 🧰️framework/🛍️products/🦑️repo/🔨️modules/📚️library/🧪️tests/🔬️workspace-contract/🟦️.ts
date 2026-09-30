@@ -4994,9 +4994,8 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
 
     const invalid = structuredClone(loadTaxonomy()) as Taxonomy;
     const contract = invalid.semanticDescendantContracts["draw-editor-command-bundle-v1"] as unknown as { requiredNodes: Record<string, unknown>[] };
-    const fixedNode = contract.requiredNodes.find((node) => node.fixedFilenameContractId === "nx-project-manifest")!;
-    delete fixedNode.fixedFilenameContractId;
-    fixedNode.kindId = "json";
+    const sourceNode = contract.requiredNodes.find((node) => node.kindId === "rust-source" && !(node.pathSegments as unknown[]).length)!;
+    sourceNode.kindId = "json";
     expect(validateTaxonomy(invalid).some((problem) => problem.includes("draw-editor-command-bundle-v1"))).toBe(true);
   });
 });
@@ -5904,7 +5903,7 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
       expect(() => inventoryTaxonomy(fixture.options)).toThrow("discovery contract validation failed");
       const descendant = structuredClone(original);
       const nodes = descendant.semanticDescendantContracts["draw-editor-command-bundle-v1"]!.requiredNodes;
-      const library = nodes.find((node) => node.nodeType === "file" && node.kindId === "rust-source" && (node.pathSegments as { literal: string }[]).map(({ literal }) => literal).join("/") === "🔄️fsm/✨️macros")!;
+      const library = nodes.find((node) => node.nodeType === "file" && node.kindId === "rust-source" && (node.pathSegments as unknown[]).length === 0)!;
       writeFileSync(schemaPath, `${JSON.stringify(descendant, null, 2)}\n`);
       expect(inventoryTaxonomy(fixture.options).entries.some(({ sourcePath }) => sourcePath === `${fixture.scope}/🧪️subject/🟦️.ts`)).toBe(true);
       library.compatibilityAlias = true;

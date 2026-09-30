@@ -7,7 +7,7 @@ grammar Puzzle_puzzle3d_mutations;
 
 DOCUMENT: 'schema' [ ]+ 'puzzle.puzzle3d.mutations' ;
 
-line: createObject | deleteObject | moveObject | rotateObject | scaleObject | changeObjectMesh | editObjectLabel | changeObjectKind | changeObjectAnchor | changeObjectHidden | changeObjectLocked | addObjectVortex | removeObjectVortex | replaceObjectVortex | connectVortices | disconnectVortices | replaceAttractionGeometry | createTargetVolume | deleteTargetVolume | moveTargetVolume | rotateTargetVolume | scaleTargetVolume | changeTargetVolumeHidden | changeTargetVolumeLocked | createReference | deleteReference | moveReference | resizeReference | replaceReferenceSource | changeReferenceHidden | changeReferenceLocked | changeDomain | connectKindCompatibility | disconnectKindCompatibility | replaceKindCatalogs ;
+line: createObject | deleteObject | moveObject | rotateObject | scaleObject | changeObjectMesh | editObjectLabel | changeObjectKind | changeObjectAnchor | changeObjectHidden | changeObjectLocked | addObjectVortex | removeObjectVortex | replaceObjectVortex | connectVortices | disconnectVortices | replaceAttractionGeometry | createTargetVolume | deleteTargetVolume | moveTargetVolume | rotateTargetVolume | scaleTargetVolume | changeTargetVolumeHidden | changeTargetVolumeLocked | createReference | deleteReference | moveReference | resizeReference | replaceReferenceSource | changeReferenceHidden | changeReferenceLocked | changeDomain | connectKindCompatibility | disconnectKindCompatibility | replaceKindCatalogs | dragSelection | rotateSelection | scaleSelection ;
 createObject: 'create-object' SP objectBlock SP indexOpt ;
 deleteObject: 'delete-object' SP id ;
 moveObject: 'move-object' SP id SP number SP number SP number ;
@@ -43,6 +43,9 @@ changeDomain: 'change-domain' SP text ;
 connectKindCompatibility: 'connect-kind-compatibility' SP id SP id SP boolean SP boolean SP specificity ;
 disconnectKindCompatibility: 'disconnect-kind-compatibility' SP id SP id ;
 replaceKindCatalogs: 'replace-kind-catalogs' SP catalogsBlockOpt ;
+dragSelection: 'drag-selection' SP idList SP number SP number SP number ;
+rotateSelection: 'rotate-selection' SP idList SP number SP number SP number SP number ;
+scaleSelection: 'scale-selection' SP idList SP number SP number SP number ;
 objectBlock: '{' NL OCTET+ '}' ;
 vortexBlock: '{' NL OCTET+ '}' ;
 volumeBlock: '{' NL OCTET+ '}' ;
@@ -57,6 +60,7 @@ quatOpt: (number SP number SP number SP number) | 'none' ;
 scaleOpt: number+ | 'none' ;
 indexOpt: number | 'none' ;
 textOpt: text | 'none' ;
+idList: '[' id* ']' ;
 id: OCTET+ ;
 number: OCTET+ ;
 text: OCTET+ ;

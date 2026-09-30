@@ -10,10 +10,10 @@ pub fn diff(payload: &super::ReplaceDailyScheduleHourlyValues, base: &EnergyMode
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Daily schedule {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if payload.new_hourly_values.len() != 24 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("A daily schedule carries twenty-four hourly values, got {}.", payload.new_hourly_values.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("A daily schedule carries twenty-four hourly values, got {}.", payload.new_hourly_values.len()), [payload.id.0.to_string()]);
     }
     if payload.new_hourly_values.iter().any(|value| !value.is_finite()) {
-        return protocol::MutationOutcome::error("mutation.invariant", "Every hourly schedule value must be finite.", [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "Every hourly schedule value must be finite.", [payload.id.0.to_string()]);
     }
     if existing.hourly_values.as_slice() == payload.new_hourly_values.as_slice() {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Daily schedule {} already carries this hourly_values: {:?}.", payload.id.0, payload.new_hourly_values));

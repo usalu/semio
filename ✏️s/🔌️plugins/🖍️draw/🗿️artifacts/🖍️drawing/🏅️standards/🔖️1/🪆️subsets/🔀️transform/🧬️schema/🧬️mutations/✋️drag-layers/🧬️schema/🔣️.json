@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/drag-layers/schema.json",
+  "title": "DragLayers",
+  "description": "The `drag-layers` mutation record — a relative, parametric drag of a set of layers by one world-space offset, applied through each layer's parent transform. Internally tagged `\"mutation\": \"dragLayers\"`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targets",
+    "dx",
+    "dy"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "dragLayers",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layers",
+          "de": "Ebenen"
+        },
+        "description": {
+          "en": "Layers to drag; a layer inside a dragged group moves with the group, locked, hidden or missing ones are skipped.",
+          "de": "Zu ziehende Ebenen; eine Ebene in einer gezogenen Gruppe bewegt sich mit der Gruppe, gesperrte, ausgeblendete oder fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "strokes",
+          "granularity": "stroke"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "dx": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset X",
+          "de": "Versatz X"
+        },
+        "description": {
+          "en": "Horizontal offset in drawing coordinates.",
+          "de": "Horizontaler Versatz in Zeichnungskoordinaten."
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "offset",
+        "order": 20
+      }
+    },
+    "dy": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset Y",
+          "de": "Versatz Y"
+        },
+        "description": {
+          "en": "Vertical offset in drawing coordinates.",
+          "de": "Vertikaler Versatz in Zeichnungskoordinaten."
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "offset",
+        "order": 30
+      }
+    }
+  }
+}

@@ -1,64 +1,243 @@
-#[path = "../../🚚️change-accidental-mass-t/🧪️tests/🚚️lightens-impact-vehicle-to-12-5-t/🦀️.rs"]
-mod tests_change_accidental_mass_t_lightens_impact_vehicle_to_12_5_t;
-#[path = "../../🚗️change-accidental-speed-km-h/🧪️tests/🚗️lowers-impact-speed-to-50-km-h/🦀️.rs"]
-mod tests_change_accidental_speed_km_h_lowers_impact_speed_to_50_km_h;
-#[path = "../../🌍️change-annex/🧪️tests/🌍️switches-national-annex-to-en/🦀️.rs"]
-mod tests_change_annex_switches_national_annex_to_en;
-#[path = "../../📐️change-area-m2/🧪️tests/📐️enlarges-loaded-area-to-360-m2/🦀️.rs"]
-mod tests_change_area_m2_enlarges_loaded_area_to_360_m2;
-#[path = "../../⚖️change-assumed-gk-kn-m2/🧪️tests/⚖️raises-assumed-gk-to-7-5-kn-m2/🦀️.rs"]
-mod tests_change_assumed_gk_kn_m2_raises_assumed_gk_to_7_5_kn_m2;
-#[path = "../../🛣️change-bridge-lane/🧪️tests/🛣️widens-carriageway-to-3-notional-lanes/🦀️.rs"]
-mod tests_change_bridge_lane_widens_carriageway_to_3_notional_lanes;
-#[path = "../../↔️change-bridge-lane-width-m/🧪️tests/↔️widens-notional-lane-to-3-5-m/🦀️.rs"]
-mod tests_change_bridge_lane_width_m_widens_notional_lane_to_3_5_m;
-#[path = "../../💪️change-bridge-moment-resistance-knm/🧪️tests/💪️raises-bridge-moment-resistance-to-4500-knm/🦀️.rs"]
-mod tests_change_bridge_moment_resistance_knm_raises_bridge_moment_resistance_to_4500_knm;
-#[path = "../../🌉️change-bridge-span-m/🧪️tests/🌉️lengthens-bridge-span-to-36-m/🦀️.rs"]
-mod tests_change_bridge_span_m_lengthens_bridge_span_to_36_m;
-#[path = "../../🗂️change-category/🧪️tests/🗂️reclassifies-imposed-load-to-category-d/🦀️.rs"]
-mod tests_change_category_reclassifies_imposed_load_to_category_d;
-#[path = "../../🌀️change-cd/🧪️tests/🌀️lowers-dynamic-factor-cd-to-0-875/🦀️.rs"]
-mod tests_change_cd_lowers_dynamic_factor_cd_to_0_875;
-#[path = "../../🚧️change-construction-activity/🧪️tests/🚧️switches-construction-activity-to-concreting/🦀️.rs"]
-mod tests_change_construction_activity_switches_construction_activity_to_concreting;
-#[path = "../../🏗️change-crane-class/🧪️tests/🏗️upgrades-crane-to-class-hc3/🦀️.rs"]
-mod tests_change_crane_class_upgrades_crane_to_class_hc3;
-#[path = "../../🔎️change-cs/🧪️tests/🔎️raises-size-factor-cs-to-1-125/🦀️.rs"]
-mod tests_change_cs_raises_size_factor_cs_to_1_125;
-#[path = "../../🌡️change-delta-tk/🧪️tests/🌡️raises-thermal-delta-tk-to-45-k/🦀️.rs"]
-mod tests_change_delta_tk_raises_thermal_delta_tk_to_45_k;
-#[path = "../../❄️change-en-sk-kn-m2/🧪️tests/❄️raises-en-characteristic-snow-load-to-1-25-kn-m2/🦀️.rs"]
-mod tests_change_en_sk_kn_m2_raises_en_characteristic_snow_load_to_1_25_kn_m2;
-#[path = "../../🌬️change-en-vbms/🧪️tests/🌬️raises-en-basic-wind-speed-to-30-m-s/🦀️.rs"]
-mod tests_change_en_vbms_raises_en_basic_wind_speed_to_30_m_s;
-#[path = "../../🔥️change-fire-curve/🧪️tests/🔥️switches-fire-curve-to-hydrocarbon/🦀️.rs"]
-mod tests_change_fire_curve_switches_fire_curve_to_hydrocarbon;
-#[path = "../../🛡️change-fire-member-capacity-c/🧪️tests/🛡️raises-fire-member-capacity-to-700-c/🦀️.rs"]
-mod tests_change_fire_member_capacity_c_raises_fire_member_capacity_to_700_c;
-#[path = "../../⏱️change-fire-resistance-min/🧪️tests/⏱️extends-fire-resistance-to-120-min/🦀️.rs"]
-mod tests_change_fire_resistance_min_extends_fire_resistance_to_120_min;
-#[path = "../../🏷️change-hoist-class/🧪️tests/🏷️upgrades-hoist-to-class-hc4/🦀️.rs"]
-mod tests_change_hoist_class_upgrades_hoist_to_class_hc4;
-#[path = "../../🪝️change-hoisting-speed-ms/🧪️tests/🪝️speeds-hoisting-to-1-25-m-s/🦀️.rs"]
-mod tests_change_hoisting_speed_ms_speeds_hoisting_to_1_25_m_s;
-#[path = "../../🧱️change-self-weight-material/🧪️tests/🧱️switches-self-weight-material-to-structural-steel/🦀️.rs"]
-mod tests_change_self_weight_material_switches_self_weight_material_to_structural_steel;
-#[path = "../../📏️change-self-weight-thickness-m/🧪️tests/📏️thickens-self-weight-layer-to-0-375-m/🦀️.rs"]
-mod tests_change_self_weight_thickness_m_thickens_self_weight_layer_to_0_375_m;
-#[path = "../../🌾️change-silo-bulk-density-kn-m3/🧪️tests/🌾️raises-silo-bulk-density-to-10-5-kn-m3/🦀️.rs"]
-mod tests_change_silo_bulk_density_kn_m3_raises_silo_bulk_density_to_10_5_kn_m3;
-#[path = "../../🗼️change-silo-height-m/🧪️tests/🗼️raises-silo-to-18-m/🦀️.rs"]
-mod tests_change_silo_height_m_raises_silo_to_18_m;
-#[path = "../../⭕️change-silo-hydraulic-radius-m/🧪️tests/⭕️widens-silo-hydraulic-radius-to-2-25-m/🦀️.rs"]
-mod tests_change_silo_hydraulic_radius_m_widens_silo_hydraulic_radius_to_2_25_m;
-#[path = "../../⚙️change-silo-k/🧪️tests/⚙️raises-silo-lateral-pressure-ratio-k-to-0-625/🦀️.rs"]
-mod tests_change_silo_k_raises_silo_lateral_pressure_ratio_k_to_0_625;
-#[path = "../../🧲️change-silo-mu/🧪️tests/🧲️raises-silo-wall-friction-mu-to-0-625/🦀️.rs"]
-mod tests_change_silo_mu_raises_silo_wall_friction_mu_to_0_625;
-#[path = "../../🏔️change-snow-altitude-m/🧪️tests/🏔️lifts-snow-altitude-to-780-m/🦀️.rs"]
-mod tests_change_snow_altitude_m_lifts_snow_altitude_to_780_m;
-#[path = "../../🗺️change-snow-zone/🧪️tests/🗺️moves-site-to-snow-zone-3/🦀️.rs"]
-mod tests_change_snow_zone_moves_site_to_snow_zone_3;
-#[path = "../../🪁️change-wind-zone/🧪️tests/🪁️moves-site-to-wind-zone-4/🦀️.rs"]
-mod tests_change_wind_zone_moves_site_to_wind_zone_4;
+//! 🧫️ Every committed `En1991Mutation` specification vector — one canonical case per mutation leaf — held to one law.
+//!
+//! @see ../../../../🧫️fixtures/🧬️mutations — the committed `(before, mutation, after, diff, outcome)` bundles.
+//! @see ../../../../🔮️oracles/🔣️.json — the `en1991-1-any` catalog that registers each bundle.
+//! @see ../../../../🧪️tests/🏋️mutate-en1991-1/🥒️.feature — the independent Python reference reading the same bundles.
+
+use crate::{En1991Diff, En1991Mutation, En1991Snapshot};
+use dsl::ToValue;
+use protocol::{Mutation, MutationDiff};
+
+//#region 🧾️Vector
+/// 🧾️ One committed vector: the semantic kind it witnesses and its five committed files.
+pub(crate) struct Vector {
+    pub(crate) kind: &'static str,
+    pub(crate) before: &'static str,
+    pub(crate) mutation: &'static str,
+    pub(crate) after: &'static str,
+    pub(crate) diff: &'static str,
+    pub(crate) outcome: &'static str,
+}
+
+/// 🔣️ A committed file as the independent `serde_json` oracle reads it.
+fn committed(text: &str) -> serde_json::Value {
+    serde_json::from_str(text).expect("a committed vector file is JSON")
+}
+
+/// 🪞️ A production value as the independent `serde_json` oracle reads its Rust wire.
+fn wire<T: ToValue>(value: &T) -> serde_json::Value {
+    serde_json::Value::from(value.to_value())
+}
+
+/// 🎯️ The same op addressing a position no collection holds, for an op whose payload carries an `index`.
+fn out_of_range(op: &En1991Mutation) -> Option<En1991Mutation> {
+    let mut payload = serde_json::Value::from(op.payload_value());
+    *payload.get_mut("index")? = serde_json::Value::from(u64::from(u32::MAX));
+    op.with_payload_value(dsl::DslValue::from(&payload)).ok()
+}
+
+/// ⚖️ The law every committed vector obeys: the mutation file is the canonical Rust wire of one `kind` op whose binary frame
+/// round-trips; both snapshots and the diff are canonical; production dispatch turns BEFORE into exactly the committed diff
+/// under the committed outcome and lands on AFTER; the committed diff alone carries BEFORE to AFTER; the op's own inverse
+/// restores BEFORE; and the leaf descriptor declares exactly the outcome classes dispatch reaches from the vector — its own
+/// status, `no-op` when re-applying the op to AFTER changes nothing, `rejected` when the op addressing an index no collection
+/// holds is refused.
+pub(crate) fn assert_vector(vector: Vector) {
+    let kind = vector.kind;
+    let op: En1991Mutation = store::os_store::test_support::assert_wire_witness(vector.mutation);
+    assert_eq!(op.descriptor().semantic_kind, kind, "{kind}: the committed mutation is another kind's op");
+    let framed = protocol::OpBinary::encode_op(&op).expect("the op encodes to its binary frame");
+    assert_eq!(<En1991Mutation as protocol::OpBinary>::decode_op(&framed).expect("its binary frame decodes"), op, "{kind}: the binary frame does not round-trip");
+    let before: En1991Snapshot = pack::json::from_json_str(vector.before).expect("the committed before-snapshot decodes");
+    let after: En1991Snapshot = pack::json::from_json_str(vector.after).expect("the committed after-snapshot decodes");
+    let delta: En1991Diff = pack::json::from_json_str(vector.diff).expect("the committed diff decodes");
+    assert_eq!(wire(&before), committed(vector.before), "{kind}: the committed before-snapshot is not the canonical wire");
+    assert_eq!(wire(&after), committed(vector.after), "{kind}: the committed after-snapshot is not the canonical wire");
+    assert_eq!(wire(&delta), committed(vector.diff), "{kind}: the committed diff is not the canonical wire");
+    let outcome = op.diff(&before);
+    assert_eq!(wire(outcome.diff()), committed(vector.diff), "{kind}: production dispatch produces another diff than the committed one");
+    let status = committed(vector.outcome)["status"].as_str().expect("the committed outcome names its status").to_string();
+    match status.as_str() {
+        "applied" => assert!(outcome.messages().is_empty(), "{kind}: an applied vector raises {:?}", outcome.messages()),
+        "no-op" => assert_ne!(outcome.worst_level(), Some(protocol::Severity::Fatal), "{kind}: a no-op vector is refused"),
+        "rejected" => assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal), "{kind}: a rejected vector is accepted"),
+        other => panic!("{kind}: unknown committed outcome status {other:?}"),
+    }
+    let applied = MutationDiff::apply(outcome.diff(), &before).expect("the produced diff applies to the committed before-snapshot");
+    assert_eq!(applied, after, "{kind}: production dispatch does not land on the committed after-snapshot");
+    assert_eq!(MutationDiff::apply(&delta, &before).expect("the committed diff applies to the committed before-snapshot"), after, "{kind}: the committed diff does not carry before to after");
+    assert_eq!(status == "applied", applied != before, "{kind}: an applied vector must move the document and only an applied one may");
+    let inverse = op.inverse(&before);
+    assert_eq!(status == "applied", !inverse.is_empty(), "{kind}: an applied vector computes a non-empty inverse and only an applied one does");
+    let restored = inverse.iter().fold(applied, |current, step| MutationDiff::apply(step.diff(&current).diff(), &current).expect("an inverse step applies"));
+    assert_eq!(restored, before, "{kind}: replaying the inverse does not restore the committed before-snapshot");
+    let no_op = op.diff(&after).messages().iter().any(|message| message.code.0 == "mutation.no-op");
+    let rejected = out_of_range(&op).is_some_and(|stray| stray.diff(&before).worst_level() >= Some(protocol::Severity::Error));
+    let reached: Vec<&str> = [(true, status.as_str()), (no_op, "no-op"), (rejected, "rejected")].into_iter().filter_map(|(reached, class)| reached.then_some(class)).collect();
+    let declared: Vec<&str> = op.descriptor().outcome_classes.iter().map(|class| class.as_str()).collect();
+    assert_eq!(declared, reached, "{kind}: the descriptor's outcome classes are not the ones production dispatch reaches");
+}
+//#endregion 🧾️Vector
+
+//#region 🧪️Cases
+#[path = "../../🌍change-annex/🧪️tests/🌍en/🦀️.rs"]
+mod change_annex;
+#[path = "../../🗺️change-snow-zone/🧪️tests/⛄zone-3/🦀️.rs"]
+mod change_snow_zone;
+#[path = "../../❄change-altitude/🧪️tests/🗻480-m/🦀️.rs"]
+mod change_altitude;
+#[path = "../../❄️change-en-sk/🧪️tests/⛄1250-pa/🦀️.rs"]
+mod change_en_sk;
+#[path = "../../🏔change-exceptional-snow-north-german-lowlands/🧪️tests/⛄on/🦀️.rs"]
+mod change_exceptional_snow_north_german_lowlands;
+#[path = "../../🪁change-wind-zone/🧪️tests/🪁zone-3/🦀️.rs"]
+mod change_wind_zone;
+#[path = "../../🌬change-en-vb/🧪️tests/💨27-5-m-s/🦀️.rs"]
+mod change_en_vb;
+#[path = "../../🏞️change-terrain-category/🧪️tests/🌳class-3/🦀️.rs"]
+mod change_terrain_category;
+#[path = "../../🧭change-mixed-terrain-upwind/🧪️tests/🧭class-1/🦀️.rs"]
+mod change_mixed_terrain_upwind;
+#[path = "../../📏change-mixed-terrain-distance/🧪️tests/📏1500-m/🦀️.rs"]
+mod change_mixed_terrain_distance;
+#[path = "../../📐change-orography-factor/🧪️tests/📐1-15/🦀️.rs"]
+mod change_orography_factor;
+#[path = "../../🏝️change-coast-or-island/🧪️tests/🌊coast/🦀️.rs"]
+mod change_coast_or_island;
+#[path = "../../🏢change-air-density/🧪️tests/💨1-225/🦀️.rs"]
+mod change_air_density;
+#[path = "../../🧱change-height/🧪️tests/🧱24-m/🦀️.rs"]
+mod change_height;
+#[path = "../../🏠change-width/🧪️tests/🏠18-5-m/🦀️.rs"]
+mod change_width;
+#[path = "../../💨change-depth/🧪️tests/🏢30-m/🦀️.rs"]
+mod change_depth;
+#[path = "../../🌡change-assumed-delta-t/🧪️tests/📈15-k/🦀️.rs"]
+mod change_assumed_delta_t;
+#[path = "../../🔥change-construction-activity/🧪️tests/🧰formwork/🦀️.rs"]
+mod change_construction_activity;
+#[path = "../../⚙change-assumed-construction-qk/🧪️tests/👷2-kpa/🦀️.rs"]
+mod change_assumed_construction_qk;
+#[path = "../../🌉change-structure-kind/🧪️tests/🌉bridge/🦀️.rs"]
+mod change_structure_kind;
+#[path = "../../🌉change-bridge-lane/🧪️tests/🚦3-lanes/🦀️.rs"]
+mod change_bridge_lane;
+#[path = "../../🏗change-bridge-span/🧪️tests/🌉36-m/🦀️.rs"]
+mod change_bridge_span;
+#[path = "../../↔️change-bridge-lane-width/🧪️tests/📏3-5-m/🦀️.rs"]
+mod change_bridge_lane_width;
+#[path = "../../🌾change-assumed-bridge-tandem/🧪️tests/🚚600-kn/🦀️.rs"]
+mod change_assumed_bridge_tandem;
+#[path = "../../🛣change-assumed-bridge-udl/🧪️tests/🚦9-kpa/🦀️.rs"]
+mod change_assumed_bridge_udl;
+#[path = "../../🚛change-assumed-bridge-lm2/🧪️tests/🚛400-kn/🦀️.rs"]
+mod change_assumed_bridge_lm2;
+#[path = "../../🚶change-assumed-bridge-footway/🧪️tests/🚶5-kpa/🦀️.rs"]
+mod change_assumed_bridge_footway;
+#[path = "../../🏙change-storey-count/🧪️tests/🏢5-storeys/🦀️.rs"]
+mod change_storey_count;
+#[path = "../../🌡change-t-max/🧪️tests/🌞39-c/🦀️.rs"]
+mod change_t_max;
+#[path = "../../🧊change-t-min/🧪️tests/🧊minus-28-c/🦀️.rs"]
+mod change_t_min;
+#[path = "../../🕰change-initial-temperature/🧪️tests/⏰15-c/🦀️.rs"]
+mod change_initial_temperature;
+#[path = "../../🏗change-thermal-element-type/🧪️tests/🌉bridge2/🦀️.rs"]
+mod change_thermal_element_type;
+#[path = "../../🌉change-thermal-bridge-type/🧪️tests/🌁type-2/🦀️.rs"]
+mod change_thermal_bridge_type;
+#[path = "../../📏change-linear-temperature-gradient/🧪️tests/📈5-k/🦀️.rs"]
+mod change_linear_temperature_gradient;
+#[path = "../../🔥change-fire-mode/🧪️tests/🔥parametric/🦀️.rs"]
+mod change_fire_mode;
+#[path = "../../📉change-fire-curve/🧪️tests/📉hydrocarbon/🦀️.rs"]
+mod change_fire_curve;
+#[path = "../../⏱change-fire-duration/🧪️tests/⌛90-min/🦀️.rs"]
+mod change_fire_duration;
+#[path = "../../♨change-assumed-gas-temperature/🧪️tests/🔥1300-k/🦀️.rs"]
+mod change_assumed_gas_temperature;
+#[path = "../../🔆change-assumed-h-net/🧪️tests/🔆35-kw-m2/🦀️.rs"]
+mod change_assumed_h_net;
+#[path = "../../🗺change-fire-compartment-area/🧪️tests/📐150-m2/🦀️.rs"]
+mod change_fire_compartment_area;
+#[path = "../../📐change-fire-compartment-height/🧪️tests/📐3-5-m/🦀️.rs"]
+mod change_fire_compartment_height;
+#[path = "../../🪟change-fire-opening-factor/🧪️tests/🪟0-06/🦀️.rs"]
+mod change_fire_opening_factor;
+#[path = "../../🧱change-fire-thermal-inertia/🧪️tests/🧱1500/🦀️.rs"]
+mod change_fire_thermal_inertia;
+#[path = "../../🏢change-fire-occupancy/🧪️tests/🏬shopping/🦀️.rs"]
+mod change_fire_occupancy;
+#[path = "../../⛽change-fire-load-density-qf/🧪️tests/⛽600-mj/🦀️.rs"]
+mod change_fire_load_density_qf;
+#[path = "../../🔋change-assumed-qf-d/🧪️tests/🔋511-mj/🦀️.rs"]
+mod change_assumed_qf_d;
+#[path = "../../🚛change-assumed-bridge-lm3/🧪️tests/🚛600-kn/🦀️.rs"]
+mod change_assumed_bridge_lm3;
+#[path = "../../👥change-assumed-bridge-lm4/🧪️tests/👥5-kpa/🦀️.rs"]
+mod change_assumed_bridge_lm4;
+#[path = "../../📦change-bridge-load-group/🧪️tests/📦gr1b/🦀️.rs"]
+mod change_bridge_load_group;
+#[path = "../../🏗️change-crane-claimed/🧪️tests/🚫withdrawn/🦀️.rs"]
+mod change_crane_claimed;
+#[path = "../../💥change-crane-class/🧪️tests/💥hc3/🦀️.rs"]
+mod change_crane_class;
+#[path = "../../➕change-hoist-class/🧪️tests/🪝hc4/🦀️.rs"]
+mod change_hoist_class;
+#[path = "../../⏫change-hoisting-speed/🧪️tests/⏫1-25-m-s/🦀️.rs"]
+mod change_hoisting_speed;
+#[path = "../../➖change-assumed-crane-wheel/🧪️tests/🛞75-kn/🦀️.rs"]
+mod change_assumed_crane_wheel;
+#[path = "../../↔️change-assumed-crane-horizontal/🧪️tests/🧲7-5-kn/🦀️.rs"]
+mod change_assumed_crane_horizontal;
+#[path = "../../🏭change-silo-claimed/🧪️tests/🚫withdrawn/🦀️.rs"]
+mod change_silo_claimed;
+#[path = "../../⚖change-silo-kind/🧪️tests/💧tank/🦀️.rs"]
+mod change_silo_kind;
+#[path = "../../🌾change-silo-bulk-density/🧪️tests/🌾9-kn-m3/🦀️.rs"]
+mod change_silo_bulk_density;
+#[path = "../../🏷change-silo-height/🧪️tests/📏18-m/🦀️.rs"]
+mod change_silo_height;
+#[path = "../../⭕change-silo-hydraulic-radius/🧪️tests/⭕2-25-m/🦀️.rs"]
+mod change_silo_hydraulic_radius;
+#[path = "../../🔎change-silo-mu/🧪️tests/🔎0-5/🦀️.rs"]
+mod change_silo_mu;
+#[path = "../../⚙️change-silo-k/🧪️tests/🔩0-55/🦀️.rs"]
+mod change_silo_k;
+#[path = "../../🌀change-assumed-silo-pressure/🧪️tests/🌀8-kpa/🦀️.rs"]
+mod change_assumed_silo_pressure;
+#[path = "../../📦change-assumed-silo-patch/🧪️tests/📦1-5-kpa/🦀️.rs"]
+mod change_assumed_silo_patch;
+#[path = "../../🧱change-assumed-silo-wall-friction/🧪️tests/🧱2-kpa/🦀️.rs"]
+mod change_assumed_silo_wall_friction;
+#[path = "../../🏢change-floor-assumed-qk/🧪️tests/🏢3-kpa/🦀️.rs"]
+mod change_floor_assumed_qk;
+#[path = "../../🚧change-self-weight-assumed-gk/🧪️tests/🚧5-kpa/🦀️.rs"]
+mod change_self_weight_assumed_gk;
+#[path = "../../🌨️change-roof-assumed-sk/🧪️tests/⛄900-pa/🦀️.rs"]
+mod change_roof_assumed_sk;
+#[path = "../../🛡change-wind-face-assumed-wp/🧪️tests/🪟750-pa/🦀️.rs"]
+mod change_wind_face_assumed_wp;
+#[path = "../../🚗change-accidental-assumed-force/🧪️tests/🚗150-kn/🦀️.rs"]
+mod change_accidental_assumed_force;
+#[path = "../../➕️insert-floors/🧪️tests/➕archive/🦀️.rs"]
+mod insert_floors;
+#[path = "../../➖️remove-floors/🧪️tests/➖office/🦀️.rs"]
+mod remove_floors;
+#[path = "../../➕️insert-self-weight-elements/🧪️tests/➕screed/🦀️.rs"]
+mod insert_self_weight_elements;
+#[path = "../../➖️remove-self-weight-elements/🧪️tests/➖slab/🦀️.rs"]
+mod remove_self_weight_elements;
+#[path = "../../➕️insert-roofs/🧪️tests/➕annex-roof/🦀️.rs"]
+mod insert_roofs;
+#[path = "../../➖️remove-roofs/🧪️tests/➖main-roof/🦀️.rs"]
+mod remove_roofs;
+#[path = "../../➕️insert-wind-faces/🧪️tests/➕leeward/🦀️.rs"]
+mod insert_wind_faces;
+#[path = "../../➖️remove-wind-faces/🧪️tests/➖windward/🦀️.rs"]
+mod remove_wind_faces;
+#[path = "../../➕️insert-accidental-cases/🧪️tests/➕explosion/🦀️.rs"]
+mod insert_accidental_cases;
+#[path = "../../➖️remove-accidental-cases/🧪️tests/➖impact/🦀️.rs"]
+mod remove_accidental_cases;
+//#endregion 🧪️Cases

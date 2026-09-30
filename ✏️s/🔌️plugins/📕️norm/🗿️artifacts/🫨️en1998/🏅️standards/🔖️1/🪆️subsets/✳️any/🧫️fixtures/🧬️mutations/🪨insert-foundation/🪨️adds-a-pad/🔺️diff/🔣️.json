@@ -1,0 +1,32 @@
+{
+  "artifact": null,
+  "annex": null,
+  "site": null,
+  "buildings": null,
+  "bridges": null,
+  "assessments": null,
+  "silos": null,
+  "tanks": null,
+  "foundations": [
+    {
+      "id": "fd-1",
+      "supportedBuildingId": "bldg-office",
+      "areaM2": 200.0,
+      "pRdPa": 400000.0,
+      "hRdN": 500000.0,
+      "kFoundation": 800000.0,
+      "kSoil": 300000.0
+    },
+    {
+      "id": "fd-2",
+      "supportedBuildingId": "bldg-office",
+      "areaM2": 120.0,
+      "pRdPa": 400000.0,
+      "hRdN": 500000.0,
+      "kFoundation": 800000.0,
+      "kSoil": 300000.0
+    }
+  ],
+  "retainingWalls": null,
+  "towers": null
+}

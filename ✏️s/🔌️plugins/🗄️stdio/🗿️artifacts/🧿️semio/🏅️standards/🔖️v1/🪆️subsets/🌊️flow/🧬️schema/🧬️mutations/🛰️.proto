@@ -35,7 +35,7 @@ message SemioFlowSnapshot {
 message SemioFlowMutation {
   string mutation = 1; // set-snapshot | insert-node | remove-node | set-node-kind |
                         // set-node-label | set-node-position | set-node-param | remove-node-param |
-                        // insert-edge | remove-edge | set-edge-endpoints | set-edge-kind
+                        // insert-edge | remove-edge | set-edge-endpoints | set-edge-kind | drag-nodes
   SemioFlowSnapshot snapshot = 2;
   FlowNode node = 3;
   FlowEdge edge = 4;
@@ -47,4 +47,7 @@ message SemioFlowMutation {
   string value = 10;
   PortRef from = 11;
   PortRef to = 12;
+  repeated string targets = 13;
+  double dx = 14;
+  double dy = 15;
 }

@@ -1,0 +1,149 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/config/mutation/attach-local-folder/schema.json",
+  "title": "AttachLocalFolder",
+  "description": "Remembers, on this device only, the local folder a program's document is attached to, keyed by the document's own identity (the id its store stamps on every envelope). `os.config.local-folders` is persisted local-only: it never enters a shared lane or a URL. On a later boot the same document identity offers to reconnect the folder.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "documentId",
+    "pluginId",
+    "appId",
+    "folder"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "attachLocalFolder"
+    },
+    "documentId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Document ID",
+          "de": "Dokument-ID"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    },
+    "pluginId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Program",
+          "de": "Programm"
+        },
+        "group": "identity",
+        "order": 20
+      }
+    },
+    "appId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "App",
+          "de": "App"
+        },
+        "group": "identity",
+        "order": 30
+      }
+    },
+    "folder": {
+      "$ref": "#/$defs/LocalFolderRef",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Folder",
+          "de": "Ordner"
+        },
+        "description": {
+          "en": "The folder on this device the document's archive persists in.",
+          "de": "Der Ordner auf diesem Gerät, in dem das Archiv des Dokuments gespeichert wird."
+        },
+        "group": "storage",
+        "order": 40
+      }
+    }
+  },
+  "$defs": {
+    "LocalFolderRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path"
+      ],
+      "properties": {
+        "kind": {
+          "const": "path"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "description": "An absolute folder path the host opens on this device; it never leaves the device."
+    },
+    "LocalFolderBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentId",
+        "pluginId",
+        "appId",
+        "folder"
+      ],
+      "properties": {
+        "documentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "pluginId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "appId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "folder": {
+          "$ref": "#/$defs/LocalFolderRef"
+        }
+      }
+    },
+    "LocalFolderBindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bindings"
+      ],
+      "properties": {
+        "bindings": {
+          "type": "array",
+          "x-semio-state": "config",
+          "items": {
+            "$ref": "#/$defs/LocalFolderBinding"
+          }
+        }
+      }
+    }
+  }
+}

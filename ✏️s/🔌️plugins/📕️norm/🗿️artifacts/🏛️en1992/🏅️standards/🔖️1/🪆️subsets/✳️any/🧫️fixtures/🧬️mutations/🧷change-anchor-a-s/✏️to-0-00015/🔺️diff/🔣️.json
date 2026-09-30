@@ -1,0 +1,57 @@
+{
+  "artifact": null,
+  "annex": null,
+  "title": null,
+  "designWorkingLifeYears": null,
+  "deltaCDev": null,
+  "cementType": null,
+  "concreteGrades": null,
+  "reinforcementGrades": null,
+  "prestressSteels": null,
+  "members": null,
+  "anchors": {
+    "values": [
+      {
+        "id": "anc-1",
+        "hEf": 0.1,
+        "cracked": true,
+        "fUk": 900000000.0,
+        "fYk": 720000000.0,
+        "aS": 0.00015,
+        "d": 0.012,
+        "c1": 0.12,
+        "fCk": 35000000.0,
+        "actions": [
+          {
+            "id": "G",
+            "kind": "permanent",
+            "category": "self",
+            "source": "external",
+            "gKLine": 0.0,
+            "qKLine": 0.0,
+            "pointForce": 0.0,
+            "mK": 0.0,
+            "nK": 8000.0,
+            "vK": 4000.0,
+            "tK": 0.0,
+            "vKPunch": 0.0
+          },
+          {
+            "id": "Q-office",
+            "kind": "imposed",
+            "category": "office",
+            "source": "external",
+            "gKLine": 0.0,
+            "qKLine": 0.0,
+            "pointForce": 0.0,
+            "mK": 0.0,
+            "nK": 5000.0,
+            "vK": 3000.0,
+            "tK": 0.0,
+            "vKPunch": 0.0
+          }
+        ]
+      }
+    ]
+  }
+}

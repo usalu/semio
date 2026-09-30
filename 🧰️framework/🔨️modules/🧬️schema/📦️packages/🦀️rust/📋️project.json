@@ -34,6 +34,14 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "document-http-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts document-http-check"
+      },
+      "outputs": []
     }
   },
   "tags": [

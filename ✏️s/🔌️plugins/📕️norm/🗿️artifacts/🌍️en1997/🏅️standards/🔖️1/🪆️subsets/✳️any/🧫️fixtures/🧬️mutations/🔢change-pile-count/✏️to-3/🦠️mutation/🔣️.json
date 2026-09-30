@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileCount",
+  "id": "pile-P1",
+  "newCount": 3
+}

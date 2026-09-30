@@ -196,7 +196,7 @@ async fn landed_semantic_kinds_produce_granular_mutations() {
 /// (`create-zone`, `delete-zone`, `create-surface`, `delete-surface`, `change-surface-*`,
 /// `change-material-*`, `change-thermostat-*`), so this is now a strict ROUND TRIP: each verb
 /// must produce granular semantic steps whose application reproduces exactly the edit the user
-/// asked for. A `mutation.kind-unavailable` here is a real regression, not a pending group.
+/// asked for. A `app.command.kind-unavailable` here is a real regression, not a pending group.
 #[semio_framework_async_macros::async_test]
 async fn every_document_verb_round_trips_through_the_granular_vocabulary() {
     let snapshot = snapshot_of(&populated_model());
@@ -251,7 +251,7 @@ async fn a_zone_still_referenced_by_a_surface_cannot_be_deleted() {
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let fault = reduce(&EnergyModelEditorCommand::DeleteZone { zone: 1 }, &doc).err().expect("a referenced zone is refused");
-    assert_eq!(fault.code.0.as_str(), "mutation.target-in-use");
+    assert_eq!(fault.code.0.as_str(), "app.command.target-in-use");
 }
 
 /// 🧱️ The SI guards run BEFORE the seam, so they are observable whatever the vocabulary state.
@@ -280,7 +280,7 @@ async fn out_of_range_payloads_are_refused_before_they_reach_the_vocabulary() {
         EnergyModelEditorCommand::CreateZone { name: "Void".into(), volume_m3: 0.0, multiplier: 1, conditioned: true },
     ] {
         let fault = reduce(&command, &doc).err().expect("an out-of-range payload is refused");
-        assert_eq!(fault.code.0.as_str(), "mutation.invalid-payload", "{} failed for the wrong reason", command.action_id());
+        assert_eq!(fault.code.0.as_str(), "app.command.invalid-payload", "{} failed for the wrong reason", command.action_id());
     }
     let fault = reduce(&EnergyModelEditorCommand::SetMaterialProperty { material: 9, property: "conductivityWMK".into(), value: "0.04".into() }, &doc).err().expect("an unknown material is refused");
     assert_eq!(fault.code.0.as_str(), "mutation.target-missing");
@@ -307,7 +307,7 @@ async fn dispatchable_app() -> EnergyEditorApp {
 
 /// 🧵️ THE dispatch law: every declared verb must reach this editor's own reducer. A domain fault
 /// (`mutation.target-missing` for an id absent from the empty default document,
-/// `mutation.kind-unavailable` for a vocabulary group still landing, or an `energy.session.*`
+/// `app.command.kind-unavailable` for a vocabulary group still landing, or an `energy.session.*`
 /// rejection for a session verb with no live run) is a PASS — it proves the command was
 /// constructed, admitted and reduced. Any `interactive-job.*` code is a FAIL: it means the verb
 /// never reached the app at all (missing factory, missing proof, unsupported publication lane,
@@ -705,9 +705,9 @@ async fn every_fenestration_property_round_trips_through_the_granular_vocabulary
 #[semio_framework_async_macros::async_test]
 async fn a_fenestration_property_verb_refuses_the_three_bad_payloads() {
     let snapshot = snapshot_of(&inspector_model());
-    assert_eq!(refusal(&snapshot, &fenestration_property(50, "nonsense", "1.0")), "mutation.invalid-payload");
-    assert_eq!(refusal(&snapshot, &fenestration_property(50, "uValueWM2K", "warm")), "mutation.invalid-payload");
-    assert_eq!(refusal(&snapshot, &fenestration_property(50, "shgc", "1.5")), "mutation.invalid-payload", "a fraction outside 0..=1 is refused");
+    assert_eq!(refusal(&snapshot, &fenestration_property(50, "nonsense", "1.0")), "app.command.invalid-payload");
+    assert_eq!(refusal(&snapshot, &fenestration_property(50, "uValueWM2K", "warm")), "app.command.invalid-payload");
+    assert_eq!(refusal(&snapshot, &fenestration_property(50, "shgc", "1.5")), "app.command.invalid-payload", "a fraction outside 0..=1 is refused");
     assert_eq!(refusal(&snapshot, &fenestration_property(9_999, "uValueWM2K", "1.0")), "mutation.target-missing");
     assert_eq!(refusal(&snapshot, &fenestration_property(50, "glazingConstruction", "9999")), "mutation.target-missing", "a dangling glazing construction is refused");
 }
@@ -751,7 +751,7 @@ async fn an_interzone_boundary_carries_and_validates_its_partner_surface() {
     let paired = EnergyModelEditorCommand::SetSurfaceProperty { surface: 40, property: "boundary".into(), value: "interzone".into(), partner_surface: 42 };
     assert_eq!(emitted_kinds(&snapshot, &paired), vec!["change-surface-boundary-condition".to_string()]);
     assert_eq!(applied(&snapshot, &paired).surfaces[0].outside_boundary_condition, OutsideBoundary::Interzone(EntityId(42)));
-    assert_eq!(refusal(&snapshot, &surface_property(40, "boundary", "interzone")), "mutation.invalid-payload", "an interzone boundary without a partner is refused");
+    assert_eq!(refusal(&snapshot, &surface_property(40, "boundary", "interzone")), "app.command.invalid-payload", "an interzone boundary without a partner is refused");
     let dangling = EnergyModelEditorCommand::SetSurfaceProperty { surface: 40, property: "boundary".into(), value: "interzone".into(), partner_surface: 9_999 };
     assert_eq!(refusal(&snapshot, &dangling), "mutation.target-missing");
 }
@@ -759,9 +759,9 @@ async fn an_interzone_boundary_carries_and_validates_its_partner_surface() {
 #[semio_framework_async_macros::async_test]
 async fn a_surface_property_verb_refuses_the_three_bad_payloads() {
     let snapshot = snapshot_of(&inspector_model());
-    assert_eq!(refusal(&snapshot, &surface_property(40, "nonsense", "x")), "mutation.invalid-payload");
-    assert_eq!(refusal(&snapshot, &surface_property(40, "class", "wall")), "mutation.invalid-payload");
-    assert_eq!(refusal(&snapshot, &surface_property(40, "multiplier", "0")), "mutation.invalid-payload");
+    assert_eq!(refusal(&snapshot, &surface_property(40, "nonsense", "x")), "app.command.invalid-payload");
+    assert_eq!(refusal(&snapshot, &surface_property(40, "class", "wall")), "app.command.invalid-payload");
+    assert_eq!(refusal(&snapshot, &surface_property(40, "multiplier", "0")), "app.command.invalid-payload");
     assert_eq!(refusal(&snapshot, &surface_property(9_999, "name", "Ghost")), "mutation.target-missing");
     assert_eq!(refusal(&snapshot, &surface_property(40, "construction", "9999")), "mutation.target-missing");
 }
@@ -784,8 +784,8 @@ async fn every_zone_property_round_trips_through_the_granular_vocabulary() {
 #[semio_framework_async_macros::async_test]
 async fn a_zone_property_verb_refuses_the_three_bad_payloads() {
     let snapshot = snapshot_of(&inspector_model());
-    assert_eq!(refusal(&snapshot, &zone_property(1, "nonsense", "x")), "mutation.invalid-payload");
-    assert_eq!(refusal(&snapshot, &zone_property(1, "volumeM3", "-4")), "mutation.invalid-payload");
+    assert_eq!(refusal(&snapshot, &zone_property(1, "nonsense", "x")), "app.command.invalid-payload");
+    assert_eq!(refusal(&snapshot, &zone_property(1, "volumeM3", "-4")), "app.command.invalid-payload");
     assert_eq!(refusal(&snapshot, &zone_property(9_999, "name", "Ghost")), "mutation.target-missing");
 }
 
@@ -850,10 +850,10 @@ async fn every_glazing_and_gas_material_property_round_trips_through_the_granula
 #[semio_framework_async_macros::async_test]
 async fn the_glazing_and_gas_property_verbs_refuse_the_three_bad_payloads() {
     let snapshot = snapshot_of(&inspector_model());
-    assert_eq!(refusal(&snapshot, &glazing_property(22, "solarReflectanceFront", "0.1")), "mutation.invalid-payload", "a field with no mutation kind is refused, never silently written");
-    assert_eq!(refusal(&snapshot, &glazing_property(22, "thicknessM", "clear")), "mutation.invalid-payload");
+    assert_eq!(refusal(&snapshot, &glazing_property(22, "solarReflectanceFront", "0.1")), "app.command.invalid-payload", "a field with no mutation kind is refused, never silently written");
+    assert_eq!(refusal(&snapshot, &glazing_property(22, "thicknessM", "clear")), "app.command.invalid-payload");
     assert_eq!(refusal(&snapshot, &glazing_property(9_999, "thicknessM", "0.006")), "mutation.target-missing");
-    assert_eq!(refusal(&snapshot, &gas_property(23, "gas", "helium")), "mutation.invalid-payload");
+    assert_eq!(refusal(&snapshot, &gas_property(23, "gas", "helium")), "app.command.invalid-payload");
     assert_eq!(refusal(&snapshot, &gas_property(9_999, "thicknessM", "0.016")), "mutation.target-missing");
     let model = inspector_model();
     assert!(emitted_kinds(&snapshot, &glazing_property(22, "thicknessM", &model.glazing_materials[0].thickness_m.to_string())).is_empty(), "an unchanged value opens no revision");
@@ -944,9 +944,9 @@ async fn every_material_property_round_trips_through_the_granular_vocabulary() {
 #[semio_framework_async_macros::async_test]
 async fn the_material_property_verb_refuses_the_four_bad_payloads() {
     let snapshot = snapshot_of(&inspector_model());
-    assert_eq!(refusal(&snapshot, &material_property(10, "roughness", "gritty")), "mutation.invalid-payload", "an unknown roughness spelling is refused, never written");
-    assert_eq!(refusal(&snapshot, &material_property(10, "conductivityWMK", "-1")), "mutation.invalid-payload");
-    assert_eq!(refusal(&snapshot, &material_property(10, "reflectance", "0.5")), "mutation.invalid-payload", "a property this record does not have is refused");
+    assert_eq!(refusal(&snapshot, &material_property(10, "roughness", "gritty")), "app.command.invalid-payload", "an unknown roughness spelling is refused, never written");
+    assert_eq!(refusal(&snapshot, &material_property(10, "conductivityWMK", "-1")), "app.command.invalid-payload");
+    assert_eq!(refusal(&snapshot, &material_property(10, "reflectance", "0.5")), "app.command.invalid-payload", "a property this record does not have is refused");
     assert_eq!(refusal(&snapshot, &material_property(9_999, "name", "Ghost")), "mutation.target-missing");
     let held = inspector_model().materials[0].roughness;
     assert!(emitted_kinds(&snapshot, &material_property(10, "roughness", crate::editor::model::surface_roughness_id(held))).is_empty(), "an unchanged roughness opens no revision");
@@ -989,10 +989,10 @@ async fn the_construction_property_verb_refuses_the_four_bad_payloads() {
     let construction = model.constructions.iter().find(|entry| entry.layer_material_ids.len() >= 2).expect("a multi-layer construction");
     let id = construction.id.0;
     let glazing = model.glazing_materials.first().expect("the demo has a glazing material");
-    assert_eq!(refusal(&snapshot, &construction_property(id, "addLayer", &glazing.id.0.to_string())), "mutation.invalid-payload", "a glazing pane has no add-construction-layer");
-    assert_eq!(refusal(&snapshot, &construction_property(id, "removeLayer", "99")), "mutation.invalid-payload", "an index past the end is refused");
-    assert_eq!(refusal(&snapshot, &construction_property(id, "moveLayerUp", "0")), "mutation.invalid-payload", "the first layer has nothing above it");
-    assert_eq!(refusal(&snapshot, &construction_property(id, "thickness", "0.2")), "mutation.invalid-payload", "a property a construction does not have is refused");
+    assert_eq!(refusal(&snapshot, &construction_property(id, "addLayer", &glazing.id.0.to_string())), "app.command.invalid-payload", "a glazing pane has no add-construction-layer");
+    assert_eq!(refusal(&snapshot, &construction_property(id, "removeLayer", "99")), "app.command.invalid-payload", "an index past the end is refused");
+    assert_eq!(refusal(&snapshot, &construction_property(id, "moveLayerUp", "0")), "app.command.invalid-payload", "the first layer has nothing above it");
+    assert_eq!(refusal(&snapshot, &construction_property(id, "thickness", "0.2")), "app.command.invalid-payload", "a property a construction does not have is refused");
     assert_eq!(refusal(&snapshot, &construction_property(9_999, "name", "Ghost")), "mutation.target-missing");
 }
 
@@ -1129,9 +1129,9 @@ async fn picking_an_interzone_partner_makes_the_surface_interzone() {
     assert_eq!(emitted_kinds(&snapshot, &command), vec!["change-surface-boundary-condition".to_string()]);
     assert_eq!(applied(&snapshot, &command).surfaces[0].outside_boundary_condition, OutsideBoundary::Interzone(second));
 
-    assert_eq!(refusal(&snapshot, &surface_property(first.0, "interzonePartner", &first.0.to_string())), "mutation.invalid-payload", "a surface is never its own neighbour");
+    assert_eq!(refusal(&snapshot, &surface_property(first.0, "interzonePartner", &first.0.to_string())), "app.command.invalid-payload", "a surface is never its own neighbour");
     assert_eq!(refusal(&snapshot, &surface_property(first.0, "interzonePartner", "9999")), "mutation.target-missing");
-    assert_eq!(refusal(&snapshot, &surface_property(first.0, "interzonePartner", "0")), "mutation.invalid-payload");
+    assert_eq!(refusal(&snapshot, &surface_property(first.0, "interzonePartner", "0")), "app.command.invalid-payload");
 
     // 🚧️ And a plain boundary pick on an ALREADY interzone surface keeps its neighbour instead of
     // refusing for want of a partner it was never given a control for.

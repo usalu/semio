@@ -1,0 +1,14 @@
+{
+  "InsertZoneWindow": {
+    "zoneId": "zone-living",
+    "index": 2,
+    "window": {
+      "id": "win-extra",
+      "orientation": "W",
+      "inclinationDeg": 90.0,
+      "areaM2": 2.0,
+      "gValue": 0.5,
+      "shadingFc": 0.5
+    }
+  }
+}

@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeInfiltrationDischargeCoefficient, base: &Ener
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Infiltration {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_discharge_coefficient.is_finite() || payload.new_discharge_coefficient <= 0.0 {
-        return protocol::MutationOutcome::error(
+        return protocol::MutationOutcome::fatal(
             "mutation.invariant",
             format!("Infiltration {}: the orifice discharge coefficient must be a positive finite value, got {}.", payload.id.0, payload.new_discharge_coefficient),
             [payload.id.0.to_string()],

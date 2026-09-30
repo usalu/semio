@@ -656,6 +656,91 @@
           }
         }
       ]
+    },
+    {
+      "id": "ack-rejected-transition-retracts",
+      "title": "Rejected History Transition Is Retracted From The Store",
+      "documentId": "parity-doc",
+      "spaceId": "parity-space",
+      "actor": "local-actor",
+      "steps": [
+        {
+          "op": "localDispatch",
+          "dispatch": {
+            "kind": "queueMutation",
+            "mutationId": "reject-op",
+            "n": 4
+          }
+        },
+        {
+          "op": "localDispatch",
+          "dispatch": {
+            "kind": "queueTransition",
+            "mutationId": "reject-transition"
+          }
+        },
+        {
+          "op": "localDispatch",
+          "dispatch": {
+            "kind": "connectSocket",
+            "actor": "hub.v1.eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "welcome",
+            "sessionId": "s9",
+            "resumeToken": "resume-9",
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 0,
+              "headEditId": "genesis",
+              "lastCommitSeq": 0,
+              "chainHashByte": 1
+            },
+            "bootstrap": "none"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "session",
+            "actor": "hub.v1.eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "color": 7
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "ack",
+            "batchId": 0,
+            "outcome": "rejected",
+            "rejectReason": "history.unknown-target",
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 0,
+              "headEditId": "genesis",
+              "lastCommitSeq": 0,
+              "chainHashByte": 1
+            }
+          }
+        },
+        {
+          "op": "expect",
+          "expect": {
+            "pendingBatchCount": 0,
+            "commandOutcome": "rejected",
+            "retractedMutationIds": [
+              "reject-transition"
+            ],
+            "eventKinds": [
+              "documentBackbone",
+              "commandOutcome"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,6 @@
+{
+  "mutation": "changeBoltCount",
+  "connectionId": "support-weld",
+  "newRows": 3,
+  "newBoltsPerRow": 2
+}

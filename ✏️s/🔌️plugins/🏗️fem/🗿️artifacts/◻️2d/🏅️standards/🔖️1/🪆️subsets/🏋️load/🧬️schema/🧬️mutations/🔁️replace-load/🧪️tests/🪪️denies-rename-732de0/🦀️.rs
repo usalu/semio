@@ -50,8 +50,8 @@ fn the_refusal_is_the_declared_diagnostic() {
     assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "replace-load/🪪️denies-rename-732de0: a rejecting replace-load must carry the empty diff, never a half-built delta");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
-    assert_eq!(messages[0].code.0, "mutation.id-mismatch", "replace-load/🪪️denies-rename-732de0: the refusal is reported as mutation.id-mismatch");
-    assert_eq!(messages[0].level, protocol::Severity::Fatal, "a replacement that renames its target is an identity breach — Fatal, and no merge policy may absorb it");
+    assert_eq!(messages[0].code.0, "mutation.target-mismatch", "replace-load/🪪️denies-rename-732de0: the refusal is reported as mutation.target-mismatch");
+    assert_eq!(messages[0].level, protocol::Severity::Error, "a replacement that renames its target contradicts the target it selects — the state-dependent Error");
     assert_eq!(messages[0].target, vec!["lw1".to_string(), "lw1_b".to_string()], "the diagnostic addresses the offending id");
     let semantics = <Fem2dMutation as protocol::SemanticMutation<Fem2dSnapshot>>::semantics(&mutation());
     assert_eq!(semantics.kind, "replace-load", "the fixture must be bound to replace-load's own descriptor");

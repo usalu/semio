@@ -66,7 +66,7 @@ mod wasm_program_exchange {
     }
 
     /// 🧾 Formats an `AppFrame::Error`'s trailing `report` (a packed `protocol::DispatchReport`,
-    /// present whenever `fault.code == "mutation.rejected"` — contract-freeze.md §C8/C9) into a short
+    /// present whenever `fault.code == "app.command.rejected"` — contract-freeze.md §C8/C9) into a short
     /// `code: message [target]` list, mirroring `framework/products/os/modules/run/component.rs`'s
     /// own `dispatch_report_summary`. Empty for a pre-CHANNEL_VERSION-11 peer or a rejection whose
     /// report genuinely carries no messages.
@@ -1138,7 +1138,11 @@ mod browser_ephemeral {
         let presence = field_bytes(&answer, "presence");
         let interaction = field_bytes(&answer, "interaction");
         let interaction = if interaction.is_empty() { None } else { protocol::decode_presence_interaction(&interaction, &mut 0).await.ok() };
-        let snapshot = ProgramEphemeralSnapshot { presence: (generation > 0.0).then_some(presence), interaction, tool_run: None, history_edit: None };
+        let tool_run = field_bytes(&answer, "toolRun");
+        let tool_run = if tool_run.is_empty() { None } else { protocol::decode_presence_tool_run(&tool_run).ok() };
+        let history_edit = field_bytes(&answer, "historyEdit");
+        let history_edit = if history_edit.is_empty() { None } else { protocol::decode_presence_history_edit(&history_edit).ok() };
+        let snapshot = ProgramEphemeralSnapshot { presence: (generation > 0.0).then_some(presence), interaction, tool_run, history_edit };
         SNAPSHOTS.with(|snapshots| snapshots.borrow_mut().insert(instance_id, snapshot));
     }
 

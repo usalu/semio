@@ -45,8 +45,8 @@ fn the_refusal_is_the_declared_diagnostic() {
     assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "replace-combination/renames-combo-e8f4f2: a refused mutation must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "replace-combination/renames-combo-e8f4f2: exactly one diagnostic is expected, got {messages:?}");
-    assert_eq!(messages[0].code.0, "mutation.id-mismatch", "replace-combination/renames-combo-e8f4f2: the refusal is reported as mutation.id-mismatch");
-    assert_eq!(messages[0].level, protocol::Severity::Fatal, "replace-combination/renames-combo-e8f4f2: renaming a record is an identity breach, the same Fatal level a duplicate identity raises");
+    assert_eq!(messages[0].code.0, "mutation.target-mismatch", "replace-combination/renames-combo-e8f4f2: the refusal is reported as mutation.target-mismatch");
+    assert_eq!(messages[0].level, protocol::Severity::Error, "replace-combination/renames-combo-e8f4f2: renaming a record contradicts the target the replace selects, the state-dependent Error");
     assert_eq!(messages[0].target, vec!["sls".to_string(), "sls_b".to_string()], "replace-combination/renames-combo-e8f4f2: the diagnostic addresses exactly \"sls\", \"sls_b\"");
 }
 

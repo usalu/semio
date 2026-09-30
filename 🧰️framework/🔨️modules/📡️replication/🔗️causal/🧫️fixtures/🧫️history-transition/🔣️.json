@@ -350,5 +350,40 @@
         "detail": "truncated"
       }
     }
+  ],
+  "trunks": [
+    {
+      "documentId": "doc",
+      "alternativeId": "trunk-fdac0ef9f78cddc8"
+    },
+    {
+      "documentId": "doc-supersede-fold",
+      "alternativeId": "trunk-dcc26f4ceb8fc889"
+    },
+    {
+      "documentId": "Grüße 🧪 document",
+      "alternativeId": "trunk-abbedef19340e972"
+    }
+  ],
+  "shapes": [
+    {
+      "shape": "document",
+      "admits": [
+        "revert",
+        "reinstate",
+        "commit",
+        "branch",
+        "checkout",
+        "repin",
+        "supersede"
+      ]
+    },
+    {
+      "shape": "config",
+      "admits": [
+        "revert",
+        "reinstate"
+      ]
+    }
   ]
 }

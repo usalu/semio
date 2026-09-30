@@ -21,7 +21,7 @@ impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetLayerStrokeSc
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "layer-stroke-scale", kind: "set-layer-stroke-scale", record: "SetLayerStrokeScale" };
     fn diff(&self, base: &MapWindowConfig) -> MutationOutcome<MapWindowConfigDiff> {
         if self.value.is_some_and(|value| !value.is_finite()) {
-            return MutationOutcome::fatal("mutation.invalid-number", "Layer stroke scale must be finite.", ["layerStrokeScale", self.layer_id.as_str()]);
+            return MutationOutcome::fatal("mutation.invariant", "Layer stroke scale must be finite.", ["layerStrokeScale", self.layer_id.as_str()]);
         }
         if base.layer_stroke_scale.get(&self.layer_id).copied() == self.value {
             return MutationOutcome::empty().warn("mutation.no-op", "Layer stroke scale override is already at the requested value.");

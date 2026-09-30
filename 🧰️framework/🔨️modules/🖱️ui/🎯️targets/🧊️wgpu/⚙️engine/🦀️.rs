@@ -1630,6 +1630,18 @@ impl Ui {
         self.windows.get(window_id).map_or(ui_contract::UiFlow::DEFAULT, |window| window.router.flow())
     }
 
+    /// 👥️ Gives every open window's retained trees the peers' notes by record key (sorted by key) — React's host
+    /// presence overlay `notes`. Keys are document-unique framework ids, so one table serves every window; a window that
+    /// opens later takes it on the next call. `true` when any window changed.
+    pub fn set_presence_notes(&mut self, notes: &[(String, String)]) -> bool {
+        let mut changed = false;
+        for window in self.windows.values_mut().filter(|window| window.closing.is_none()) {
+            changed |= window.tree.set_presence_notes(notes);
+            changed |= window.presented_tree.set_presence_notes(notes);
+        }
+        changed
+    }
+
     /// 🎯️ Applies one host-owned single selection to a reconciled Tree candidate without folding
     /// ephemeral presence into the immutable document record. The generation fence prevents a late
     /// host update from decorating a replacement document that reused the same surface id.

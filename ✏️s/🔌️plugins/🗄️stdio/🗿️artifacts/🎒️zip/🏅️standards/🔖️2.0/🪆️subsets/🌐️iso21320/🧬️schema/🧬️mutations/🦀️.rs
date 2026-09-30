@@ -108,8 +108,6 @@ pub fn declared_method(mutation: &ZipIso21320Mutation) -> Option<ZipIso21320Meth
 //#endregion 🔖️Model
 
 //#region 🔖️Apply
-const CODE_REJECTED: &str = "stdio.zip.iso21320.mutation-outside-profile";
-
 /// ▶️ Applies `mutation` to `snapshot`: the diff is the single semantics source, never a separate
 /// imperative apply path.
 pub fn apply_zip_iso21320_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipIso21320Mutation) -> protocol::MutationOutcome<ZipDiff> {
@@ -119,7 +117,7 @@ pub fn apply_zip_iso21320_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipIso
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -132,10 +130,10 @@ pub(crate) fn agg_diff(this: &ZipIso21320Mutation, base: &ZipSnapshot) -> protoc
         ZipIso21320Mutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment, comment_utf8 }) => protocol::MutationOutcome::new(diff::diff_set_archive_comment(comment, *comment_utf8)),
         ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry, before }) | ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry, before }) => {
             if base.entries.iter().any(|existing| existing.name == entry.name) {
-                return protocol::MutationOutcome::error(CODE_REJECTED, format!("a member named {:?} already exists -- ISO/IEC 21320-1 containers address members by name", entry.name), [entry.name.clone()]);
+                return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("a member named {:?} already exists -- ISO/IEC 21320-1 containers address members by name", entry.name), [entry.name.clone()]);
             }
             if before.as_ref().is_some_and(|name| !base.entries.iter().any(|entry| &entry.name == name)) {
-                return protocol::MutationOutcome::error(CODE_REJECTED, "ZIP insertion anchor no longer exists", ["entries"]);
+                return protocol::MutationOutcome::error("mutation.target-missing", "ZIP insertion anchor no longer exists", ["entries"]);
             }
             let mut entry = entry.clone();
             entry.metadata.compression_method = declared_method(this).expect("add mutation declares compression").wire_code();
@@ -144,7 +142,7 @@ pub(crate) fn agg_diff(this: &ZipIso21320Mutation, base: &ZipSnapshot) -> protoc
         ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name }) => protocol::MutationOutcome::new(diff::diff_remove_entry(name)),
         ZipIso21320Mutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => {
             if base.entries.iter().any(|existing| existing.name == *new_name) {
-                return protocol::MutationOutcome::error(CODE_REJECTED, format!("a member named {new_name:?} already exists"), [new_name.clone()]);
+                return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("a member named {new_name:?} already exists"), [new_name.clone()]);
             }
             protocol::MutationOutcome::new(diff::diff_rename_entry(name, new_name))
         }

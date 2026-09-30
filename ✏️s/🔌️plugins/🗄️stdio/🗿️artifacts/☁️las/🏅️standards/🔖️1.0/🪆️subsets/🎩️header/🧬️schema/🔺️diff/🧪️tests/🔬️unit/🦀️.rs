@@ -5,7 +5,7 @@ async fn invalid_collection_targets_are_rejected_before_mutation() {
     let base = LasSnapshot::default();
     let diff = LasDiff { vlrs: Some(LasVlrsDiff { removed: vec![0], ..Default::default() }), ..Default::default() };
     let error = diff.apply(&base).expect_err("missing VLR target must be rejected");
-    assert_eq!(error.code, "invalid-remove-index");
+    assert_eq!(error.code, "mutation.apply.invalid-remove-index");
     assert_eq!(error.target, vec!["vlrs", "0"]);
     assert_eq!(base, LasSnapshot::default());
 }

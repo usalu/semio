@@ -6,6 +6,8 @@ import { PassThrough } from "node:stream";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import {
+  resolveThemeGeometry,
+  resolveThemeSpacingPx,
   clearColorResolveCache,
   resolveColorHex,
   resolveColorRgba,
@@ -95,7 +97,7 @@ describe("shared asset delivery", () => {
     const schema = JSON.parse(readFileSync(resolve(root, "🧬️schema/🔣️.json"), "utf8"));
     const authority = JSON.parse(readFileSync(resolve(root, "🚚️delivery.json"), "utf8"));
     const { default: Ajv } = await import("ajv");
-    const validate = new Ajv({ strict: true }).compile(schema);
+    const validate = new Ajv({ strict: true, keywords: ["x-semio-ui", "x-semio-resolution"], formats: { "semio-css-length-expression": { type: "string", validate: (value: string) => value.length <= 512 } } }).compile(schema);
     expect(validate(authority)).toBe(true);
     expect(parseAssetDeliveryAuthority(authority).directoryName).toBe(SEMIO_ASSET_DIRECTORY);
     for (const invalid of fixture.invalidAuthorities) {
@@ -140,7 +142,7 @@ describe("favicon delivery", () => {
     const authority = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🌐️favicon/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
     const { default: Ajv } = await import("ajv");
-    const validate = new Ajv({ strict: true }).compile(schema);
+    const validate = new Ajv({ strict: true, keywords: ["x-semio-ui", "x-semio-resolution"], formats: { "semio-css-length-expression": { type: "string", validate: (value: string) => value.length <= 512 } } }).compile(schema);
     expect(validate(authority)).toBe(true);
     for (const invalid of [{ ...authority, svg: "favicon.svg" }, { ...authority, ico: "🖼️favicon.ico" }, { ...authority, extra: true }]) expect(validate(invalid)).toBe(false);
     const sources = semioFaviconSources(repoRoot);
@@ -349,7 +351,7 @@ describe("font source identity", () => {
     const input = JSON.parse(readFileSync(resolve(assetRoot, "🔤️fonts/📇️catalog.json"), "utf8"));
     const schema = JSON.parse(readFileSync(resolve(assetRoot, "🔤️fonts/🧬️schema/🔣️.json"), "utf8"));
     const { default: Ajv } = await import("ajv");
-    const validate = new Ajv({ strict: true }).compile(schema);
+    const validate = new Ajv({ strict: true, keywords: ["x-semio-ui", "x-semio-resolution"], formats: { "semio-css-length-expression": { type: "string", validate: (value: string) => value.length <= 512 } } }).compile(schema);
     expect(validate(input)).toBe(true);
     const catalog = parseFontCatalog(input);
     const sources = fontCatalogSources(catalog);
@@ -1164,3 +1166,43 @@ describe("chrome text-on-surface contrast pairs", () => {
   });
 });
 //#endregion ♿️CustomThemeContrast
+
+
+describe("shared theme geometry", () => {
+  it("matches neutral vectors and independent CSS calculation", async () => {
+    const { calc } = await import("@csstools/css-calc");
+    const { default: Ajv } = await import("ajv/dist/2020");
+    const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/📐️theme-geometry/🔣️.json"), "utf8"));
+    const bindings = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🌓️theme/📐️geometry/🔣️.json"), "utf8")).bindings;
+    const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🌓️theme/📐️geometry/🧬️contract/🔣️.json"), "utf8"));
+    const validate = new Ajv({ strict: true, keywords: ["x-semio-ui", "x-semio-resolution"], formats: { "semio-css-length-expression": { type: "string", validate: (value: string) => value.length <= 512 } } }).compile(schema);
+    for (const vector of fixture.cases) {
+      const input = { compact: vector.compact, rootRemPx: vector.rootRemPx, metrics: vector.metrics };
+      expect(validate(input), JSON.stringify(validate.errors)).toBe(true);
+      const geometry = resolveThemeGeometry({ spacing: { compact: vector.compact }, metrics: { ...vector.metrics, dom: { ...vector.metrics.dom, rootRemPx: vector.rootRemPx } } });
+      expect(geometry.spacingPx).toBeCloseTo(vector.expectedSpacingPx, 10);
+      for (const binding of bindings) {
+        const metric = vector.metrics[binding.section][binding.key];
+        const length = binding.unit === "spacing" ? calc(`calc(${metric} * ${vector.compact})`) : `${metric}px`;
+        const pixels = length.endsWith("rem") ? calc(`calc(${Number.parseFloat(length)} * ${vector.rootRemPx}px)`) : length;
+        expect(Number.parseFloat(pixels)).toBeCloseTo(vector.expected[binding.themeField], 10);
+        expect(geometry.scalars[binding.themeField]).toBeCloseTo(vector.expected[binding.themeField], 10);
+        expect(Number.parseFloat(geometry.cssVars[binding.cssVar]!)).toBeCloseTo(vector.expected[binding.themeField], 10);
+      }
+    }
+    for (const compact of fixture.invalid) {
+      expect(() => resolveThemeSpacingPx(compact, 16)).toThrow();
+    }
+    for (const rootRemPx of [0, -1]) {
+      expect(validate({ compact: "1rem", rootRemPx, metrics: {} })).toBe(false);
+      expect(() => resolveThemeSpacingPx("1rem", rootRemPx)).toThrow();
+    }
+  });
+
+  it("uses projected chrome metrics in React shell placement", () => {
+    const root = resolve(import.meta.dir, "../../../🧱️elements");
+    expect(readFileSync(resolve(root, "🔝️Navbar/🟦️.tsx"), "utf8")).toContain("h-[var(--navbar-height)]");
+    expect(readFileSync(resolve(root, "🔚️Footer/🟦️.tsx"), "utf8")).toContain("h-[var(--footer-height)]");
+    expect(readFileSync(resolve(root, "🎨️Canvas/🟦️.tsx"), "utf8")).toContain('MODE_CANVAS_INSET_CLASS = "p-[var(--padding-standard)]"');
+  });
+});

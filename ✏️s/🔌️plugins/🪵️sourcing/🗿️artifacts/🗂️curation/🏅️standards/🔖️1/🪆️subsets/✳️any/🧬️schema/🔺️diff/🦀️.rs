@@ -197,7 +197,7 @@ fn reorder_named<T>(items: Vec<T>, order: Option<&[String]>, id: impl for<'a> Fn
 impl CurationDiff {
     /// 🧬️ Applies sparse document fields onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &CurationArtifact) -> protocol::MutationApplyResult<CurationArtifact> {
-        self.validate().map_err(|message| protocol::MutationApplyError::new("mutation.child-identity", message))?;
+        self.validate().map_err(|message| protocol::MutationApplyError::new("mutation.apply.child-identity", message))?;
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -224,7 +224,7 @@ pub fn diff_set_snapshot(snapshot: &CurationSnapshot) -> CurationDiff {
 
 impl MutationDiff<CurationSnapshot> for CurationDiff {
     fn apply(&self, snapshot: &CurationSnapshot) -> protocol::MutationApplyResult<CurationSnapshot> {
-        self.validate().map_err(|message| protocol::MutationApplyError::new("mutation.child-identity", message))?;
+        self.validate().map_err(|message| protocol::MutationApplyError::new("mutation.apply.child-identity", message))?;
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());

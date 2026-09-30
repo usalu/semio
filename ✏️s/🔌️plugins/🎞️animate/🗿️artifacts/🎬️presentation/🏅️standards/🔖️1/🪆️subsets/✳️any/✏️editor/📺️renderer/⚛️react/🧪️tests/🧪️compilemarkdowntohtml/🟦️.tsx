@@ -2115,7 +2115,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         inlineColumnLabelPosition,
         mediaEmbodiments,
         mediaParticipants,
-      } = await import("@semio-tech/mit-bestand-praesentation-projektetage-spec");
+      } = await import("@semio-tech/mit-bestand-praesentation-projektetage/spec");
       const deck: Presentation = {
         id: "projektetage-morph",
         name: "Morph",
@@ -2235,8 +2235,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("shows catalogue full figure at rest with source ghosts and focus tiles visible", async () => {
-      const { collectPresentationSlides } = await import("@semio-tech/animate-presentation-core");
-      const { deck } = await import("@semio-tech/mit-bestand-praesentation-projektetage-spec");
+      const { collectPresentationSlides } = await import("@semio-tech/presentation");
+      const { deck } = await import("@semio-tech/mit-bestand-praesentation-projektetage/spec");
       const mountRoot = document.createElement("div");
       document.body.appendChild(mountRoot);
       act(() => {
@@ -2265,7 +2265,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("renders target ghosts but no source ghosts on focus and labels slides", async () => {
-      const { deck } = await import("@semio-tech/mit-bestand-praesentation-projektetage-spec");
+      const { deck } = await import("@semio-tech/mit-bestand-praesentation-projektetage/spec");
       const mountRoot = document.createElement("div");
       document.body.appendChild(mountRoot);
       act(() => {
@@ -2285,8 +2285,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("puts reveal data-id on catalogue tile wrappers for catalogue-to-focus morph", async () => {
-      const { collectPresentationSlides } = await import("@semio-tech/animate-presentation-core");
-      const { deck, CATALOGUE_FOCUS_TILES } = await import("@semio-tech/mit-bestand-praesentation-projektetage-spec");
+      const { collectPresentationSlides } = await import("@semio-tech/presentation");
+      const { deck, CATALOGUE_FOCUS_TILES } = await import("@semio-tech/mit-bestand-praesentation-projektetage/spec");
       const catalogueRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilkatalog");
       const focusRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilarten");
       expect(catalogueRef).toBeDefined();
@@ -2310,8 +2310,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("auto-animates catalogue tiles into focus layout", async () => {
-      const { collectPresentationSlides } = await import("@semio-tech/animate-presentation-core");
-      const { deck, CATALOGUE_FOCUS_TILES } = await import("@semio-tech/mit-bestand-praesentation-projektetage-spec");
+      const { collectPresentationSlides } = await import("@semio-tech/presentation");
+      const { deck, CATALOGUE_FOCUS_TILES } = await import("@semio-tech/mit-bestand-praesentation-projektetage/spec");
       const catalogueRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilkatalog");
       const focusRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilarten");
       expect(catalogueRef).toBeDefined();
@@ -2334,8 +2334,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("places catalogue-labels target ghosts at inline label frames", async () => {
-      const { collectPresentationSlides } = await import("@semio-tech/animate-presentation-core");
-      const { deck, inlineColumnLabelPosition } = await import("@semio-tech/mit-bestand-praesentation-projektetage-spec");
+      const { collectPresentationSlides } = await import("@semio-tech/presentation");
+      const { deck, inlineColumnLabelPosition } = await import("@semio-tech/mit-bestand-praesentation-projektetage/spec");
       const focusRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilarten");
       const labelRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilbeschriftungen");
       expect(focusRef).toBeDefined();
@@ -2360,8 +2360,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("fires reveal auto-animate when advancing projektetage focus to labels", async () => {
-      const { collectPresentationSlides } = await import("@semio-tech/animate-presentation-core");
-      const { deck } = await import("@semio-tech/mit-bestand-praesentation-projektetage-spec");
+      const { collectPresentationSlides } = await import("@semio-tech/presentation");
+      const { deck } = await import("@semio-tech/mit-bestand-praesentation-projektetage/spec");
       const catalogueRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilkatalog");
       const focusRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilarten");
       const labelRef = collectPresentationSlides(deck).find((slide) => slide.slide === "Bauteilbeschriftungen");

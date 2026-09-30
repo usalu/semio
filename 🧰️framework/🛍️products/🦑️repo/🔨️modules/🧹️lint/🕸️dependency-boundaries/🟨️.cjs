@@ -20,10 +20,9 @@ const RENDERER_HOST_ALLOWED_RESOLVED_PATHS = [
 
 /** 🔌️ Derived from the live `✏️s/🔌️plugins` directory listing rather than hardcoded, so the
  * cross-plugin isolation matrix below self-corrects as plugins are added, renamed, or removed. */
-const PLUGINS = fs
-  .readdirSync(path.join(REPO_ROOT, "✏️s/🔌️plugins"), { withFileTypes: true })
+const PLUGINS = presentDirectories("✏️s/🔌️plugins")
   .filter((entry) => entry.isDirectory())
-  .map((entry) => entry.name);
+  .map((entry) => entry.name).sort();
 
 /** 🔣️ `forbiddenPathSegments` (both `⚡️implementations` spellings) read from the M1 shared vocabulary
  * (`26/08/06/MECHANISM-VOCABULARY-AND-DISCOVERY-LIBRARY`) rather than re-hardcoded here, so this config
@@ -32,6 +31,21 @@ const PLUGINS = fs
 const TAXONOMY = JSON.parse(
   fs.readFileSync(path.join(REPO_ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8"),
 );
+
+/** 🗂️ Optional owner directories disappear cleanly; malformed present owners remain errors. */
+function presentDirectories(owner) {
+  try { return fs.readdirSync(path.join(REPO_ROOT, owner), { withFileTypes: true }); }
+  catch (error) { if (error.code === "ENOENT") return []; throw error; }
+}
+
+/** 📁️ Deletion removes a workspace contribution without hiding a damaged present manifest. */
+function presentWorkspace(owner) {
+  let entry;
+  try { entry = fs.lstatSync(path.join(REPO_ROOT, owner)); }
+  catch (error) { if (error.code === "ENOENT") return false; throw error; }
+  if (!entry.isDirectory()) throw new Error(`Workspace owner must be a directory: ${owner}`);
+  return true;
+}
 
 /** ⚙️ Escapes a literal string for embedding inside a `RegExp` alternation. */
 function escapeRegex(literal) {
@@ -97,10 +111,12 @@ assertFocusedBoundarySemantics();
 /** 🗺️ Classifies package ownership from the taxonomy and authored workspace manifests without reading opaque areas. */
 const AREA_LAYERS = Object.entries(TAXONOMY.areaLayers);
 const OPAQUE_PATHS = Object.values(TAXONOMY.pathExclusions).map(({ path: prefix }) => prefix.replace(/\/$/u, ""));
-const WORKSPACE_PACKAGES = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "package.json"), "utf8")).workspaces
+const WORKSPACES = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "package.json"), "utf8")).workspaces;
+if (!Array.isArray(WORKSPACES) || WORKSPACES.some((dir) => typeof dir !== "string" || !dir || dir.includes("\\") || dir.startsWith("/") || dir.split("/").some((part) => !part || part === "." || part === ".."))) throw new Error("Dependency boundaries require authored workspace paths");
+const WORKSPACE_PACKAGES = WORKSPACES
   .filter((dir) => !OPAQUE_PATHS.some((prefix) => dir === prefix || dir.startsWith(`${prefix}/`)))
-  .map((dir) => { const manifest = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, dir, "package.json"), "utf8")); return { dir, name: manifest.name, dependencyRole: manifest.semio?.dependencyRole }; })
-  .filter(({ name }) => typeof name === "string");
+  .filter(presentWorkspace)
+  .map((dir) => { const manifest = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, dir, "package.json"), "utf8")); if (typeof manifest.name !== "string" || !manifest.name) throw new Error(`Workspace owner requires an authored package name: ${dir}`); return { dir, name: manifest.name, dependencyRole: manifest.semio?.dependencyRole }; });
 const S_PACKAGES = WORKSPACE_PACKAGES.filter(({ dir }) => dir.startsWith("✏️s/"));
 const FRAMEWORK_PACKAGES = WORKSPACE_PACKAGES.filter(({ dir }) => dir.startsWith("🧰️framework/"));
 const IGNORED_GRAPH_PATHS = TAXONOMY.implementationLeafPolicy.ignoredPathPatterns.filter((pattern) => pattern !== "**/node_modules").map((pattern) => `(^|/)${escapeRegex(pattern.replace(/^\*\*\//u, ""))}(/|$)`)
@@ -269,7 +285,7 @@ function frameworkNoSRule() {
  * audit for this ticket found zero real violations of this direction, so it's safe to enforce as ERROR
  * immediately rather than staging it through `warn`. */
 function sModulesNoPluginsRule() {
-  const pluginPackageNames = S_PACKAGES.filter((p) => p.dir.startsWith("✏️s/🔌️plugins/")).map((p) => `^${escapeRegex(p.name)}$`);
+  const pluginPackageNames = S_PACKAGES.filter((p) => p.dir.startsWith("✏️s/🔌️plugins/")).map((p) => `(?:^(?:node_modules/)?|/node_modules/)${escapeRegex(p.name)}(?:$|/)`);
   return {
     name: "s-modules-no-plugins",
     severity: "error",
@@ -281,47 +297,16 @@ function sModulesNoPluginsRule() {
   };
 }
 
-/** 🧱️ `no-plugin-to-extension` (W1 of `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT`): a plugin's core
- * code (i.e. everything under `✏️s/🔌️plugins/{p}/` outside its own `🧩️extensions/`) must not depend on
- * ANY plugin's `🧩️extensions/` tree — extensions are optional add-ons layered on top of a plugin's core,
- * so the dependency must run extension → core, never core → extension. `from` excludes `{p}/🧩️extensions/`
- * itself so extension-to-extension imports (including within the same plugin) are exempt. ERROR (W7 of
- * the same ticket) for every plugin except `🌀️procedural` and `📐️cad` — a full depcruise sweep of the
- * TS/JS import graph found zero real hits for every OTHER per-plugin rule, so there is nothing left to
- * clear before promoting those.
- *
- * `🌀️procedural` is the documented C2 exception (see `📓️w5b-c2-verdict.md`): 7 REAL dependencies on
- * `🌊️flow`'s extension crates, but they are Cargo (Rust) edges, invisible to this TS/JS-only scan either
- * way — promoting this rule here would be cosmetic, not a real gate on C2. C2 stays enforced (WARN-only,
- * populated allowlist) by the cargo-metadata layering lint instead (`CapabilityLayeringLintScript`,
- * `KNOWN_LAYERING_VIOLATIONS`), which actually sees the Cargo graph. Unlinking it for real needs new
- * runtime infrastructure that doesn't exist yet — a follow-up ticket, not mechanical cleanup.
- *
- * `📐️cad` is a SECOND, newly-discovered real violation (W7, not previously investigated by any earlier
- * wave of this ticket): `🔨️modules/🏃️runtime/🟦️.ts` and `🔨️modules/📐️brepjs/🟦️.ts`
- * (both plugin-core, outside `🧩️extensions/`) statically `import`/`import()` all 4 of cad's own
- * extensions (`@semio-tech/cad-js-module-{spatial-shape,aec-building,aec-building-energy,aec-building-
- * structure}`) to build `CAD_MODULE_REGISTRARS` — a composition-root that registers each installed
- * extension module. This is a real, structural core→extension edge, not noise, but "fix" here means
- * redesigning how cad's extensions register themselves (e.g. self-registration into a runtime-populated
- * table instead of the core statically importing every extension by name) — an architecture change, not
- * a lint-severity flip; out of scope for this pass. Left at WARN pending a dedicated follow-up. */
-function noPluginToExtensionRules() {
-  const extensionPackageNamePatterns = S_PACKAGES.filter((p) => /(^|\/)🧩️extensions\//.test(p.dir)).map((p) => `^${escapeRegex(p.name)}$`);
-  const GRANDFATHERED_PLUGINS = new Set(["🌀️procedural", "📐️cad"]);
-  return PLUGINS.map((p) => ({
-    name: `no-plugin-to-extension-${p}`,
-    severity: GRANDFATHERED_PLUGINS.has(p) ? "warn" : "error",
-    comment: GRANDFATHERED_PLUGINS.has(p)
-      ? `a plugin's core must not depend on any plugin's extensions tree — extensions depend on core, not the reverse — WARN: ${p === "🌀️procedural" ? "🌀️procedural's real violation (C2) is a Cargo dependency edge, invisible to this TS/JS import-graph scan; enforced instead by the cargo-metadata layering lint's KNOWN_LAYERING_VIOLATIONS allowlist, see 📓️w5b-c2-verdict.md" : "📐️cad's real violation is its runtime/brepjs composition-root statically importing all 4 of its own extensions to register them — an architecture change, not a lint flip; see this rule's own docstring above"}`
-      : "a plugin's core must not depend on any plugin's extensions tree — extensions depend on core, not the reverse",
-    from: {
-      path: `^✏️s/🔌️plugins/${p}/`,
-      pathNot: `^✏️s/🔌️plugins/${p}/🧩️extensions/`,
-    },
-    to: {
-      path: ["^✏️s/🔌️plugins/[^/]+/🧩️extensions/"].concat(extensionPackageNamePatterns),
-    },
+/** 🧩️ Optional extensions and artifacts consume their plugin owner, never the reverse. */
+function pluginNoExtensionOrArtifactRules() {
+  const ownerPaths = ["🧩️extensions", "🗿️artifacts"];
+  const packagePatterns = S_PACKAGES.filter((pkg) => ownerPaths.some((owner) => pkg.dir.includes(`/${owner}/`))).map((pkg) => `(?:^(?:node_modules/)?|/node_modules/)${escapeRegex(pkg.name)}(?:$|/)`);
+  return PLUGINS.map((plugin) => ({
+    name: `plugin-no-extension-or-artifact-${plugin}`,
+    severity: "error",
+    comment: "Plugin owners must remain independent of optional extensions and artifacts through every import form",
+    from: { path: `^✏️s/🔌️plugins/${escapeRegex(plugin)}/`, pathNot: `^✏️s/🔌️plugins/${escapeRegex(plugin)}/(?:${ownerPaths.join("|")})/` },
+    to: { path: ["^✏️s/🔌️plugins/[^/]+/(?:🧩️extensions|🗿️artifacts)/"].concat(packagePatterns) },
   }));
 }
 
@@ -410,7 +395,7 @@ module.exports = {
       comment: "🧰️framework must not import plugin app packages — shells derive from app contributions",
       from: { path: "^🧰️framework/" },
       to: {
-        path: PLUGINS.map((p) => `^✏️s/🔌️plugins/${p}/`).concat(PLUGINS.map((p) => `^@semio-tech/${p.replace(/^[^a-zA-Z]+/, "")}-`)),
+        path: ["^✏️s/🔌️plugins/"].concat(S_PACKAGES.filter((pkg) => pkg.dir.startsWith("✏️s/🔌️plugins/")).map((pkg) => `(?:^(?:node_modules/)?|/node_modules/)${escapeRegex(pkg.name)}(?:$|/)`)),
       },
     },
     {
@@ -452,9 +437,10 @@ module.exports = {
     crossPackageRelativeRule(),
     frameworkNoSRule(),
     frameworkNoImplementationRule(),
+    { ...frameworkNoImplementationRule(), name: "repo-no-implementation", comment: "Repository-wide source must remain independent of deletable implementation owners", from: { path: ["^[^/]+$"] } },
     ...declaredDependencyDirectionRules(),
     sModulesNoPluginsRule(),
-    ...noPluginToExtensionRules(),
+    ...pluginNoExtensionOrArtifactRules(),
     pluginsFrameworkSdkOnlyRule(),
   ],
   options: {
@@ -466,7 +452,7 @@ module.exports = {
     combinedDependencies: true,
     enhancedResolveOptions: {
       exportsFields: ["exports"],
-      conditionNames: ["import", "require", "node", "default"],
+      conditionNames: ["semio-source", "import", "require", "node", "default"],
     },
   },
 };

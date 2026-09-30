@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/drag-selection/schema.json",
+  "title": "DragSelection",
+  "description": "The `drag-selection` mutation record — internally tagged `\"mutation\": \"dragSelection\"`: one pane's objects moved by one relative world offset.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "pane",
+    "targets",
+    "offset"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "dragSelection",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "pane": {
+      "enum": [
+        "shape",
+        "building",
+        "energy",
+        "structure-classic"
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Model",
+          "de": "Modell"
+        },
+        "description": {
+          "en": "The model pane the objects live in.",
+          "de": "Der Modellbereich, in dem die Objekte liegen."
+        },
+        "options": {
+          "shape": {
+            "en": "Shape",
+            "de": "Form"
+          },
+          "building": {
+            "en": "Building",
+            "de": "Gebäude"
+          },
+          "energy": {
+            "en": "Energy",
+            "de": "Energie"
+          },
+          "structure-classic": {
+            "en": "Structure (classic)",
+            "de": "Tragwerk (klassisch)"
+          }
+        },
+        "group": "target",
+        "order": 5
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Objects",
+          "de": "Objekte"
+        },
+        "description": {
+          "en": "Objects to drag; ones the pane lacks are skipped.",
+          "de": "Zu ziehende Objekte; im Bereich fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "object",
+          "domain": "cad",
+          "granularity": "object"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "offset": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Offset",
+          "de": "Versatz"
+        },
+        "description": {
+          "en": "World offset every object moves by.",
+          "de": "Weltversatz, um den jedes Objekt verschoben wird."
+        },
+        "unit": "m",
+        "step": 0.1,
+        "precision": 3,
+        "group": "offset",
+        "order": 20,
+        "snapSource": {
+          "step": true
+        }
+      }
+    }
+  }
+}

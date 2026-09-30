@@ -1,0 +1,10 @@
+{
+  "mutation": "scaleLayers",
+  "targets": [
+    "shape-a"
+  ],
+  "pivotX": 10.0,
+  "pivotY": 20.0,
+  "scaleX": 2.0,
+  "scaleY": 0.5
+}

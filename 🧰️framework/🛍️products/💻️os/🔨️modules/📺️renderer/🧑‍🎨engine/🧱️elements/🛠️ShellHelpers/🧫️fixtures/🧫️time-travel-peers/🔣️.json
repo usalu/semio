@@ -1,0 +1,80 @@
+{
+  "description": "Peers' open history edits as a shell tells them (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING, W2-B follow-up 2 / W2-C follow-up 2). The presence wire carries only `historyEdit {mutationId, stage, drafts}` (bit 13), never locale text: each shell labels an editing peer from its OWN history `rows`. `expect.<locale>.chips` is every editing peer's roster activity, in peer order (its `text` is part of the chip's accessible name, its `badge` marks the row); a peer without a history edit has none. `expect.<locale>.notes` is the note each history-body node gets, by node key (`framework.history.entry.<seq>` for the row holding the mutation, `framework.history.mutation.<mutationId>` for the mutation itself), sorted by key, one key's lines joined by ` · ` in peer order. Texts are React's `ui.timeTravel.peer.{editingTarget,editingHistory,editingRow}` at the normal terminology.",
+  "rows": [
+    { "seq": 3, "editId": "e-3", "mutations": [{ "mutationId": "m-drag", "label": { "en": "Drag selection", "de": "Auswahl ziehen" } }] },
+    { "seq": 5, "editId": "e-5", "mutations": [{ "mutationId": "m-rotate", "label": { "en": "Rotate", "de": "Drehen" } }, { "mutationId": "m-scale", "label": { "en": "Scale", "de": "Skalieren" } }] }
+  ],
+  "cases": [
+    {
+      "name": "a peer editing a mutation among the local rows",
+      "peers": [{ "actor": "actor-ada", "label": "Ada", "historyEdit": { "mutationId": "m-drag", "stage": "editing", "drafts": 1 } }],
+      "expect": {
+        "en": {
+          "chips": [{ "actor": "actor-ada", "text": "Ada is editing Drag selection in time travel", "badge": "⏪" }],
+          "notes": [
+            { "key": "framework.history.entry.3", "text": "Ada is editing this in time travel" },
+            { "key": "framework.history.mutation.m-drag", "text": "Ada is editing this in time travel" }
+          ]
+        },
+        "de": {
+          "chips": [{ "actor": "actor-ada", "text": "Ada bearbeitet Auswahl ziehen in der Zeitreise", "badge": "⏪" }],
+          "notes": [
+            { "key": "framework.history.entry.3", "text": "Ada bearbeitet dies in der Zeitreise" },
+            { "key": "framework.history.mutation.m-drag", "text": "Ada bearbeitet dies in der Zeitreise" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "a mutation not among the local rows names the history in general",
+      "peers": [{ "actor": "actor-bo", "label": "Bo", "historyEdit": { "mutationId": "m-elsewhere", "stage": "replaying", "drafts": 2 } }],
+      "expect": {
+        "en": {
+          "chips": [{ "actor": "actor-bo", "text": "Bo is editing the history in time travel", "badge": "⏪" }],
+          "notes": [{ "key": "framework.history.mutation.m-elsewhere", "text": "Bo is editing this in time travel" }]
+        },
+        "de": {
+          "chips": [{ "actor": "actor-bo", "text": "Bo bearbeitet den Verlauf in der Zeitreise", "badge": "⏪" }],
+          "notes": [{ "key": "framework.history.mutation.m-elsewhere", "text": "Bo bearbeitet dies in der Zeitreise" }]
+        }
+      }
+    },
+    {
+      "name": "two peers on one row join their notes in peer order; a peer without a history edit has none",
+      "peers": [
+        { "actor": "actor-ada", "label": "Ada", "historyEdit": { "mutationId": "m-scale", "stage": "reviewing", "drafts": 1 } },
+        { "actor": "actor-cy", "label": "Cy" },
+        { "actor": "actor-bo", "label": "Bo", "historyEdit": { "mutationId": "m-rotate", "stage": "editing", "drafts": 0 } }
+      ],
+      "expect": {
+        "en": {
+          "chips": [
+            { "actor": "actor-ada", "text": "Ada is editing Scale in time travel", "badge": "⏪" },
+            { "actor": "actor-bo", "text": "Bo is editing Rotate in time travel", "badge": "⏪" }
+          ],
+          "notes": [
+            { "key": "framework.history.entry.5", "text": "Ada is editing this in time travel · Bo is editing this in time travel" },
+            { "key": "framework.history.mutation.m-rotate", "text": "Bo is editing this in time travel" },
+            { "key": "framework.history.mutation.m-scale", "text": "Ada is editing this in time travel" }
+          ]
+        },
+        "de": {
+          "chips": [
+            { "actor": "actor-ada", "text": "Ada bearbeitet Skalieren in der Zeitreise", "badge": "⏪" },
+            { "actor": "actor-bo", "text": "Bo bearbeitet Drehen in der Zeitreise", "badge": "⏪" }
+          ],
+          "notes": [
+            { "key": "framework.history.entry.5", "text": "Ada bearbeitet dies in der Zeitreise · Bo bearbeitet dies in der Zeitreise" },
+            { "key": "framework.history.mutation.m-rotate", "text": "Bo bearbeitet dies in der Zeitreise" },
+            { "key": "framework.history.mutation.m-scale", "text": "Ada bearbeitet dies in der Zeitreise" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "no peer editing the history shows nothing",
+      "peers": [{ "actor": "actor-cy", "label": "Cy" }],
+      "expect": { "en": { "chips": [], "notes": [] }, "de": { "chips": [], "notes": [] } }
+    }
+  ]
+}

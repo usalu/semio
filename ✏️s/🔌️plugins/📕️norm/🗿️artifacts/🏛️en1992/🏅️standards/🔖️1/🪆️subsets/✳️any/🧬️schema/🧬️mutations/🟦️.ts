@@ -23,5 +23,5 @@ export interface En1992Mutation {
   concreteGrades?: En1992ConcreteMutation[]; reinforcementGrades?: En1992ReinfMutation[];
 }
 export type ChangeActionMk = { memberId: string; actionId: string; newValue: number };
-export type ChangeActionVEd = { memberId: string; actionId: string; newValue: number };
-export type ChangeActionNEd = { memberId: string; actionId: string; newValue: number };
+export type ChangeActionVk = { memberId: string; actionId: string; newValue: number };
+export type ChangeActionNk = { memberId: string; actionId: string; newValue: number };

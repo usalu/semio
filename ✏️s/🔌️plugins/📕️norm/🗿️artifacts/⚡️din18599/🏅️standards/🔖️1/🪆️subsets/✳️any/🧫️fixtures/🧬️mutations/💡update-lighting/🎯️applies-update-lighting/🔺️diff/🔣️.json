@@ -1,0 +1,22 @@
+{
+  "buildingCategory": null,
+  "attachment": null,
+  "useClass": null,
+  "method": null,
+  "netFloorAreaM2": null,
+  "heatedVolumeM3": null,
+  "gegQpFactor": null,
+  "deltaUWbWM2k": null,
+  "automationClass": null,
+  "zones": null,
+  "elements": null,
+  "heating": null,
+  "dhw": null,
+  "ventilation": null,
+  "cooling": null,
+  "lighting": {
+    "controlFactor": 0.88
+  },
+  "renewables": null,
+  "climate": null
+}

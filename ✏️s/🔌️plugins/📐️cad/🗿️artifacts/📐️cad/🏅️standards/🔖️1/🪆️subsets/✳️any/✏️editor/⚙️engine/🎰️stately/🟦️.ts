@@ -300,7 +300,7 @@ export const statelyStateEngineProvider: StateEngineProvider = {
 
 // #region 🧪️Tests
 const __spatialStatelyTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️.ts") : null;
-const __spatialStatelyTestKernel = import.meta.vitest ? await import("../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️.ts") : null;
+const __spatialStatelyTestKernel = import.meta.vitest ? await import("../../../../../../../../../🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts") : null;
 
 /** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-stately/🟦️.ts`. */
 export type StatelyTestDependencies = {

@@ -13,6 +13,7 @@ line = create-object / delete-object / move-object / rotate-object / scale-objec
      / delete-reference / move-reference / resize-reference / replace-reference-source
      / change-reference-hidden / change-reference-locked / change-domain
      / connect-kind-compatibility / disconnect-kind-compatibility / replace-kind-catalogs
+     / drag-selection / rotate-selection / scale-selection
 
 create-object = "create-object" SP object-block SP index-opt
 delete-object = "delete-object" SP id
@@ -49,6 +50,9 @@ change-domain = "change-domain" SP text
 connect-kind-compatibility = "connect-kind-compatibility" SP id SP id SP boolean SP boolean SP specificity
 disconnect-kind-compatibility = "disconnect-kind-compatibility" SP id SP id
 replace-kind-catalogs = "replace-kind-catalogs" SP catalogs-block-opt
+drag-selection = "drag-selection" SP id-list SP number SP number SP number
+rotate-selection = "rotate-selection" SP id-list SP number SP number SP number SP number
+scale-selection = "scale-selection" SP id-list SP number SP number SP number
 
 object-block = "{" NL OCTET+ "}"
 vortex-block = "{" NL OCTET+ "}"
@@ -57,7 +61,8 @@ reference-block = "{" NL OCTET+ "}"
 source-block = "{" NL OCTET+ "}"
 catalogs-block-opt = ( "{" NL OCTET+ "}" ) / "none"
 attraction-fields = number SP number SP number SP number SP number SP number SP number SP number
-full-vortex-id = OCTET+
+full-vortex-id-list = "[" id* "]"
+id = OCTET+
 anchor = "fixed" / "derived"
 specificity = "general" / "object" / "attraction" / "cable" / "vortex"
 quat-opt = ( number SP number SP number SP number ) / "none"

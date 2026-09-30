@@ -1,0 +1,17 @@
+{
+  "name": "@semio-tech/puzzle-2d",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Puzzle 2D artifact-owned browser session factories.",
+  "exports": {
+    ".": "./🟦️.ts"
+  },
+  "dependencies": {
+    "@semio-tech/framework-renderer-react": "workspace:*"
+  },
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  }
+}

@@ -4,7 +4,7 @@ use crate::document::AnnexChoice;
 use crate::part_1_2::FireRating;
 use crate::{ExposureClass, En1992Snapshot};
 use super::{
-    apply_en1992_mutation, change_action_mk, change_action_n_ed, change_action_v_ed, change_anchor_a_s,
+    apply_en1992_mutation, change_action_mk, change_action_nk, change_action_vk, change_anchor_a_s,
     change_anchor_h_ef, change_annex, change_bar_layer_count, change_bar_layer_diameter, change_cement_type,
     change_concrete_f_ck, change_delta_c_dev, change_design_working_life, change_member_axis_distance,
     change_member_cover, change_member_effective_depth, change_member_exposure, change_member_fire_rating,
@@ -173,11 +173,11 @@ fn change_bar_layer_and_actions() {
         member_id: id.clone(), action_id: action_id.clone(), new_value: 200.0e3,
     })).expect("m");
     assert!((after.members.iter().find(|m| m.id == id).unwrap().actions.iter().find(|a| a.id == action_id).unwrap().m_k - 200.0e3).abs() < 1.0);
-    let (after, _) = apply_en1992_mutation(&before, &En1992Mutation::ChangeActionNEd(change_action_n_ed::ChangeActionNEd {
+    let (after, _) = apply_en1992_mutation(&before, &En1992Mutation::ChangeActionNk(change_action_nk::ChangeActionNk {
         member_id: id.clone(), action_id: action_id.clone(), new_value: -50.0e3,
     })).expect("n");
     assert!((after.members.iter().find(|m| m.id == id).unwrap().actions.iter().find(|a| a.id == action_id).unwrap().n_k + 50.0e3).abs() < 1.0);
-    let (after, _) = apply_en1992_mutation(&before, &En1992Mutation::ChangeActionVEd(change_action_v_ed::ChangeActionVEd {
+    let (after, _) = apply_en1992_mutation(&before, &En1992Mutation::ChangeActionVk(change_action_vk::ChangeActionVk {
         member_id: id.clone(), action_id: action_id.clone(), new_value: 90.0e3,
     })).expect("v");
     assert!((after.members.iter().find(|m| m.id == id).unwrap().actions.iter().find(|a| a.id == action_id).unwrap().v_k - 90.0e3).abs() < 1.0);

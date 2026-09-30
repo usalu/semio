@@ -89,7 +89,7 @@
         "forwardAllArgs": true
       },
       "outputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json"
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json"
       ]
     },
     "catalog-root": {

@@ -1,0 +1,32 @@
+{
+  "descriptorVersion": 1,
+  "packageId": "semio:contract-test",
+  "role": "plugin",
+  "manifest": {
+    "pluginId": "contract-test",
+    "label": "Contract Test",
+    "version": "0.1.0",
+    "apps": [],
+    "examples": []
+  },
+  "execution": "isolated",
+  "executionProtocol": { "appChannelVersion": 20 },
+  "contributions": {
+    "inferenceServices": [{
+      "owner": "contract-test",
+      "artifactKind": "test.document",
+      "artifactSchema": "test.document",
+      "artifactSchemaVersion": 1,
+      "inferenceSchema": "test.document.inference",
+      "inferenceSchemaVersion": 1,
+      "algorithmVersion": 1,
+      "policyVersion": 1,
+      "contributor": "contract-test"
+    }]
+  },
+  "hashes": {
+    "wasmSha256": "0fb19bbf5000750836d0343893c24471a0d65cbc0ef8e7a9ef9ce4208d58cb5c",
+    "coreWasmSha256": "9999999999999999999999999999999999999999999999999999999999999999",
+    "descriptorSha256": "8888888888888888888888888888888888888888888888888888888888888888"
+  }
+}

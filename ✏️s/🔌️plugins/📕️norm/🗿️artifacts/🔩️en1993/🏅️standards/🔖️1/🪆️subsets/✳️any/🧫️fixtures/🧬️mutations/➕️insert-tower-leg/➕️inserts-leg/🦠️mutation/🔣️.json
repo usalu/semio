@@ -1,0 +1,23 @@
+{
+  "InsertTowerLeg": {
+    "index": 1,
+    "towerLeg": {
+      "id": "tw-1-2",
+      "memberId": "member-b1",
+      "forceCoefficient": 1.0,
+      "dynamicFactor": 1.0,
+      "actions": [
+        {
+          "id": "tw-g",
+          "loadCaseId": "g-permanent",
+          "force": 500000.0
+        },
+        {
+          "id": "tw-w",
+          "loadCaseId": "w-wind",
+          "force": 200000.0
+        }
+      ]
+    }
+  }
+}

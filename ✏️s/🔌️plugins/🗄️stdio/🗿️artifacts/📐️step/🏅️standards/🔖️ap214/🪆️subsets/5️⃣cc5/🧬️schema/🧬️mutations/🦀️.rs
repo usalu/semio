@@ -111,13 +111,13 @@ pub fn apply_step_cc5_mutation(snapshot: &mut StepSnapshot, mutation: &StepCc5Mu
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn rejected(message: String) -> protocol::MutationOutcome<StepDiff> {
-    protocol::MutationOutcome::error("stdio.step.cc5.mutation-rejected", message, Vec::<String>::new())
+    protocol::MutationOutcome::error("mutation.target-mismatch", message, Vec::<String>::new())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

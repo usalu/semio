@@ -1,0 +1,6 @@
+{
+  "ChangeZoneTurbulence": {
+    "zoneId": "zone-office",
+    "newTurbulenceIntensityPercent": 35.0
+  }
+}

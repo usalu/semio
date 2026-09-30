@@ -353,7 +353,7 @@ crate::artifact_retire_struct!(crate::os_spr::HistoryEdit { id, actor, started_a
 crate::artifact_retire_struct!(crate::os_spr::OpPayload { text, binary });
 crate::artifact_retire_struct!(crate::os_spr::HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin, messages, transaction });
 crate::artifact_retire_struct!(crate::os_spr::TransactionRef { id, tool });
-crate::artifact_retire_struct!(crate::os_spr::HistoryFold { applied, redo, refused, checkpoint, alternative, changes, checkpoints, alternatives, supersessions });
+crate::artifact_retire_struct!(crate::os_spr::HistoryFold { applied, redo, refused, checkpoint, alternative, trunk, changes, checkpoints, alternatives, supersessions });
 crate::artifact_retire_struct!(crate::os_spr::EffectiveSupersession { transition_id, actor, timestamp, scope, replacement });
 crate::artifact_retire_leaf!(crate::os_spr::HybridLogicalTimestamp);
 

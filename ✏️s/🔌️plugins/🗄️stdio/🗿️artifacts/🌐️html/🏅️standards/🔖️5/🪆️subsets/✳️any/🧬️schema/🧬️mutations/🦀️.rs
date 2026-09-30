@@ -100,7 +100,7 @@ pub fn apply_html_mutation(snapshot: &mut HtmlSnapshot, mutation: &HtmlMutation)
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 

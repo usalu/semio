@@ -1,0 +1,56 @@
+{
+  "artifact": null,
+  "domain": null,
+  "fasteners": null,
+  "kindCatalogs": null,
+  "kindCatalogsExtra": null,
+  "kindCompatibility": null,
+  "label": null,
+  "meta": null,
+  "parts": {
+    "added": [],
+    "patched": [
+      {
+        "id": "part-b",
+        "patch": {
+          "replacement": {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                6.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          }
+        }
+      }
+    ],
+    "removed": [],
+    "reordered": null
+  },
+  "schema": null,
+  "targetVolumes": null
+}

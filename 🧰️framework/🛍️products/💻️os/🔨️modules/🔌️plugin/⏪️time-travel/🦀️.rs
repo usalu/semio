@@ -31,6 +31,8 @@ pub const TIME_TRAVEL_PROGRESS_REFRESH_PERMILLE: u64 = 50;
 pub const HISTORY_ROW_MUTATION_ROWS: usize = 32;
 /// 🧷️ Reference chips one input row shows; each costs a list and a map of the one `UiValue` arena page.
 const TIME_TRAVEL_PANEL_CHIPS: usize = 8;
+/// 🎛️ Input rows the draft editor materialises at most; a payload with more names the rest in one closing row.
+pub(crate) const TIME_TRAVEL_EDITOR_INPUT_ROWS: usize = 64;
 /// 🧹️ Discarded draft operations cold-retired per driver or close turn.
 const TIME_TRAVEL_DISCARD_OPS_PER_TURN: usize = 64;
 /// 🗳️ The request id the finalize prompt opens under; nothing awaits a dialog.
@@ -210,9 +212,9 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
         }
     }
 
-    /// 🏃️ Whether a driver turn has work: a live replay, retirement, or an owed UI scope.
+    /// 🏃️ Whether a driver turn has work: a live replay, retirement, an owed UI scope or an owed history patch.
     pub fn has_pending_work(&self) -> bool {
-        (self.replay.is_some() && self.session.stage == TimeTravelStage::Replaying) || !self.retired_snapshots.is_empty() || self.snapshot_retirement.is_some() || !self.discarded.is_empty() || self.is_ui_dirty()
+        (self.replay.is_some() && self.session.stage == TimeTravelStage::Replaying) || !self.retired_snapshots.is_empty() || self.snapshot_retirement.is_some() || !self.discarded.is_empty() || self.is_ui_dirty() || self.patch_due || self.patch.is_some()
     }
 
     /// 🚩️ Whether a session change still owes the host a UI scope.
@@ -224,6 +226,11 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
     /// and stage changes reach every host's band without a dispatch.
     pub fn take_patch(&mut self) -> Option<HistoryPatch> {
         self.patch.take()
+    }
+
+    /// 🧾️ Whether a prepared history patch still waits for its unsolicited UI progress frame.
+    pub fn has_patch(&self) -> bool {
+        self.patch.is_some()
     }
 
     /// 🎯️ The scope a session change dirties: every body once when the rendered document was swapped, else the
@@ -948,7 +955,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// ⏪️ Host-driven routing of the reserved history-edit verbs (design §7): applied to the session now, never queued
     /// behind guest work. A refusal is a silent `{rejected}` result that still repaints the history body, so a stale
-    /// button never keeps its stale identity.
+    /// button never keeps its stale identity. The reply carries the owed UI scope; the session status the verb moved to
+    /// (its stage and generation) is prepared at once as the history patch of the unsolicited UI progress frame of this
+    /// same turn, so every dispatch route — a command's reply, a retained-surface intent's reply that carries no patch —
+    /// publishes the new generation with the stage flip and a verb stamped with it is never stale.
     pub(crate) async fn dispatch_time_travel_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
         let mut effects = Vec::new();
         let outcome = self.apply_time_travel_action(action, args, meta, &mut effects).await?;
@@ -959,8 +969,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let ui_scope = self.time_travel.dirty_scope();
         self.time_travel.ui_dirty = false;
         self.time_travel.document_dirty = false;
-        self.time_travel.patch_due = false;
-        self.time_travel.patch = None;
+        self.prepare_time_travel_patch().await?;
         let mut result = Self::empty_result(action, meta, effects, Vec::new(), ui_scope).await;
         result.output = output;
         Ok(result)
@@ -1122,7 +1131,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     /// ✏️ Opens (or retargets) the session on `mutationId`: refused while a mutating tool run or an agent transaction
-    /// holds this instance, for an unknown operation, and for one whose inputs cannot be edited.
+    /// holds this instance, for an unknown operation, and for one whose inputs cannot be edited. Opening a session
+    /// delivers [`HostEvent::TimeTravelFrozen`] to every open window, so an open gesture there ends first.
     async fn begin_time_travel(&mut self, args: Option<&DslValue>, meta: &ActionMeta, effects: &mut Vec<Effect>) -> Result<TimeTravelActionOutcome, Fault> {
         let Some(mutation) = time_travel_arg_text(args, HISTORY_EDIT_ARG_MUTATION_ID) else { return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::UnknownMutation)) };
         if self.tool_runs.holds_mutating_run() || self.pending_transaction.is_some() {
@@ -1134,11 +1144,15 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             Err(refusal) => return Ok(TimeTravelActionOutcome::Rejected(refusal)),
         };
         let event = TimeTravelEvent::Begin { target: TimeTravelTarget { mutation: target, position: editor.position }, original };
+        let opening = !self.time_travel.is_active();
         match self.time_travel.session.apply(event) {
             Ok(session_effects) => {
                 self.time_travel.replace_editor(Some(editor));
                 self.note_time_travel_changed(true, true);
                 self.perform_time_travel_effects(session_effects, Some(meta), effects).await?;
+                if opening {
+                    self.deliver_host_event_to_every_window(|window_id| HostEvent::TimeTravelFrozen { window_id }, meta).await?;
+                }
                 Ok(TimeTravelActionOutcome::Applied(self.time_travel.session.stage))
             }
             Err(refusal) => {
@@ -1315,6 +1329,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// ⏯️ One bounded driver turn (≤ [`TIME_TRAVEL_TURN_WALL_US`]): owed scope, retirement, base watch, one replay slice;
     /// a session change prepares the history patch that rides the next unsolicited UI progress frame.
     pub(crate) async fn drive_time_travel_turn(&mut self) -> Result<(), Fault> {
+        self.prepare_time_travel_patch().await?;
         self.flush_time_travel_ui_dirty();
         if let Some(step) = self.time_travel.retire_step(&mut self.store, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)? {
             if !matches!(step, PluginCloseStep::Blocked { .. }) {
@@ -1325,10 +1340,22 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if !moved && self.time_travel.session.stage == TimeTravelStage::Replaying && self.time_travel.replay.is_some() {
             self.step_time_travel_replay().await?;
         }
-        if std::mem::take(&mut self.time_travel.patch_due) {
-            self.time_travel.patch = Some(self.history_patch(false).await?);
-        }
+        self.prepare_time_travel_patch().await?;
         self.flush_time_travel_ui_dirty();
+        Ok(())
+    }
+
+    /// 🧾️ Prepares the owed history patch (a session change sets `patch_due`) for the next unsolicited UI progress
+    /// frame. A patch that has not shipped yet is superseded by one that still carries its rows, so no row upsert is lost
+    /// between two changes of one turn.
+    async fn prepare_time_travel_patch(&mut self) -> Result<(), Fault> {
+        if !std::mem::take(&mut self.time_travel.patch_due) {
+            return Ok(());
+        }
+        if let Some(previous) = self.time_travel.patch.take() {
+            self.history_dirty_sequences.extend(previous.upserts.iter().map(|entry| entry.seq));
+        }
+        self.time_travel.patch = Some(self.history_patch(false).await?);
         Ok(())
     }
 
@@ -1650,6 +1677,25 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         });
     }
 
+    /// 🗂️ Retires the command-log rows of the document a whole-document replacement displaced (an archive or a pack load): a
+    /// row naming an edit or a history transition the published store does not hold belonged to that document, so the history
+    /// lists exactly the loaded document's rows, which the next read backfills (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING
+    /// follow-up 3). Rows naming neither — configuration and shell rows — stay.
+    pub(crate) fn retire_displaced_document_rows(&mut self) {
+        self.refresh_supersede_ledger();
+        let held: HashSet<&str> = self.store.envelope().vcs.edits.iter().map(|edit| edit.id.as_str()).collect();
+        let supersedes = &self.supersedes;
+        let before = self.command_log.len();
+        self.command_log.retain(|entry| entry.edit_id.as_deref().is_none_or(|edit_id| held.contains(edit_id)) && entry.transition_id.as_deref().is_none_or(|transition_id| supersedes.record(transition_id).is_some()));
+        if self.command_log.len() == before {
+            return;
+        }
+        let kept: HashSet<u64> = self.command_log.iter().map(|entry| entry.seq).collect();
+        self.shell_undone.retain(|seq| kept.contains(seq));
+        self.history_dirty_sequences.retain(|seq| kept.contains(seq));
+        self.log_generation += 1;
+    }
+
     /// 🏷️ The history label of supersede record `index`, naming its alternative when it is scoped to one.
     pub(crate) fn supersede_row_label(&self, index: usize) -> LocalizedLabel {
         let envelope = self.store.envelope();
@@ -1816,6 +1862,13 @@ pub(crate) enum HistoryPanelText {
     Opacity,
     ClearInput,
     Cleared,
+    Alternatives,
+    Current,
+    BranchedBy,
+    EditedHistory,
+    Switch,
+    Trunk,
+    MoreInputs,
 }
 
 impl HistoryPanelText {
@@ -1857,6 +1910,13 @@ impl HistoryPanelText {
                 Self::Opacity => "Opacity",
                 Self::ClearInput => "Clear {label}",
                 Self::Cleared => "Cleared (no value)",
+                Self::Alternatives => "Alternatives",
+                Self::Current => "Current",
+                Self::BranchedBy => "Branched by {author}, {time}",
+                Self::EditedHistory => "Edited history",
+                Self::Switch => "Switch",
+                Self::Trunk => "Main line",
+                Self::MoreInputs => "{count} more inputs are not shown",
             },
             Locale::De => match self {
                 Self::Actions => "Aktionen",
@@ -1894,6 +1954,13 @@ impl HistoryPanelText {
                 Self::Opacity => "Deckkraft",
                 Self::ClearInput => "{label} leeren",
                 Self::Cleared => "Geleert (kein Wert)",
+                Self::Alternatives => "Alternativen",
+                Self::Current => "Aktuell",
+                Self::BranchedBy => "Abgezweigt von {author}, {time}",
+                Self::EditedHistory => "Bearbeiteter Verlauf",
+                Self::Switch => "Wechseln",
+                Self::Trunk => "Hauptlinie",
+                Self::MoreInputs => "{count} weitere Eingaben werden nicht angezeigt",
             },
         }
     }
@@ -1917,12 +1984,15 @@ pub(crate) fn history_severity_text(level: dsl::Severity, locale: Locale) -> &'s
 pub(crate) fn history_code_text(code: &str, locale: Locale) -> &str {
     let known = match code {
         "mutation.target-missing" => Some(("Target missing", "Ziel fehlt")),
+        "mutation.target-referenced" => Some(("Target still referenced", "Ziel wird noch referenziert")),
+        "mutation.target-mismatch" => Some(("Inconsistent with the target", "Widerspricht dem Ziel")),
         "mutation.no-op" => Some(("No change", "Keine Änderung")),
         "mutation.partial" => Some(("Partially applied", "Teilweise angewendet")),
         "mutation.clamped" => Some(("Clamped", "Begrenzt")),
         "mutation.duplicate-id" => Some(("Duplicate id", "ID bereits vergeben")),
         "mutation.invariant" => Some(("Invalid state", "Ungültiger Zustand")),
         "mutation.cascade" => Some(("Cascaded", "Folgeänderung")),
+        code if code.starts_with("mutation.apply.") => Some(("Could not apply", "Nicht anwendbar")),
         _ => None,
     };
     match (known, locale) {
@@ -2010,14 +2080,37 @@ fn time_travel_clear_args(generation: u32, path: &str) -> UiAssemblyResult<UiVal
     Ok(UiValue::Map(args.finish()))
 }
 
-/// 🪧️ The session band as the history body's first section `framework.history.timeTravel`: the stage status (a polite
-/// live region, the only one the panel announces), the edited mutation, replay progress with Cancel, the report's worst
-/// severity, "Next problem", Finalize (disabled with its reason while refused) and Exit.
+/// 🌲️ One tree row holding one inline control — the history body's one vocabulary for a control, the shape both hosts
+/// mount: a tree section's `tree_item`s, each with at most one single control child (React mounts a row's non-row
+/// children as its controls and activates a row's one activatable control; wgpu mounts one input, select, toggle,
+/// button, key-value list, slider, stepper, ring or icon select per row and nests every other child as a row).
+fn time_travel_control_row(id: &str, label: &str, icon: &str, control: BuiltNode, enabled: bool, tone: Option<Tone>, description: Option<&str>) -> UiAssemblyResult<BuiltNode> {
+    let error = ui_assembly_error;
+    let mut row = ui::tree_item(Label(UiText::clipped(label))).icon(ui_text(icon, "time-travel-panel.row-icon")?).disabled(!enabled);
+    if let Some(tone) = tone {
+        row = row.tone(tone);
+    }
+    if let Some(description) = description {
+        row = row.description(UiText::clipped(description));
+    }
+    row.try_id(id).map_err(|_| error("time-travel-panel.row-id"))?.try_child(control).map_err(|_| error("time-travel-panel.row-child"))?.try_build().map_err(|_| error("time-travel-panel.row"))
+}
+
+/// 🌲️ A button row: the button keeps its own id (`{id}`) and the row wraps it as `{id}.row`.
+fn time_travel_button_row(controller_id: &str, id: &str, label: &str, icon: &str, verb: &str, args: Option<UiValue>, enabled: bool) -> UiAssemblyResult<BuiltNode> {
+    time_travel_control_row(&format!("{id}.row"), label, icon, time_travel_button(controller_id, id, label, icon, verb, args, enabled)?, enabled, None, None)
+}
+
+/// 🪧️ The session band as the history body's first tree section `framework.history.timeTravel`, one row each: the stage
+/// status with the edited mutation and the report's worst severity, replay progress in words, the last fault, then Cancel
+/// replay, Next problem, Finalize (disabled with its reason while refused), Replay again and Exit as the stage offers
+/// them. Rows carry text in their labels, never as a child, so every host renders them; the shell's own band is the one
+/// polite live region that announces the session and draws its progress bar.
 pub(crate) fn time_travel_band_section(panel: &TimeTravelPanel, controller_id: &str, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let error = ui_assembly_error;
     let scope = "framework.history.timeTravel";
     let status = &panel.status;
-    let mut children = BuiltChildren::default();
+    let mut rows = BuiltChildren::default();
     let mut stage_line = panel.review.map_or_else(|| panel.stage.label(), TimeTravelReview::label).localized(LocalizedLabel::native).resolve(Terminology::Native, locale).to_string();
     if let Some(label) = status.target_label.as_ref() {
         stage_line = format!("{stage_line}: {}", label.resolve(Terminology::Native, locale));
@@ -2026,56 +2119,57 @@ pub(crate) fn time_travel_band_section(panel: &TimeTravelPanel, controller_id: &
         stage_line = format!("{stage_line} \u{b7} {}", history_severity_text(worst, locale));
     }
     let (tone, _) = history_severity_tone(status.worst);
-    let status_node = text(Label(UiText::clipped(&stage_line))).live(Liveness::Polite).tone(if status.worst.is_some() { tone } else { Tone::Neutral }).try_id(format!("{scope}.status")).map_err(|_| error("time-travel-panel.status-id"))?.try_build().map_err(|_| error("time-travel-panel.status"))?;
-    children.try_push(status_node).map_err(|_| error("time-travel-panel.children"))?;
+    let tone = if status.worst.is_some() { tone } else { Tone::Neutral };
+    let stage_row = ui::tree_item(Label(UiText::clipped(&stage_line))).icon(ui_text("clock", "time-travel-panel.status-icon")?).tone(tone).try_id(format!("{scope}.status")).map_err(|_| error("time-travel-panel.status-id"))?.try_build().map_err(|_| error("time-travel-panel.status"))?;
+    rows.try_push(stage_row).map_err(|_| error("time-travel-panel.rows"))?;
     if let (Some(done), Some(total)) = (status.done, status.total) {
         let value_text = TimeTravelLabel::ReplayProgressValueText.localized(LocalizedLabel::native).resolve(Terminology::Native, locale).replace("{done}", &done.to_string()).replace("{total}", &total.to_string());
-        let bar = progress(f64::from(done), Label(UiText::clipped(&value_text))).total(f64::from(total)).try_id(format!("{scope}.progress")).map_err(|_| error("time-travel-panel.progress-id"))?.try_build().map_err(|_| error("time-travel-panel.progress"))?;
-        children.try_push(bar).map_err(|_| error("time-travel-panel.children"))?;
+        let progress_row = ui::tree_item(Label(UiText::clipped(&value_text))).icon(ui_text("loader-2", "time-travel-panel.progress-icon")?).try_id(format!("{scope}.progress")).map_err(|_| error("time-travel-panel.progress-id"))?.try_build().map_err(|_| error("time-travel-panel.progress"))?;
+        rows.try_push(progress_row).map_err(|_| error("time-travel-panel.rows"))?;
     }
     if let Some(fault) = status.fault.as_deref() {
         let label = TimeTravelLabel::for_fault(fault).or_else(|| TimeTravelRefusal::parse(fault).map(TimeTravelRefusal::label)).map_or_else(|| fault.to_string(), |label| label.localized(LocalizedLabel::native).resolve(Terminology::Native, locale).to_string());
-        let node = text(Label(UiText::clipped(&label))).tone(Tone::Danger).try_id(format!("{scope}.fault")).map_err(|_| error("time-travel-panel.fault-id"))?.try_build().map_err(|_| error("time-travel-panel.fault"))?;
-        children.try_push(node).map_err(|_| error("time-travel-panel.children"))?;
+        let node = ui::tree_item(Label(UiText::clipped(&label))).icon(ui_text("triangle-alert", "time-travel-panel.fault-icon")?).tone(Tone::Danger).try_id(format!("{scope}.fault")).map_err(|_| error("time-travel-panel.fault-id"))?.try_build().map_err(|_| error("time-travel-panel.fault"))?;
+        rows.try_push(node).map_err(|_| error("time-travel-panel.rows"))?;
     }
     let generation = status.generation;
-    let mut buttons = BuiltChildren::default();
     if panel.stage == TimeTravelStage::Replaying {
-        buttons.try_push(time_travel_button(controller_id, &format!("{scope}.cancelReplay"), HistoryPanelText::CancelReplay.text(locale), "square", HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, Some(time_travel_generation_args(generation)?), true)?).map_err(|_| error("time-travel-panel.buttons"))?;
+        rows.try_push(time_travel_button_row(controller_id, &format!("{scope}.cancelReplay"), HistoryPanelText::CancelReplay.text(locale), "square", HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, Some(time_travel_generation_args(generation)?), true)?).map_err(|_| error("time-travel-panel.rows"))?;
     }
     if let Some(problem) = panel.next_problem.as_deref() {
         let mut args = UiMapBuilder::try_new().ok_or_else(|| error("time-travel-panel.problem-args"))?;
         args.push(HISTORY_EDIT_ARG_MUTATION_ID.to_string(), UiValue::Text(UiText::clipped(problem))).map_err(|_| error("time-travel-panel.problem-args"))?;
-        buttons.try_push(time_travel_button(controller_id, &format!("{scope}.nextProblem"), HistoryPanelText::NextProblem.text(locale), "arrow-right", HISTORY_EDIT_BEGIN_ACTION_ID, Some(UiValue::Map(args.finish())), true)?).map_err(|_| error("time-travel-panel.buttons"))?;
+        rows.try_push(time_travel_button_row(controller_id, &format!("{scope}.nextProblem"), HistoryPanelText::NextProblem.text(locale), "arrow-right", HISTORY_EDIT_BEGIN_ACTION_ID, Some(UiValue::Map(args.finish())), true)?).map_err(|_| error("time-travel-panel.rows"))?;
     }
     if matches!(panel.stage, TimeTravelStage::Reviewing | TimeTravelStage::Choosing) {
-        let refused = panel.finalize_refusal;
-        let mut finalize = button(ui_label(HistoryPanelText::Finalize.text(locale), "time-travel-panel.finalize-label")?).icon(ui_text("list-checks", "time-travel-panel.finalize-icon")?).disabled(refused.is_some()).try_id(format!("{scope}.finalize")).map_err(|_| error("time-travel-panel.finalize-id"))?;
-        if let Some(refusal) = refused {
-            finalize = finalize.try_describe(refusal.label().localized(LocalizedLabel::native).resolve(Terminology::Native, locale)).map_err(|_| error("time-travel-panel.finalize-description"))?;
+        let refused = panel.finalize_refusal.map(|refusal| refusal.label().localized(LocalizedLabel::native).resolve(Terminology::Native, locale).to_string());
+        let label = HistoryPanelText::Finalize.text(locale);
+        let mut finalize = button(ui_label(label, "time-travel-panel.finalize-label")?).icon(ui_text("list-checks", "time-travel-panel.finalize-icon")?).disabled(refused.is_some()).try_id(format!("{scope}.finalize")).map_err(|_| error("time-travel-panel.finalize-id"))?;
+        if let Some(reason) = refused.as_deref() {
+            finalize = finalize.try_describe(reason).map_err(|_| error("time-travel-panel.finalize-description"))?;
         }
         let action = ActionId::try_v1(controller_id, HISTORY_EDIT_FINALIZE_ACTION_ID).ok_or_else(|| error("time-travel-panel.action-id"))?;
         let finalize = finalize.try_on_with(Trigger::Activate, action, time_travel_generation_args(generation)?).map_err(|_| error("time-travel-panel.finalize-binding"))?.try_build().map_err(|_| error("time-travel-panel.finalize"))?;
-        buttons.try_push(finalize).map_err(|_| error("time-travel-panel.buttons"))?;
+        rows.try_push(time_travel_control_row(&format!("{scope}.finalize.row"), label, "list-checks", finalize, refused.is_none(), None, refused.as_deref())?).map_err(|_| error("time-travel-panel.rows"))?;
     }
     if panel.stage == TimeTravelStage::Reviewing {
         let rerun = TimeTravelLabel::ActionRerun.localized(LocalizedLabel::native).resolve(Terminology::Native, locale).to_string();
-        buttons.try_push(time_travel_button(controller_id, &format!("{scope}.rerun"), &rerun, "skip-forward", HISTORY_EDIT_RERUN_ACTION_ID, Some(time_travel_generation_args(generation)?), panel.rerun_refusal.is_none())?).map_err(|_| error("time-travel-panel.buttons"))?;
+        rows.try_push(time_travel_button_row(controller_id, &format!("{scope}.rerun"), &rerun, "skip-forward", HISTORY_EDIT_RERUN_ACTION_ID, Some(time_travel_generation_args(generation)?), panel.rerun_refusal.is_none())?).map_err(|_| error("time-travel-panel.rows"))?;
     }
-    buttons.try_push(time_travel_button(controller_id, &format!("{scope}.exit"), HistoryPanelText::Exit.text(locale), "rotate-ccw", HISTORY_EDIT_EXIT_ACTION_ID, None, panel.stage != TimeTravelStage::Finalizing)?).map_err(|_| error("time-travel-panel.buttons"))?;
-    let toolbar = row().try_id(format!("{scope}.actions")).map_err(|_| error("time-travel-panel.actions-id"))?.try_children(buttons).map_err(|_| error("time-travel-panel.actions"))?.try_build().map_err(|_| error("time-travel-panel.actions-build"))?;
-    children.try_push(toolbar).map_err(|_| error("time-travel-panel.children"))?;
-    section(ui_label(HistoryPanelText::TimeTravel.text(locale), "time-travel-panel.label")?).try_id(scope).map_err(|_| error("time-travel-panel.id"))?.try_children(children).map_err(|_| error("time-travel-panel.children"))?.try_build().map_err(|_| error("time-travel-panel.build"))
+    rows.try_push(time_travel_button_row(controller_id, &format!("{scope}.exit"), HistoryPanelText::Exit.text(locale), "rotate-ccw", HISTORY_EDIT_EXIT_ACTION_ID, None, panel.stage != TimeTravelStage::Finalizing)?).map_err(|_| error("time-travel-panel.rows"))?;
+    tree_section(ui_label(HistoryPanelText::TimeTravel.text(locale), "time-travel-panel.label")?).default_open(true).try_id(scope).map_err(|_| error("time-travel-panel.id"))?.try_children(rows).map_err(|_| error("time-travel-panel.rows"))?.try_build().map_err(|_| error("time-travel-panel.build"))
 }
 
-/// ✏️ The draft editor section `framework.history.editor`: the edited mutation with its draft's own outcome, one windowed
-/// row per input (the control its descriptor derives, bound to `historyEditInput{generation, path}` or, for a
-/// reference, to "use selection"), and Accept, Discard and Withdraw.
-pub(crate) fn time_travel_editor_section(panel: &TimeTravelPanel, editor: &TimeTravelEditorPanel, controller_id: &str, locale: Locale, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+/// ✏️ The draft editor as two tree sections: `framework.history.editor` — the edited mutation with its draft's own
+/// outcome, why no input is editable, then Accept, Discard and Withdraw — and `framework.history.editor.inputs`, one row
+/// per input (the control its descriptor derives, bound to `historyEditInput{generation, path}` or, for a reference, to
+/// "use selection"). The inputs are never windowed: every row up to [`TIME_TRAVEL_EDITOR_INPUT_ROWS`] is materialised the
+/// moment the section shows, and a closing row counts the rest.
+pub(crate) fn time_travel_editor_sections(panel: &TimeTravelPanel, editor: &TimeTravelEditorPanel, controller_id: &str, locale: Locale) -> UiAssemblyResult<[BuiltNode; 2]> {
     let error = ui_assembly_error;
     let scope = "framework.history.editor";
     let generation = panel.status.generation;
-    let mut children = BuiltChildren::default();
+    let mut rows = BuiltChildren::default();
     let mut heading = format!("{}: {}", HistoryPanelText::Draft.text(locale), editor.label.resolve(Terminology::Native, locale));
     if editor.withdrawn {
         heading = format!("{heading} \u{b7} {}", HistoryPanelText::Withdrawn.text(locale));
@@ -2087,20 +2181,25 @@ pub(crate) fn time_travel_editor_section(panel: &TimeTravelPanel, editor: &TimeT
     }
     let (tone, icon) = history_severity_tone(worst);
     let head = ui::tree_item(Label(UiText::clipped(&heading))).icon(ui_text(icon, "time-travel-panel.editor-icon")?).tone(tone).try_id(format!("{scope}.target")).map_err(|_| error("time-travel-panel.editor-target-id"))?.try_build().map_err(|_| error("time-travel-panel.editor-target"))?;
-    children.try_push(head).map_err(|_| error("time-travel-panel.editor-children"))?;
+    rows.try_push(head).map_err(|_| error("time-travel-panel.editor-rows"))?;
     if let Some(reason) = editor.inputs_refused.as_deref() {
         let node = ui::tree_item(Label(UiText::clipped(HistoryPanelText::NoInputs.text(locale)))).description(UiText::clipped(reason)).tone(Tone::Warning).try_id(format!("{scope}.refused")).map_err(|_| error("time-travel-panel.editor-refused-id"))?.try_build().map_err(|_| error("time-travel-panel.editor-refused"))?;
-        children.try_push(node).map_err(|_| error("time-travel-panel.editor-children"))?;
+        rows.try_push(node).map_err(|_| error("time-travel-panel.editor-rows"))?;
     }
-    let inputs = tree_window_indexed_section(windows, "framework.history.editor.inputs", ui_label(HistoryPanelText::Inputs.text(locale), "time-travel-panel.inputs-label")?, true, editor.rows.len(), |index| time_travel_input_row(&editor.rows[index], editor.refused.as_ref(), controller_id, generation, locale))?;
-    children.try_push(inputs).map_err(|_| error("time-travel-panel.editor-children"))?;
-    let mut buttons = BuiltChildren::default();
-    buttons.try_push(time_travel_button(controller_id, &format!("{scope}.accept"), HistoryPanelText::Accept.text(locale), "check", HISTORY_EDIT_ACCEPT_ACTION_ID, Some(time_travel_generation_args(generation)?), true)?).map_err(|_| error("time-travel-panel.editor-buttons"))?;
-    buttons.try_push(time_travel_button(controller_id, &format!("{scope}.discard"), HistoryPanelText::Discard.text(locale), "x", HISTORY_EDIT_DISCARD_ACTION_ID, Some(time_travel_generation_args(generation)?), true)?).map_err(|_| error("time-travel-panel.editor-buttons"))?;
-    buttons.try_push(time_travel_button(controller_id, &format!("{scope}.withdraw"), HistoryPanelText::Withdraw.text(locale), "eye-off", HISTORY_EDIT_WITHDRAW_ACTION_ID, Some(time_travel_generation_args(generation)?), !editor.withdrawn)?).map_err(|_| error("time-travel-panel.editor-buttons"))?;
-    let toolbar = row().try_id(format!("{scope}.actions")).map_err(|_| error("time-travel-panel.editor-actions-id"))?.try_children(buttons).map_err(|_| error("time-travel-panel.editor-actions"))?.try_build().map_err(|_| error("time-travel-panel.editor-actions-build"))?;
-    children.try_push(toolbar).map_err(|_| error("time-travel-panel.editor-children"))?;
-    section(ui_label(editor.label.resolve(Terminology::Native, locale), "time-travel-panel.editor-label")?).try_id(scope).map_err(|_| error("time-travel-panel.editor-id"))?.try_children(children).map_err(|_| error("time-travel-panel.editor-children"))?.try_build().map_err(|_| error("time-travel-panel.editor-build"))
+    rows.try_push(time_travel_button_row(controller_id, &format!("{scope}.accept"), HistoryPanelText::Accept.text(locale), "check", HISTORY_EDIT_ACCEPT_ACTION_ID, Some(time_travel_generation_args(generation)?), true)?).map_err(|_| error("time-travel-panel.editor-rows"))?;
+    rows.try_push(time_travel_button_row(controller_id, &format!("{scope}.discard"), HistoryPanelText::Discard.text(locale), "x", HISTORY_EDIT_DISCARD_ACTION_ID, Some(time_travel_generation_args(generation)?), true)?).map_err(|_| error("time-travel-panel.editor-rows"))?;
+    rows.try_push(time_travel_button_row(controller_id, &format!("{scope}.withdraw"), HistoryPanelText::Withdraw.text(locale), "eye-off", HISTORY_EDIT_WITHDRAW_ACTION_ID, Some(time_travel_generation_args(generation)?), !editor.withdrawn)?).map_err(|_| error("time-travel-panel.editor-rows"))?;
+    let section = tree_section(ui_label(editor.label.resolve(Terminology::Native, locale), "time-travel-panel.editor-label")?).default_open(true).try_id(scope).map_err(|_| error("time-travel-panel.editor-id"))?.try_children(rows).map_err(|_| error("time-travel-panel.editor-rows"))?.try_build().map_err(|_| error("time-travel-panel.editor-build"))?;
+    let mut input_rows = BuiltChildren::default();
+    for row in editor.rows.iter().take(TIME_TRAVEL_EDITOR_INPUT_ROWS) {
+        input_rows.try_push(time_travel_input_row(row, editor.refused.as_ref(), controller_id, generation, locale)?).map_err(|_| error("time-travel-panel.input-rows"))?;
+    }
+    if let Some(hidden) = editor.rows.len().checked_sub(TIME_TRAVEL_EDITOR_INPUT_ROWS).filter(|hidden| *hidden > 0) {
+        let more = ui::tree_item(Label(UiText::clipped(&HistoryPanelText::MoreInputs.text(locale).replace("{count}", &hidden.to_string())))).try_id(format!("{scope}.inputs.more")).map_err(|_| error("time-travel-panel.inputs-more-id"))?.try_build().map_err(|_| error("time-travel-panel.inputs-more"))?;
+        input_rows.try_push(more).map_err(|_| error("time-travel-panel.input-rows"))?;
+    }
+    let inputs = tree_section(ui_label(HistoryPanelText::Inputs.text(locale), "time-travel-panel.inputs-label")?).default_open(true).try_id("framework.history.editor.inputs").map_err(|_| error("time-travel-panel.inputs-id"))?.try_children(input_rows).map_err(|_| error("time-travel-panel.input-rows"))?.try_build().map_err(|_| error("time-travel-panel.inputs"))?;
+    Ok([section, inputs])
 }
 
 /// 🎨️ The colour control of an sRGB vector input — the one place that picks its widget: the UI contract's
@@ -2121,8 +2220,8 @@ fn time_travel_color_control(value: &DslValue, alpha: bool, id: &str, label: &st
 
 /// 🎛️ One input row: a tree item reading the row's label (a refused value names its reason as the description) holding
 /// the control its descriptor derives (`ActionArgDef::control`), bound to the row's pointer; its id is the pointer with
-/// `.` for `/` under `framework.history.editor.input`. A `nullable` input adds a Clear button ("Clear <label>") that
-/// drafts `null` — disabled, and the row described as cleared, while the input already is.
+/// `.` for `/` under `framework.history.editor.input`. A `nullable` input nests a Clear row holding one Clear button
+/// ("Clear <label>") that drafts `null` — disabled, and the input row described as cleared, while the input already is.
 fn time_travel_input_row(row: &TimeTravelInputRow, refused: Option<&(String, String)>, controller_id: &str, generation: u32, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let error = ui_assembly_error;
     let (arg, value, pointer) = (&row.input, &row.value, row.pointer.as_str());
@@ -2266,8 +2365,8 @@ fn time_travel_input_row(row: &TimeTravelInputRow, refused: Option<&(String, Str
     item = item.try_child(control).map_err(|_| error("time-travel-panel.input-row-child"))?;
     if arg.nullable {
         let clear_label = HistoryPanelText::ClearInput.text(locale).replace("{label}", label);
-        let clear = time_travel_button(controller_id, &format!("{id}.clear"), &clear_label, "eraser", HISTORY_EDIT_INPUT_ACTION_ID, Some(time_travel_clear_args(generation, pointer)?), !cleared)?;
-        item = item.try_child(clear).map_err(|_| error("time-travel-panel.input-row-clear"))?;
+        let clear = time_travel_button_row(controller_id, &format!("{id}.clear"), &clear_label, "eraser", HISTORY_EDIT_INPUT_ACTION_ID, Some(time_travel_clear_args(generation, pointer)?), !cleared)?;
+        item = item.default_open(true).try_child(clear).map_err(|_| error("time-travel-panel.input-row-clear"))?;
     }
     item.try_build().map_err(|_| error("time-travel-panel.input-row"))
 }

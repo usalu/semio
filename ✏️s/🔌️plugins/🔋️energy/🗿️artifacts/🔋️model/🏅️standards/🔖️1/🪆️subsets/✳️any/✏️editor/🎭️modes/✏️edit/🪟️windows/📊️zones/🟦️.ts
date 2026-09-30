@@ -21,7 +21,7 @@ export interface EnergyModelSetZoneCell {
 
 /** 📊️ The window's authored verbs beside the generic `set-cell` kit action — the typed twin of
  * `🦀️.rs`'s `zone_actions()`. A zone that is still referenced by a space, surface or thermostat is
- * refused with `mutation.target-in-use` rather than cascaded. */
+ * refused with `app.command.target-in-use` rather than cascaded. */
 export const ENERGY_MODEL_ZONE_ACTIONS = [
   { id: "create-zone", label: { en: "Create zone", de: "Zone anlegen" } },
   { id: "rename-zone", label: { en: "Rename zone", de: "Zone umbenennen" } },

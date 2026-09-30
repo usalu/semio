@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceElement`.
 //!
 //! Guards, in the order they run: `mutation.target-missing` (Error) on the selected id,
-//! `mutation.id-mismatch` (Fatal) when the replacement renames it, the SAME four foreign-key
+//! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME four foreign-key
 //! resolutions `create-element` runs (`mutation.target-missing`, Error), and finally the
 //! `mutation.no-op` warning when the replacement equals what is already there.
 use super::ReplaceElement;

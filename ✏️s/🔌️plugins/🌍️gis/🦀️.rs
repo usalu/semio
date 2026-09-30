@@ -4,6 +4,8 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 #[path = "📇️native-codecs/🦀️.rs"]
 pub mod native_codecs;
+#[path = "💡️inference/🔌️client/🦀️.rs"]
+pub mod inference_client;
 
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
@@ -32,14 +34,15 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Composes map and terrain editors, viewers and native media capabilities.
 pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
-    let dependency = semio_s_plugin_stdio::registry::native_artifact_catalog_dependency()?;
-    let catalog = semio_s_plugin_stdio::registry::native_artifact_catalog_contribution()?;
+    let dependency = semio_s_plugin_stdio::catalog::native_artifact_catalog_dependency()?;
+    let catalog = semio_s_plugin_stdio::catalog::native_artifact_catalog_contribution()?;
     Plugin::<GisApps>::builder("gis")
         .label("GIS")
         .version("0.1.0")
         .package_id("semio:gis")
         .depends_on(dependency.plugin_id, dependency.version)
         .contributes_topic(catalog)
+        .contributes_topic(semio_framework::TopicContribution::new(protocol::os_directory::client::DOCUMENT_HTTP_PORT_TOPIC, protocol::ToValue::to_value(&inference_client::declaration())))
         .artifact_kind(semio_s_artifact_gis_gismap::artifact_kind())
         .artifact_kind(semio_s_artifact_gis_gisterrain::artifact_kind())
         .artifact(semio_s_artifact_gis_gismap::declaration().map_err(PluginAssemblyError::definition)?)

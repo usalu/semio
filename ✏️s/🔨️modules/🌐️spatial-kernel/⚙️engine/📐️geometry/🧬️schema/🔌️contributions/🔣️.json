@@ -1,0 +1,74 @@
+{
+  "type": "object",
+  "required": [
+    "schema",
+    "steps"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "s.spatial-kernel.model-definition-contributions/v1"
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "operation",
+          "ids"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "operation": {
+            "enum": [
+              "inspect",
+              "register",
+              "remove"
+            ]
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "manifest": {
+            "type": "object",
+            "required": [
+              "schema",
+              "id",
+              "label",
+              "version",
+              "kinds"
+            ],
+            "properties": {
+              "schema": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "kinds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "label": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              }
+            }
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

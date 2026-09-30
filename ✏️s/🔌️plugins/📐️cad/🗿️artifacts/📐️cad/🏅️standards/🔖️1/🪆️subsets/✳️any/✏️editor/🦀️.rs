@@ -19,6 +19,7 @@ use crate::editor::cad::commands::utility::set_dislocate_option;
 use crate::editor::cad::config::{cad_sun_config_to_world, deserialize_cad_preview_generation, CadConfig, CadConfigMutation, CadDislocateOptions, CAD_PREVIEW_GENERATION_MAX};
 use crate::editor::cad::engine::interaction::{self, apply_event, can_commit, keyed_transitions, resolve_interaction_key, start_session, CadEngagementScratch};
 use crate::editor::cad::modes::edit;
+use crate::editor::cad::modes::edit::tools::transform::{CadToolEntry, CadTransformRecord};
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::panels::{catalogue, document, inspection};
 use crate::editor::cad::terminology::{cad_is_de_locale, cad_labels};
@@ -527,66 +528,6 @@ pub(crate) fn cad_objects_by_pane(document: &CadSnapshot, ids: &[String]) -> Vec
         .collect()
 }
 
-/// 🚚️ `translateSelection`'s ops: one `move-objects` per touched pane, carrying each object's
-/// ABSOLUTE next origin (the op is absolute so its inverse restores the recorded pose exactly).
-pub fn translate_objects_mutations(document: &CadSnapshot, ids: &[String], delta: [f64; 3]) -> Vec<CadMutation> {
-    cad_objects_by_pane(document, ids)
-        .into_iter()
-        .map(|(pane, objects)| {
-            let placements = objects
-                .into_iter()
-                .map(|object| crate::mutations::CadObjectOrigin { object_id: object.id, new_origin: [object.origin[0] + delta[0], object.origin[1] + delta[1], object.origin[2] + delta[2]] })
-                .collect();
-            CadMutation::MoveObjects(crate::mutations::move_objects::MoveObjects { pane, placements })
-        })
-        .collect()
-}
-
-/// 🌀️ Hamilton product — composes the gumball's incremental axis-angle delta onto each object's own
-/// orientation, so a rotation about a world axis accumulates instead of replacing the pose.
-fn quaternion_product(left: [f64; 4], right: [f64; 4]) -> [f64; 4] {
-    let [lx, ly, lz, lw] = left;
-    let [rx, ry, rz, rw] = right;
-    [lw * rx + lx * rw + ly * rz - lz * ry, lw * ry - lx * rz + ly * rw + lz * rx, lw * rz + lx * ry - ly * rx + lz * rw, lw * rw - lx * rx - ly * ry - lz * rz]
-}
-
-/// 🌀️ `rotateSelection`'s ops — see [`translate_objects_mutations`].
-pub fn rotate_objects_mutations(document: &CadSnapshot, ids: &[String], axis: [f64; 3], angle: f64) -> Vec<CadMutation> {
-    let length = (axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]).sqrt();
-    if !length.is_finite() || length == 0.0 || !angle.is_finite() {
-        return Vec::new();
-    }
-    let (sin, cos) = ((angle * 0.5).sin(), (angle * 0.5).cos());
-    let delta = [axis[0] / length * sin, axis[1] / length * sin, axis[2] / length * sin, cos];
-    cad_objects_by_pane(document, ids)
-        .into_iter()
-        .map(|(pane, objects)| {
-            let placements = objects
-                .into_iter()
-                .map(|object| crate::mutations::CadObjectOrientation { new_orientation: quaternion_product(delta, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])), object_id: object.id })
-                .collect();
-            CadMutation::RotateObjects(crate::mutations::rotate_objects::RotateObjects { pane, placements })
-        })
-        .collect()
-}
-
-/// ⚖️ `scaleSelection`'s ops — see [`translate_objects_mutations`].
-pub fn scale_objects_mutations(document: &CadSnapshot, ids: &[String], factors: [f64; 3]) -> Vec<CadMutation> {
-    cad_objects_by_pane(document, ids)
-        .into_iter()
-        .map(|(pane, objects)| {
-            let placements = objects
-                .into_iter()
-                .map(|object| {
-                    let base = object.scale.unwrap_or([1.0, 1.0, 1.0]);
-                    crate::mutations::CadObjectScale { new_scale: [base[0] * factors[0], base[1] * factors[1], base[2] * factors[2]], object_id: object.id }
-                })
-                .collect();
-            CadMutation::ScaleObjects(crate::mutations::scale_objects::ScaleObjects { pane, placements })
-        })
-        .collect()
-}
-
 /// 🆕️ `addObject`'s / `duplicateObject`'s op: one `create-object` appended to `pane`.
 pub fn create_object_mutations(document: &CadSnapshot, pane: CadPaneId, object: crate::standards::v1::subsets::any::io::geometry_import::CadObject) -> Vec<CadMutation> {
     let index = cad_pane_objects(document, pane).len() as u32;
@@ -619,7 +560,7 @@ pub const CAD_DUPLICATE_OFFSET: f64 = 1.0;
 
 /// 🔁️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3 retired `ReplacePaneObjects`, and
 /// the per-pane re-materialization seam that replaces it landed on 2026-09-16 (see
-/// [`translate_objects_mutations`]). Re-deriving building/energy/structure typologies from shape
+/// [`crate::cad_pane_rematerialized_child`]). Re-deriving building/energy/structure typologies from shape
 /// geometry is expressible on it as a `create-object` run against the target pane, but the derivation
 /// RULES (which typology each source solid becomes, how openings and storeys map) are not written
 /// anywhere yet — that is a modelling decision, not a missing seam. Still a documented no-op, for a
@@ -869,12 +810,12 @@ pub(crate) fn make_object_for_typology(typology: &str, label_count: usize, pane:
     object
 }
 
-/// Commits `session` if it satisfies `can_commit`, returning the `AddObject` operation and clearing
-/// the session runtime state. Returns the operations (empty when no commit happened) — used by both the
-/// direct-event and keyed-transition REPL paths in `engagement_submit_mutations` (a state reached via
-/// either path can be commit-ready, e.g. box's explicit `confirm` step reachable via a keyed
-/// transition).
-pub fn try_commit_session_mutations(document: &CadSnapshot, runtime: &mut CadPlayRuntime, pane: CadPaneId, session: &CadEngagementScratch) -> Vec<CadMutation> {
+/// 🧭️ Commits `session` if it satisfies `can_commit`: clears the session runtime state and answers what the
+/// transform tool yields for it — a construction's `create-object`s, a copy's duplicated objects, or the parametric
+/// transform of `transform.move`/`rotate`/`scale*` — as ONE tool request (empty when no commit happened). Used by both
+/// the direct-event and keyed-transition REPL paths in `engagement_submit_entries` (a state reached via either path can
+/// be commit-ready, e.g. box's explicit `confirm` step reachable via a keyed transition).
+pub fn try_commit_session_entries(document: &CadSnapshot, runtime: &mut CadPlayRuntime, pane: CadPaneId, session: &CadEngagementScratch) -> Vec<CadToolEntry> {
     if !can_commit(session) {
         return Vec::new();
     }
@@ -886,30 +827,27 @@ pub fn try_commit_session_mutations(document: &CadSnapshot, runtime: &mut CadPla
     runtime.engagement_input.clear();
     runtime.last_finalized_interaction_id = Some(interaction_id.clone());
     runtime.engagement_session = None;
-    let (ops, step) = match outcome {
-        // 🧱️ Every constructed object lands in the session's pane through the per-pane
-        // re-materialisation seam (`create_object_mutations` → `create-object`), one op per object so
-        // each is its own history row.
+    let created = |snapshot: &mut CadSnapshot, pane: CadPaneId, object: crate::standards::v1::subsets::any::io::geometry_import::CadObject| {
+        let created = create_object_mutations(snapshot, pane, object);
+        for op in &created {
+            let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(op, snapshot);
+            if let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+                *snapshot = next;
+            }
+        }
+        created.into_iter().map(CadToolEntry::Leaf)
+    };
+    let (entries, step): (Vec<CadToolEntry>, String) = match outcome {
         Some(interaction::CommitOutcome::Objects(objects)) => {
             let count = objects.len();
-            let mut ops = Vec::with_capacity(count);
             let mut snapshot = document.clone();
-            for object in objects {
-                let created = create_object_mutations(&snapshot, pane, object);
-                for op in &created {
-                    let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(op, &snapshot);
-                    if let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), &snapshot) {
-                        snapshot = next;
-                    }
-                }
-                ops.extend(created);
-            }
-            (ops, format!("Committed {count} object(s)"))
+            let entries = objects.into_iter().flat_map(|object| created(&mut snapshot, pane, object).collect::<Vec<_>>()).collect();
+            (entries, format!("Committed {count} object(s)"))
         }
-        Some(interaction::CommitOutcome::Move { targets, delta }) => (translate_objects_mutations(document, &targets, delta), "Moved".to_string()),
+        Some(interaction::CommitOutcome::Move { targets, delta }) => (vec![CadToolEntry::Transform(CadTransformRecord::drag(targets, delta))], "Moved".to_string()),
         Some(interaction::CommitOutcome::Copy { targets, delta }) => {
-            let mut ops = Vec::new();
             let mut snapshot = document.clone();
+            let mut entries = Vec::new();
             for target in &targets {
                 let Some(source_pane) = cad_pane_of_object(&snapshot, target) else { continue };
                 let Some(source) = cad_pane_objects(&snapshot, source_pane).into_iter().find(|object| &object.id == target) else { continue };
@@ -917,29 +855,22 @@ pub fn try_commit_session_mutations(document: &CadSnapshot, runtime: &mut CadPla
                 copy.id = next_cad_id("object");
                 copy.label = format!("{} copy", source.label);
                 copy.origin = [source.origin[0] + delta[0], source.origin[1] + delta[1], source.origin[2] + delta[2]];
-                let created = create_object_mutations(&snapshot, source_pane, copy);
-                for op in &created {
-                    let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(op, &snapshot);
-                    if let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), &snapshot) {
-                        snapshot = next;
-                    }
-                }
-                ops.extend(created);
+                entries.extend(created(&mut snapshot, source_pane, copy));
             }
-            (ops, "Copied".to_string())
+            (entries, "Copied".to_string())
         }
-        Some(interaction::CommitOutcome::Rotate { targets, axis, angle }) => (rotate_objects_mutations(document, &targets, axis, angle), "Rotated".to_string()),
-        Some(interaction::CommitOutcome::Scale { targets, factors }) => (scale_objects_mutations(document, &targets, factors), "Scaled".to_string()),
+        Some(interaction::CommitOutcome::Rotate { targets, axis, angle }) => (vec![CadToolEntry::Transform(CadTransformRecord::rotate(targets, axis, angle))], "Rotated".to_string()),
+        Some(interaction::CommitOutcome::Scale { targets, factors }) => (vec![CadToolEntry::Transform(CadTransformRecord::scale(targets, factors))], "Scaled".to_string()),
         Some(interaction::CommitOutcome::Unsupported(action)) => (Vec::new(), format!("Unsupported: {action}")),
         None => (Vec::new(), "Nothing to commit".to_string()),
     };
-    runtime.engagement_step = if ops.is_empty() && step.starts_with("Committed") { "Nothing to commit".into() } else { step };
-    ops
+    runtime.engagement_step = if entries.is_empty() && step.starts_with("Committed") { "Nothing to commit".into() } else { step };
+    entries
 }
 
 /// ⌨️ Advances the engagement REPL for the current `engagement_input`, mutating runtime
-/// session state and returning any commit operations produced.
-pub fn engagement_submit_mutations(document: &CadSnapshot, runtime: &mut CadPlayRuntime, pane: CadPaneId) -> Vec<CadMutation> {
+/// session state and returning the transform-tool entries its commit yields (empty without one).
+pub fn engagement_submit_entries(document: &CadSnapshot, runtime: &mut CadPlayRuntime, pane: CadPaneId) -> Vec<CadToolEntry> {
     let input = runtime.engagement_input.trim().to_string();
     if input.is_empty() {
         // ⏎️ An empty line during a session is the shell's Enter/Space: it is the state's own
@@ -949,7 +880,7 @@ pub fn engagement_submit_mutations(document: &CadSnapshot, runtime: &mut CadPlay
             if apply_event(session, "confirm", None) {
                 runtime.engagement_step = session.state.clone();
                 let session_snapshot = session.clone();
-                return try_commit_session_mutations(document, runtime, pane, &session_snapshot);
+                return try_commit_session_entries(document, runtime, pane, &session_snapshot);
             }
             runtime.engagement_step = session.state.clone();
             return Vec::new();
@@ -970,14 +901,14 @@ pub fn engagement_submit_mutations(document: &CadSnapshot, runtime: &mut CadPlay
                 // prompt) must not linger as the published line, or the shell's next Enter re-submits it.
                 runtime.engagement_input.clear();
                 let session_snapshot = session.clone();
-                return try_commit_session_mutations(document, runtime, pane, &session_snapshot);
+                return try_commit_session_entries(document, runtime, pane, &session_snapshot);
             }
             for transition in keyed_transitions(session) {
                 if (transition.key.eq_ignore_ascii_case(&input) || transition.event_kind.eq_ignore_ascii_case(&input)) && apply_event(session, &transition.event_kind, None) {
                     runtime.engagement_step = session.state.clone();
                     runtime.engagement_input.clear();
                     let session_snapshot = session.clone();
-                    return try_commit_session_mutations(document, runtime, pane, &session_snapshot);
+                    return try_commit_session_entries(document, runtime, pane, &session_snapshot);
                 }
             }
         } else if let Some(entry) = resolve_interaction_key(&event_kind, model_definition_id) {

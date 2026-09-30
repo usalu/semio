@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceRegion`.
 //!
 //! Guards, in the order they run: `mutation.target-missing` (Error) on the selected id,
-//! `mutation.id-mismatch` (Fatal) when the replacement renames it, the SAME `material_id`
+//! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME `material_id`
 //! resolution and meshability bounds `create-region` runs, and finally `mutation.no-op`.
 use super::ReplaceRegion;
 use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dRegionsDelta, Fem2dRegionsPatchEntry};

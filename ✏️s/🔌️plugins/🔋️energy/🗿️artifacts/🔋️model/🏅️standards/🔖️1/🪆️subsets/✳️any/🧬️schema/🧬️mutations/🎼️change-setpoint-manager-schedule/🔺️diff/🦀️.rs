@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeSetpointManagerSchedule, base: &EnergyModelSn
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Setpoint manager {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_schedule_present && payload.new_schedule_id.0 != 0 {
-        return protocol::MutationOutcome::error("mutation.invariant", "An absent setpoint manager schedule carries the id zero.".to_string(), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "An absent setpoint manager schedule carries the id zero.".to_string(), [payload.id.0.to_string()]);
     }
     if payload.new_schedule_present
         && (!(base.model.schedules.constants.iter().any(|schedule| schedule.id == payload.new_schedule_id)

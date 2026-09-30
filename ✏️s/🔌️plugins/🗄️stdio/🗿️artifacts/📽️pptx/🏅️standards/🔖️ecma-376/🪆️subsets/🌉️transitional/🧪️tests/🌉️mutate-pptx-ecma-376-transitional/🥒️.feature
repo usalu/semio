@@ -44,8 +44,7 @@ Feature: Apply every typed PPTX ECMA-376 Transitional conformance-class mutation
   Every scenario copies the committed .pptx into the case work directory before touching it, so the
   7 real slides and 3 real media parts the 🧱️base case also reads are never written to by this one.
 
-  Every `params` cell is the leaf's own wire payload.
-  Both implementations read that one wire: the reference engine by field name, the subject through
+  Every `params` cell is the leaf's own wire payload. Both implementations read that one wire: the reference engine by field name, the subject through
   `Mutation::from_payload_value`, whose re-emitted payload must equal the row exactly; the subject
   undoes every row with `Mutation::inverse` itself. `set-snapshot` replaces the whole package, so its
   payload is the entire stamped package and no table cell: it is the plain `mutate-set-snapshot`/

@@ -16,8 +16,8 @@ export default defineTestAdapter({
   scenarios: {
     mutate: after,
     inverse: readme,
-    "set-snapshot": after,
-    "set-snapshot-inverse": readme,
+    "mutate-set-snapshot": after,
+    "inverse-set-snapshot": readme,
     "identity-round-trip": readme,
   },
 });

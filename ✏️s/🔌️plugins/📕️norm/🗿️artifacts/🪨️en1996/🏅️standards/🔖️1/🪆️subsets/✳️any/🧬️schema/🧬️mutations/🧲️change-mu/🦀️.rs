@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeMu {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🧲️applies-change-mu/🦀️.rs"]
+#[path = "🧪️tests/🧲️raises-the-bed-joint-friction-coefficient-to-0-625/🦀️.rs"]
 mod named_test;

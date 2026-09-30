@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeOutdoorAirSystemMinOaFlow, base: &EnergyModel
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Outdoor air system {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_min_oa_flow_m3_s.is_finite() || payload.new_min_oa_flow_m3_s < 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("A minimum outdoor air flow must be a non-negative finite number, got {}.", payload.new_min_oa_flow_m3_s), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("A minimum outdoor air flow must be a non-negative finite number, got {}.", payload.new_min_oa_flow_m3_s), [payload.id.0.to_string()]);
     }
     if existing.min_oa_flow_m3_s == payload.new_min_oa_flow_m3_s {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Outdoor air system {} already has that minimum outdoor air flow.", payload.id.0));

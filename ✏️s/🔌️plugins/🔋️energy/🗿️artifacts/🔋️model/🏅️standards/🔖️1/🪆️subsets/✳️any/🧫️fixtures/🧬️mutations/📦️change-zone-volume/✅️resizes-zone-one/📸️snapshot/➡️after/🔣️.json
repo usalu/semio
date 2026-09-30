@@ -14,7 +14,7 @@
       {
         "id": 1,
         "name": "ZONE ONE",
-        "volume_m3": 129.6,
+        "volume_m3": 158.4,
         "multiplier": 1,
         "conditioned": true,
         "part_of_total_floor_area": true

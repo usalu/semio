@@ -1,6 +1,6 @@
 {
   "status": "rejected",
-  "code": "mutation.referenced",
+  "code": "mutation.target-referenced",
   "path": [
     "results.geo.dsmAssetId"
   ]

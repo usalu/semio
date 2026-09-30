@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceNode`.
 //!
 //! Guards, in the order they run: `mutation.target-missing` (Error) on the selected id,
-//! `mutation.id-mismatch` (Fatal) when the replacement renames it, the SAME `node_geometry` bound
+//! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME `node_geometry` bound
 //! `create-node` runs (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceNode;
 use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dNodesDelta, Fem2dNodesPatchEntry};

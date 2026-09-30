@@ -1,0 +1,14 @@
+{
+  "angle": 1.5707963267948966,
+  "axis": [
+    0.0,
+    1.0,
+    0.0
+  ],
+  "mutation": "rotateSelection",
+  "targets": [
+    "object-b",
+    "volume-2",
+    "object-ghost"
+  ]
+}

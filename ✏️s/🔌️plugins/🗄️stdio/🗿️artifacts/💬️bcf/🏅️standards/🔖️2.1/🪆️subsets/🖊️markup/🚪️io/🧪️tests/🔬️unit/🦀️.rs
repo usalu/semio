@@ -121,6 +121,37 @@ async fn folder_without_markup_becomes_raw_parts() {
     assert!(decoded.parts.iter().any(|p| p.name == "stray/notes.txt"));
 }
 
+/// 📷️ Every committed jszip `⬅️before.bcf` of this subset's corpus carries `viewpoint-01` with a perspective camera and a
+/// two-guid selection; the decoder must hand both over and a re-encode must keep them. The generator once wrote
+/// `<Visibility DefaultVisibility/>` (a bare HTML-style attribute), the strict XML reader refused that `.bcfv`, and the
+/// decoder dropped camera and components without a word.
+#[semio_framework_async_macros::async_test]
+async fn committed_viewpoint_fixture_keeps_camera_and_components_through_a_round_trip() {
+    const BEFORE: &[u8] = include_bytes!("../../../🧫️fixtures/✏️set-comment-applied/⬅️before.bcf");
+    let decoded = decode_bcf(BEFORE).expect("decode the committed fixture");
+    let topic = decoded.topics.iter().find(|topic| topic.guid == "topic-clash-01").expect("topic-clash-01");
+    let viewpoint = topic.viewpoints.iter().find(|viewpoint| viewpoint.guid == "viewpoint-01").expect("viewpoint-01");
+    assert_eq!(viewpoint.camera, Some(BcfCamera::Perspective { view_point: BcfPoint3 { x: 10.0, y: 5.0, z: 2.0 }, direction: BcfPoint3 { x: 0.0, y: 0.0, z: -1.0 }, up_vector: BcfPoint3 { x: 0.0, y: 1.0, z: 0.0 }, field_of_view: 60.0 }));
+    assert_eq!(viewpoint.components, Some(BcfComponents { selection: vec!["ifc-beam-1".into(), "ifc-duct-1".into()], visibility: BcfVisibility { default_visibility: true, exceptions: Vec::new() }, coloring: Vec::new() }));
+    assert_eq!(decode_bcf(&encode_bcf(&decoded).expect("encode")).expect("decode the re-encoded archive"), decoded);
+}
+
+/// 🚫️ A `.bcfv` the markup references but no well-formed `<VisualizationInfo>` fills is REFUSED with the part's name, never
+/// decoded as a viewpoint without camera and components.
+#[semio_framework_async_macros::async_test]
+async fn malformed_visualization_info_is_refused() {
+    let markup = b"<?xml version=\"1.0\" encoding=\"UTF-8\"?><Markup><Topic Guid=\"t\" TopicStatus=\"Open\"><Title>T</Title></Topic><Viewpoints Guid=\"v\"><Viewpoint>v.bcfv</Viewpoint></Viewpoints></Markup>".to_vec();
+    let visinfo = b"<?xml version=\"1.0\" encoding=\"UTF-8\"?><VisualizationInfo Guid=\"v\"><Components><Visibility DefaultVisibility/></Components></VisualizationInfo>".to_vec();
+    let zip_snap = semio_s_artifact_stdio_zip::ZipSnapshot {
+        schema: semio_s_artifact_stdio_zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(),
+        entries: vec![ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes("2.1"), ..Default::default() }, ZipEntry { name: "t/markup.bcf".into(), data: markup, ..Default::default() }, ZipEntry { name: "t/v.bcfv".into(), data: visinfo, ..Default::default() }],
+        comment: String::new(),
+        ..Default::default()
+    };
+    let bytes = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::encode_zip(&zip_snap).unwrap();
+    assert_eq!(decode_bcf(&bytes), Err("t/v.bcfv is not a well-formed BCF 2.1 <VisualizationInfo> document".to_string()));
+}
+
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_matches_schema() {
     let snapshot = empty_bcf_snapshot();

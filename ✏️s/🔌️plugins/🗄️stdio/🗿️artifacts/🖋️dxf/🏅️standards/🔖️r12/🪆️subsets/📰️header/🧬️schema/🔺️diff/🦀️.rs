@@ -1483,7 +1483,7 @@ fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified
         let mut target = prefix.to_vec();
         target.push(index.to_string());
         if index >= base_len || !removed.insert(index) {
-            return Err(target_error("invalid-remove-index", "removal target must exist exactly once", target));
+            return Err(target_error("mutation.apply.invalid-remove-index", "removal target must exist exactly once", target));
         }
     }
     let mut modified = BTreeSet::new();
@@ -1491,7 +1491,7 @@ fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified
         let mut target = prefix.to_vec();
         target.push(index.to_string());
         if index >= base_len || removed.contains(&index) || !modified.insert(index) {
-            return Err(target_error("invalid-modify-index", "modification target must exist exactly once and remain present", target));
+            return Err(target_error("mutation.apply.invalid-modify-index", "modification target must exist exactly once and remain present", target));
         }
     }
     let mut additions: Vec<usize> = added_indices.into_iter().collect();
@@ -1501,7 +1501,7 @@ fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified
         let mut target = prefix.to_vec();
         target.push(index.to_string());
         if index > length || previous == Some(index) {
-            return Err(target_error("invalid-add-index", "addition target must be unique and within the evolving sequence", target));
+            return Err(target_error("mutation.apply.invalid-add-index", "addition target must be unique and within the evolving sequence", target));
         }
         previous = Some(index);
     }
@@ -1538,7 +1538,7 @@ fn validate_named_targets<'a>(
         let mut target = prefix.to_vec();
         target.push(key.to_string());
         if !unique(key) || !removed.insert(key) {
-            return Err(target_error("invalid-remove-target", "removal target must exist exactly once", target));
+            return Err(target_error("mutation.apply.invalid-remove-target", "removal target must exist exactly once", target));
         }
     }
     let mut modified = BTreeSet::new();
@@ -1546,7 +1546,7 @@ fn validate_named_targets<'a>(
         let mut target = prefix.to_vec();
         target.push(key.to_string());
         if !unique(key) || removed.contains(key) || !modified.insert(key) {
-            return Err(target_error("invalid-modify-target", "modification target must exist exactly once and remain present", target));
+            return Err(target_error("mutation.apply.invalid-modify-target", "modification target must exist exactly once and remain present", target));
         }
     }
     let mut additions: Vec<(usize, &str)> = added.into_iter().collect();
@@ -1557,7 +1557,7 @@ fn validate_named_targets<'a>(
         let mut target = prefix.to_vec();
         target.push(key.to_string());
         if present(key) || !added_keys.insert(key) || index > length || previous == Some(index) {
-            return Err(target_error("invalid-add-target", "addition name and position must be unique and valid", target));
+            return Err(target_error("mutation.apply.invalid-add-target", "addition name and position must be unique and valid", target));
         }
         previous = Some(index);
     }

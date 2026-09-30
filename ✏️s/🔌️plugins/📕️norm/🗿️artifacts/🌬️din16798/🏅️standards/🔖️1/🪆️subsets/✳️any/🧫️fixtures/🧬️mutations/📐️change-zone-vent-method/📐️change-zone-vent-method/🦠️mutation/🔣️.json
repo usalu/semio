@@ -1,0 +1,6 @@
+{
+  "ChangeZoneVentMethod": {
+    "zoneId": "zone-office",
+    "newVentMethod": "method_2_limit_values"
+  }
+}

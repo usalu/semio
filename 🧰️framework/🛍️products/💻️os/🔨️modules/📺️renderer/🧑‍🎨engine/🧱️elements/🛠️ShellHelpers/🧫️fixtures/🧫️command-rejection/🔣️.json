@@ -1,0 +1,375 @@
+{
+  "description": "A refused command batch as the Shell tells the human (ticket 26/09/23 C10, audit G-P2-3; 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING follow-up 3). `rejection` is the one typed contract every producer answers (`🏪️store/🔄️sync/🧬️schema/🔣️command-rejection`): a hub refusal carries the `MutationMessage`s the hub graded it with, decoded once by the actor. The outcome step grades a region another human's concurrent command touched as `mutation.clamped` and a violated structural constraint as `mutation.invariant` (`🛢️db/🗿️artifact` `grade_conflict_record`). A batch refused for a history transition (`history.malformed-transition`, `history.unknown-target`, `history.transition-refused`) names that refusal alone, as an error whose notice code is the raw code (byte-equal with the wgpu shell); every other hub refusal is a warning coded `sync.command.rejected`. A local refusal is told by its own code. `notice` is the exact notice text per locale; no producer's English `reason` appears in it.",
+  "rows": [
+    {
+      "name": "same field edited by two humans at once",
+      "rejection": {
+        "kind": "rejected",
+        "code": "hub.refused",
+        "reason": "command c-2 touches region(s) also touched by concurrent command c-1",
+        "messages": [
+          {
+            "level": "warning",
+            "code": "mutation.clamped",
+            "message": "command c-2 touches region(s) also touched by concurrent command c-1",
+            "target": [
+              "features/f-1/properties/name"
+            ]
+          }
+        ]
+      },
+      "kind": "warning",
+      "code": "sync.command.rejected",
+      "notice": {
+        "en": "Change refused by the hub: Someone else changed the same part at the same time",
+        "de": "Änderung vom Hub abgelehnt: Jemand anderes hat gleichzeitig dieselbe Stelle geändert"
+      }
+    },
+    {
+      "name": "same field of an opaque document written without seeing the other human's write (vigilant)",
+      "rejection": {
+        "kind": "rejected",
+        "code": "hub.refused",
+        "reason": "command second was authored without seeing concurrent command first, which writes the same part of the document",
+        "messages": [
+          {
+            "level": "warning",
+            "code": "mutation.clamped",
+            "message": "command second was authored without seeing concurrent command first, which writes the same part of the document",
+            "target": [
+              "text"
+            ]
+          }
+        ]
+      },
+      "kind": "warning",
+      "code": "sync.command.rejected",
+      "notice": {
+        "en": "Change refused by the hub: Someone else changed the same part at the same time",
+        "de": "Änderung vom Hub abgelehnt: Jemand anderes hat gleichzeitig dieselbe Stelle geändert"
+      }
+    },
+    {
+      "name": "a constraint a concurrent change now holds",
+      "rejection": {
+        "kind": "rejected",
+        "code": "hub.refused",
+        "reason": "command c-2 violates constraint 'unique-name' held by concurrent command c-1",
+        "messages": [
+          {
+            "level": "fatal",
+            "code": "mutation.invariant",
+            "message": "command c-2 violates constraint 'unique-name' held by concurrent command c-1",
+            "target": [
+              "unique-name"
+            ]
+          }
+        ]
+      },
+      "kind": "warning",
+      "code": "sync.command.rejected",
+      "notice": {
+        "en": "Change refused by the hub: Conflicts with a simultaneous change",
+        "de": "Änderung vom Hub abgelehnt: Widerspricht einer gleichzeitigen Änderung"
+      }
+    },
+    {
+      "name": "both conflict kinds: the structural one is named",
+      "rejection": {
+        "kind": "rejected",
+        "code": "hub.refused",
+        "reason": "rejected",
+        "messages": [
+          {
+            "level": "warning",
+            "code": "mutation.clamped",
+            "message": "region"
+          },
+          {
+            "level": "fatal",
+            "code": "mutation.invariant",
+            "message": "constraint"
+          }
+        ]
+      },
+      "kind": "warning",
+      "code": "sync.command.rejected",
+      "notice": {
+        "en": "Change refused by the hub: Conflicts with a simultaneous change",
+        "de": "Änderung vom Hub abgelehnt: Widerspricht einer gleichzeitigen Änderung"
+      }
+    },
+    {
+      "name": "an admission refusal names no conflict",
+      "rejection": {
+        "kind": "rejected",
+        "code": "hub.refused",
+        "reason": "socket subject actor mismatch",
+        "messages": []
+      },
+      "kind": "warning",
+      "code": "sync.command.rejected",
+      "notice": {
+        "en": "Change refused by the hub",
+        "de": "Änderung vom Hub abgelehnt"
+      }
+    },
+    {
+      "name": "an unrelated message code names no conflict",
+      "rejection": {
+        "kind": "rejected",
+        "code": "hub.refused",
+        "reason": "rejected",
+        "messages": [
+          {
+            "level": "error",
+            "code": "mutation.target-missing",
+            "message": "target missing"
+          }
+        ]
+      },
+      "kind": "warning",
+      "code": "sync.command.rejected",
+      "notice": {
+        "en": "Change refused by the hub",
+        "de": "Änderung vom Hub abgelehnt"
+      }
+    },
+    {
+      "name": "a supersede the hub could not read",
+      "rejection": {
+        "kind": "rejected",
+        "code": "hub.refused",
+        "reason": "supersede payload does not decode",
+        "messages": [
+          {
+            "level": "error",
+            "code": "history.malformed-transition",
+            "message": "supersede payload does not decode",
+            "target": [
+              "m-7"
+            ]
+          }
+        ]
+      },
+      "kind": "error",
+      "code": "history.malformed-transition",
+      "notice": {
+        "en": "History edit refused: the change could not be read.",
+        "de": "Verlaufsbearbeitung abgelehnt: Die Änderung konnte nicht gelesen werden."
+      }
+    },
+    {
+      "name": "a supersede naming a mutation the hub does not hold",
+      "rejection": {
+        "kind": "rejected",
+        "code": "hub.refused",
+        "reason": "unknown supersede target m-9",
+        "messages": [
+          {
+            "level": "error",
+            "code": "history.unknown-target",
+            "message": "unknown supersede target m-9",
+            "target": [
+              "m-9"
+            ]
+          }
+        ]
+      },
+      "kind": "error",
+      "code": "history.unknown-target",
+      "notice": {
+        "en": "History edit refused: the edited mutation no longer exists.",
+        "de": "Verlaufsbearbeitung abgelehnt: Die bearbeitete Mutation existiert nicht mehr."
+      }
+    },
+    {
+      "name": "a refused history step wins over a graded conflict in the same batch",
+      "rejection": {
+        "kind": "rejected",
+        "code": "hub.refused",
+        "reason": "rejected",
+        "messages": [
+          {
+            "level": "warning",
+            "code": "mutation.clamped",
+            "message": "region"
+          },
+          {
+            "level": "error",
+            "code": "history.transition-refused",
+            "message": "the hub refused 1 history step(s)",
+            "target": [
+              "t-1"
+            ]
+          }
+        ]
+      },
+      "kind": "error",
+      "code": "history.transition-refused",
+      "notice": {
+        "en": "The hub refused a history edit; the document is rebuilt from the hub.",
+        "de": "Der Hub hat eine Verlaufsbearbeitung abgelehnt; das Dokument wird vom Hub neu aufgebaut."
+      }
+    },
+    {
+      "name": "hub diagnostics that did not decode name no conflict",
+      "rejection": {
+        "kind": "rejected",
+        "code": "hub.unreadable",
+        "reason": "rejected",
+        "messages": []
+      },
+      "kind": "warning",
+      "code": "sync.command.rejected",
+      "notice": {
+        "en": "Change refused by the hub",
+        "de": "Änderung vom Hub abgelehnt"
+      }
+    },
+    {
+      "name": "a viewer-only execution target",
+      "rejection": {
+        "kind": "rejected",
+        "code": "local.read-only",
+        "reason": "execution target is read-only",
+        "messages": [],
+        "detail": {
+          "envelopes": 1
+        }
+      },
+      "kind": "warning",
+      "code": "local.read-only",
+      "notice": {
+        "en": "Change not applied: this document is read-only here",
+        "de": "Änderung nicht übernommen: Dieses Dokument ist hier schreibgeschützt"
+      }
+    },
+    {
+      "name": "a full pending mutation queue",
+      "rejection": {
+        "kind": "rejected",
+        "code": "local.queue-full",
+        "reason": "pending mutation queue full",
+        "messages": [],
+        "detail": {
+          "envelopes": 2,
+          "limit": 2000
+        }
+      },
+      "kind": "warning",
+      "code": "local.queue-full",
+      "notice": {
+        "en": "Change not applied: too many changes are waiting to be saved",
+        "de": "Änderung nicht übernommen: Zu viele Änderungen warten aufs Speichern"
+      }
+    },
+    {
+      "name": "a full document backbone retention",
+      "rejection": {
+        "kind": "rejected",
+        "code": "local.backbone-capacity",
+        "reason": "document backbone pending capacity",
+        "messages": [],
+        "detail": {
+          "envelopes": 69,
+          "bytes": 40960,
+          "limit": 16777216
+        }
+      },
+      "kind": "warning",
+      "code": "local.backbone-capacity",
+      "notice": {
+        "en": "Change not applied: too many changes are waiting to be saved",
+        "de": "Änderung nicht übernommen: Zu viele Änderungen warten aufs Speichern"
+      }
+    },
+    {
+      "name": "a mutation already retained unsent",
+      "rejection": {
+        "kind": "rejected",
+        "code": "local.backbone-duplicate",
+        "reason": "document backbone mutation identity is already retained",
+        "messages": [],
+        "detail": {
+          "envelopes": 1
+        }
+      },
+      "kind": "warning",
+      "code": "local.backbone-duplicate",
+      "notice": {
+        "en": "Change not applied: it is already waiting to be saved",
+        "de": "Änderung nicht übernommen: Sie wartet bereits aufs Speichern"
+      }
+    },
+    {
+      "name": "no verified canonical pair yet",
+      "rejection": {
+        "kind": "rejected",
+        "code": "local.backbone-pair-unavailable",
+        "reason": "document backbone canonical pair unavailable",
+        "messages": [],
+        "detail": {
+          "bytes": 40960
+        }
+      },
+      "kind": "warning",
+      "code": "local.backbone-pair-unavailable",
+      "notice": {
+        "en": "Change not applied: the document is not ready yet",
+        "de": "Änderung nicht übernommen: Das Dokument ist noch nicht bereit"
+      }
+    },
+    {
+      "name": "envelopes naming another document",
+      "rejection": {
+        "kind": "rejected",
+        "code": "local.backbone-scope-mismatch",
+        "reason": "document backbone scope mismatch",
+        "messages": [],
+        "detail": {
+          "envelopes": 69
+        }
+      },
+      "kind": "error",
+      "code": "local.backbone-scope-mismatch",
+      "notice": {
+        "en": "Change not applied: it belongs to another document",
+        "de": "Änderung nicht übernommen: Sie gehört zu einem anderen Dokument"
+      }
+    },
+    {
+      "name": "a backbone message that does not decode",
+      "rejection": {
+        "kind": "rejected",
+        "code": "local.backbone-malformed",
+        "reason": "document backbone malformed",
+        "messages": []
+      },
+      "kind": "error",
+      "code": "local.backbone-malformed",
+      "notice": {
+        "en": "Change not applied: it could not be read",
+        "de": "Änderung nicht übernommen: Sie konnte nicht gelesen werden"
+      }
+    },
+    {
+      "name": "one envelope over the socket's ceiling",
+      "rejection": {
+        "kind": "rejected",
+        "code": "local.socket-frame-ceiling",
+        "reason": "document socket frame exceeds the socket's ceiling",
+        "messages": [],
+        "detail": {
+          "envelopes": 1
+        }
+      },
+      "kind": "error",
+      "code": "local.socket-frame-ceiling",
+      "notice": {
+        "en": "Change not applied: it is too large to send",
+        "de": "Änderung nicht übernommen: Sie ist zu groß zum Senden"
+      }
+    }
+  ]
+}

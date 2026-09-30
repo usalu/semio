@@ -1,0 +1,15 @@
+{
+  "InsertMaterial": {
+    "index": 1,
+    "material": {
+      "id": "mat-s460-2",
+      "grade": "S460",
+      "fy": 460000000.0,
+      "fu": 550000000.0,
+      "eModulus": 210000000000.0,
+      "gModulus": 81000000000.0,
+      "subgrade": "K2",
+      "kind": "carbon"
+    }
+  }
+}

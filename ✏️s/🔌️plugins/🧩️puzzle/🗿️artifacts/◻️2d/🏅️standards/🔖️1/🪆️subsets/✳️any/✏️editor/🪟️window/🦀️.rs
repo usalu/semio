@@ -189,8 +189,10 @@ pub struct Puzzle2dWindowTransient {
     /// never a persisted option, and never shared with a sibling pane.
     pub suggestion_menu: Option<Puzzle2dSuggestionMenu>,
     /// 🛠️ The window's in-flight select-tool gesture: statechart configuration and open transaction, persisted
-    /// between dispatches so one streamed gesture stays ONE transaction; `None` at rest.
-    pub select_tool: Option<Puzzle2dSelectToolState>,
+    /// between dispatches so one streamed gesture stays ONE transaction; `None` at rest. Boxed: the window transient
+    /// publishes through the ephemeral ownership transfer, whose inline bound
+    /// (`store::ARTIFACT_EPHEMERAL_TRANSFER_MAXIMUM_INLINE_BYTES`) an inline gesture state exceeds.
+    pub select_tool: Option<Box<Puzzle2dSelectToolState>>,
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -469,7 +471,7 @@ pub fn runtime(config: &crate::editor::puzzle2d::config::Puzzle2dConfig, window:
         brush_candidates: transient.brush_candidates.clone(),
         brush_candidate_source_handle_id: transient.brush_candidate_source_handle_id.clone(),
         suggestion_menu: transient.suggestion_menu.clone(),
-        select_tool: transient.select_tool.clone(),
+        select_tool: transient.select_tool.as_deref().cloned(),
         fill_count: config.fill_count,
         grid_snap_enabled: window.grid_snap_enabled,
         grid_factor: window.grid_factor,
@@ -522,7 +524,7 @@ pub fn split(runtime: &crate::editor::puzzle2d::config::Puzzle2dPlayRuntime, win
             brush_candidates: runtime.brush_candidates.clone(),
             brush_candidate_source_handle_id: runtime.brush_candidate_source_handle_id.clone(),
             suggestion_menu: runtime.suggestion_menu.clone(),
-            select_tool: runtime.select_tool.clone(),
+            select_tool: runtime.select_tool.clone().map(Box::new),
         },
     )
 }

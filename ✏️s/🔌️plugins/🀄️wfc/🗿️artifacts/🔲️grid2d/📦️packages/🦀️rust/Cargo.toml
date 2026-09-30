@@ -6,7 +6,7 @@ rust-version.workspace = true
 description = "WFC 2D grid artifact — tiled wave function collapse over a regular rectangular grid"
 
 [package.metadata.semio]
-role = "s-module"
+role = "artifact"
 
 [lints]
 workspace = true

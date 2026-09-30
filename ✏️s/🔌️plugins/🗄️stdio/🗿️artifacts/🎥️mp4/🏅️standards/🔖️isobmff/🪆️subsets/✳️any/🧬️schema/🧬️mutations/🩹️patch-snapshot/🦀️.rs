@@ -17,7 +17,7 @@ impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for PatchSnapshot {
     fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
         match editing::apply_snapshot_patch(base, &self.patch) {
             Ok(next) => protocol::MutationOutcome::new(<Mp4Diff as protocol::command::DiffAlgebra<Mp4Snapshot>>::between(base, &next)),
-            Err(error) => protocol::MutationOutcome::error(error.code, error.message, [error.path]),
+            Err(error) => protocol::MutationOutcome::refuse(error.outcome_code(), format!("{}: {}", error.code, error.message), [error.path]),
         }
     }
 

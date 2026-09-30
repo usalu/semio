@@ -1625,7 +1625,7 @@ impl PluginArtifactChannel {
         };
         let request_bytes = serde_json::to_vec(&request).map_err(|error| Self::not_wired("encoding the inference request", error))?;
         let route = self.ensure_inference_route()?;
-        let result_bytes = semio_framework_async::block_on(route.router.infer(&request_bytes, &command.cancel.0)).map_err(|error| Fault { code: "mutation.rejected".to_string(), message: format!("`{}` refused: {error}", request.inference_schema) })?;
+        let result_bytes = semio_framework_async::block_on(route.router.infer(&request_bytes, &command.cancel.0)).map_err(|error| Fault { code: "app.command.rejected".to_string(), message: format!("`{}` refused: {error}", request.inference_schema) })?;
         serde_json::from_slice(&result_bytes).map_err(|error| Self::not_wired("decoding the inference result", error))
     }
 
@@ -2393,11 +2393,11 @@ fn decode_guest_fault(bytes: &[u8]) -> Fault {
     let decoded = store::pack_rt::decode_wire_value(bytes).ok();
     match decoded {
         Some(value) => {
-            let code = value.get("code").and_then(store::DslValue::as_str).unwrap_or("mutation.rejected").to_string();
+            let code = value.get("code").and_then(store::DslValue::as_str).unwrap_or("app.command.rejected").to_string();
             let message = value.get("message").and_then(store::DslValue::as_str).map(str::to_string).unwrap_or_else(|| store::os_pack::json::to_json_string(&value));
             Fault { code, message }
         }
-        None => Fault { code: "mutation.rejected".to_string(), message: format!("guest rejected the command ({} bytes of fault detail, undecodable as JSON)", bytes.len()) },
+        None => Fault { code: "app.command.rejected".to_string(), message: format!("guest rejected the command ({} bytes of fault detail, undecodable as JSON)", bytes.len()) },
     }
 }
 
@@ -2484,17 +2484,17 @@ fn bind_inference_document(declared: &semio_framework::ContributedInferenceMetad
     };
     if binding.encoding != semio_framework::INFERENCE_ARTIFACT_PACK_BASE64 {
         return Err(Fault {
-            code: "mutation.rejected".to_string(),
+            code: "app.command.rejected".to_string(),
             message: format!("`{}` declares artifact binding encoding `{}`, which this gateway has no writer for (it writes `{}`)", declared.inference_schema, binding.encoding, semio_framework::INFERENCE_ARTIFACT_PACK_BASE64),
         });
     }
     let mut body: serde_json::Value = if command.canonical_payload.is_empty() {
         serde_json::json!({})
     } else {
-        serde_json::from_slice(&command.canonical_payload).map_err(|error| Fault { code: "mutation.rejected".to_string(), message: format!("`{}` payload is not a JSON object: {error}", declared.inference_schema) })?
+        serde_json::from_slice(&command.canonical_payload).map_err(|error| Fault { code: "app.command.rejected".to_string(), message: format!("`{}` payload is not a JSON object: {error}", declared.inference_schema) })?
     };
     let Some(object) = body.as_object_mut() else {
-        return Err(Fault { code: "mutation.rejected".to_string(), message: format!("`{}` payload is not a JSON object", declared.inference_schema) });
+        return Err(Fault { code: "app.command.rejected".to_string(), message: format!("`{}` payload is not a JSON object", declared.inference_schema) });
     };
     if object.contains_key(&binding.field) {
         return serde_json::to_vec(&body).map_err(|error| Fault { code: "plugin.internal".to_string(), message: format!("encoding the inference payload: {error}") });
@@ -2505,7 +2505,7 @@ fn bind_inference_document(declared: &semio_framework::ContributedInferenceMetad
         }
         None if binding.required && object.is_empty() => {
             return Err(Fault {
-                code: "mutation.rejected".to_string(),
+                code: "app.command.rejected".to_string(),
                 message: format!("`{}` is artifact-bound: name the artifact to run it on with `artifactId`, or supply `payload.{}` yourself", declared.inference_schema, binding.field),
             })
         }
@@ -3373,8 +3373,8 @@ impl RoutingArtifactChannel {
             match store::decode_hot_backbone_message_exact(&message) {
                 Ok(store::BackboneMessage::Mutations { .. }) => {}
                 Ok(store::BackboneMessage::Ack { .. }) => continue,
-                Ok(store::BackboneMessage::Genesis { .. } | store::BackboneMessage::Member { .. }) => {
-                    return Err(Fault { code: "channel.not-wired".to_string(), message: format!("`{artifact_id}`'s guest published a genesis or member message on its hot document backbone") });
+                Ok(store::BackboneMessage::Genesis { .. } | store::BackboneMessage::Member { .. } | store::BackboneMessage::Retract { .. }) => {
+                    return Err(Fault { code: "channel.not-wired".to_string(), message: format!("`{artifact_id}`'s guest published a genesis, member or retraction message on its hot document backbone") });
                 }
                 Err(error) => return Err(Fault { code: "channel.not-wired".to_string(), message: format!("`{artifact_id}`'s guest published an undecodable document-backbone message: {error}") }),
             }

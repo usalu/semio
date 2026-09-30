@@ -4,7 +4,7 @@
 //! **This file no longer serves the oracle role.** The reference for `semio-v1-flow-mutate` is the
 //! registered oracle `semio-flow-python-independent` (`../../🏅️standards/🔖️v1/🪆️subsets/🌊️flow/
 //! 🔮️oracles/🔣️.json`) — an independent Python implementation of the semio flow carrier and
-//! its thirteen verbs, written from the committed grammar, protocol and specification vectors,
+//! its fourteen verbs, written from the committed grammar, protocol and specification vectors,
 //! living beside this file as `🐍️component.py`. The runner dispatches the oracle role to that adapter
 //! and the subject role here, and compares the two projections under `@comparison-ordered-json-v1`.
 //! Registering oracle handlers here as well would put this repository's own answer on both sides of

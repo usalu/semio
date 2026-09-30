@@ -1,7 +1,0 @@
-{
-  "ChangeZoneWindowArea": {
-    "zoneId": "zone-living",
-    "windowId": "win-south",
-    "newAreaM2": 10.0
-  }
-}

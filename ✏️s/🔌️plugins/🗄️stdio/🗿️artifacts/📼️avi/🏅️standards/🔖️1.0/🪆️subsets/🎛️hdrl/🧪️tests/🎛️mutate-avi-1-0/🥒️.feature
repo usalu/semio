@@ -35,11 +35,11 @@ Feature: Apply every typed AVI 1.0 mutation to a real-world video container
   comment rather than hidden by loosening the projection:
 
   - Its `strh` is 56 bytes, not 64 — `ffmpeg`'s own AVI-1.0 muxer writes the classic
-    `AVISTREAMHEADER` with `rcFrame` simply omitted, a real, common, spec-legal producer behaviour.
-    This oracle tolerates it (missing trailing bytes default to zero, the same tolerance every
-    real-world AVI reader needs); production's `decode_avi` requires exactly 64 bytes and will
-    reject this real file until fixed — a genuine pre-existing subject-side gap, not introduced
-    here, in the same spirit as wave 7's TIFF/BMP findings.
+    `AVISTREAMHEADER` whose `rcFrame` is four 16-bit `SHORT`s, here `(0, 0, 480, 432)`, the real
+    frame rectangle — a real, common, spec-legal producer behaviour. Both the oracle and the subject
+    read whichever `rcFrame` form is on the wire, record its width (`rcFrameWidth` 8 here, 16 for the
+    modern 4-`LONG` form) and write that same form back, and the independent `riff-avi-codec` probe
+    the comparison pipeline runs reads both results' `strh` side by side.
   - The fixture's `strl` also carries a real `vprp` (video properties) chunk and a 4120-byte `JUNK`
     padding chunk, and its `hdrl` carries a further 260-byte `JUNK` — none of which this subset's
     schema (`AviSnapshot`) has a modelled slot for at all. Both the oracle and the subject silently
@@ -54,8 +54,8 @@ Feature: Apply every typed AVI 1.0 mutation to a real-world video container
   no aggregate tag — so a freshly inserted chunk's bytes and `strf`'s `extra` travel as the byte
   arrays the vocabulary itself declares, and a fresh `strh` states its `rcFrameWidth` and
   `strhExtra`. The subject decodes each row through the derive-generated `from_payload_value`; the
-  `riff` oracle reads the same field names and refuses a member it has no slot for (a non-64-byte
-  `rcFrame` form, `strhExtra`, `strlExtra`, `hdrlExtra`) rather than dropping it.
+  `riff` oracle reads the same field names and refuses a member it has no slot for (an
+  `rcFrameWidth` other than 0, 8 or 16, `strhExtra`, `strlExtra`, `hdrlExtra`) rather than dropping it.
 
   Every scenario copies the real fixture into the case work directory before touching it; the
   committed file is never written to.

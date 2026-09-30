@@ -42,6 +42,8 @@
         "code": {
           "enum": [
             "mutation.target-missing",
+            "mutation.target-referenced",
+            "mutation.target-mismatch",
             "mutation.no-op",
             "mutation.partial",
             "mutation.clamped",

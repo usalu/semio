@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeBatteryRoundTripEfficiency, base: &EnergyMode
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Battery {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !(payload.new_round_trip_efficiency > 0.0 && payload.new_round_trip_efficiency <= 1.0) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Battery {}: round-trip efficiency must be a fraction in (0, 1], got {}.", payload.id.0, payload.new_round_trip_efficiency), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Battery {}: round-trip efficiency must be a fraction in (0, 1], got {}.", payload.id.0, payload.new_round_trip_efficiency), [payload.id.0.to_string()]);
     }
     if existing.round_trip_efficiency == payload.new_round_trip_efficiency {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Battery {} already carries this round-trip efficiency: {}.", payload.id.0, payload.new_round_trip_efficiency));

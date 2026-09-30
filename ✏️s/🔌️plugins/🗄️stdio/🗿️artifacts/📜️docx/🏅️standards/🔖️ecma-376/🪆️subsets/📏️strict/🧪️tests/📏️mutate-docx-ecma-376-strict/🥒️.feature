@@ -91,7 +91,7 @@ Feature: Apply every typed DOCX ECMA-376 Strict conformance-class mutation to a 
       | insert-alternate-content     | {"path": "word/document.xml"}                                                                                                                          |
       | remove-alternate-content     | {"path": "word/document.xml"}                                                                                                                          |
 
-  @id-stamp-conformance-class
+  @id-mutate-set-snapshot
   @level-exhaustive
   @mode-differential
   Scenario: Stamp the real package into the strict class as one whole-package set-snapshot
@@ -99,7 +99,7 @@ Feature: Apply every typed DOCX ECMA-376 Strict conformance-class mutation to a 
     When the package is stamped strict and the stamped package replaces it through set-snapshot
     Then the oracle and the subject agree on the conformance-class projection
 
-  @id-stamp-conformance-class-inverse
+  @id-inverse-set-snapshot
   @level-exhaustive
   @mode-property
   Scenario: Undoing the strict stamp restores the real package

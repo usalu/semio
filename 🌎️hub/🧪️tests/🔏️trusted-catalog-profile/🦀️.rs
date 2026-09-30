@@ -101,8 +101,8 @@ async fn verified_gis_map_profile(root: &Path, component: &[u8]) -> Result<Verif
     semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_s_plugin_gis::plugin().map_err(|error| AuthorityError::Catalog(format!("GIS assembly unavailable: {error:?}")))?);
     let emitted = semio_framework_plugin::describe::describe_plugin(&runtime).await;
     let mut descriptor = super::decode_package_descriptor(&emitted)?;
-    semio_s_plugin_stdio::registry::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).map_err(super::catalog_error)?;
-    semio_s_plugin_stdio::registry::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(super::catalog_error)?;
+    semio_s_plugin_stdio::catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).map_err(super::catalog_error)?;
+    semio_s_plugin_stdio::catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(super::catalog_error)?;
     let component_sha256 = hex_lower(&Sha256::digest(component));
     let actor_sha256 = hex_lower(&Sha256::digest(SYNTHETIC_ACTOR));
     let mut component_blake3 = Hasher::new();

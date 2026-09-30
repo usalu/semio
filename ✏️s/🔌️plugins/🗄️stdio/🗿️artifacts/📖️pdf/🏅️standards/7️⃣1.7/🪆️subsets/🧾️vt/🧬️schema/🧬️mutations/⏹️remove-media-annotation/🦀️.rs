@@ -3,7 +3,6 @@
 use super::insert_media_annotation::InsertMediaAnnotation;
 use super::PdfVtMutation;
 use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
-use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -23,7 +22,7 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveMediaAnnotation {
         if let Some(id) = support::media_annotation(&next, &self.subtype, &self.title) {
             support::remove_object(&mut next, id);
         }
-        MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
+        MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfVtMutation> {

@@ -1,3 +1,5 @@
-; abnf stdio.json mutations
-document = payload
-payload = *OCTET
+; abnf norm.en1991 mutations — one op frame
+op = format tag payload
+format = %x01
+tag = OCTET ; the kind's record tag in 📡️.protocol.semio
+payload = *OCTET ; the leaf payload as UTF-8 JSON

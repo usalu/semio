@@ -1,0 +1,20 @@
+{
+  "mutation": "changeVariables",
+  "newVariables": [
+    {
+      "category": "office",
+      "id": "Q-office",
+      "qk": 40000.0
+    },
+    {
+      "category": "wind",
+      "id": "Q-wind",
+      "qk": 20000.0
+    },
+    {
+      "category": "snow",
+      "id": "Q-snow",
+      "qk": 15000.0
+    }
+  ]
+}

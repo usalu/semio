@@ -600,6 +600,7 @@ impl RetireOwned for flow_mutation::SemioFlowMutation {
             Self::RemoveEdge(flow_mutation::remove_edge::RemoveEdge { id }) => id.retirement(),
             Self::SetEdgeEndpoints(flow_mutation::set_edge_endpoints::SetEdgeEndpoints { id, from, to }) => seq![id, from, to],
             Self::SetEdgeKind(flow_mutation::set_edge_kind::SetEdgeKind { id, kind }) => seq![id, kind],
+            Self::DragNodes(flow_mutation::drag_nodes::DragNodes { targets, dx, dy }) => seq![targets, dx, dy],
         }
     }
 }

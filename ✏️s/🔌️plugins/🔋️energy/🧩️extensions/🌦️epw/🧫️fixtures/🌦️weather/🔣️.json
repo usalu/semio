@@ -1,0 +1,81 @@
+{
+  "schema": "semio.energy.epw-weather/v1",
+  "cases": [
+    {
+      "id": "hour-ending-one",
+      "input": "LOCATION,Hannover,Niedersachsen,DEU,semio-fixture,10238,52.37,9.74,1.0,55.0\nDESIGN CONDITIONS,0\nTYPICAL/EXTREME PERIODS,0\nGROUND TEMPERATURES,0\nHOLIDAYS/DAYLIGHT SAVINGS,0\nCOMMENTS 1,0\nCOMMENTS 2,0\nDATA PERIODS,1,1,Data,Sunday,1/1,1/1\n2026,1,15,1,0,?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9,-7.8,-12.3,92,101100,0,0,280,0,0,0,0,0,0,0,205,2.9,3,2,20.0,22000,0,999999999,14,0.081,0,88,0.2,0,0\n",
+      "accepted": true,
+      "expected": {
+        "location": "Hannover",
+        "latitude_deg": 52.37,
+        "longitude_deg": 9.74,
+        "elevation_m": 55.0,
+        "time_zone_hours": 1.0,
+        "records": [
+          {
+            "year": 2026,
+            "month": 1,
+            "day": 15,
+            "hour": 0,
+            "minute": 0,
+            "dry_bulb_c": -7.8,
+            "dew_point_c": -12.3,
+            "relative_humidity": 0.92,
+            "atmospheric_pressure_pa": 101100.0,
+            "wind_speed_m_s": 2.9,
+            "wind_direction_deg": 205.0,
+            "direct_normal_irradiance_w_m2": 0.0,
+            "diffuse_horizontal_irradiance_w_m2": 0.0,
+            "horizontal_infrared_w_m2": 280.0,
+            "precipitation_mm": 0.0,
+            "snow_depth_mm": 0.0
+          }
+        ]
+      }
+    },
+    {
+      "id": "hour-ending-twenty-four",
+      "input": "LOCATION,Hannover,Niedersachsen,DEU,semio-fixture,10238,52.37,9.74,1.0,55.0\nDESIGN CONDITIONS,0\nTYPICAL/EXTREME PERIODS,0\nGROUND TEMPERATURES,0\nHOLIDAYS/DAYLIGHT SAVINGS,0\nCOMMENTS 1,0\nCOMMENTS 2,0\nDATA PERIODS,1,1,Data,Sunday,1/1,1/1\n2026,1,15,24,0,?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9,-7.8,-12.3,92,101100,0,0,280,0,0,0,0,0,0,0,205,2.9,3,2,20.0,22000,0,999999999,14,0.081,0,88,0.2,0,0\n",
+      "accepted": true,
+      "expected": {
+        "location": "Hannover",
+        "latitude_deg": 52.37,
+        "longitude_deg": 9.74,
+        "elevation_m": 55.0,
+        "time_zone_hours": 1.0,
+        "records": [
+          {
+            "year": 2026,
+            "month": 1,
+            "day": 15,
+            "hour": 23,
+            "minute": 0,
+            "dry_bulb_c": -7.8,
+            "dew_point_c": -12.3,
+            "relative_humidity": 0.92,
+            "atmospheric_pressure_pa": 101100.0,
+            "wind_speed_m_s": 2.9,
+            "wind_direction_deg": 205.0,
+            "direct_normal_irradiance_w_m2": 0.0,
+            "diffuse_horizontal_irradiance_w_m2": 0.0,
+            "horizontal_infrared_w_m2": 280.0,
+            "precipitation_mm": 0.0,
+            "snow_depth_mm": 0.0
+          }
+        ]
+      }
+    },
+    {
+      "id": "short-record",
+      "input": "LOCATION,Hannover,Niedersachsen,DEU,semio-fixture,10238,52.37,9.74,1.0,55.0\nDESIGN CONDITIONS,0\nTYPICAL/EXTREME PERIODS,0\nGROUND TEMPERATURES,0\nHOLIDAYS/DAYLIGHT SAVINGS,0\nCOMMENTS 1,0\nCOMMENTS 2,0\nDATA PERIODS,1,1,Data,Sunday,1/1,1/1\n2026,1,15\n",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "invalid-number",
+      "input": "LOCATION,Hannover,Niedersachsen,DEU,semio-fixture,10238,52.37,9.74,1.0,55.0\nDESIGN CONDITIONS,0\nTYPICAL/EXTREME PERIODS,0\nGROUND TEMPERATURES,0\nHOLIDAYS/DAYLIGHT SAVINGS,0\nCOMMENTS 1,0\nCOMMENTS 2,0\nDATA PERIODS,1,1,Data,Sunday,1/1,1/1\n2026,1,15,1,0,?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9,invalid,-12.3,92,101100,0,0,280,0,0,0,0,0,0,0,205,2.9,3,2,20.0,22000,0,999999999,14,0.081,0,88,0.2,0,0\n",
+      "accepted": false,
+      "expected": null
+    }
+  ]
+}

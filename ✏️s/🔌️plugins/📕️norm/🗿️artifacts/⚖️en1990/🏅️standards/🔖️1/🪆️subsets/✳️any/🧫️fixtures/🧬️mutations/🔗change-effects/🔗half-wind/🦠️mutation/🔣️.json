@@ -1,0 +1,35 @@
+{
+  "mutation": "changeEffects",
+  "newEffects": [
+    {
+      "actionId": "G-sup",
+      "influence": 1.0,
+      "memberId": "beam-B1"
+    },
+    {
+      "actionId": "G-inf",
+      "influence": 1.0,
+      "memberId": "beam-B1"
+    },
+    {
+      "actionId": "Q-office",
+      "influence": 1.0,
+      "memberId": "beam-B1"
+    },
+    {
+      "actionId": "Q-wind",
+      "influence": 0.5,
+      "memberId": "beam-B1"
+    },
+    {
+      "actionId": "A-impact",
+      "influence": 1.0,
+      "memberId": "beam-B1"
+    },
+    {
+      "actionId": "E-1",
+      "influence": 1.0,
+      "memberId": "beam-B1"
+    }
+  ]
+}

@@ -1,0 +1,403 @@
+{
+  "schema": "gis:document-http-fixture/v1",
+  "request": {
+    "schema": "semio.hub.inference-request/v1",
+    "version": 1,
+    "requestId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "serviceId": "s.gis.gismap.inference",
+    "policyVersion": 1,
+    "lifetimeMs": 60000
+  },
+  "receipt": {
+    "schema": "semio.hub.inference-job-receipt/v1",
+    "jobId": "11111111111111111111111111111111",
+    "state": "accepted",
+    "proposalState": "none",
+    "proposalHash": null,
+    "cursor": 0,
+    "expiresAtMs": 1700000060000
+  },
+  "page": {
+    "schema": "semio.hub.inference-job-events/v1",
+    "jobId": "11111111111111111111111111111111",
+    "state": "succeeded",
+    "proposalState": "offered",
+    "cancelRequested": false,
+    "stale": false,
+    "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+    "events": [],
+    "progress": [],
+    "nextCursor": 0,
+    "preview": {
+      "schema": "semio.hub.gis-map-inference-preview/v1",
+      "jobId": "11111111111111111111111111111111",
+      "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+      "regionId": "inference-11111111111111111111111111111111",
+      "ring": [
+        [
+          7,
+          46
+        ],
+        [
+          9,
+          46
+        ],
+        [
+          9,
+          48
+        ],
+        [
+          7,
+          48
+        ],
+        [
+          7,
+          46
+        ]
+      ]
+    }
+  },
+  "approval": {
+    "schema": "semio.hub.inference-approval-receipt/v1",
+    "jobId": "11111111111111111111111111111111",
+    "mutationId": "9071779b724c67e0a45d5e23fddc8dbe",
+    "commandHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+    "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+    "applied": true,
+    "undo": {
+      "targetId": "22222222222222222222222222222222",
+      "expectedCurrent": {
+        "documentId": "document-map",
+        "headEditOrdinal": 2,
+        "headEditId": "approval-edit",
+        "lastCommitSeq": 2,
+        "chainSha256": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130"
+      }
+    }
+  },
+  "preview": {
+    "schema": "semio.hub.gis-map-inference-preview/v1",
+    "jobId": "11111111111111111111111111111111",
+    "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+    "regionId": "inference-11111111111111111111111111111111",
+    "ring": [
+      [
+        7,
+        46
+      ],
+      [
+        9,
+        46
+      ],
+      [
+        9,
+        48
+      ],
+      [
+        7,
+        48
+      ],
+      [
+        7,
+        46
+      ]
+    ]
+  },
+  "schemaVectors": [
+    {
+      "name": "submit-valid",
+      "schema": "submit-input.json",
+      "value": {
+        "schema": "semio.hub.inference-request/v1",
+        "version": 1,
+        "requestId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "serviceId": "s.gis.gismap.inference",
+        "policyVersion": 1,
+        "lifetimeMs": 60000
+      },
+      "valid": true
+    },
+    {
+      "name": "submit-foreign-field",
+      "schema": "submit-input.json",
+      "value": {
+        "schema": "semio.hub.inference-request/v1",
+        "version": 1,
+        "requestId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "serviceId": "s.gis.gismap.inference",
+        "policyVersion": 1,
+        "lifetimeMs": 60000,
+        "extra": true
+      },
+      "valid": false
+    },
+    {
+      "name": "events-valid",
+      "schema": "events-input.json",
+      "value": {
+        "jobId": "11111111111111111111111111111111",
+        "after": 0
+      },
+      "valid": true
+    },
+    {
+      "name": "events-foreign-field",
+      "schema": "events-input.json",
+      "value": {
+        "jobId": "11111111111111111111111111111111",
+        "after": 0,
+        "extra": true
+      },
+      "valid": false
+    },
+    {
+      "name": "cancel-valid",
+      "schema": "cancel-input.json",
+      "value": {
+        "jobId": "11111111111111111111111111111111"
+      },
+      "valid": true
+    },
+    {
+      "name": "cancel-foreign-field",
+      "schema": "cancel-input.json",
+      "value": {
+        "jobId": "11111111111111111111111111111111",
+        "extra": true
+      },
+      "valid": false
+    },
+    {
+      "name": "approve-valid",
+      "schema": "approve-input.json",
+      "value": {
+        "schema": "semio.hub.inference-approval/v1",
+        "version": 1,
+        "jobId": "11111111111111111111111111111111",
+        "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130"
+      },
+      "valid": true
+    },
+    {
+      "name": "approve-foreign-field",
+      "schema": "approve-input.json",
+      "value": {
+        "schema": "semio.hub.inference-approval/v1",
+        "version": 1,
+        "jobId": "11111111111111111111111111111111",
+        "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+        "extra": true
+      },
+      "valid": false
+    },
+    {
+      "name": "submit-output.json-valid",
+      "schema": "submit-output.json",
+      "value": {
+        "schema": "semio.hub.inference-job-receipt/v1",
+        "jobId": "11111111111111111111111111111111",
+        "state": "accepted",
+        "proposalState": "none",
+        "proposalHash": null,
+        "cursor": 0,
+        "expiresAtMs": 1700000060000
+      },
+      "valid": true
+    },
+    {
+      "name": "submit-output.json-foreign-schema",
+      "schema": "submit-output.json",
+      "value": {
+        "schema": "foreign.reply/v1",
+        "jobId": "11111111111111111111111111111111",
+        "state": "accepted",
+        "proposalState": "none",
+        "proposalHash": null,
+        "cursor": 0,
+        "expiresAtMs": 1700000060000
+      },
+      "valid": false
+    },
+    {
+      "name": "page-output.json-valid",
+      "schema": "page-output.json",
+      "value": {
+        "schema": "semio.hub.inference-job-events/v1",
+        "jobId": "11111111111111111111111111111111",
+        "state": "succeeded",
+        "proposalState": "offered",
+        "cancelRequested": false,
+        "stale": false,
+        "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+        "events": [],
+        "progress": [],
+        "nextCursor": 0,
+        "preview": {
+          "schema": "semio.hub.gis-map-inference-preview/v1",
+          "jobId": "11111111111111111111111111111111",
+          "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+          "regionId": "inference-11111111111111111111111111111111",
+          "ring": [
+            [
+              7,
+              46
+            ],
+            [
+              9,
+              46
+            ],
+            [
+              9,
+              48
+            ],
+            [
+              7,
+              48
+            ],
+            [
+              7,
+              46
+            ]
+          ]
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "page-output.json-foreign-schema",
+      "schema": "page-output.json",
+      "value": {
+        "schema": "foreign.reply/v1",
+        "jobId": "11111111111111111111111111111111",
+        "state": "succeeded",
+        "proposalState": "offered",
+        "cancelRequested": false,
+        "stale": false,
+        "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+        "events": [],
+        "progress": [],
+        "nextCursor": 0,
+        "preview": {
+          "schema": "semio.hub.gis-map-inference-preview/v1",
+          "jobId": "11111111111111111111111111111111",
+          "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+          "regionId": "inference-11111111111111111111111111111111",
+          "ring": [
+            [
+              7,
+              46
+            ],
+            [
+              9,
+              46
+            ],
+            [
+              9,
+              48
+            ],
+            [
+              7,
+              48
+            ],
+            [
+              7,
+              46
+            ]
+          ]
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "approve-output.json-valid",
+      "schema": "approve-output.json",
+      "value": {
+        "schema": "semio.hub.inference-approval-receipt/v1",
+        "jobId": "11111111111111111111111111111111",
+        "mutationId": "9071779b724c67e0a45d5e23fddc8dbe",
+        "commandHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+        "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+        "applied": true,
+        "undo": {
+          "targetId": "22222222222222222222222222222222",
+          "expectedCurrent": {
+            "documentId": "document-map",
+            "headEditOrdinal": 2,
+            "headEditId": "approval-edit",
+            "lastCommitSeq": 2,
+            "chainSha256": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130"
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "approve-output.json-foreign-schema",
+      "schema": "approve-output.json",
+      "value": {
+        "schema": "foreign.reply/v1",
+        "jobId": "11111111111111111111111111111111",
+        "mutationId": "9071779b724c67e0a45d5e23fddc8dbe",
+        "commandHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+        "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+        "applied": true,
+        "undo": {
+          "targetId": "22222222222222222222222222222222",
+          "expectedCurrent": {
+            "documentId": "document-map",
+            "headEditOrdinal": 2,
+            "headEditId": "approval-edit",
+            "lastCommitSeq": 2,
+            "chainSha256": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130"
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "nonfinite-json-projection",
+      "schema": "page-output.json",
+      "value": {
+        "schema": "semio.hub.inference-job-events/v1",
+        "jobId": "11111111111111111111111111111111",
+        "state": "succeeded",
+        "proposalState": "offered",
+        "cancelRequested": false,
+        "stale": false,
+        "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+        "events": [],
+        "progress": [],
+        "nextCursor": 0,
+        "preview": {
+          "schema": "semio.hub.gis-map-inference-preview/v1",
+          "jobId": "11111111111111111111111111111111",
+          "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
+          "regionId": "inference-11111111111111111111111111111111",
+          "ring": [
+            [
+              null,
+              46
+            ],
+            [
+              9,
+              46
+            ],
+            [
+              9,
+              48
+            ],
+            [
+              7,
+              48
+            ],
+            [
+              7,
+              46
+            ]
+          ]
+        }
+      },
+      "valid": false
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "artifact": null,
+  "nodes": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "n7",
+        "item": {
+          "id": "n7",
+          "x": 10.0,
+          "y": 7.0
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "elements": null,
+  "regions": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "panel_spare",
+        "item": {
+          "id": "panel_spare",
+          "name": "Spare Side Panel",
+          "outline": [
+            [
+              6.0,
+              3.5
+            ],
+            [
+              10.0,
+              3.5
+            ],
+            [
+              10.0,
+              7.0
+            ],
+            [
+              6.0,
+              7.0
+            ]
+          ],
+          "holes": [],
+          "thickness": 0.15,
+          "materialId": "concrete_c30",
+          "meshSize": 0.5
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null
+}

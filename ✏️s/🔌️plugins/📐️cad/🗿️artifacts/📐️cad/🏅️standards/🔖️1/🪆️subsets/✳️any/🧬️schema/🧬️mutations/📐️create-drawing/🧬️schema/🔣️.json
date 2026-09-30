@@ -2,6 +2,15 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/create-drawing/schema.json",
   "title": "CreateDrawing",
+  "x-semio-invariant": [
+    {
+      "id": "child-identity",
+      "description": {
+        "en": "A composed child's id equals its target artifact id, and the target uses the s.stdio.semio@v1 dialect of the expected subset.",
+        "de": "Die Id eines eingebetteten Kindes entspricht der Artefakt-Id seines Ziels, und das Ziel verwendet den Dialekt s.stdio.semio@v1 des erwarteten Subsets."
+      }
+    }
+  ],
   "type": "object",
   "additionalProperties": false,
   "required": [

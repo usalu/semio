@@ -2572,15 +2572,17 @@ async fn a_rebootstrap_waits_for_the_hosts_reseed_and_says_hello_at_its_baseline
 }
 
 /// 🛟️ A hub-refused `Supersede` has no inverse (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING): the refused batch's
-/// operation rolls back by its inverse, the transition cannot, so the actor raises the typed
-/// [`HISTORY_TRANSITION_REFUSED_CODE`] refusal naming it; the hub's following `RebootstrapRequired` rebuilds the document
+/// operation rolls back by its inverse, the transition is retracted — the store receives `BackboneMessage::Retract`
+/// naming it, on its channel and through the document backbone alike — and the actor raises the typed
+/// [`HISTORY_TRANSITION_REFUSED_CODE`] refusal naming it; a following `RebootstrapRequired` still rebuilds the document
 /// from the canonical pair, and the refused batch is never requeued, resent or handed back to the re-seeded guest.
 #[cfg(not(target_arch = "wasm32"))]
 #[tokio::test]
-async fn a_refused_supersession_is_a_typed_refusal_and_reseeds_from_the_canonical_pair() {
+async fn a_refused_supersession_is_retracted_as_a_typed_refusal() {
+    use crate::os_store::Backbone;
     let (bootstrap, pair) = demo_artifact_bootstrap(true).await;
     let baseline = bootstrap.baseline_frontier.clone();
-    let (_backbone, remote) = ChannelBackbone::pair("native-refused-supersede-test").await;
+    let (mut backbone, remote) = ChannelBackbone::pair("native-refused-supersede-test").await;
     let (_, receiver) = artifact_mailbox_pair();
     let (events, mut event_rx) = broadcast::channel(32);
     let mut actor = native_actor::ArtifactActor::new(
@@ -2609,16 +2611,23 @@ async fn a_refused_supersession_is_a_typed_refusal_and_reseeds_from_the_canonica
     while event_rx.try_recv().is_ok() {}
 
     actor.inject_hub_frame(ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "history.unknown-target".into(), messages: Vec::new() }) }], frontier: baseline.clone() }).await;
-    let (mut rolled_back, mut outcome, mut refusal) = (Vec::new(), None, None);
+    let (mut rolled_back, mut retracted, mut outcome, mut refusal) = (Vec::new(), Vec::new(), None, None);
     while let Ok(event) = event_rx.try_recv() {
         match event {
-            ArtifactEvent::DocumentBackbone { message } => rolled_back.extend(decode_document_backbone_message_exact(&message).expect("canonical rollback batch").into_iter().map(|envelope| envelope.mutation_id.0)),
+            ArtifactEvent::DocumentBackbone { message } => match crate::os_store::decode_hot_backbone_message_exact(&message).expect("canonical backbone message") {
+                BackboneMessage::Mutations { envelopes } => rolled_back.extend(decode_envelopes(&envelopes).expect("rollback batch").into_iter().map(|envelope| envelope.mutation_id.0)),
+                BackboneMessage::Retract { mutation_ids } => retracted.extend(mutation_ids),
+                other => panic!("unexpected document backbone message {other:?}"),
+            },
             ArtifactEvent::CommandOutcome { outcome: ack, .. } => outcome = Some(ack),
             ArtifactEvent::Conflict(message) => refusal = Some(message),
             _ => {}
         }
     }
     assert_eq!(rolled_back, vec![format!("{}~undo", operation.mutation_id.0)], "only the operation rolls back; a transition has no inverse");
+    assert_eq!(retracted, vec![transition.mutation_id.0.clone()], "the transition is retracted instead");
+    let store_bound: Vec<BackboneMessage> = backbone.receive().await.expect("the store end receives");
+    assert!(store_bound.contains(&BackboneMessage::Retract { mutation_ids: vec![transition.mutation_id.0.clone()] }), "the store's own channel carries the retraction: {store_bound:?}");
     assert!(matches!(outcome, Some(CommandAckOutcome::Rejected { .. })), "the batch's own outcome is still reported: {outcome:?}");
     let refusal = refusal.expect("a refused transition is a typed refusal the runtime can show");
     assert_eq!((refusal.code.0.as_str(), refusal.level, refusal.target.clone()), (HISTORY_TRANSITION_REFUSED_CODE, crate::os_dsl::Severity::Error, vec![transition.mutation_id.0.clone()]));

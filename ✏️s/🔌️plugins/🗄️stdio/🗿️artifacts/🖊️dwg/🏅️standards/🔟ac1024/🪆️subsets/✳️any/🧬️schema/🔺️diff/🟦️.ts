@@ -1,5 +1,5 @@
-export * from '../../🟦️.ts';
-import type { DwgApplicationHistory, DwgApplicationInfo, DwgAuxiliaryHeader, DwgClass, DwgDependency, DwgHeaderVariables, DwgIndexedPreview, DwgLogicalDrawing, DwgRevisionHistory, DwgSummaryInfo, DwgTemplate } from '../../🟦️.ts';
+export * from '../🟦️.ts';
+import type { DwgApplicationHistory, DwgApplicationInfo, DwgAuxiliaryHeader, DwgClass, DwgDependency, DwgHeaderVariables, DwgIndexedPreview, DwgLogicalDrawing, DwgRevisionHistory, DwgSummaryInfo, DwgTemplate } from '../🟦️.ts';
 
 export interface DwgDiff {
   version?: string;

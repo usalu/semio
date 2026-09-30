@@ -283,7 +283,6 @@ impl En1994Mutation {
 }
 //#endregion 🔖️FromSnapshot
 
-
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
@@ -315,3 +314,10 @@ pub fn inverse_en1994_mutation(mutation: &En1994Mutation, base: &En1994Snapshot)
 
 #[cfg(test)]
 pub use tests::demo_mutation_cases;
+
+
+//#region 🧫️Vectors
+#[cfg(test)]
+#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
+mod fixture_tests;
+//#endregion 🧫️Vectors

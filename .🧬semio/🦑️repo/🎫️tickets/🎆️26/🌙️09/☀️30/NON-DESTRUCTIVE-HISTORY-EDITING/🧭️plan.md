@@ -258,3 +258,41 @@ the crate's payload round-trip law. Target in scope: `schema mutation-payloads` 
 mutation-inputs` 0, every touched feature case green in its phases (contract/oracle/subject/parity), crate lib tests
 incl. `semio_payload_law_*` green (gated cargo, plugin crates `--target wasm32-wasip2` for checks). Report
 `📓️w2-w-<group>-report.md`.
+
+### W3-T brief (common to every tool-machine conversion executor)
+
+Goal (user requirement): every tool gesture is a state machine (`🛠️tool-machine` `ToolMachine` over `🔄️machine`
+statecharts) that yields mutations inside ONE `ToolTransaction`; tools themselves are never history-editable, their
+yielded mutations are (time travel edits their inputs). Reference implementation: puzzle 2d select tool (W2-D,
+`📓️w2-d-report.md` §1: statechart `🖱️select/🦀️.rs`, runner persisted in the window transient, `phase` stream/commit/abort,
+host aborts blur/captureLost/frozen/baseMoved/retired, preview painted from transient only, `Emit::commit_transaction`,
+no `coalesce_key` on commits, one gesture = one edit = one history row labelled from the leaf's `SemanticMutation::label`
+(en + de), cancel = zero trace). API: `📓️w1-c-report.md`, design §5 + §7 + §10 (wire contract: `Emit.transaction`).
+Per plugin:
+1. Census the plugin's gestures (pointer drags, gumballs, brushes/strokes, marquee, transform brackets, keyboard nudges,
+   inspector deltas, HUD submits) and how they commit today (absolute final-state ops, per-tick `Emit::amend`, scratch +
+   `Emit::commit`, vendored statecharts, host-only brackets). Write it in your report first.
+2. Parametric leaves: gestures yield RELATIVE, selection-scoped leaves carrying intent (targets + offset/angle/pivot/factor,
+   stroke points, …) — model on puzzle 2d `drag-selection`/`rotate-selection`/`scale-selection` and 🎥️shooting
+   `DragAssets`. New leaves are schema-first: `<leaf>/🧬️schema/🔣️.json` with full `x-semio-ui` (labels en/de, widget,
+   bounds, step, precision, units, snaps, `role: target` + `ref`), invariants as schema bounds or declared
+   `x-semio-invariant`, outcome codes only from the 9-code vocabulary (design addenda; Error target-missing /
+   target-referenced / target-mismatch, Warning no-op / partial / clamped, Fatal duplicate-id / invariant / mutation.apply.*,
+   Info cascade), Rust leaf + `#[derive(Mutations)]` wiring, TS twin with `parse<Type>()`, committed wire witness
+   (quintet or `🧾️wire-witness`), payload law, labels via `SemanticMutation::label` en + de. Replace (not wrap) the old
+   absolute ops where they only existed for gestures; delete dead code/leaves/fixtures (no legacy, no compat).
+3. Tool machine: statechart + `ToolMachineRunner`, persisted in the window transient when a gesture spans dispatches
+   (stable-id configuration), host aborts leave zero trace, preview from transient only, one `Emit::commit_transaction`.
+   Delete scratch structs / vendored machine copies / per-tick amend paths that the machine replaces.
+4. Hosts: React + wgpu hosts send stream/commit/abort phases; both must behave the same (shared corpus when a coalescer
+   exists).
+5. Tests (TDD, language-agnostic first): one gesture = one edit = one row with `TransactionRef`; cancel = zero trace; two
+   gestures = two transactions; replay determinism (editing the leaf's inputs through time travel re-applies correctly —
+   use `state_before`/`begin_report_replay` laws like puzzle 2d); third-party oracle where the plugin has one.
+   Lints `schema mutation-inputs` and `schema mutation-payloads` must stay 0 for your scope; `cargo check` wasm32-wasip2
+   for the plugin; plugin crate tests; TS tests for the hosts you touch.
+Rules: fleet rules in `📌️important/📝️.md` (private `CARGO_TARGET_DIR=.🧬semio/🦑️repo/⚡️cache/cargo/target-nde-<you>`,
+gated foreground builds, compile-atomic edits, re-read before edit, no git-modifying commands, don't close the ticket,
+never sweep `🗑️generated/`, `[DEBUG] ` prefix for temporary logs and remove them). Don't regenerate descriptors /
+launch.json / central schema generate (coordinator does it once at the end) — list what needs regeneration.
+Report: `📓️w3-t-<plugin>-report.md`.

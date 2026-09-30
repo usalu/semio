@@ -41,7 +41,9 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); document.body.replaceChildren(); vi.unstubAllGlobals(); });
 
 describe("accepted browser media authority", () => {
-  it("admits the neutral real-app reservation journey with independent schema and production boot decoding", () => {
+  it("admits the neutral real-app reservation journey with independent schema and production boot decoding", async () => {
+    const { runBrowserMediaAppAcceptance } = await import("../../🎯️targets/🧊️wgpu/🧪️tests/🎬️media-app/🟦️.ts");
+    await expect(runBrowserMediaAppAcceptance([])).rejects.toThrow("requires serve, explicit locale and output");
     const path = resolve(testDirectory, "../../🧫️fixtures/🎬️media-app-acceptance");
     const journey = JSON.parse(readFileSync(resolve(path, "🔣️.json"), "utf8"));
     const validate = new Ajv2020().compile(JSON.parse(readFileSync(resolve(path, "🧬️schema/🔣️.json"), "utf8")));

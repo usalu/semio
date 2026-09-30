@@ -32,14 +32,16 @@ Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
   the decode/re-encode, and the writer reproduces that canonical layout exactly — a dropped chunk, a
   miscounted sample or a wrong byte rate would all move the bytes. `WavSnapshot` carries no raw-byte
   escape hatch for what it claims to understand: this fixture's `data` chunk is decoded into typed
-  `Pcm16` samples one 16-bit little-endian word at a time and re-emitted from them, and the five
-  @id-mutate rows drive the same decode/encode pipeline and every one of them moves both the bytes
-  and the compared projection, which is what proves a real parse happened.
+  `Pcm16` samples one 16-bit little-endian word at a time and re-emitted from them, and every
+  @id-mutate row drives the same decode/encode pipeline and moves both the bytes and the compared
+  projection, which is what proves a real parse happened.
 
   Every Examples `params` cell is exactly the leaf's wire payload — its `payload_value()`, camelCase, no
   aggregate tag — which the subject decodes through the derive-generated `from_payload_value` and the
   owned oracle reads by the same field names; no hand-written params grammar sits between the row and
-  the typed mutation.
+  the typed mutation. The `patch-snapshot` row is the editor's compact path-addressed patch: it sets
+  sample 4000 and removes sample 4001 through the snapshot's own member paths, which the subject applies
+  through the schema-validated snapshot editor and the owned oracle interprets over its PCM model.
 
   Every scenario copies the immutable fixture into the case work directory before touching it; the
   committed fixture is never written to. The owned oracle is isolated from the subject codec, and
@@ -63,6 +65,7 @@ Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
       | set-fmt          | {"fmt":{"audioFormat":1,"channels":2,"sampleRate":22050,"byteRate":88200,"blockAlign":4,"bitsPerSample":16}} |
       | set-data         | {"data":{"kind":"pcm16","value":[3000,-3000,1500,-1500,750,-750,375,-375]}} |
       | patch-data       | {"index":4000,"removeCount":8,"data":{"kind":"pcm16","value":[3000,-3000,1500,-1500]}} |
+      | patch-snapshot   | {"patch":{"edits":[{"path":["data","value","4000"],"edit":{"operation":"set","value":1234}},{"path":["data","value","4001"],"edit":{"operation":"remove"}}]}} |
       | set-other-chunks | {"chunks":[{"fourcc":"fact","data":[4,0,0,0]},{"fourcc":"LIST","data":[73,78,70,79]}]} |
 
   @id-inverse
@@ -82,6 +85,7 @@ Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
       | set-fmt          | {"fmt":{"audioFormat":1,"channels":2,"sampleRate":22050,"byteRate":88200,"blockAlign":4,"bitsPerSample":16}} |
       | set-data         | {"data":{"kind":"pcm16","value":[3000,-3000,1500,-1500,750,-750,375,-375]}} |
       | patch-data       | {"index":4000,"removeCount":8,"data":{"kind":"pcm16","value":[3000,-3000,1500,-1500]}} |
+      | patch-snapshot   | {"patch":{"edits":[{"path":["data","value","4000"],"edit":{"operation":"set","value":1234}},{"path":["data","value","4001"],"edit":{"operation":"remove"}}]}} |
       | set-other-chunks | {"chunks":[{"fourcc":"fact","data":[4,0,0,0]},{"fourcc":"LIST","data":[73,78,70,79]}]} |
 
   @id-identity-round-trip

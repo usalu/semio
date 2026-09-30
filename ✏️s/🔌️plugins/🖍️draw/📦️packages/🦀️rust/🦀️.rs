@@ -17,12 +17,11 @@
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
-// 🎭️ `fsm::statechart!` (used by `editor::drawing::commands::canvas_pointer_down`'s gesture machine) generates code
-// containing `#[cfg(feature = "serde")]` gates meant for `fsm`'s OWN crate; macro hygiene splices
-// that cfg check into the CALLING crate's feature list instead (a `fsm`/rustc macro-expansion
-// limitation, not a real conditional-compilation bug here) — this crate declares no `serde` feature
-// at all (the dependency is always-on), so rustc flags the value as unrecognized. Harmless, but a
-// hard error under `-D warnings` without this crate-wide allow.
+// 🎭️ `machine::statechart!` (the canvas tool of `editor::drawing::commands::canvas_pointer_down`) generates code
+// containing `#[cfg(feature = "serde")]` gates meant for `machine`'s OWN crate; macro hygiene splices that cfg check
+// into the CALLING crate's feature list instead (a rustc macro-expansion limitation, not a real
+// conditional-compilation bug here) — this crate declares no `serde` feature, so rustc flags the value as
+// unrecognized. Harmless, but a hard error under `-D warnings` without this crate-wide allow.
 
 //#region 🗿️Artifacts
 mod artifacts {

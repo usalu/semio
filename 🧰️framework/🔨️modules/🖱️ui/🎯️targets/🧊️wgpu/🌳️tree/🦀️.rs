@@ -443,6 +443,10 @@ pub struct UiTree {
     /// and `paint::sync_interactive_state_node_step` re-mints for whatever is still open — so the
     /// working set is bounded by [`UI_COMPOSITE_ROWS`] and never grows across frames.
     composite_rows: Vec<(NodeId, NodeId)>,
+    /// 👥️ Host-localized lines about peers acting on a record, by record key, sorted by key — React's
+    /// `UiPresenceOverlayEntry.notes` ("Ada is editing this in time travel"). Presence, never document state: a tree row
+    /// paints and announces them after its own description, and a reconcile leaves them alone.
+    presence_notes: Vec<(String, String)>,
 }
 
 /// 🔽️ The ceiling on synthesized composite rows held at once. One open popup at a time is the shell's
@@ -453,6 +457,25 @@ pub const UI_COMPOSITE_ROWS: usize = 1_024;
 impl UiTree {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// 👥️ The peers' note on the record keyed `key`, its lines joined, if any peer acts on it.
+    pub fn presence_note(&self, key: &str) -> Option<&str> {
+        self.presence_notes.binary_search_by(|(candidate, _)| candidate.as_str().cmp(key)).ok().map(|index| self.presence_notes[index].1.as_str())
+    }
+
+    /// 👥️ Replaces the peers' notes (sorted by key, as [`UiTree::presence_note`] searches them) and marks the root for
+    /// repaint when they changed; `true` when they did.
+    pub fn set_presence_notes(&mut self, notes: &[(String, String)]) -> bool {
+        debug_assert!(notes.windows(2).all(|pair| pair[0].0 < pair[1].0), "presence notes are sorted by key, one entry per key");
+        if self.presence_notes == notes {
+            return false;
+        }
+        self.presence_notes = notes.to_vec();
+        if let Some(root) = self.root {
+            self.mark_dirty(root, NodeFlags::DIRTY_PAINT);
+        }
+        true
     }
 
     pub fn node(&self, id: NodeId) -> Option<&Node> {

@@ -10,7 +10,7 @@ pub fn apply_jpg_mutation(snapshot: &mut JpgSnapshot, mutation: &JpgMutation) ->
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 

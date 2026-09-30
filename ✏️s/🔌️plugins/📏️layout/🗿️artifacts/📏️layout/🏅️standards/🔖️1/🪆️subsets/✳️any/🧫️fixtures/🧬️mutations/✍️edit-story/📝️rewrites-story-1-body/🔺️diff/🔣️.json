@@ -12,7 +12,8 @@
       {
         "id": "story-1",
         "patch": {
-          "content": "Alpha body, revised."
+          "content": "Alpha body, revised.",
+          "style_runs": null
         }
       }
     ],

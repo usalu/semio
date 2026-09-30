@@ -117,6 +117,11 @@ const FRAMEWORK_DISPLAY_LAYOUT_TAB_ID: &str = "framework.display.layout";
 const FRAMEWORK_SETTINGS_GENERAL_TAB_ID: &str = "framework.settings.general";
 
 use dsl::DslValue;
+use protocol::{FromValue, ToValue};
+#[cfg(not(target_arch = "wasm32"))]
+use protocol::os_directory::client::{DocumentHttpPortCodeV1, DocumentHttpPortDeclarationV1, DOCUMENT_HTTP_PORT_TOPIC};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_schema::CompiledDocumentHttpPortV1;
 use serde_json::Value;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -703,6 +708,7 @@ fn presence_peer_rows_for_surface(peers: &[PresencePeer], attached_surface: Opti
             connected_at_ms: Some(peer.connected_at_ms),
             color: peer.color,
             is_agent: matches!(peer.principal_kind, Some(store_sync::os_spr::PresencePrincipalKind::Agent)),
+            activity: None,
         })
         .collect()
 }
@@ -1584,6 +1590,7 @@ fn route_document_backbone_effects(actor_uri: &str, cmd_tx: &ArtifactMailboxSend
                     store_sync::os_store::BackboneMessage::Ack { .. } => {}
                     store_sync::os_store::BackboneMessage::Genesis { .. } => return Err("hot document-backbone egress cannot publish genesis".into()),
                     store_sync::os_store::BackboneMessage::Member { .. } => return Err("a composed member requires its exact member transport lane".into()),
+                    store_sync::os_store::BackboneMessage::Retract { .. } => return Err("a retraction flows from the actor to its store, never back".into()),
                 }
             }
             other => remaining.push(other),
@@ -2240,6 +2247,7 @@ impl GisMapInferenceDriverV1 {
 /// enters the render loop, and a cancel is a hard terminal.
 #[cfg(not(target_arch = "wasm32"))]
 struct ShellInferenceRunner {
+    port: std::sync::Arc<CompiledDocumentHttpPortV1>,
     pool: WorkerPool,
     client: std::sync::Arc<ShellDirectoryClient>,
     context: OperationContext,
@@ -2257,8 +2265,9 @@ impl ShellInferenceRunner {
     const MAX_ACTIONS_PER_TURN: usize = 4;
     const MAX_TURN_MS: u64 = 4;
 
-    fn start(pool: WorkerPool, client: std::sync::Arc<ShellDirectoryClient>, context: OperationContext, driver: GisMapInferenceDriverV1) -> std::sync::Arc<Self> {
+    fn start(pool: WorkerPool, client: std::sync::Arc<ShellDirectoryClient>, port: std::sync::Arc<CompiledDocumentHttpPortV1>, context: OperationContext, driver: GisMapInferenceDriverV1) -> std::sync::Arc<Self> {
         let runner = std::sync::Arc::new(Self {
+            port,
             pool,
             client,
             context,
@@ -2337,6 +2346,7 @@ impl ShellInferenceRunner {
         let client = self.client.clone();
         let context = self.context.clone();
         let scope = self.driver.lock().expect("inference driver mutex poisoned").scope().clone();
+        let port = self.port.clone();
         ShellPoolFuture::spawn(self.pool.clone(), Lane::Io, async move {
             let outcome = {
                 match action {
@@ -2349,13 +2359,19 @@ impl ShellInferenceRunner {
                             policy_version: 1,
                             lifetime_ms: GisMapInferenceDriverV1::JOB_LIFETIME_MS,
                         };
-                        client.submit_gis_map_inference_job(&context, &scope, &request).await.map(GisMapInferencePortEventV1::Receipt)
+                        port.call(&client, &context, &scope, "submit", &request.to_value()).await
+                            .and_then(|value| protocol::os_directory::schema::GisMapInferenceJobReceiptV1::from_value(value).map_err(|_| DocumentHttpPortCodeV1::Invalid))
+                            .and_then(|receipt| receipt.validate().then_some(receipt).ok_or(DocumentHttpPortCodeV1::Invalid))
+                            .map(GisMapInferencePortEventV1::Receipt).map_err(document_http_port_code)
                     }
-                    GisMapInferenceTurnV1::Poll { job_id, after } => client.read_gis_map_inference_events(&context, &scope, &job_id, after).await.map(GisMapInferencePortEventV1::Page),
-                    GisMapInferenceTurnV1::Cancel { job_id } => client.cancel_gis_map_inference_job(&context, &scope, &job_id).await.map(GisMapInferencePortEventV1::Page),
+                    GisMapInferenceTurnV1::Poll { job_id, after } => read_document_port_page(&port, &client, &context, &scope, "events", &job_id, Some(after)).await,
+                    GisMapInferenceTurnV1::Cancel { job_id } => read_document_port_page(&port, &client, &context, &scope, "cancel", &job_id, None).await,
                     GisMapInferenceTurnV1::Approve { job_id, proposal_hash } => {
                         let request = GisMapInferenceApprovalRequestV1 { schema: "semio.hub.inference-approval/v1".to_string(), version: 1, job_id, proposal_hash };
-                        client.approve_gis_map_inference_job(&context, &scope, &request).await.map(GisMapInferencePortEventV1::Approval)
+                        port.call(&client, &context, &scope, "approve", &request.to_value()).await
+                            .and_then(|value| protocol::os_directory::schema::GisMapInferenceApprovalReceiptV1::from_value(value).map_err(|_| DocumentHttpPortCodeV1::Invalid))
+                            .and_then(|receipt| receipt.validate(&request.job_id, &request.proposal_hash).then_some(receipt).ok_or(DocumentHttpPortCodeV1::Invalid))
+                            .map(GisMapInferencePortEventV1::Approval).map_err(document_http_port_code)
                     }
                     GisMapInferenceTurnV1::Idle | GisMapInferenceTurnV1::WaitUntil(_) | GisMapInferenceTurnV1::Terminal => Ok(GisMapInferencePortEventV1::Clear),
                 }
@@ -2396,6 +2412,31 @@ impl ShellInferenceRunner {
         self.cancelled.store(true, std::sync::atomic::Ordering::Release);
         self.context.cancel.cancel_now();
     }
+}
+#[cfg(not(target_arch = "wasm32"))]
+fn document_http_port_code(code: DocumentHttpPortCodeV1) -> GisMapInferencePortCodeV1 {
+    match code {
+        DocumentHttpPortCodeV1::Invalid => GisMapInferencePortCodeV1::Invalid,
+        DocumentHttpPortCodeV1::Bounds => GisMapInferencePortCodeV1::Bounds,
+        DocumentHttpPortCodeV1::Cancelled => GisMapInferencePortCodeV1::Cancelled,
+        DocumentHttpPortCodeV1::Denied => GisMapInferencePortCodeV1::Denied,
+        DocumentHttpPortCodeV1::Transport => GisMapInferencePortCodeV1::Transport,
+        DocumentHttpPortCodeV1::NotFound => GisMapInferencePortCodeV1::NotFound,
+        DocumentHttpPortCodeV1::Conflict => GisMapInferencePortCodeV1::Conflict,
+        DocumentHttpPortCodeV1::Gone => GisMapInferencePortCodeV1::Expired,
+        DocumentHttpPortCodeV1::Capacity => GisMapInferencePortCodeV1::Capacity,
+        DocumentHttpPortCodeV1::Unavailable => GisMapInferencePortCodeV1::Unavailable,
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+async fn read_document_port_page(port: &CompiledDocumentHttpPortV1, client: &ShellDirectoryClient, context: &OperationContext, scope: &DocumentScope, action: &str, job_id: &str, after: Option<u64>) -> Result<GisMapInferencePortEventV1, GisMapInferencePortCodeV1> {
+    let mut fields = vec![("jobId".into(), DslValue::String(job_id.into()))];
+    if let Some(after) = after { fields.push(("after".into(), after.to_value())); }
+    port.call(client, context, scope, action, &DslValue::Object(fields)).await
+        .and_then(|value| protocol::os_directory::schema::GisMapInferenceEventPageV1::from_value(value).map_err(|_| DocumentHttpPortCodeV1::Invalid))
+        .and_then(|page| page.validate(job_id).then_some(page).ok_or(DocumentHttpPortCodeV1::Invalid))
+        .map(GisMapInferencePortEventV1::Page).map_err(document_http_port_code)
 }
 //#endregion 💡️InferencePort
 
@@ -3784,6 +3825,9 @@ pub struct ShellState {
     /// fires on a changed value. Re-seeded, never noted, when the session instance changes, because a
     /// successor's landing window is a mount rather than a user activation.
     noted_active_window: Option<(u32, String)>,
+    /// 📨️ The active window the program was last told about for host events, so the pane that loses the activation is
+    /// blurred exactly once ([`Self::arm_window_blur_host_event`]).
+    host_event_active_window: Option<(u32, String)>,
     /// 🧭️ Every anchor's own open/size/active-path chrome, slotted by `PanelAnchor::index` — the
     /// wgpu twin of React's `panels[anchor]` reducer state.
     pub panel_anchors: [PanelAnchorState; 8],
@@ -7119,6 +7163,7 @@ impl ShellState {
             closing_documents: ShellDocumentRetirementRegistry::default(),
             active_window_id: None,
             noted_active_window: None,
+            host_event_active_window: None,
             panel_anchors: Default::default(),
             dock_tabs: ShellDock::default(),
             dock_override: None,
@@ -10843,6 +10888,7 @@ impl ShellState {
         #[cfg(not(target_arch = "wasm32"))]
         let directory_changed = self.poll_time_travel_progress().await || directory_changed;
         let directory_changed = self.drain_progress_history_patches().await || directory_changed;
+        let directory_changed = self.publish_peer_time_travel_notes() || directory_changed;
         self.poll_auto_checkin().await;
         let directory_changed = self.advance_document_opening().await || directory_changed;
         let directory_changed = self.advance_sync_reseed().await || directory_changed;
@@ -10971,11 +11017,14 @@ impl ShellState {
                 }
                 ArtifactEvent::Preview { .. } => {
                 }
-                ArtifactEvent::CommandOutcome { outcome: store_sync::sync::CommandAckOutcome::Rejected { reason, .. }, .. } => {
-                    if let Some((code, text, severity)) = time_travel::history_refusal_notice(&reason, self.active_locale()) {
-                        self.show_transient_notice(text, severity, Some(code));
-                        changed = true;
-                    }
+                ArtifactEvent::CommandOutcome { outcome: store_sync::sync::CommandAckOutcome::Rejected { code, messages, .. }, .. } => {
+                    let (code, text, severity) = command_rejection_notice(code, &messages, self.active_locale());
+                    self.show_transient_notice(text, severity, Some(code));
+                    changed = true;
+                }
+                ArtifactEvent::CommandOutcome { outcome: store_sync::sync::CommandAckOutcome::Transformed, .. } => {
+                    self.show_transient_notice(shell_chrome_string("conflict.hubTransformed", self.locale_id == "de"), semio_framework::Severity::Info, Some(SYNC_COMMAND_TRANSFORMED_NOTICE_CODE));
+                    changed = true;
                 }
                 ArtifactEvent::CommandOutcome { .. } => {}
             }
@@ -11016,11 +11065,20 @@ impl ShellState {
     /// 👥️ The roster `#s-presence-peers` paints, scoped to the attached surface. A document opened
     /// without a hub binding carries no surface and answers an empty roster — exactly the state
     /// React's footer renders as `No one else is here`, not a reason to omit the pill.
+    ///
+    /// ⏪️ A peer editing the history wears its time-travel activity (`time_travel::time_travel_peer_presence`).
     fn footer_presence_rows(&self) -> Vec<ui_wgpu::wgpu::PresencePeerRow> {
-        match self.presence_surface.as_deref() {
-            Some(surface) => presence_peer_rows_for_surface(&self.presence_peers, Some(surface), surface),
-            None => Vec::new(),
+        let Some(surface) = self.presence_surface.as_deref() else { return Vec::new() };
+        let mut rows = presence_peer_rows_for_surface(&self.presence_peers, Some(surface), surface);
+        let mut activities = self.peer_time_travel_presence().activities;
+        if !activities.is_empty() {
+            for row in &mut rows {
+                if let Some(index) = activities.iter().position(|(actor, _)| *actor == row.actor) {
+                    row.activity = Some(activities.swap_remove(index).1);
+                }
+            }
         }
+        rows
     }
 
     /// 🚦️ The `#s-sync-status` pill's state for the CURRENT session, the wgpu twin of
@@ -13368,6 +13426,22 @@ impl ShellState {
         Some(DocumentScope { space_id, document_id })
     }
 
+    /// 🧩 Resolves exactly one service from its installed owner manifest; ambiguity fails closed.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn installed_document_http_port(&self, service_id: &str) -> Option<CompiledDocumentHttpPortV1> {
+        let mut found = None;
+        for plugin in &self.plugins {
+            for contribution in &plugin.manifest.topic_contributions {
+                if contribution.topic != DOCUMENT_HTTP_PORT_TOPIC { continue; }
+                let declaration = DocumentHttpPortDeclarationV1::from_value(contribution.payload.clone()).ok()?;
+                if declaration.service_id != service_id { continue; }
+                if found.is_some() { return None; }
+                found = Some(CompiledDocumentHttpPortV1::compile(&plugin.plugin_id, declaration).ok()?);
+            }
+        }
+        found
+    }
+
     /// 💡️ Opens the one retained port, replacing any predecessor. A missing scope, identity, client
     /// or verified lease publishes a localized terminal instead of starting anything.
     #[cfg(not(target_arch = "wasm32"))]
@@ -13391,7 +13465,11 @@ impl ShellState {
         }
         let context = self.directory_ctx();
         self.inference_port_status = Some(driver.status().clone());
-        self.inference_port = Some(ShellInferenceRunner::start(crate::renderer_worker_pool(), client, context, driver));
+        let Some(port) = self.installed_document_http_port(GIS_MAP_INFERENCE_SERVICE_ID) else {
+            self.inference_port_status = Some(reduce_gis_map_inference_port_v1(driver.status(), &GisMapInferencePortEventV1::Failed(GisMapInferencePortCodeV1::Unavailable)));
+            return;
+        };
+        self.inference_port = Some(ShellInferenceRunner::start(crate::renderer_worker_pool(), client, std::sync::Arc::new(port), context, driver));
     }
 
     /// 🔄️ One bounded drain per frame; the runner never spins and never blocks the render loop.
@@ -14999,6 +15077,13 @@ fn tree_row_has_chevron(input: &InputState<ActionDescriptor>, item_id: &str) -> 
     input.hits().iter().chain(input.staged_hits().iter()).any(|hit| hit.control_id.as_deref() == Some(chevron.as_str()))
 }
 
+/// 📨️ `hostEvent{windowId, kind}` on `controller_id`: the window fact the program answers by ending an open gesture there —
+/// the wgpu twin of React's `windowHostEventHandlersV1` (a pane that loses the activation is blurred, a cancelled pointer
+/// sequence loses its capture).
+pub(crate) fn window_host_event_action(controller_id: &str, window_id: &str, kind: &str) -> ActionDescriptor {
+    ActionDescriptor { controller_id: controller_id.to_string(), action: semio_framework::HOST_EVENT_ACTION_ID.into(), args: crate::action_args_json!({ "windowId": window_id, "kind": kind }) }
+}
+
 /// 🌳️ Retained controls whose complete pointer gesture belongs to `EventRouter`.
 fn retained_router_owns_pointer(kind: HitKind) -> bool {
     matches!(kind, HitKind::Button | HitKind::Input | HitKind::Select | HitKind::Toggle | HitKind::Slider | HitKind::NumberStepper | HitKind::Ring | HitKind::IconSelect | HitKind::TreeItem | HitKind::TreeDragHandle | HitKind::ComponentScene)
@@ -15018,6 +15103,14 @@ impl ShellState {
         let (pointer_x, pointer_y) = (input.pointer_x, input.pointer_y);
         let cancelled_scenes = crate::interpreter::cancel_scene_pointer(pointer_id, input);
         let scene_cancelled = !cancelled_scenes.is_empty();
+        let mut capture_lost: Vec<&str> = retained_cancelled.iter().map(String::as_str).chain(cancelled_scenes.iter().map(|cancelled| cancelled.window_id.as_str())).collect();
+        capture_lost.sort_unstable();
+        capture_lost.dedup();
+        if let Some(controller_id) = self.shell_command_controller_id() {
+            for window_id in capture_lost {
+                self.deferred_actions.push(window_host_event_action(&controller_id, window_id, semio_framework::HOST_EVENT_KIND_CAPTURE_LOST));
+            }
+        }
         for cancelled in cancelled_scenes {
             match cancelled.kind {
                 ui_wgpu::wgpu::SurfaceKind::World3d => {
@@ -17009,6 +17102,7 @@ impl ShellState {
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     async fn drain_deferred_actions(&mut self) -> Result<usize, String> {
         self.arm_window_activation_note();
+        self.arm_window_blur_host_event();
         let mut worked = 0usize;
         for _ in 0..SHELL_DEFERRED_CHAIN_ROUNDS {
             let actions = std::mem::take(&mut self.deferred_actions);
@@ -23353,6 +23447,21 @@ impl ShellState {
         self.deferred_actions.push(Self::note_shell_command_action(&controller_id, "shell.windowActivate", label, Some(serde_json::json!({ "windowId": active }))));
     }
 
+    /// 📨️ Arms `hostEvent{windowId, kind: blur}` for the pane that lost the activation — React's pane `onBlur` twin — so
+    /// the program ends an open gesture there. The first observation of a session seeds the witness without a blur.
+    pub(crate) fn arm_window_blur_host_event(&mut self) {
+        let Some(instance_id) = self.session.as_ref().map(|session| session.instance_id) else {
+            return;
+        };
+        let Some(active) = self.active_window_id.clone().filter(|id| !id.is_empty()) else {
+            return;
+        };
+        let blurred = self.host_event_active_window.replace((instance_id, active.clone())).filter(|(seen, window)| *seen == instance_id && *window != active).map(|(_, window)| window);
+        if let (Some(blurred), Some(controller_id)) = (blurred, self.shell_command_controller_id()) {
+            self.deferred_actions.push(window_host_event_action(&controller_id, &blurred, semio_framework::HOST_EVENT_KIND_BLUR));
+        }
+    }
+
     /// 🕒️ `handle_shell_hit`'s generic seam into `shell_command_for_control`'s `(commandId, label)`
     /// mapping — every discrete chrome-control arm that should log a history row calls this instead
     /// of hand-rolling the same `host_controller_id`/`dispatch_action` boilerplate. A silent no-op for
@@ -23901,9 +24010,12 @@ const TRANSIENT_NOTICE_MAX_WIDTH: f32 = 520.0;
 /// 🆔️ The banner's own dismiss control.
 const TRANSIENT_NOTICE_CLOSE_CONTROL_ID: &str = "shell.notice.close";
 
+/// 🆔️ The transient notice's own polite status node — the wgpu twin of React's `[data-semio-transient-notice]`.
+const TRANSIENT_NOTICE_STATUS_ID: &str = "shell.notice";
+
 /// 🧯️ The single live notice. `severity` is `semio_framework::Severity` — the same frozen four-level
 /// vocabulary React's `TransientNotice.kind` carries, not a renderer-local enum — and `code` is the
-/// frozen `Fault.code` (`viewer.read-only`, `mutation.rejected`, …) a probe asserts on, mirroring
+/// frozen `Fault.code` (`viewer.read-only`, `app.command.rejected`, …) a probe asserts on, mirroring
 /// React's `data-notice-code` attribute.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ShellTransientNotice {
@@ -24086,11 +24198,11 @@ fn document_opening_rect(message: &str, action_label: &str, width: f32, theme: &
 //#endregion 🚪️DocumentOpenBand
 
 /// 🔒️ Frozen fault codes the dispatch funnel recognises — the exact strings the guest raises
-/// (`🔌️plugin/🦀️.rs`'s `viewer.read-only`, and the mutation-outcomes contract's `mutation.rejected`),
-/// which is also what React's `SURFACE_FAULT_CODES.ViewerReadOnly`/`MUTATION_REJECTED_FAULT_CODE`
+/// (`🔌️plugin/🦀️.rs`'s `viewer.read-only`, and the mutation-outcomes contract's `app.command.rejected`),
+/// which is also what React's `SURFACE_FAULT_CODES.ViewerReadOnly`/`COMMAND_REJECTED_FAULT_CODE`
 /// match on.
 const VIEWER_READ_ONLY_FAULT_CODE: &str = "viewer.read-only";
-const MUTATION_REJECTED_FAULT_CODE: &str = "mutation.rejected";
+const COMMAND_REJECTED_FAULT_CODE: &str = "app.command.rejected";
 
 /// 🧯️ Classifies one dispatch-fault string into the banner React would show for it: a read-only
 /// viewer is an `info` with its own frozen copy, a hub history refusal an `error` with its localized
@@ -24104,14 +24216,67 @@ fn classify_dispatch_fault_notice(error: &str, locale: Locale) -> (String, semio
         let text = LocalizedLabel::native("This is a read-only viewer — editing is disabled.", "Dies ist ein schreibgeschützter Betrachter – Bearbeiten ist deaktiviert.").resolve(terminology, locale).to_string();
         return (text, Severity::Info, Some(VIEWER_READ_ONLY_FAULT_CODE));
     }
-    if let Some((code, text, severity)) = time_travel::history_refusal_notice(error, locale) {
+    if let Some((code, text, severity)) = time_travel::history_refusal_of_fault(error, locale) {
         return (text.to_string(), severity, Some(code));
     }
-    if error.contains(MUTATION_REJECTED_FAULT_CODE) {
+    if error.contains(COMMAND_REJECTED_FAULT_CODE) {
         let title = LocalizedLabel::native("Change rejected", "Änderung abgelehnt").resolve(terminology, locale).to_string();
-        return (format!("{title}: {error}"), Severity::Error, Some(MUTATION_REJECTED_FAULT_CODE));
+        return (format!("{title}: {error}"), Severity::Error, Some(COMMAND_REJECTED_FAULT_CODE));
     }
     (error.to_string(), Severity::Error, None)
+}
+
+/// ⚔️ The notice code a hub refusal naming no history transition is told under — React's `sync.command.rejected`.
+const SYNC_COMMAND_REJECTED_NOTICE_CODE: &str = "sync.command.rejected";
+
+/// 🔀️ The notice code of a batch the hub applied in adjusted form — React's `sync.command.transformed`.
+const SYNC_COMMAND_TRANSFORMED_NOTICE_CODE: &str = "sync.command.transformed";
+
+/// 🚫️ The notice code, chrome line and severity of each local refusal — React's `LOCAL_COMMAND_REJECTION_NOTICES_V1`: one
+/// the human can wait out or cannot act on here is a warning, one meaning this device produced a change it cannot send is
+/// an error. `None` for the hub's own two codes.
+fn local_command_rejection_notice(code: store_sync::sync::CommandRejectionCode) -> Option<(&'static str, &'static str, semio_framework::Severity)> {
+    use semio_framework::Severity;
+    use store_sync::sync::CommandRejectionCode as Code;
+    Some(match code {
+        Code::HubRefused | Code::HubUnreadable => return None,
+        Code::LocalReadOnly => ("local.read-only", "conflict.local.readOnly", Severity::Warning),
+        Code::LocalQueueFull => ("local.queue-full", "conflict.local.queueFull", Severity::Warning),
+        Code::LocalBackboneCapacity => ("local.backbone-capacity", "conflict.local.queueFull", Severity::Warning),
+        Code::LocalBackboneDuplicate => ("local.backbone-duplicate", "conflict.local.duplicate", Severity::Warning),
+        Code::LocalBackbonePairUnavailable => ("local.backbone-pair-unavailable", "conflict.local.notReady", Severity::Warning),
+        Code::LocalBackboneScopeMismatch => ("local.backbone-scope-mismatch", "conflict.local.foreignDocument", Severity::Error),
+        Code::LocalBackboneMalformed => ("local.backbone-malformed", "conflict.local.unreadable", Severity::Error),
+        Code::LocalSocketFrameCeiling => ("local.socket-frame-ceiling", "conflict.local.tooLarge", Severity::Error),
+    })
+}
+
+/// ⚔️ The notice for one refused command batch, read from the typed rejection contract alone — React's
+/// `commandRejectionNoticeV1`, pinned for both shells by `🛠️ShellHelpers/🧫️fixtures/🧫️command-rejection`. A local refusal
+/// is told by its `code`; a hub refusal by the `MutationMessage` codes it was graded with: a refused history transition
+/// names that refusal ([`time_travel::history_refusal_notice`]), else a concurrent structural constraint
+/// (`mutation.invariant`) or region (`mutation.clamped`) is named after "Change refused by the hub", else only that.
+/// The producer's English `reason` never reaches the human. Contract:
+/// [`CommandRejectionV1`](../../../../../../🏪️store/🔄️sync/🧬️schema/🔣️command-rejection/🔣️.json).
+fn command_rejection_notice(code: store_sync::sync::CommandRejectionCode, messages: &[store_sync::os_spr::MutationMessage], locale: Locale) -> (&'static str, String, semio_framework::Severity) {
+    let de = locale == Locale::De;
+    if let Some((code, key, severity)) = local_command_rejection_notice(code) {
+        return (code, shell_chrome_string(key, de).to_string(), severity);
+    }
+    if let Some((code, text, severity)) = messages.iter().find_map(|message| time_travel::history_refusal_notice(&message.code.0, locale)) {
+        return (code, text.to_string(), severity);
+    }
+    let graded = |wanted: &str| messages.iter().any(|message| message.code.0 == wanted);
+    let reason = if graded("mutation.invariant") {
+        Some("conflict.hubConcurrentInvariant")
+    } else if graded("mutation.clamped") {
+        Some("conflict.hubConcurrentEdit")
+    } else {
+        None
+    };
+    let rejected = shell_chrome_string("conflict.hubRejected", de);
+    let text = reason.map_or_else(|| rejected.to_string(), |reason| format!("{rejected}: {}", shell_chrome_string(reason, de)));
+    (SYNC_COMMAND_REJECTED_NOTICE_CODE, text, semio_framework::Severity::Warning)
 }
 
 /// ✅️ One step of the approvals modal's flat paint program — the retained chrome step walks this
@@ -27059,7 +27224,7 @@ impl ShellState {
         let (views, active_tool) = self.board_presence_views();
         let ephemeral = self.plugins.iter().find(|entry| entry.plugin_id == channel.plugin_id).and_then(|plugin| plugin.ephemeral_snapshot(channel.instance_id)).unwrap_or_default();
         let (presence_pack, interaction) = (ephemeral.presence, ephemeral.interaction);
-        let peer = PresencePeer { actor, label, presence_pack, connected_at_ms, user_id, role: None, drag_ghost_json: None, interaction, color: None, surface: None, views, ui: None, tool_run: None, principal_kind: None, active_tool, history_edit: ephemeral.history_edit };
+        let peer = PresencePeer { actor, label, presence_pack, connected_at_ms, user_id, role: None, drag_ghost_json: None, interaction, color: None, surface: None, views, ui: None, tool_run: ephemeral.tool_run, principal_kind: None, active_tool, history_edit: ephemeral.history_edit };
         self.document_host.presence_heartbeat_key(&channel.document_key, chrome_now_ms() as u64, peer);
     }
 
@@ -32027,6 +32192,28 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("conflict.quarantined", true) => "Zurückgehalten",
         ("conflict.degraded", false) => "Degraded",
         ("conflict.degraded", true) => "Beeinträchtigt",
+        ("conflict.hubRejected", false) => "Change refused by the hub",
+        ("conflict.hubRejected", true) => "Änderung vom Hub abgelehnt",
+        ("conflict.hubTransformed", false) => "Change adjusted",
+        ("conflict.hubTransformed", true) => "Änderung angepasst",
+        ("conflict.hubConcurrentEdit", false) => "Someone else changed the same part at the same time",
+        ("conflict.hubConcurrentEdit", true) => "Jemand anderes hat gleichzeitig dieselbe Stelle geändert",
+        ("conflict.hubConcurrentInvariant", false) => "Conflicts with a simultaneous change",
+        ("conflict.hubConcurrentInvariant", true) => "Widerspricht einer gleichzeitigen Änderung",
+        ("conflict.local.readOnly", false) => "Change not applied: this document is read-only here",
+        ("conflict.local.readOnly", true) => "Änderung nicht übernommen: Dieses Dokument ist hier schreibgeschützt",
+        ("conflict.local.queueFull", false) => "Change not applied: too many changes are waiting to be saved",
+        ("conflict.local.queueFull", true) => "Änderung nicht übernommen: Zu viele Änderungen warten aufs Speichern",
+        ("conflict.local.duplicate", false) => "Change not applied: it is already waiting to be saved",
+        ("conflict.local.duplicate", true) => "Änderung nicht übernommen: Sie wartet bereits aufs Speichern",
+        ("conflict.local.notReady", false) => "Change not applied: the document is not ready yet",
+        ("conflict.local.notReady", true) => "Änderung nicht übernommen: Das Dokument ist noch nicht bereit",
+        ("conflict.local.foreignDocument", false) => "Change not applied: it belongs to another document",
+        ("conflict.local.foreignDocument", true) => "Änderung nicht übernommen: Sie gehört zu einem anderen Dokument",
+        ("conflict.local.unreadable", false) => "Change not applied: it could not be read",
+        ("conflict.local.unreadable", true) => "Änderung nicht übernommen: Sie konnte nicht gelesen werden",
+        ("conflict.local.tooLarge", false) => "Change not applied: it is too large to send",
+        ("conflict.local.tooLarge", true) => "Änderung nicht übernommen: Sie ist zu groß zum Senden",
         ("plugins.status.available", false) => "Available",
         ("plugins.status.available", true) => "Verfügbar",
         ("plugins.status.installing", false) => "Installing…",
@@ -34529,7 +34716,10 @@ impl ShellState {
     /// remappable chord table (React's `aria-keyshortcuts` twin, audit W14 §B14), `aria-disabled`
     /// from the registry.
     fn chrome_accessibility_nodes(&self, hits: &[HitTarget<ActionDescriptor>]) -> Vec<ui_contract::AccessibilityProjectionNode> {
-        if let Some(nodes) = self.dialog_accessibility_nodes(hits).or_else(|| self.palette_accessibility_nodes(hits)) {
+        if let Some(mut nodes) = self.dialog_accessibility_nodes(hits).or_else(|| self.palette_accessibility_nodes(hits)) {
+            if let Some(notice) = self.transient_notice_accessibility_node(nodes.iter().map(|node| node.node_id).max().unwrap_or(0) + 1) {
+                nodes.push(notice);
+            }
             return nodes;
         }
         let shortcuts = self.shortcut_table();
@@ -34648,6 +34838,9 @@ impl ShellState {
                 status.busy = export.running();
                 nodes.push(status);
             }
+            if let Some(notice) = self.transient_notice_accessibility_node(nodes.len() as u64 + 1).filter(|_| nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
+                nodes.push(notice);
+            }
             if let Some(status) = self.time_travel_status_accessibility_node(nodes.len() as u64 + 1).filter(|_| nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
                 nodes.push(status);
             }
@@ -34660,13 +34853,24 @@ impl ShellState {
         })
     }
 
+    /// 🧯️ The showing transient notice as the polite status React renders it (`role=status`, `aria-live=polite`,
+    /// `data-notice-code`): named by its localized message and described by its machine code, so an assistive technology
+    /// and the ARIA mirror hear what the banner paints and not only its close button. Projected over a modal too — a
+    /// refusal answered while a dialog is open is still told. `None` once dismissed or past its 4 s deadline.
+    fn transient_notice_accessibility_node(&self, node_id: u64) -> Option<ui_contract::AccessibilityProjectionNode> {
+        let notice = self.chrome_build.transient_notice.as_ref().filter(|notice| !transient_notice_expired(notice, chrome_now_ms()))?;
+        let mut node = chrome_status_accessibility_node(node_id, TRANSIENT_NOTICE_STATUS_ID, notice.message.clone());
+        node.description = notice.code.clone();
+        Some(node)
+    }
+
     /// 🏷️ The footer chips this shell paints without a hit target — the presence roster (React's `#s-presence-peers`
     /// status) and the hub connection — with the text they paint, so a screen reader and the
     /// accessibility mirror read them too. The signed-out action is a separate button and gets its own hit-backed node.
     fn footer_status_chips(&self) -> Vec<(&'static str, String)> {
         let mut chips = Vec::new();
         if !self.mobile_panel_active() {
-            chips.push(("s-presence-peers", ui_wgpu::wgpu::presence_bar_chip_text(&self.footer_presence_rows(), None, self.active_locale())));
+            chips.push(("s-presence-peers", ui_wgpu::wgpu::presence_bar_chip_accessible_text(&self.footer_presence_rows(), None, self.active_locale())));
         }
         chips.push(("s-hub-connection", self.hub_footer_label()));
         chips

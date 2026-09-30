@@ -137,7 +137,7 @@ fn dispatch_registers_semantic_descriptors() {
     for kind in <Puzzle5dMutation as protocol::SemanticMutation<Puzzle5dSnapshot>>::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }
-    assert_eq!(<Puzzle5dMutation as protocol::SemanticMutation<Puzzle5dSnapshot>>::kinds().len(), 35);
+    assert_eq!(<Puzzle5dMutation as protocol::SemanticMutation<Puzzle5dSnapshot>>::kinds().len(), 39);
 }
 //#endregion 🔖️MutationLaws
 
@@ -170,6 +170,93 @@ fn create_duplicate_id_is_fatal_and_never_applies() {
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
 }
 //#endregion 🔖️OutcomeLaws
+
+//#region 🔖️SelectionLaws
+/// 🧱️ One part placed on the board at `(x, 0)` and in the world at `origin`, plus one target volume at `origin`.
+fn selection_scene(x: f64, origin: [f64; 3]) -> Puzzle5dSnapshot {
+    let mut scene = empty();
+    scene.parts.push(crate::Puzzle5dPart { id: "p1".into(), part_2d: crate::Puzzle5dPart2d { x, ..Default::default() }, part_3d: crate::Puzzle5dPart3d { origin, scale: Some(crate::Puzzle5dScale::Uniform(2.0)), ..Default::default() }, ..Default::default() });
+    scene.target_volumes.push(crate::Puzzle5dTargetVolume { id: "v1".into(), origin, ..Default::default() });
+    scene
+}
+
+/// 🔁️ A selection leaf states intent, not a final state: the same drag replayed on a moved base lands exactly
+/// offset-away from THAT base — on the board for the 2d leaf, in the world for the 3d one. A board drag never touches
+/// the world pose; a world drag carries the board pin along its ground-plane motion.
+#[test]
+fn selection_leaves_replay_on_a_moved_base() {
+    for (x, origin) in [(0.0, [0.0; 3]), (40.0, [10.0, -3.0, 2.5])] {
+        let mut scene = selection_scene(x, origin);
+        apply_puzzle5d_mutation(&mut scene, &drag_selection_2d(vec!["p1".into()], 5.0, -2.5)).expect("board drag applies");
+        apply_puzzle5d_mutation(&mut scene, &drag_selection_3d(vec!["p1".into(), "v1".into()], [1.0, 2.0, 3.0])).expect("world drag applies");
+        assert_eq!((scene.parts[0].part_2d.x, scene.parts[0].part_2d.y), (x + 5.0 + 1.0 / PUZZLE5D_FLAT_TO_WORLD, -2.5 - 2.0 / PUZZLE5D_FLAT_TO_WORLD), "the board drag moves the pin, and the world drag carries it along its ground-plane motion");
+        assert_eq!(scene.parts[0].part_3d.origin, [origin[0] + 1.0, origin[1] + 2.0, origin[2] + 3.0]);
+        assert_eq!(scene.target_volumes[0].origin, [origin[0] + 1.0, origin[1] + 2.0, origin[2] + 3.0]);
+    }
+    let mut scene = selection_scene(0.0, [0.0; 3]);
+    apply_puzzle5d_mutation(&mut scene, &scale_selection_3d(vec!["p1".into()], [0.5, 1.0, 3.0])).expect("scaling applies");
+    assert_eq!(scene.parts[0].part_3d.scale, Some(crate::Puzzle5dScale::Vec3([1.0, 2.0, 6.0])), "a uniform base scale broadcasts before the per-axis factors multiply it");
+    let outcome = drag_selection_2d(vec!["v1".into()], 1.0, 1.0).diff(&scene);
+    assert_eq!(outcome.messages().iter().map(|message| message.code.0.as_str()).collect::<Vec<_>>(), vec!["mutation.target-missing"], "the board paints no target volume, so a board drag of one reaches nothing");
+}
+
+/// 🗣️ Every selection leaf's history label is a real sentence in both locales.
+#[test]
+fn selection_labels_are_localized() {
+    let label = |mutation: Puzzle5dMutation| serde_json::to_string(&<Puzzle5dMutation as protocol::SemanticMutation<Puzzle5dSnapshot>>::label(&mutation)).expect("label serializes");
+    let board = label(drag_selection_2d(vec!["p1".into(), "p2".into()], 5.0, -2.5));
+    assert!(board.contains("Drag 2 items by (5, -2.5) on the board") && board.contains("2 Elemente auf dem Brett um (5; -2,5) ziehen"), "{board}");
+    let world = label(drag_selection_3d(vec!["p1".into()], [1.5, 0.0, -1.0]));
+    assert!(world.contains("Drag 1 item by (1.5, 0, -1)") && world.contains("1 Element um (1,5; 0; -1) ziehen"), "{world}");
+    let turn = label(rotate_selection_3d(vec!["p1".into()], [0.0, 0.0, 1.0], std::f64::consts::FRAC_PI_2));
+    assert!(turn.contains("Rotate 1 item by 90°") && turn.contains("1 Element um 90° drehen"), "{turn}");
+    let scaling = label(scale_selection_3d(vec!["p1".into()], [2.0, 1.0, 0.25]));
+    assert!(scaling.contains("Scale 1 item by (2, 1, 0.25)") && scaling.contains("1 Element um (2; 1; 0,25) skalieren"), "{scaling}");
+}
+
+/// 🚨️ A selection leaf whose every target is absent is the Error-level `mutation.target-missing`.
+#[test]
+fn selection_missing_targets_are_errors() {
+    let base = empty();
+    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &drag_selection_2d(vec!["missing".into()], 1.0, 0.0)));
+    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &drag_selection_3d(vec!["missing".into()], [1.0, 0.0, 0.0])));
+    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection_3d(vec!["missing".into()], [0.0, 0.0, 1.0], 1.0)));
+    semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &scale_selection_3d(vec!["missing".into()], [2.0, 2.0, 2.0])));
+}
+
+/// ⏪️ Time travel edits a selection leaf's inputs, never the gesture: a board drag superseded with a new offset
+/// previews as the state before it plus the draft, and its Report replay re-applies every downstream
+/// transform onto the edited pose — exactly the fresh fold of the edited log.
+#[semio_framework_async_macros::async_test]
+async fn a_board_drag_edited_in_history_replays_its_downstream() {
+    use protocol::OpBinary;
+    let mut store = crate::standards::v1::subsets::any::schema::mutations::binary::puzzle5d_store(store::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, "selection-time-travel", selection_scene(0.0, [0.0; 3]), None)).await.expect("the store opens");
+    let log = [drag_selection_2d(vec!["p1".into()], 1.0, 0.0), drag_selection_3d(vec!["p1".into()], [0.0, 0.0, 4.0]), drag_selection_2d(vec!["p1".into()], 0.0, 2.0)];
+    for mutation in &log {
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("a selection gesture applies");
+    }
+    let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
+    let edited = drag_selection_2d(vec!["p1".into()], 7.0, 0.0);
+    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: crate::PUZZLE_5D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    let mut preview = store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref().clone();
+    assert_eq!(preview.parts[0].part_2d.x, 0.0, "the preview base is the state right before the edited drag");
+    apply_puzzle5d_mutation(&mut preview, &edited).expect("the draft applies to its base");
+    assert_eq!((preview.parts[0].part_2d.x, preview.parts[0].part_3d.origin), (7.0, [0.0; 3]), "the preview shows the draft and nothing downstream");
+    let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited drag");
+    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+    let result = replay.finish().expect("a finished replay yields its result");
+    assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "a clean edit never blocks finalizing");
+    let mut fresh = selection_scene(0.0, [0.0; 3]);
+    for mutation in [edited, log[1].clone(), log[2].clone()] {
+        apply_puzzle5d_mutation(&mut fresh, &mutation).expect("the edited log folds");
+    }
+    assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
+    assert_eq!((fresh.parts[0].part_2d.x, fresh.parts[0].part_2d.y, fresh.parts[0].part_3d.origin), (7.0, 2.0, [0.0, 0.0, 4.0]));
+    store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+    assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
+    crate::standards::v1::subsets::any::schema::mutations::binary::close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
+}
+//#endregion 🔖️SelectionLaws
 
 //#region 🧪️KindsCatalog
 /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling

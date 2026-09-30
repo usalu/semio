@@ -6,7 +6,7 @@ rust-version.workspace = true
 description = "cad cad artifact"
 
 [package.metadata.semio]
-role = "s-module"
+role = "artifact"
 
 [lints]
 workspace = true
@@ -37,6 +37,10 @@ semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framewor
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
 base64_codec = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+# 🧭️ The transform tool is a `🔄️machine` statechart folded by the tool-machine runner; `statechart!` expands to
+# `machine::…`, so the kernel dependency carries that name.
+machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine", default-features = false, features = ["macros"] }
+semio-framework-tool-machine = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest", "artifact-app-testing"], package = "semio-framework-plugin" }

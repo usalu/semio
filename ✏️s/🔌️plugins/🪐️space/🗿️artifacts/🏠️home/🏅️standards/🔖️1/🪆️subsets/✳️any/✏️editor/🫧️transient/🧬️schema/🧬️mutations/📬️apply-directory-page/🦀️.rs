@@ -19,14 +19,13 @@ pub struct ApplyDirectoryPage {
 impl protocol::MutationKind<HomeTransient, HomeTransientMutation> for ApplyDirectoryPage {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "apply", entity: "directory-page", kind: "apply-directory-page", record: "ApplyDirectoryPage" };
     fn diff(&self, base: &HomeTransient) -> protocol::MutationOutcome<HomeTransient> {
-        let refused = |code: semio_framework_plugin::FaultCode, text: &str| protocol::MutationOutcome::new(base.clone()).absorb_messages([protocol::MutationMessage::error(code, text).at(["directory"])]);
         let Ok(page) = store::os_directory::DirectoryEventPageV1::parse_canonical_json(&self.page_json) else {
-            return refused(semio_framework_plugin::FaultCode::new("s.home.directory-event-page-invalid"), "The directory page is not one canonical, receipt-sealed page.");
+            return protocol::MutationOutcome::new(base.clone()).absorb_messages([protocol::MutationMessage::fatal("mutation.invariant", "The directory page is not one canonical, receipt-sealed page.").at(["directory"])]);
         };
         match base.directory().admit_page(&page) {
             Ok(DirectoryPageAdmission::Held) => protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", format!("The directory projection already holds the frontier through sequence {}.", page.through_seq_inclusive)),
             Ok(DirectoryPageAdmission::Fold) => protocol::MutationOutcome::new(HomeTransient::with_directory(base.directory().fold_page(&page))),
-            Err(fault) => refused(fault.code, "The directory page does not continue the frontier the projection holds."),
+            Err(fault) => protocol::MutationOutcome::new(base.clone()).absorb_messages([protocol::MutationMessage::error("mutation.target-mismatch", format!("The directory page does not continue the frontier the projection holds ({}).", fault.code.0)).at(["directory"])]),
         }
     }
     fn inverse(&self, _base: &HomeTransient) -> Vec<HomeTransientMutation> {

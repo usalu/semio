@@ -1,0 +1,385 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "all-literal-compile-edges",
+      "source": "const TEXT: &str = include_str!(\"fixture.txt\");\nconst BYTES: &[u8] = include_bytes!(r#\"fixture.txt\"#);\ninclude!(\"leaf.rs\");\n#[path = \"module.rs\"] mod child;\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1
+        },
+        {
+          "kind": "include_bytes",
+          "path": "fixture.txt",
+          "line": 2
+        },
+        {
+          "kind": "include",
+          "path": "leaf.rs",
+          "line": 3
+        },
+        {
+          "kind": "path",
+          "path": "module.rs",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "comment-string-and-character-decoys",
+      "source": "// include_str!(\"absent.txt\")\n/* #[path = \"absent.rs\"] /* include!(\"absent.rs\") */ */\nconst DECOY: &str = r##\"include_bytes!(\"absent.txt\")\"##;\nconst QUOTE: char = '\"';\nconst TEXT: &str = include_str!(r###\"fixture.txt\"###);\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "id": "constant-concat-and-nested-test",
+      "source": "#[cfg(test)] mod tests {\n const TEXT: &str = include_str!(concat!(\"fix\", concat!(\"ture\", \".txt\")));\n}\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 2,
+          "modulePath": [
+            "tests"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "escaped-literal-identity",
+      "source": "const TEXT: &str = include_str!(\"fix\\u{74}ure.txt\");\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "cfg-attribute-module-path",
+      "source": "#[cfg_attr(test, path=\"module.rs\")] mod child;\n",
+      "references": [
+        {
+          "kind": "path",
+          "path": "module.rs",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "generated-output-input",
+      "source": "const TEXT: &str = include_str!(concat!(env!(\"OUT_DIR\"), \"/fixture.txt\"));\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "/fixture.txt",
+          "line": 1,
+          "base": "generated"
+        }
+      ]
+    },
+    {
+      "id": "manifest-relative-input",
+      "source": "const TEXT: &str = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/fixture.txt\"));\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "/fixture.txt",
+          "line": 1,
+          "base": "manifest"
+        }
+      ]
+    },
+    {
+      "id": "unused-macro-authored-input",
+      "source": "macro_rules! unused { () => { include!(\"leaf.rs\"); }; }\n",
+      "references": [
+        {
+          "kind": "include",
+          "path": "leaf.rs",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "prototype-name-delimiter-decoys",
+      "source": "mod child { fn constructor() { let _ = include_str!(\"fixture.txt\"); } fn toString() {} }\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1,
+          "modulePath": [
+            "child"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "literal-template-invocation",
+      "source": "macro_rules! load { ($stem:literal, $extension:literal) => { include_str!(concat!($stem, $extension)) }; }\nconst TEXT: &str = load!(\"fixture\", \".txt\");\n",
+      "references": [
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "inline-module-directory-mount",
+      "source": "#[path=\"alternate\"] mod child { const TEXT: &str = include_str!(\"fixture.txt\"); }\n",
+      "references": [
+        {
+          "kind": "path",
+          "path": "alternate",
+          "line": 1,
+          "directory": true
+        },
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1,
+          "modulePath": [
+            "child"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "empty-inline-current-directory",
+      "source": "#[path=\"\"] mod child { const TEXT: &str = include_str!(\"fixture.txt\"); }\n",
+      "references": [
+        {
+          "kind": "path",
+          "path": "",
+          "line": 1,
+          "directory": true
+        },
+        {
+          "kind": "include_str",
+          "path": "fixture.txt",
+          "line": 1,
+          "modulePath": [
+            "child"
+          ]
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "name": "framework-no-implementation",
+      "severity": "error",
+      "from": {
+        "path": [
+          "^general/"
+        ],
+        "pathNot": [
+          "^general/excluded/"
+        ]
+      },
+      "to": {
+        "path": [
+          "^specific/"
+        ],
+        "pathNot": [
+          "^specific/allowed/"
+        ]
+      }
+    }
+  ],
+  "directions": [
+    {
+      "id": "framework-test-to-specific-fixture",
+      "from": "general/tests/source.rs",
+      "source": "const TEXT: &str = include_str!(\"../../specific/fixture.txt\");",
+      "edges": [
+        {
+          "rule": "framework-no-implementation",
+          "from": "general/tests/source.rs",
+          "to": "specific/fixture.txt",
+          "kind": "include_str",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "specific-to-framework-module",
+      "from": "specific/source.rs",
+      "source": "include!(\"../general/leaf.rs\");",
+      "edges": []
+    },
+    {
+      "id": "source-rule-exclusion",
+      "from": "general/excluded/source.rs",
+      "source": "include!(\"../../specific/leaf.rs\");",
+      "edges": []
+    },
+    {
+      "id": "target-rule-exclusion",
+      "from": "general/source.rs",
+      "source": "include!(\"../specific/allowed/leaf.rs\");",
+      "edges": []
+    },
+    {
+      "id": "attribute-decoy",
+      "from": "general/source.rs",
+      "source": "#[serde(path=\"../specific/leaf.rs\")] struct Decoy;",
+      "edges": []
+    },
+    {
+      "id": "path-on-nonmodule",
+      "from": "general/source.rs",
+      "source": "#[path=\"../specific/leaf.rs\"] struct Decoy;",
+      "edges": []
+    },
+    {
+      "id": "inline-module-to-specific-directory",
+      "from": "general/source.rs",
+      "source": "#[path=\"../specific\"] mod nested { mod child; }",
+      "edges": [
+        {
+          "rule": "framework-no-implementation",
+          "from": "general/source.rs",
+          "to": "specific",
+          "kind": "path",
+          "line": 1
+        }
+      ]
+    }
+  ],
+  "mounts": [
+    {
+      "id": "root-inline",
+      "files": {
+        "Cargo.toml": "[package]\nname=\"boundary_oracle\"\nversion=\"0.1.0\"\n[lib]\npath=\"source.rs\"\n",
+        "source.rs": "mod nested { #[path=\"leaf.rs\"] mod item; }\n",
+        "nested/leaf.rs": "pub const LEAF: usize = 1;\n"
+      },
+      "sourcePath": "source.rs",
+      "targets": [
+        "nested/leaf.rs"
+      ]
+    },
+    {
+      "id": "conventional-sibling",
+      "files": {
+        "Cargo.toml": "[package]\nname=\"boundary_oracle\"\nversion=\"0.1.0\"\n[lib]\npath=\"source.rs\"\n",
+        "source.rs": "mod sibling;\n",
+        "sibling/nested/leaf.rs": "pub const LEAF: usize = 1;\n",
+        "sibling.rs": "mod nested { #[path=\"leaf.rs\"] mod item; }\n"
+      },
+      "sourcePath": "sibling.rs",
+      "targets": [
+        "sibling/nested/leaf.rs"
+      ]
+    },
+    {
+      "id": "explicit-sibling",
+      "files": {
+        "Cargo.toml": "[package]\nname=\"boundary_oracle\"\nversion=\"0.1.0\"\n[lib]\npath=\"source.rs\"\n",
+        "source.rs": "#[path=\"sibling.rs\"] mod sibling;\n",
+        "nested/leaf.rs": "pub const LEAF: usize = 1;\n",
+        "sibling.rs": "mod nested { #[path=\"leaf.rs\"] mod item; }\n"
+      },
+      "sourcePath": "sibling.rs",
+      "targets": [
+        "nested/leaf.rs"
+      ]
+    },
+    {
+      "id": "root-inline-override",
+      "files": {
+        "Cargo.toml": "[package]\nname=\"boundary_oracle\"\nversion=\"0.1.0\"\n[lib]\npath=\"source.rs\"\n",
+        "source.rs": "#[path=\"alternate\"] mod nested { #[path=\"leaf.rs\"] mod item; }\n",
+        "alternate/leaf.rs": "pub const LEAF: usize = 1;\n"
+      },
+      "sourcePath": "source.rs",
+      "targets": [
+        "alternate/leaf.rs"
+      ]
+    },
+    {
+      "id": "sibling-inline-override",
+      "files": {
+        "Cargo.toml": "[package]\nname=\"boundary_oracle\"\nversion=\"0.1.0\"\n[lib]\npath=\"source.rs\"\n",
+        "source.rs": "mod sibling;\n",
+        "alternate/leaf.rs": "pub const LEAF: usize = 1;\n",
+        "sibling.rs": "#[path=\"alternate\"] mod nested { #[path=\"leaf.rs\"] mod item; }\n"
+      },
+      "sourcePath": "sibling.rs",
+      "targets": [
+        "alternate/leaf.rs"
+      ]
+    },
+    {
+      "id": "included-inline-module",
+      "files": {
+        "Cargo.toml": "[package]\nname=\"boundary_oracle\"\nversion=\"0.1.0\"\n[lib]\npath=\"source.rs\"\n",
+        "source.rs": "include!(\"mounted/source.rs\");\n",
+        "mounted/source.rs": "mod nested { #[path=\"leaf.rs\"] mod item; }\n",
+        "mounted/nested/leaf.rs": "pub const LEAF: usize = 1;\n"
+      },
+      "sourcePath": "mounted/source.rs",
+      "targets": [
+        "mounted/nested/leaf.rs"
+      ]
+    },
+    {
+      "id": "included-manifest-input",
+      "files": {
+        "Cargo.toml": "[package]\nname=\"boundary_oracle\"\nversion=\"0.1.0\"\n[lib]\npath=\"source.rs\"\n",
+        "source.rs": "include!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/mounted/source.rs\"));\n",
+        "mounted/source.rs": "const TEXT: &str = include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/fixture.txt\"));\n",
+        "fixture.txt": "neutral"
+      },
+      "sourcePath": "mounted/source.rs",
+      "targets": [
+        "fixture.txt"
+      ]
+    }
+  ],
+  "unsupported": [
+    {
+      "id": "unrecognized-env",
+      "source": "include_str!(concat!(env!(\"HOME\"), \"/data\"));"
+    },
+    {
+      "id": "unrecognized-macro",
+      "source": "include!(choose_path!());"
+    },
+    {
+      "id": "metavariable-template",
+      "source": "macro_rules! load { ($path:expr) => { include!($path); }; }"
+    },
+    {
+      "id": "attribute-expression",
+      "source": "#[path=choose_path!()] mod child;"
+    },
+    {
+      "id": "generated-path-traversal",
+      "source": "include_str!(concat!(env!(\"OUT_DIR\"), \"/../authored.txt\"));"
+    },
+    {
+      "id": "emitted-quote-input",
+      "source": "quote! { const INPUT: &str = include_str!(#dependency); }"
+    },
+    {
+      "id": "conditional-inline-alternate-owner",
+      "source": "#[cfg_attr(unix,path=\"safe\")] #[cfg_attr(windows,path=\"../../specific\")] mod mounted { #[path=\"leaf.rs\"] mod child; }"
+    },
+    {
+      "id": "conditional-inline-default-alternative",
+      "source": "#[cfg_attr(test,path=\"alternate\")] mod mounted { #[path=\"leaf.rs\"] mod child; }"
+    }
+  ]
+}

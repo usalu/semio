@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSlopeAngle",
+  "id": "slope-S1",
+  "newAngleDeg": 30.0
+}

@@ -29,7 +29,7 @@ pub fn diff_create_character_style(payload: &CreateCharacterStyle, base: &Layout
         return protocol::MutationOutcome::fatal("mutation.invariant", "A character style needs an id.", std::iter::empty::<String>());
     }
     if base.character_styles.iter().any(|style| style.id == payload.id) {
-        return protocol::MutationOutcome::error("mutation.duplicate", format!("Character style \"{}\" already exists.", payload.id), [payload.id.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Character style \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
     let style = CharacterStyle { id: payload.id.clone(), name: payload.name.clone(), font_family: None, font_size: None, font_weight: None, italic: None, color: None, tracking: None };
     protocol::MutationOutcome::new(LayoutDiff { character_styles: Some(LayoutCharacterStylesDelta { added: vec![style], ..Default::default() }), ..Default::default() })

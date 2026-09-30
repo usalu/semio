@@ -29,7 +29,7 @@
         "id": 1,
         "name": "CLEAR 3MM",
         "thickness_m": 0.003,
-        "conductivity_w_m_k": 1.06,
+        "conductivity_w_m_k": 1.4,
         "solar_transmittance": 0.837,
         "solar_reflectance_front": 0.075,
         "solar_reflectance_back": 0.075,

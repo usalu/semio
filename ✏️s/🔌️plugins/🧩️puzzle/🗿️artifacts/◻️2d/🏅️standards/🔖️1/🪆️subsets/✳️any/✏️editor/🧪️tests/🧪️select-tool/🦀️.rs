@@ -209,7 +209,7 @@ fn a_persisted_gesture_round_trips_the_window_transient_wire() {
     let state = tool.persist().expect("open");
     let text = dsl::json::to_json_string(&state);
     assert_eq!(dsl::json::from_json_str::<Puzzle2dSelectToolState>(&text).as_ref().ok(), Some(&state), "the gesture state survives its wire: {text}");
-    let transient = crate::editor::puzzle2d::window::Puzzle2dWindowTransient { select_tool: Some(state), ..Default::default() };
+    let transient = crate::editor::puzzle2d::window::Puzzle2dWindowTransient { select_tool: Some(Box::new(state)), ..Default::default() };
     let text = dsl::json::to_json_string(&transient);
     assert_eq!(dsl::json::from_json_str::<crate::editor::puzzle2d::window::Puzzle2dWindowTransient>(&text).as_ref().ok(), Some(&transient), "the window transient carries it: {text}");
 }

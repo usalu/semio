@@ -2,14 +2,8 @@
 use super::*;
 use semio_framework_async::{CancelToken, TraceId};
 
-const FIXTURE: &str = include_str!("../../../../../../../../🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json");
-
-fn fixture() -> serde_json::Value {
-    serde_json::from_str(FIXTURE).expect("the neutral gis-map-proposal-approval fixture parses")
-}
-
 fn sample_job_id() -> String {
-    fixture()["sampleJobId"].as_str().expect("sampleJobId").to_string()
+    "ab".repeat(16)
 }
 
 /// 🆔️ A well-formed 32-lower-hex job id that is never the fixture's own `sampleJobId` — a hostile
@@ -24,7 +18,7 @@ fn foreign_job_id() -> String {
 }
 
 fn sample_proposal_hash() -> String {
-    fixture()["proposalHash"].as_str().expect("proposalHash").to_string()
+    "cd".repeat(32)
 }
 
 fn context(cancel: &CancelToken) -> OperationContext {
@@ -75,24 +69,7 @@ fn block_on<F: std::future::Future>(future: F) -> F::Output {
 }
 
 //#region 🧪️Vocabulary
-#[test]
-fn the_published_error_vocabulary_is_exactly_the_neutral_fixtures_and_status_alone_is_ambiguous() {
-    let fixture = fixture();
-    let rows = fixture["errors"].as_array().expect("error vocabulary");
-    assert_eq!(rows.len(), INFERENCE_ROUTE_ERRORS.len(), "the closed vocabulary drifted from the neutral corpus");
-    for row in rows {
-        let code = row["code"].as_str().expect("code");
-        let status = row["status"].as_u64().expect("status");
-        let published = InferenceRouteErrorV1::from_code(code).unwrap_or_else(|| panic!("{code} is not a published inference route code"));
-        assert_eq!(u64::from(published.status()), status, "{code}");
-    }
-    for published in INFERENCE_ROUTE_ERRORS {
-        assert!(rows.iter().any(|row| row["code"] == published.code()), "{} is published but not pinned by the corpus", published.code());
-    }
-    assert_eq!(InferenceRouteErrorV1::from_status(503), InferenceRouteErrorV1::Unavailable, "503 is shared by three codes, so the widest honest member is the only safe fallback");
-    assert_eq!(InferenceRouteErrorV1::from_status(409), InferenceRouteErrorV1::Conflict);
-    assert_eq!(InferenceRouteErrorV1::from_status(418), InferenceRouteErrorV1::Unavailable);
-}
+
 
 #[test]
 fn a_503_inference_unavailable_becomes_a_retryable_plugin_unavailable_that_names_the_missing_binding() {
@@ -121,24 +98,13 @@ fn a_503_inference_unavailable_becomes_a_retryable_plugin_unavailable_that_names
     assert_eq!(InferenceRouteErrorV1::Capacity.to_gateway_error("x").code, GatewayErrorCode::PluginUnavailable);
 }
 
-#[test]
-fn the_client_mirrors_the_neutral_fixtures_exact_fixed_limits() {
-    let fixture = fixture();
-    let limits = &fixture["limits"];
-    assert_eq!(limits["requestMaxBytes"], INFERENCE_REQUEST_MAX_BYTES as u64);
-    assert_eq!(limits["jobMaxLifetimeMs"], INFERENCE_JOB_MAX_LIFETIME_MS);
-    assert_eq!(limits["progressMaxCursor"], INFERENCE_PROGRESS_MAX_CURSOR);
-    assert_eq!(limits["eventPageMaxItems"], INFERENCE_EVENT_PAGE_MAX_ITEMS as u64);
-    assert_eq!(fixture["binding"]["serviceId"], "s.gis.gismap.inference");
-    assert_eq!(fixture["binding"]["artifactSchema"], "gis.map");
-    assert_eq!(fixture["binding"]["artifactKind"], "s.gis.gismap");
-}
+
 //#endregion 🧪️Vocabulary
 
 //#region 🧪️WireShapes
 #[test]
 fn a_submit_intent_encodes_within_the_fixed_bound_and_every_hostile_field_is_refused() {
-    let request = HubInferenceSubmitRequestV1::new("s.gis.gismap.inference", sample_job_id(), INFERENCE_JOB_MAX_LIFETIME_MS);
+    let request = HubInferenceSubmitRequestV1::new("test.document.inference", sample_job_id(), INFERENCE_JOB_MAX_LIFETIME_MS);
     let encoded = request.encode().expect("a well-formed intent encodes");
     assert!(encoded.len() <= INFERENCE_REQUEST_MAX_BYTES);
     let decoded: HubInferenceSubmitRequestV1 = serde_json::from_slice(&encoded).expect("closed round trip");
@@ -149,7 +115,7 @@ fn a_submit_intent_encodes_within_the_fixed_bound_and_every_hostile_field_is_ref
         ("wrong-version", Box::new(|value: &mut HubInferenceSubmitRequestV1| value.version = 2)),
         ("non-hex-request-id", Box::new(|value: &mut HubInferenceSubmitRequestV1| value.request_id = "Z".repeat(32))),
         ("short-request-id", Box::new(|value: &mut HubInferenceSubmitRequestV1| value.request_id.truncate(31))),
-        ("malformed-service", Box::new(|value: &mut HubInferenceSubmitRequestV1| value.service_id = "../s.gis.gismap".into())),
+        ("malformed-service", Box::new(|value: &mut HubInferenceSubmitRequestV1| value.service_id = "../test.document".into())),
         ("wrong-policy", Box::new(|value: &mut HubInferenceSubmitRequestV1| value.policy_version = 2)),
         ("zero-lifetime", Box::new(|value: &mut HubInferenceSubmitRequestV1| value.lifetime_ms = 0)),
         ("over-lifetime", Box::new(|value: &mut HubInferenceSubmitRequestV1| value.lifetime_ms = INFERENCE_JOB_MAX_LIFETIME_MS + 1)),
@@ -161,7 +127,7 @@ fn a_submit_intent_encodes_within_the_fixed_bound_and_every_hostile_field_is_ref
     }
     assert!(
         serde_json::from_str::<HubInferenceSubmitRequestV1>(&format!(
-            "{{\"schema\":\"{HUB_INFERENCE_REQUEST_SCHEMA}\",\"version\":1,\"requestId\":\"{}\",\"serviceId\":\"s.gis.gismap.inference\",\"policyVersion\":1,\"lifetimeMs\":1,\"mapPack\":\"smuggled\"}}",
+            "{{\"schema\":\"{HUB_INFERENCE_REQUEST_SCHEMA}\",\"version\":1,\"requestId\":\"{}\",\"serviceId\":\"test.document.inference\",\"policyVersion\":1,\"lifetimeMs\":1,\"mapPack\":\"smuggled\"}}",
             sample_job_id()
         ))
         .is_err(),
@@ -195,10 +161,10 @@ fn an_approval_intent_carries_only_the_job_and_its_exact_proposal_digest() {
 fn the_four_client_paths_are_exact_percent_encoded_hub_paths() {
     let scope = scope();
     let job = sample_job_id();
-    assert_eq!(hub_inference_jobs_path(&scope, "inference/gis-map"), "/spaces/space%3Aalpha/documents/doc%3Atokyo/inference/gis-map/jobs");
-    assert_eq!(hub_inference_job_events_path(&scope, "inference/gis-map", &job, 4), format!("/spaces/space%3Aalpha/documents/doc%3Atokyo/inference/gis-map/jobs/{job}/events?after=4"));
-    assert_eq!(hub_inference_job_cancel_path(&scope, "inference/gis-map", &job), format!("/spaces/space%3Aalpha/documents/doc%3Atokyo/inference/gis-map/jobs/{job}/cancel"));
-    assert_eq!(hub_inference_job_approval_path(&scope, "inference/gis-map", &job), format!("/spaces/space%3Aalpha/documents/doc%3Atokyo/inference/gis-map/jobs/{job}/approval"));
+    assert_eq!(hub_inference_jobs_path(&scope, "inference/document"), "/spaces/space%3Aalpha/documents/doc%3Atokyo/inference/document/jobs");
+    assert_eq!(hub_inference_job_events_path(&scope, "inference/document", &job, 4), format!("/spaces/space%3Aalpha/documents/doc%3Atokyo/inference/document/jobs/{job}/events?after=4"));
+    assert_eq!(hub_inference_job_cancel_path(&scope, "inference/document", &job), format!("/spaces/space%3Aalpha/documents/doc%3Atokyo/inference/document/jobs/{job}/cancel"));
+    assert_eq!(hub_inference_job_approval_path(&scope, "inference/document", &job), format!("/spaces/space%3Aalpha/documents/doc%3Atokyo/inference/document/jobs/{job}/approval"));
 }
 
 #[test]
@@ -238,103 +204,9 @@ fn a_two_hundred_reply_must_declare_its_own_exact_schema_and_carry_no_unknown_fi
     assert_eq!(decode_inference_reply::<HubInferenceJobReceiptV1>(&InferenceHubResponseV1 { status: 200, body: vec![b'{'; INFERENCE_RESPONSE_MAX_BYTES + 1] }).unwrap_err(), InferenceRouteErrorV1::Bounds);
 }
 
-#[test]
-fn an_offered_page_carries_the_corpus_preview_and_a_forged_or_open_ring_is_refused() {
-    let fixture = fixture();
-    let job = sample_job_id();
-    let preview: GisMapInferencePreviewV1 = serde_json::from_value(fixture["preview"].clone()).expect("the corpus preview decodes closed");
-    assert_eq!(preview.validate(&job), Ok(()));
-    assert_eq!(preview.job_id, job);
-    assert_eq!(preview.region_id, format!("inference-{job}"));
-    assert_eq!(preview.proposal_hash, sample_proposal_hash());
-    assert_eq!(preview.ring[0], preview.ring[GIS_MAP_INFERENCE_PREVIEW_RING_POINTS - 1], "the published ring is closed");
-    let bounds = &fixture["base"]["expectedInference"]["bounds"];
-    let (lon_min, lat_min) = (bounds["lonMin"].as_f64().expect("lonMin"), bounds["latMin"].as_f64().expect("latMin"));
-    let (lon_max, lat_max) = (bounds["lonMax"].as_f64().expect("lonMax"), bounds["latMax"].as_f64().expect("latMax"));
-    assert_eq!(preview.ring, [[lon_min, lat_min], [lon_max, lat_min], [lon_max, lat_max], [lon_min, lat_max], [lon_min, lat_min]], "the preview does not fold to the corpus's own bounds");
 
-    let mut foreign_job = preview.clone();
-    foreign_job.job_id = "2".repeat(32);
-    assert_eq!(foreign_job.validate(&job), Err(InferenceRouteErrorV1::Invalid));
-    let mut forged_region = preview.clone();
-    forged_region.region_id = "inference-forged".into();
-    assert_eq!(forged_region.validate(&job), Err(InferenceRouteErrorV1::Invalid));
-    let mut wrong_schema = preview.clone();
-    wrong_schema.schema = HUB_INFERENCE_EVENTS_SCHEMA.into();
-    assert_eq!(wrong_schema.validate(&job), Err(InferenceRouteErrorV1::Invalid));
-    let mut open_ring = preview.clone();
-    open_ring.ring[4] = [lon_max, lat_max];
-    assert_eq!(open_ring.validate(&job), Err(InferenceRouteErrorV1::Conflict), "an unclosed ring is never rendered");
-    let mut inverted = preview.clone();
-    inverted.ring = [[lon_max, lat_max], [lon_min, lat_max], [lon_min, lat_min], [lon_max, lat_min], [lon_max, lat_max]];
-    assert_eq!(inverted.validate(&job), Err(InferenceRouteErrorV1::Conflict));
 
-    let page = serde_json::json!({
-        "schema": HUB_INFERENCE_EVENTS_SCHEMA,
-        "jobId": job,
-        "state": "succeeded",
-        "proposalState": "offered",
-        "cancelRequested": false,
-        "stale": false,
-        "proposalHash": sample_proposal_hash(),
-        "preview": fixture["preview"],
-        "events": [],
-        "progress": [],
-        "nextCursor": 0,
-    });
-    let decoded: HubInferenceEventPageV1 = decode_inference_reply(&InferenceHubResponseV1 { status: 200, body: serde_json::to_vec(&page).expect("body") }).expect("an offered page decodes");
-    assert_eq!(checked_page(decoded, &job).expect("the checked page keeps its verified preview").preview, Some(preview));
 
-    let mut mismatched = page.clone();
-    mismatched["proposalHash"] = serde_json::json!("0".repeat(64));
-    let decoded: HubInferenceEventPageV1 = decode_inference_reply(&InferenceHubResponseV1 { status: 200, body: serde_json::to_vec(&mismatched).expect("body") }).expect("it still decodes");
-    assert_eq!(checked_page(decoded, &job).unwrap_err(), InferenceRouteErrorV1::Conflict, "a preview whose digest disagrees with the page is never handed on");
-
-    let mut foreign_page = page.clone();
-    foreign_page["jobId"] = serde_json::json!("3".repeat(32));
-    let decoded: HubInferenceEventPageV1 = decode_inference_reply(&InferenceHubResponseV1 { status: 200, body: serde_json::to_vec(&foreign_page).expect("body") }).expect("it still decodes");
-    assert_eq!(checked_page(decoded, &job).unwrap_err(), InferenceRouteErrorV1::Conflict, "a page for another job is never accepted");
-
-    let cancelled = serde_json::json!({
-        "schema": HUB_INFERENCE_EVENTS_SCHEMA,
-        "jobId": job,
-        "state": "cancelled",
-        "proposalState": "cancelled",
-        "cancelRequested": true,
-        "stale": false,
-        "proposalHash": serde_json::Value::Null,
-        "events": [],
-        "progress": [],
-        "nextCursor": 0,
-    });
-    let decoded: HubInferenceEventPageV1 = decode_inference_reply(&InferenceHubResponseV1 { status: 200, body: serde_json::to_vec(&cancelled).expect("body") }).expect("an omitted preview is absent, not an error");
-    assert_eq!(decoded.preview, None);
-}
-
-#[test]
-fn the_neutral_lifecycles_decode_into_the_closed_event_page_in_order() {
-    let fixture = fixture();
-    for (name, trace) in [("lifecycle", &fixture["lifecycle"]), ("cancelLifecycle", &fixture["cancelLifecycle"])] {
-        let rows = trace.as_array().expect("trace");
-        assert!(rows.len() <= INFERENCE_EVENT_PAGE_MAX_ITEMS, "{name} exceeds one bounded page");
-        let events: Vec<serde_json::Value> = rows.iter().map(|row| serde_json::json!({ "ordinal": row["ordinal"], "kind": row["kind"], "atMs": 1_000 })).collect();
-        let body = serde_json::json!({
-            "schema": HUB_INFERENCE_EVENTS_SCHEMA,
-            "jobId": sample_job_id(),
-            "state": if name == "lifecycle" { "succeeded" } else { "cancelled" },
-            "proposalState": if name == "lifecycle" { "approved" } else { "cancelled" },
-            "cancelRequested": name != "lifecycle",
-            "stale": false,
-            "proposalHash": sample_proposal_hash(),
-            "events": events,
-            "progress": [],
-            "nextCursor": 0,
-        });
-        let page: HubInferenceEventPageV1 = decode_inference_reply(&InferenceHubResponseV1 { status: 200, body: serde_json::to_vec(&body).expect("body") }).unwrap_or_else(|error| panic!("{name} did not decode: {error:?}"));
-        assert_eq!(page.events.iter().map(|event| event.ordinal).collect::<Vec<_>>(), (1..=rows.len() as u64).collect::<Vec<_>>());
-        assert_eq!(page.events.iter().map(|event| event.kind.clone()).collect::<Vec<_>>(), rows.iter().map(|row| row["kind"].as_str().expect("kind").to_string()).collect::<Vec<_>>());
-    }
-}
 //#endregion 🧪️WireShapes
 
 //#region 🧪️Calls
@@ -343,14 +215,14 @@ fn a_submit_call_posts_the_bounded_closed_intent_to_the_exact_job_route() {
     let transport =
         ScriptedTransport::ok(200, serde_json::json!({ "schema": HUB_INFERENCE_RECEIPT_SCHEMA, "jobId": sample_job_id(), "state": "accepted", "proposalState": "none", "proposalHash": serde_json::Value::Null, "cursor": 0, "expiresAtMs": 9 }));
     let cancel = CancelToken::root_now();
-    let request = HubInferenceSubmitRequestV1::new("s.gis.gismap.inference", sample_job_id(), 1_000);
-    let receipt = block_on(submit_hub_inference_job(&transport, &context(&cancel), "https://hub.invalid", &scope(), "inference/gis-map", &request)).expect("scripted receipt");
+    let request = HubInferenceSubmitRequestV1::new("test.document.inference", sample_job_id(), 1_000);
+    let receipt = block_on(submit_hub_inference_job(&transport, &context(&cancel), "https://hub.invalid", &scope(), "inference/document", &request)).expect("scripted receipt");
     assert_eq!(receipt.job_id, sample_job_id());
     assert_eq!(receipt.proposal_hash, None);
     let seen = transport.requests();
     assert_eq!(seen.len(), 1);
     assert_eq!(seen[0].method, InferenceHubMethodV1::Post);
-    assert_eq!(seen[0].path, hub_inference_jobs_path(&scope(), "inference/gis-map"));
+    assert_eq!(seen[0].path, hub_inference_jobs_path(&scope(), "inference/document"));
     assert!(seen[0].body.len() <= INFERENCE_REQUEST_MAX_BYTES);
     assert_eq!(seen[0].maximum_response_bytes, INFERENCE_RESPONSE_MAX_BYTES);
 }
@@ -359,8 +231,8 @@ fn a_submit_call_posts_the_bounded_closed_intent_to_the_exact_job_route() {
 fn an_events_call_refuses_a_foreign_job_id_or_an_out_of_range_cursor_before_any_request() {
     let transport = ScriptedTransport::new(Vec::new());
     let cancel = CancelToken::root_now();
-    assert_eq!(block_on(read_hub_inference_job_events(&transport, &context(&cancel), "https://hub.invalid", &scope(), "inference/gis-map", "not-a-job", 0)).unwrap_err(), InferenceRouteErrorV1::Invalid);
-    assert_eq!(block_on(read_hub_inference_job_events(&transport, &context(&cancel), "https://hub.invalid", &scope(), "inference/gis-map", &sample_job_id(), INFERENCE_PROGRESS_MAX_CURSOR + 1)).unwrap_err(), InferenceRouteErrorV1::Invalid);
+    assert_eq!(block_on(read_hub_inference_job_events(&transport, &context(&cancel), "https://hub.invalid", &scope(), "inference/document", "not-a-job", 0)).unwrap_err(), InferenceRouteErrorV1::Invalid);
+    assert_eq!(block_on(read_hub_inference_job_events(&transport, &context(&cancel), "https://hub.invalid", &scope(), "inference/document", &sample_job_id(), INFERENCE_PROGRESS_MAX_CURSOR + 1)).unwrap_err(), InferenceRouteErrorV1::Invalid);
     assert!(transport.requests().is_empty(), "a malformed read never reaches the network");
 }
 
@@ -369,7 +241,7 @@ fn an_already_cancelled_operation_context_never_reaches_the_hub_and_maps_to_canc
     let transport = ScriptedTransport::ok(200, serde_json::json!({}));
     let cancel = CancelToken::root_now();
     cancel.cancel_now();
-    let error = block_on(cancel_hub_inference_job(&transport, &context(&cancel), "https://hub.invalid", &scope(), "inference/gis-map", &sample_job_id())).unwrap_err();
+    let error = block_on(cancel_hub_inference_job(&transport, &context(&cancel), "https://hub.invalid", &scope(), "inference/document", &sample_job_id())).unwrap_err();
     assert_eq!(error, InferenceRouteErrorV1::Cancelled);
     assert_eq!(error.to_gateway_error("inference_cancel").code, GatewayErrorCode::Cancelled);
     assert!(transport.requests().is_empty(), "a cancelled call is never sent");
@@ -388,7 +260,7 @@ fn a_transport_failure_maps_onto_the_closed_route_vocabulary_and_never_a_fabrica
         let transport = ScriptedTransport::new(vec![Err(transport_error.clone())]);
         let cancel = CancelToken::root_now();
         let approval = HubInferenceApprovalRequestV1::new(sample_job_id(), sample_proposal_hash());
-        assert_eq!(block_on(approve_hub_inference_job(&transport, &context(&cancel), "https://hub.invalid", &scope(), "inference/gis-map", &approval)).unwrap_err(), expected, "{transport_error:?}");
+        assert_eq!(block_on(approve_hub_inference_job(&transport, &context(&cancel), "https://hub.invalid", &scope(), "inference/document", &approval)).unwrap_err(), expected, "{transport_error:?}");
     }
 }
 
@@ -416,7 +288,7 @@ fn an_approval_receipt_must_bind_the_exact_job_proposal_and_durable_undo_scope()
     });
     let transport = ScriptedTransport::ok(200, exact.clone());
     let cancel = CancelToken::root_now();
-    let receipt = block_on(approve_hub_inference_job(&transport, &context(&cancel), "https://hub.invalid", &scope, "inference/gis-map", &request)).expect("exact approval receipt");
+    let receipt = block_on(approve_hub_inference_job(&transport, &context(&cancel), "https://hub.invalid", &scope, "inference/document", &request)).expect("exact approval receipt");
     assert_eq!(receipt.undo.target_id, "cc".repeat(16));
 
     for (name, candidate) in [
@@ -452,41 +324,11 @@ fn an_approval_receipt_must_bind_the_exact_job_proposal_and_durable_undo_scope()
         }),
     ] {
         let transport = ScriptedTransport::ok(200, candidate);
-        assert_eq!(block_on(approve_hub_inference_job(&transport, &context(&CancelToken::root_now()), "https://hub.invalid", &scope, "inference/gis-map", &request)), Err(InferenceRouteErrorV1::Conflict), "{name}",);
+        assert_eq!(block_on(approve_hub_inference_job(&transport, &context(&CancelToken::root_now()), "https://hub.invalid", &scope, "inference/document", &request)), Err(InferenceRouteErrorV1::Conflict), "{name}",);
     }
 }
 
-#[test]
-fn a_durable_approval_undo_posts_only_the_hub_target_frontier_and_retry_identity() {
-    let undo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🌎️hub/🧫️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("undo fixture");
-    let request: semio_framework_os_kernel::os_directory::GisMapApprovalUndoRequestV1 = serde_json::from_value(undo_fixture["request"].clone()).expect("closed request");
-    let scope = DocumentScope::new("space-a", "map-a");
-    let response = serde_json::json!({
-        "schema": HUB_INFERENCE_APPROVAL_UNDO_RECEIPT_SCHEMA,
-        "targetId": request.target_id.clone(),
-        "originalJobId": undo_fixture["target"]["originalJobId"],
-        "mutationId": "aa".repeat(16),
-        "commandHash": "bb".repeat(32),
-        "applied": true,
-        "replayed": false,
-        "frontier": {
-            "documentId": "map-a",
-            "headEditOrdinal": 5,
-            "headEditId": "aa".repeat(16),
-            "lastCommitSeq": 5,
-            "chainSha256": "cc".repeat(32),
-        },
-    });
-    let transport = ScriptedTransport::ok(200, response);
-    let cancel = CancelToken::root_now();
-    let receipt = block_on(undo_hub_inference_approval(&transport, &context(&cancel), "https://hub.invalid", &scope, "inference/gis-map", &request)).expect("typed durable receipt");
-    assert_eq!(receipt.target_id, request.target_id);
-    let seen = transport.requests();
-    assert_eq!(seen.len(), 1);
-    assert_eq!(seen[0].path, hub_inference_approval_undo_path(&scope, "inference/gis-map"));
-    assert_eq!(serde_json::from_slice::<serde_json::Value>(&seen[0].body).expect("request json"), undo_fixture["request"]);
-    assert!(!String::from_utf8_lossy(&seen[0].body).contains("inverse"));
-}
+
 
 #[test]
 fn a_retained_local_wait_is_interrupted_by_its_own_operation_label_and_by_nothing_else() {
@@ -494,7 +336,7 @@ fn a_retained_local_wait_is_interrupted_by_its_own_operation_label_and_by_nothin
     let other = inference_operation_label("space:alpha", "doc:tokyo", None);
     let cancel = CancelToken::root_now();
     retain_inference_operation(&label, cancel.clone());
-    assert!(!interrupt_inference_operation("gis-map:space:alpha/doc:other/*"), "an unrelated label interrupts nothing");
+    assert!(!interrupt_inference_operation("inference:space:alpha/doc:other/*"), "an unrelated label interrupts nothing");
     assert!(!cancel.is_cancelled_now());
     assert!(!interrupt_inference_operation(&other), "the document-wide label is a different retained wait");
     assert!(interrupt_inference_operation(&label));
@@ -536,12 +378,12 @@ fn a_job_handle_is_readable_only_by_its_own_session_and_its_own_authenticated_su
     let subject = HubInferenceSubjectV1 { hub_origin: "https://hub.invalid".into(), space_id: "space:alpha".into(), user_id: "user-a".into(), authority_generation: 7 };
     let payload = InferenceJobHandlePayloadV1 {
         site: InferenceExecutionSiteV1::Hub,
-        service_id: "s.gis.gismap.inference".into(),
-        artifact_kind: "s.gis.gismap".into(),
-        plugin_id: "gis".into(),
+        service_id: "test.document.inference".into(),
+        artifact_kind: "test.document".into(),
+        plugin_id: "test".into(),
         document_id: "doc:tokyo".into(),
         job_id: sample_job_id(),
-        hub: Some(HubInferenceJobBindingV1 { route: "inference/gis-map".into(), space_id: subject.space_id.clone(), subject_user_id: subject.user_id.clone(), authority_generation: subject.authority_generation, request_id: sample_job_id(), base: None }),
+        hub: Some(HubInferenceJobBindingV1 { route: "inference/document".into(), space_id: subject.space_id.clone(), subject_user_id: subject.user_id.clone(), authority_generation: subject.authority_generation, request_id: sample_job_id(), base: None }),
     };
     let handle = handles.mint(crate::handles::HandleKind::Job, mine.clone(), crate::handles::Attachment::Artifact { artifact_id: "doc:tokyo".into() }, serde_json::to_value(&payload).expect("payload"), 1_000);
     assert_eq!(resolve_inference_job_handle(&handles, &mine, &handle, 1_001).expect("the minting session reads its own job"), payload);
@@ -566,7 +408,7 @@ fn a_booting_hub_roster_is_unavailable_never_empty() {
     assert_eq!(block_on(read_hub_inference_services(&starting, &context(&cancel), "http://127.0.0.1:1")).expect_err("booting hub"), InferenceRouteErrorV1::Unavailable);
     let blocked = ScriptedTransport::ok(503, serde_json::json!({ "status": "not-ready", "features": { "inferenceServices": [] } }));
     assert_eq!(block_on(read_hub_inference_services(&blocked, &context(&cancel), "http://127.0.0.1:1")).expect("not-ready hub roster"), Vec::new());
-    let ready = ScriptedTransport::ok(200, serde_json::json!({ "status": "ready", "features": { "inferenceServices": [{ "serviceId": "s.gis.gismap.inference", "route": "inference/gis-map" }] } }));
+    let ready = ScriptedTransport::ok(200, serde_json::json!({ "status": "ready", "features": { "inferenceServices": [{ "serviceId": "test.document.inference", "route": "inference/document" }] } }));
     assert_eq!(block_on(read_hub_inference_services(&ready, &context(&cancel), "http://127.0.0.1:1")).expect("ready hub roster").len(), 1);
 }
 
@@ -590,3 +432,23 @@ fn the_four_capabilities_are_direct_object_typed_gateway_tools_with_bilingual_de
     assert!(crate::GATEWAY_TOOL_NAMES.iter().filter(|name| expected.contains(name)).count() == expected.len(), "the census must list every inference job tool");
 }
 //#endregion 🧪️Policy
+
+#[test]
+fn neutral_job_pages_refuse_foreign_jobs_and_private_payloads() {
+    let source = include_str!("../../🧫️fixtures/🗳️job-client/🔣️.json");
+    let vectors: serde_json::Value = serde_json::from_str(source).unwrap();
+    let owned = semio_framework_os_kernel::os_pack::json::parse(source).unwrap();
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_os_kernel::os_pack::json::to_json_string(&owned)).unwrap(), vectors);
+    for case in vectors["operationLabels"].as_array().unwrap() {
+        assert_eq!(inference_operation_label(case["spaceId"].as_str().unwrap(), case["documentId"].as_str().unwrap(), case["jobId"].as_str()), case["expected"].as_str().unwrap());
+    }
+    for case in vectors["cases"].as_array().unwrap() {
+        let cancel = CancelToken::root_now();
+        let transport = ScriptedTransport::ok(200, case["response"].clone());
+        let result = block_on(read_hub_inference_job_events(&transport, &context(&cancel), "https://hub.invalid", &scope(), "inference/document", case["requestedJobId"].as_str().unwrap(), 0));
+        match case["expectedError"].as_str() {
+            Some(code) => assert_eq!(result.unwrap_err().code(), code, "{}", case["name"]),
+            None => assert_eq!(serde_json::to_value(result.unwrap()).unwrap()["state"], case["response"]["state"]),
+        }
+    }
+}

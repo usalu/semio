@@ -297,7 +297,7 @@ pub enum AppFrame {
 }
 
 /// ⚠️ This port's own minimal `Fault` — `code` mirrors the real channel's fault code strings
-/// (`"transaction.generation-mismatch"`, `"transaction.instance-busy"`, `"mutation.rejected"`,
+/// (`"transaction.generation-mismatch"`, `"transaction.instance-busy"`, `"app.command.rejected"`,
 /// `"viewer.read-only"`, `"capability-denied"`) verbatim, per `📋️master.md` §3.3's Fault code table,
 /// plus `"budget.exceeded"` (quota exhaustion, this crate's own addition, mapped to
 /// `GatewayErrorCode::BudgetExceeded`).
@@ -412,7 +412,7 @@ fn map_fault(fault: &Fault) -> GatewayError {
         "capability-denied" => GatewayError::new(GatewayErrorCode::PermissionDenied, fault.message.clone()),
         HUB_EDIT_UNBOUND_FAULT_CODE => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()),
         HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()).retryable(),
-        "mutation.rejected" => GatewayError::new(GatewayErrorCode::SideEffectRejected, fault.message.clone()),
+        "app.command.rejected" => GatewayError::new(GatewayErrorCode::SideEffectRejected, fault.message.clone()),
         "transaction.member-rejected" => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()),
         "interactive-job.not-ui-safe" => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()),
         "interactive-job.preview-output" => GatewayError::new(GatewayErrorCode::InputInvalid, fault.message.clone()),
@@ -590,7 +590,7 @@ impl MockInstanceState {
             AppCommand::TransactionUndo { group_id } => {
                 if self.force_undo_fails {
                     self.force_undo_fails = false;
-                    return AppFrame::Error(Fault { code: "mutation.rejected".into(), message: "undo rejected".into() });
+                    return AppFrame::Error(Fault { code: "app.command.rejected".into(), message: "undo rejected".into() });
                 }
                 self.generation += 1;
                 AppFrame::TransactionUndone { group_id }

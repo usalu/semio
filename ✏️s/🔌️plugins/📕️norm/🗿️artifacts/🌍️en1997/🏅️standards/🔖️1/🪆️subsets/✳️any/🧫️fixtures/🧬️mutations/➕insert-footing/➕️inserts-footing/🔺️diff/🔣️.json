@@ -1,0 +1,59 @@
+{
+  "artifact": null,
+  "structureId": null,
+  "geotechnicalCategory": null,
+  "designSituation": null,
+  "designApproach": null,
+  "annex": null,
+  "groundwaterLevel": null,
+  "investigationDepth": null,
+  "layers": null,
+  "footings": {
+    "values": [
+      {
+        "id": "footing-F1",
+        "width": 2.5,
+        "length": 2.5,
+        "embedment": 1.5,
+        "baseInclinationDeg": 0.0,
+        "settlementLimit": 0.025,
+        "loadCases": [
+          {
+            "id": "lc-bsP",
+            "designSituation": "bsP",
+            "verticalPermanent": 400000.0,
+            "verticalVariable": 150000.0,
+            "horizontalPermanent": 20000.0,
+            "horizontalVariable": 40000.0,
+            "momentPermanent": 30000.0,
+            "momentVariable": 50000.0
+          }
+        ]
+      },
+      {
+        "id": "footing-F1-2",
+        "width": 2.5,
+        "length": 2.5,
+        "embedment": 1.5,
+        "baseInclinationDeg": 0.0,
+        "settlementLimit": 0.025,
+        "loadCases": [
+          {
+            "id": "lc-bsP",
+            "designSituation": "bsP",
+            "verticalPermanent": 400000.0,
+            "verticalVariable": 150000.0,
+            "horizontalPermanent": 20000.0,
+            "horizontalVariable": 40000.0,
+            "momentPermanent": 30000.0,
+            "momentVariable": 50000.0
+          }
+        ]
+      }
+    ]
+  },
+  "piles": null,
+  "retainingWalls": null,
+  "slopes": null,
+  "upliftCases": null
+}

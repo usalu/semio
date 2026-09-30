@@ -1,0 +1,12 @@
+{
+  "factors": [
+    3.0,
+    3.0,
+    3.0
+  ],
+  "mutation": "scaleSelection",
+  "targets": [
+    "object-a",
+    "volume-1"
+  ]
+}

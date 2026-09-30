@@ -13,7 +13,11 @@
       {
         "id": "link-1",
         "patch": {
-          "path": "alpha-v2.png"
+          "path": "alpha-v2.png",
+          "color_profile": null,
+          "dpi": null,
+          "height": null,
+          "width": null
         }
       }
     ],

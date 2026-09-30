@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeFenestrationShgc, base: &EnergyModelSnapshot)
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Fenestration {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_shgc.is_finite() || !(0.0..=1.0).contains(&payload.new_shgc) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Fenestration {} needs an SHGC in 0..=1, got {}.", payload.id.0, payload.new_shgc), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fenestration {} needs an SHGC in 0..=1, got {}.", payload.id.0, payload.new_shgc), [payload.id.0.to_string()]);
     }
     if existing.shgc == payload.new_shgc {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fenestration {} already has this SHGC.", payload.id.0));

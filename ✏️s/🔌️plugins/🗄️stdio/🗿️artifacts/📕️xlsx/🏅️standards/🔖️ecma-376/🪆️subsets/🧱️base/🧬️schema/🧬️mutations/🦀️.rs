@@ -104,7 +104,7 @@ pub fn apply_xlsx_mutation(snapshot: &mut XlsxSnapshot, mutation: &XlsxMutation)
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -114,7 +114,7 @@ pub fn apply_xlsx_mutation(snapshot: &mut XlsxSnapshot, mutation: &XlsxMutation)
 pub(crate) fn agg_diff(this: &XlsxMutation, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
     match canonical_edit::mutate(base, this) {
         Ok(next) => protocol::MutationOutcome::new(diff_set_snapshot(base, &next)),
-        Err(message) => protocol::MutationOutcome::error("stdio.xlsx.canonical-edit.invalid", message, ["xmlParts"]),
+        Err(message) => protocol::MutationOutcome::error("mutation.target-mismatch", message, ["xmlParts"]),
     }
 }
 

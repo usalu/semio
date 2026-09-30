@@ -51,8 +51,8 @@ fn the_refusal_is_the_declared_diagnostic() {
     assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "replace-solid/renames-apron-7bfadd: a refused mutation must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "replace-solid/renames-apron-7bfadd: exactly one diagnostic is expected, got {messages:?}");
-    assert_eq!(messages[0].code.0, "mutation.id-mismatch", "replace-solid/renames-apron-7bfadd: the refusal is reported as mutation.id-mismatch");
-    assert_eq!(messages[0].level, protocol::Severity::Fatal, "replace-solid/renames-apron-7bfadd: renaming a record is an identity breach, the same Fatal level a duplicate identity raises");
+    assert_eq!(messages[0].code.0, "mutation.target-mismatch", "replace-solid/renames-apron-7bfadd: the refusal is reported as mutation.target-mismatch");
+    assert_eq!(messages[0].level, protocol::Severity::Error, "replace-solid/renames-apron-7bfadd: renaming a record contradicts the target the replace selects, the state-dependent Error");
     assert_eq!(messages[0].target, vec!["slab_apron".to_string(), "slab_apron_v2".to_string()], "replace-solid/renames-apron-7bfadd: the diagnostic addresses exactly \"slab_apron\", \"slab_apron_v2\"");
 }
 

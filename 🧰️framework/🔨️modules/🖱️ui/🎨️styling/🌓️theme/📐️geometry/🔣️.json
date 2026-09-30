@@ -1,0 +1,130 @@
+{
+  "bindings": [
+    {
+      "section": "chrome",
+      "key": "navbarHeightUiSpacing",
+      "themeField": "navbar_height",
+      "cssVar": "--navbar-height",
+      "unit": "spacing"
+    },
+    {
+      "section": "chrome",
+      "key": "footerHeightUiSpacing",
+      "themeField": "footer_height",
+      "cssVar": "--footer-height",
+      "unit": "spacing"
+    },
+    {
+      "section": "chrome",
+      "key": "panelHeaderHeightUiSpacing",
+      "themeField": "panel_header_height",
+      "cssVar": "--panel-header-height",
+      "unit": "spacing"
+    },
+    {
+      "section": "chrome",
+      "key": "controlHeightUiSpacing",
+      "themeField": "control_height",
+      "cssVar": "--size-medium",
+      "unit": "spacing"
+    },
+    {
+      "section": "chrome",
+      "key": "controlHeightSmallUiSpacing",
+      "themeField": "control_height_small",
+      "cssVar": "--size-small",
+      "unit": "spacing"
+    },
+    {
+      "section": "chrome",
+      "key": "gapStandardUiSpacing",
+      "themeField": "gap_standard",
+      "cssVar": "--gap-standard",
+      "unit": "spacing"
+    },
+    {
+      "section": "chrome",
+      "key": "paddingStandardUiSpacing",
+      "themeField": "padding_standard",
+      "cssVar": "--padding-standard",
+      "unit": "spacing"
+    },
+    {
+      "section": "chrome",
+      "key": "panelInsetUiSpacing",
+      "themeField": "panel_inset",
+      "cssVar": "--panel-inset",
+      "unit": "spacing"
+    },
+    {
+      "section": "dom",
+      "key": "treeRowUiSpacing",
+      "themeField": "tree_row_height",
+      "cssVar": "--tree-row-height",
+      "unit": "spacing"
+    },
+    {
+      "section": "dom",
+      "key": "treeIndentPerLevelUiSpacing",
+      "themeField": "tree_indent_per_level",
+      "cssVar": "--tree-indent-per-level",
+      "unit": "spacing"
+    },
+    {
+      "section": "dom",
+      "key": "treeToggleUiSpacing",
+      "themeField": "tree_toggle_width",
+      "cssVar": "--tree-toggle-width",
+      "unit": "spacing"
+    },
+    {
+      "section": "dom",
+      "key": "layoutPanelMinUiSpacing",
+      "themeField": "panel_min_width",
+      "cssVar": "--layout-panel-min",
+      "unit": "spacing"
+    },
+    {
+      "section": "dom",
+      "key": "layoutPanelMaxUiSpacing",
+      "themeField": "panel_max_width",
+      "cssVar": "--layout-panel-max",
+      "unit": "spacing"
+    },
+    {
+      "section": "dom",
+      "key": "layoutPanelRailUiSpacing",
+      "themeField": "window_measures_default_width",
+      "cssVar": "--layout-panel-rail",
+      "unit": "spacing"
+    },
+    {
+      "section": "dom",
+      "key": "layoutEngagementMaxUiSpacing",
+      "themeField": "window_engagement_max_width",
+      "cssVar": "--layout-engagement-max",
+      "unit": "spacing"
+    },
+    {
+      "section": "typography",
+      "key": "textSmPx",
+      "themeField": "font_size_body",
+      "cssVar": "--text-sm",
+      "unit": "px"
+    },
+    {
+      "section": "typography",
+      "key": "textXsPx",
+      "themeField": "font_size_small",
+      "cssVar": "--text-xs",
+      "unit": "px"
+    },
+    {
+      "section": "typography",
+      "key": "textBasePx",
+      "themeField": "font_size_emphasized",
+      "cssVar": "--text-base",
+      "unit": "px"
+    }
+  ]
+}

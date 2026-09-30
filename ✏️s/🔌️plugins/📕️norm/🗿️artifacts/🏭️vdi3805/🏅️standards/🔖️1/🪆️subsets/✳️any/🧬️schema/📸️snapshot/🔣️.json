@@ -82,7 +82,13 @@
         "text": {
           "type": "string"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "BuildingSystemNumber": {
       "title": "BuildingSystemNumber",
@@ -127,7 +133,13 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "ExtensionFields": {
       "type": "object",
@@ -142,7 +154,13 @@
             "type": "string"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "ManufacturerFile": {
       "title": "ManufacturerFile",
@@ -229,7 +247,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "NativeRecord": {
       "title": "NativeRecord",
@@ -272,7 +296,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "SheetAttributes": {
       "title": "SheetAttributes",
@@ -445,6 +475,12 @@
             }
           }
         }
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
       ]
     },
     "Configuration": {
@@ -503,7 +539,13 @@
             "role": "value"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "ProductIdentity": {
       "title": "ProductIdentity",
@@ -545,7 +587,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "Product": {
       "type": "object",
@@ -601,7 +649,13 @@
         "extensions": {
           "$ref": "#/$defs/ExtensionFields"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "ManufacturerCatalog": {
       "type": "object",
@@ -624,7 +678,13 @@
         "extensions": {
           "$ref": "#/$defs/ExtensionFields"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "EditionId": {
       "title": "EditionId",
@@ -661,7 +721,13 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "CatalogIndexEntry": {
       "type": "object",
@@ -690,7 +756,13 @@
             "null"
           ]
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "CatalogIndex": {
       "type": "object",
@@ -705,7 +777,13 @@
             "$ref": "#/$defs/CatalogIndexEntry"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "BoundingBox": {
       "title": "BoundingBox",
@@ -810,7 +888,13 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "GeometryConnection": {
       "type": "object",
@@ -850,7 +934,13 @@
             "null"
           ]
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "ParametricGeometry": {
       "title": "ParametricGeometry",
@@ -899,7 +989,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "CurvePoint": {
       "title": "CurvePoint",
@@ -916,7 +1012,13 @@
         "y": {
           "type": "number"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "CharacteristicCurve": {
       "title": "CharacteristicCurve",
@@ -962,7 +1064,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "SecurityLimits": {
       "title": "SecurityLimits",
@@ -1029,7 +1137,11 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
     },
     "VdiUnit": {
       "title": "VdiUnit",
@@ -1081,7 +1193,10 @@
             "precision": 6
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "GenericAttribute": {
       "title": "GenericAttribute",
@@ -1111,7 +1226,12 @@
             "widget": "text"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "AccessoryLink": {
       "title": "AccessoryLink",
@@ -1160,7 +1280,13 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "CompositionLink": {
       "title": "CompositionLink",
@@ -1198,7 +1324,13 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "GenericAttributes": {
       "type": "object",
@@ -1213,7 +1345,12 @@
             "$ref": "#/$defs/GenericAttribute"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "CatalogueProduct": {
       "title": "CatalogueProduct",
@@ -1326,7 +1463,10 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "ConnectionPoint": {
       "title": "ConnectionPoint",
@@ -1407,7 +1547,10 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "EditionProfileChoice": {
       "title": "EditionProfileChoice",
@@ -1427,7 +1570,10 @@
             "de": "Aktuelle Ausgabe"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "ExtensionBag": {
       "title": "ExtensionBag",
@@ -1449,7 +1595,10 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "VdiQuantityKind": {
       "title": "VdiQuantityKind",
@@ -1554,7 +1703,10 @@
             "de": "Beschleunigung"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

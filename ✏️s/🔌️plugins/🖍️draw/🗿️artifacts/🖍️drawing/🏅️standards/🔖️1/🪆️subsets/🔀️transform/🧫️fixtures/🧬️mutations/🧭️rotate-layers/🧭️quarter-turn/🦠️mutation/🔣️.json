@@ -1,0 +1,9 @@
+{
+  "mutation": "rotateLayers",
+  "targets": [
+    "shape-a"
+  ],
+  "pivotX": 10.0,
+  "pivotY": 0.0,
+  "angle": 1.5707963267948966
+}

@@ -12,18 +12,16 @@
 //! the `semantic-pdf-v1` profile compares them. The subject half is gated behind the generated
 //! host's `sut` feature so the oracle-only run never compiles the local implementation.
 //!
-//! 🩺 What the differential run found. The first oracle-against-subject run of this case exposed
-//! ONE production defect behind ten of its thirteen failures: `encode_pdf` serialized the retained
-//! COS graph alone, so every mutation in the authored `pages`/`info` lane applied to the snapshot
-//! and then vanished on export. Fixed at the cause in
-//! `../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🦀️.rs` (`reconcile_authored_lanes`),
-//! with no comparison profile touched, no `ignoreKeys` added and no fixture swapped.
-//!
-//! Three divergences are left RED on purpose: `inverse-remove-page`, `inverse-append-page-content`
-//! and `inverse-set-page-content`. They differ on `pages.N.contentOperators` and on nothing else.
-//! This side restores the page's original stream; the reference's own undo rebuilds it from a
-//! prior-text capture that reads only `Tj`, while the thesis sets its type with `TJ`. That is the
-//! reference being lossy, not us, so the failure stays. The feature description argues it in full.
+//! 🩺 What the differential runs found, each fixed at the cause. First, `encode_pdf` serialized the retained COS graph
+//! alone, so every edit in the authored `pages`/`info` lanes applied and then vanished on export. Then its fix
+//! regenerated every typed object whenever any lane moved, so a page edit rewrote the catalog and a direct COS edit
+//! (`set-object-value` #145, `set-dict-entry`, `remove-object`, the trailer kinds) was overwritten by the stale typed
+//! lane, and a custom trailer entry was dropped outright. `encode_pdf` now reconciles with incremental-writer
+//! semantics (`../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🦀️.rs`, `reconcile`): a graph edit carries the typed
+//! lanes it moves (`carry_graph_edit`), a moved lane re-states only the objects and entries it owns, and every other
+//! object, entry and trailer key is written as it stands. Last, the reference's own undo of the three page-content
+//! kinds rebuilt a page from its `Tj` text alone; it now captures the page's operators verbatim, so every inverse is
+//! held to the whole projection.
 //!
 //! No measured ratio is recorded here. A parity figure in source is a claim about one moment that
 //! silently becomes false when anything moves; the dated ticket record is where measurements live.
@@ -32,13 +30,12 @@
 //! module and under `semantic-pdf-v1`'s own tolerance, so a scenario cannot pass merely because
 //! `lopdf` declined to error: `mutate-<kind>` must MOVE the compared projection, `inverse-<kind>`
 //! must land back on the untouched document's projection, and `identity-round-trip` must both
-//! preserve the projection and produce bytes that differ from the input. The two carve-outs — one
-//! kind exempt from observability, one axis exempt from the inverse law for three kinds — are named
-//! by the subset's own oracle module (`UNOBSERVABLE`, `regenerates_page_content`), argued there in
-//! full, and repeated in this case's feature description.
+//! preserve the projection and produce bytes that differ from the input. The one carve-out — one
+//! kind exempt from observability — is named by the subset's own oracle module (`UNOBSERVABLE`),
+//! argued there in full, and repeated in this case's feature description.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pdf_1_7, regenerates_page_content, without_content_operators, UNOBSERVABLE};
+use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pdf_1_7, UNOBSERVABLE};
 use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
 //#region 🔖️Input
@@ -78,19 +75,13 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 
 /// ↩️ The INVERSE law, asserted in role without needing the subject: `apply(inverse(m), apply(m,
 /// base))` must land back on the ORIGINAL document's own projection, read through the same
-/// independent reader. `regenerates_page_content`'s three kinds drop `pages.N.contentOperators`
-/// from BOTH sides and nothing else — that carve-out lives in the subset's oracle module, next to
-/// the reason for it, so this handler and the module's own law test can never exempt different
-/// things.
+/// independent reader, every axis included.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
-    let kind = spec.str("kind");
-    let original = project_pdf_1_7(&input)?;
     let bytes = oracle_apply_mutation_inverse(&input, &spec)?;
     let projection = project_pdf_1_7(&bytes)?;
-    let (expected, restored) = if regenerates_page_content(&kind) { (without_content_operators(&original), without_content_operators(&projection)) } else { (original, projection.clone()) };
-    inverse_restores_within(&kind, &restored, &expected, PDF_WRITER_FREEDOM, PDF_TOLERANCE)?;
+    inverse_restores_within(&spec.str("kind"), &projection, &project_pdf_1_7(&input)?, PDF_WRITER_FREEDOM, PDF_TOLERANCE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
@@ -130,12 +121,8 @@ mod subject {
 
     //#region 🔖️Handlers
     /// 🦠️ The forward half with the OBSERVABILITY law asserted IN THE SUBJECT ROLE, against the
-    /// untouched real document and under the same profile the oracle half uses. Until this wave
-    /// every one of these sixteen rows returned its projection uncompared, which is exactly how
-    /// ten of them could report green while `encode_pdf` was dropping the whole authored page and
-    /// metadata lane on the floor (@see the reconciler in
-    /// ../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🦀️.rs). The one exemption is the
-    /// subset's own [`UNOBSERVABLE`], shared verbatim with the oracle half.
+    /// untouched real document and under the same profile the oracle half uses. The one exemption
+    /// is the subset's own [`UNOBSERVABLE`], shared verbatim with the oracle half.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let base = decode_pdf(&input).map_err(|error| format!("decode_pdf failed: {error:?}"))?;
@@ -149,13 +136,10 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection))
     }
 
-    /// ↩️ The INVERSE law asserted IN THE SUBJECT ROLE, and — unlike the oracle half — with NO
-    /// carve-out at all: `pages.N.contentOperators` is held to the same equality as every other
-    /// axis. This implementation restores the page's original content stream rather than
-    /// regenerating one, because a mutation that returns the authored lane to its base value leaves
-    /// the retained carrier untouched, so the reconciler has nothing to rewrite. That is the claim
-    /// the three surviving `inverse-*` parity divergences rest on, and it is asserted here rather
-    /// than argued in prose.
+    /// ↩️ The INVERSE law asserted IN THE SUBJECT ROLE, against the untouched real document and
+    /// under the same profile the oracle half uses: the production inverse restores every axis,
+    /// `pages.N.contentOperators` included — a mutation that returns the authored lane to its base
+    /// value leaves nothing for the reconciling writer to rewrite.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let base = decode_pdf(&input).map_err(|error| format!("decode_pdf failed: {error:?}"))?;

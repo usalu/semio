@@ -1,0 +1,13 @@
+{
+  "InsertFloors": {
+    "index": 1,
+    "item": {
+      "area": 120.0,
+      "assumedPartitions": 0.0,
+      "assumedQk": 6000.0,
+      "assumedQkConcentrated": 7000.0,
+      "category": "E1",
+      "id": "archive-l2"
+    }
+  }
+}

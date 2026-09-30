@@ -294,3 +294,45 @@ fn hexagon_profile_with_backward_coedges_extruded_down_faces_outward() {
 }
 
 // #endregion 🔖️Hexagon
+
+#[test]
+fn retained_profiles_survive_every_repeated_extrusion_without_topology_aliases() {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️retained-extrusion/🔣️.json")).unwrap();
+    let expected = &fixture["expect"];
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut kernel = Brep::new();
+        let kind = case["profile"].as_str().unwrap();
+        let wire = if kind == "hexagon-wire" {
+            kernel.regular_polygon_wire_sync(case["radius"].as_f64().unwrap(), case["sides"].as_u64().unwrap() as usize).unwrap()
+        } else {
+            kernel.rectangle_wire_sync(case["width"].as_f64().unwrap(), case["height"].as_f64().unwrap()).unwrap()
+        };
+        let profile = if kind == "rectangle-face" { kernel.face_from_wire_sync(&wire).unwrap() } else { wire.clone() };
+        kernel.retain(&std::collections::HashSet::from([profile.0.clone()]));
+        assert_eq!(kernel.registry_len(), expected["registeredProfileCount"].as_u64().unwrap() as usize);
+        let mut outputs = Vec::new();
+        for distance in case["distances"].as_array().unwrap() {
+            let distance = distance.as_f64().unwrap();
+            let solid = if kind == "rectangle-face" { kernel.extrude_sync(&profile, [0.0, 0.0, 1.0], distance) } else { kernel.extrude_wire_sync(&profile, [0.0, 0.0, distance]) }.unwrap();
+            let report = kernel.validate_sync(&solid).unwrap();
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&report).unwrap()["ok"], true, "{kind} distance={distance}: {report}");
+            let mesh = kernel.tessellate_sync(&solid, TESSELLATION_DEFLECTION).unwrap();
+            let defects = soup_edge_defects(&mesh);
+            assert_eq!(defects, (expected["boundaryEdges"].as_u64().unwrap() as usize, expected["orientationDefects"].as_u64().unwrap() as usize), "{kind} distance={distance}");
+            let volume = case["area"].as_f64().unwrap() * distance;
+            let tolerance = expected["volumeTolerance"].as_f64().unwrap();
+            assert!((signed_soup_volume(&mesh) - volume).abs() < tolerance, "{kind} distance={distance}");
+            assert!((parry_signed_volume(&mesh) - volume).abs() < tolerance, "{kind} distance={distance}");
+            outputs.push((solid, mesh));
+            for (old, prior) in &outputs {
+                assert_eq!(&kernel.tessellate_sync(old, TESSELLATION_DEFLECTION).unwrap(), prior, "later extrusion changed an owned earlier solid");
+            }
+            kernel.retain(&std::collections::HashSet::from_iter(std::iter::once(profile.0.clone()).chain(outputs.iter().map(|(solid, _)| solid.0.clone()))));
+        }
+        kernel.retain(&std::collections::HashSet::from([profile.0.clone()]));
+        assert_eq!(kernel.registry_len(), expected["registeredProfileCount"].as_u64().unwrap() as usize);
+        kernel.retain(&std::collections::HashSet::new());
+        assert_eq!(kernel.registry_len(), 0);
+    }
+}

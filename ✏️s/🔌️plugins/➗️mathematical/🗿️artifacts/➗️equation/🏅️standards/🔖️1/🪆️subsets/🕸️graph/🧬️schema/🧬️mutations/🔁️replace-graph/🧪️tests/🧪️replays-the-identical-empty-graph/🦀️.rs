@@ -66,9 +66,8 @@ async fn inverse_restores_before() {
     assert_eq!(snapshot, base, "replace-graph/replays-the-identical-empty-graph: inverse did not restore the before-snapshot");
 }
 
-/// 🔣️ Both committed snapshots and the committed mutation are canonical. The nested
-/// `EquationGraph` DOES carry `#[serde(rename_all = "camelCase")]`, so its seed slot is
-/// `algorithmSeed` even though the payload's own fields stay snake_case.
+/// 🔣️ Both committed snapshots and the committed mutation are canonical. The payload and the nested
+/// `EquationGraph` both carry `#[value(rename_all = "camelCase")]`, so the seed slot is `algorithmSeed`.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {

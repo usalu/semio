@@ -354,21 +354,21 @@ fn a_gesture_streamed_over_several_dispatches_is_one_transaction() {
     close_app(&mut app);
 }
 
-/// 🧯️ A host abort mid-gesture (`blur`, `captureLost`, `frozen`) leaves zero trace, and a later commit finds
-/// nothing to publish.
+/// 🧯️ A window fact the host forwards mid-gesture (`hostEvent`: a blur, a lost pointer capture, a closing window) reaches
+/// the app as its typed host event, which ends the window's open gesture with zero trace; a late commit finds nothing.
 #[test]
-fn a_host_abort_mid_gesture_leaves_zero_trace() {
+fn a_forwarded_host_event_mid_gesture_leaves_zero_trace() {
     let mut app = board_app();
     select_id(&mut app, PUZZLE2D_GRANULARITY_NODE, "left").expect("select left");
     let before = fixture_of(&app);
-    for reason in ["blur", "captureLost", "frozen"] {
+    for kind in ["blur", "captureLost", "retiring"] {
         stream(&mut app, 10.0);
         stream(&mut app, 15.0);
-        assert_eq!(painted_x(&mut app, "left"), -175.0, "{reason}: the gesture is open");
-        let result = phase(&mut app, json!({ "phase": "abort", "reason": reason }));
-        assert_zero_trace(&mut app, &result, &before, reason);
+        assert_eq!(painted_x(&mut app, "left"), -175.0, "{kind}: the gesture is open");
+        let result = dispatch(&mut app, "hostEvent", Some(&json!({ "windowId": overview::WINDOW_KIND_ID, "kind": kind })), Some(overview::WINDOW_KIND_ID)).expect("the forwarded host event");
+        assert_zero_trace(&mut app, &result, &before, kind);
         let late = phase(&mut app, json!({ "phase": "commit" }));
-        assert_zero_trace(&mut app, &late, &before, &format!("a commit after {reason}"));
+        assert_zero_trace(&mut app, &late, &before, &format!("a commit after {kind}"));
     }
     close_app(&mut app);
 }
@@ -437,7 +437,7 @@ fn streaming_transient(snapshot: &Puzzle2dPlaySnapshot, dx: f64, revision: &str)
     let mut tool = select_utility::Puzzle2dSelectTool::start("translateSelection", "seed-1", revision).expect("the tool starts");
     let request = SelectToolRequest { base: std::sync::Arc::new(snapshot.typed().clone()), proximity_radius: 0.0, records: vec![Puzzle2dSelectionRecord::drag(vec!["left".to_string()], dx, 0.0)] };
     assert_eq!(tool.send(select_utility::select_tool::Event::Stream(request)), Ok(ToolStep::Open));
-    Puzzle2dWindowTransient { select_tool: tool.persist(), ..Default::default() }
+    Puzzle2dWindowTransient { select_tool: tool.persist().map(Box::new), ..Default::default() }
 }
 
 /// 📨️ One dispatch of `action` from the overview window over `left` selected, on `revision` under `utility`.

@@ -241,9 +241,6 @@ mod tests;
 /// self-wired here rather than in `🦀️.rs`: that file is shared with the other artifact lanes
 /// running concurrently, and a `#[path]` on a module declared at the top level of this non-mod-rs
 /// file already resolves relative to this very directory.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
 //#endregion 🧪️FixtureTests
 
 //#region 🌉️ExternalCodecBridge
@@ -283,3 +280,10 @@ pub fn inverse_iso16757_mutation(mutation: &Iso16757Mutation, base: &Iso16757Sna
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
 //#endregion 🧪️KindsCatalog
+
+
+//#region 🧫️Vectors
+#[cfg(test)]
+#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
+mod fixture_tests;
+//#endregion 🧫️Vectors

@@ -391,4 +391,155 @@ I added no dead route code: without (a)–(c) it could only ever answer `local`.
 ~27062). It does not yet render the badge, the chip's accessible name or the row note. I have not checked whether the
 wgpu presence heartbeat publishes the local `history_edit`.
 
-**Status.** Not in this packet's brief, so it is left for the coordinator to assign.
+**Status.** Done in Follow-up 2 (G2).
+
+## Follow-up 2 (rejection codes, peers' history edits)
+
+### G1. Command rejections are told from their codes
+
+W2-B's unified contract is `CommandAckOutcome::Rejected { code, reason, messages, detail }` with ten closed codes. The
+wgpu shell no longer reads the English `reason` anywhere.
+
+- **`ArtifactEvent::CommandOutcome` (`🧊️wgpu/🦀️.rs`).** Every rejection now shows a notice through the new
+  `command_rejection_notice(code, &messages, locale)`, React's `commandRejectionNoticeV1`:
+  - A `local.*` code is told by its own line (`local_command_rejection_notice`, React's
+    `LOCAL_COMMAND_REJECTION_NOTICES_V1`): warning or error, coded with the rejection code.
+  - A hub refusal is read from its messages' codes. A history-edit refusal wins. Otherwise `mutation.invariant` or
+    `mutation.clamped` is named after "Change refused by the hub"; otherwise only that line is shown, as a warning coded
+    `sync.command.rejected`.
+  - `Transformed` now shows the info notice "Change adjusted" (`sync.command.transformed`), as React does.
+  - Before this change wgpu showed a notice only when the English reason happened to contain a history code.
+- **Copy.** The 13 `ui.conflict.*` lines, in en and de at normal terminology, are now in the shell's bilingual
+  `shell_chrome_string` table.
+- **`time_travel::history_refusal_notice`.** It now matches one exact code only; prose never matches.
+- **New `time_travel::history_refusal_of_fault`.** React's `historyRefusalOfFaultV1`. It reads the dispatch-fault string
+  (`code: message — code: message [t]; …`, or with the browser bridge's prefix) token by token: the fault code first,
+  then the report codes. A code inside a word is not a code.
+  - `classify_dispatch_fault_notice` uses it.
+  - The band's fault line and `ArtifactEvent::Conflict` already pass exact codes.
+- **Law.** `every_command_rejection_is_told_from_its_codes_in_both_locales` runs all 18 rows of W2-B's shared
+  `🛠️ShellHelpers/🧫️fixtures/🧫️command-rejection`. Each `rejection` is decoded into the Rust `CommandAckOutcome`, and the
+  law checks code, text (en and de) and severity, and that all 10 closed codes are covered.
+- **Updated law.** `history_refusals_are_localized_notices_carrying_their_code` now covers exact codes, prose that must
+  not match, and three real fault-string shapes.
+
+### G2. Peers' history-edit presence (React parity, W2-B Follow-up 2)
+
+- **Publishing.**
+  - Native: the heartbeat already published `history_edit`, and now also publishes `tool_run` from the guest's
+    `AppFrame::Ephemeral`, as React does.
+  - Browser: `WgpuEphemeralSnapshot` (bridge TS) now carries `toolRun` and `historyEdit` bytes, and
+    `browser_ephemeral::observe` (ProgramBridge) decodes them. Before, the browser build published neither.
+- **Labelling.** `time_travel::time_travel_peer_presence` is React's `timeTravelPeerPresenceV1`. It labels each editing
+  peer from this replica's own `history_entries`, never from wire text:
+  - "Ada is editing Drag selection in time travel", or "… the history in time travel" when the mutation is not a
+    local row, with badge `⏪`;
+  - notes on `framework.history.entry.<seq>` and `framework.history.mutation.<id>` ("Ada is editing this in time
+    travel"), in en and de, sorted by key, one key's lines joined by ` · `.
+- **Roster.**
+  - `footer_presence_rows` gives each editing peer on the attached surface its `activity`.
+  - The wgpu `PresenceBar` (`🖱️ui/🧱️elements/👥️PresenceBar/🎯️targets/🧊️wgpu`) gained `PresenceActivity` and
+    `PresencePeerRow.activity`, a `peer-activity-badge:<actor>` node, and the badge in the painted chip ("Ada ⏪ · Cy").
+  - The new `presence_bar_chip_accessible_text` is React's per-row `aria-label` ("Ada (Ada bearbeitet Skalieren in der
+    Zeitreise)"). The footer chip's status node now announces this text.
+- **History rows.**
+  - The wgpu UI has no host presence overlay, so I added one: `UiTree::{presence_note, set_presence_notes}` and the engine
+    `Ui::set_presence_notes`, which fans the notes out to every window's candidate and presented trees.
+  - A retained tree row paints `description · note` (`🖌️paint` step 5), and `accessibility_projection` announces it the
+    same way. The document is never touched.
+  - The shell pushes the notes every frame from `pump_sync_events` through
+    `crate::interpreter::set_ui_presence_notes`, which with nobody editing is one empty comparison per window.
+- **New language-neutral corpus: `🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-peers/🔣️.json`.**
+  - Contents: two history rows and four cases (local mutation, foreign mutation, two peers sharing one row plus a
+    non-editing peer, nobody editing), with the expected chips and notes in en and de, copied from React's i18n bundle.
+  - React reads it too since Follow-up 3 (H1), so it is the parity contract for both shells, as the band corpus is.
+- **Laws.**
+  - `the_shared_peer_history_edit_corpus_holds_on_wgpu`: every case and locale.
+  - `the_roster_badges_and_announces_an_editing_peer_and_notes_its_rows`: runs through `ShellState`. It checks the
+    badge, the painted chip, the announced chip and the published notes, and that a peer on another surface is neither
+    shown nor noted.
+  - UI crate `peer_notes_are_announced_after_a_tree_rows_description`: mounts the `🌲️tree-row-recipes` corpus document
+    and checks the appended description, that an unchanged table changes nothing, and that an empty table restores the
+    row.
+  - UI crate `an_activity_badges_its_row_and_is_announced_in_the_accessible_name`.
+
+### G3. History-body order (W2-A R2-1)
+
+The body is the guest's `framework.body.history`, built by the shared `🔌️plugin/🦀️.rs` `ui_history_panel`. wgpu renders
+that retained document as it arrives, so W2-A's reordering reaches wgpu with no shell change. The band is shell chrome
+and stays pinned to React by the band corpus.
+
+### G4. Compile state and counts
+
+W1-E saw the renderer crate broken while `PresencePeerRow.activity` existed before the shell and test literals had it;
+that was mid-edit. All of the following were run in the foreground after re-reading every touched file:
+
+| Run | Result |
+| --- | --- |
+| `cargo test -p semio-framework-os-renderer-wgpu --lib -- time_travel dialog_choices` | **22/22** (20 `time_travel`, of which 3 are new, plus W1-E's 2) |
+| `cargo test -p semio-framework-ui --features testkit --lib -- conformance_corpus presence_bar` | **15/15** (2 new) |
+| vitest `🧩️package-integration` (`test-preview-generated`) | **28/28** (the ephemeral-snapshot test now covers `toolRun`/`historyEdit`) |
+| `tsc -p 🧪️w2-c-typecheck-progress-bridge.tsconfig.json` (bridge plus import closure) | **0 errors** |
+| `cargo check -p semio-framework-os-renderer-wgpu --lib`, native and `wasm32-unknown-unknown` | both ok, no warning in touched code |
+
+Two things got in the way:
+
+- A peer's in-progress `semio-framework-os-kernel` edits (`🏪️store`, `📡️spr/📜️history`) blocked the first two runs. I
+  waited until those files were quiet for four minutes and did not touch them.
+- Another peer renamed `mutation.rejected` to `app.command.rejected` in my law file and the dispatch funnel in the
+  meantime. My edits keep that rename.
+
+**Not verified:**
+
+- The `Rejected` and `Transformed` event arms in a live sync channel. The tests have no `ShellSyncChannel` harness; the
+  pure function is proven by the corpus.
+- The painted note pixels. The paint step compiles; the note lookup and the accessibility projection are proven.
+- Any browser run.
+
+**Files (Follow-up 2):**
+
+- Renderer: `…/🐚️Shell/🎯️targets/🧊️wgpu/{🦀️.rs, ⏪️time-travel/🦀️.rs}`
+- Shell tests: `…/🐚️Shell/🧪️tests/{🧪️wgpu-time-travel, 🌓️appearance-tour-and-footer-pills}/🦀️.rs`
+- Interpreter: `…/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`
+- ProgramBridge: `…/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`
+- Bridge TS: `…/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts`
+- Bridge TS test: `…/🧑‍🎨engine/🧪️tests/🧩️package-integration/🟦️.ts`
+- New fixture: `…/🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-peers/🔣️.json`
+- UI crate:
+  - `🖱️ui/🧱️elements/👥️PresenceBar/{🎯️targets/🧊️wgpu, 🧪️tests/🔬️wgpu-unit}/🦀️.rs`
+  - `🖱️ui/🎯️targets/🧊️wgpu/{🦀️.rs, 🌳️tree/🦀️.rs, ⚙️engine/🦀️.rs, 🖌️paint/🦀️.rs, ♿️accessibility/🦀️.rs}`
+  - `🖱️ui/🧪️tests/🧪️conformance-corpus/🦀️.rs`
+
+## Follow-up 3 (the peers corpus is React's contract too)
+
+### H1. React asserts `🧫️time-travel-peers`
+
+- **What changed.** In `🛠️ShellHelpers/⏪️time-travel/🧪️tests/🧩️component/🟦️.tsx`, W2-B's hand-written peer test ("marks the
+  rows a peer edits…") is replaced by "marks the rows and chips of peers editing in time travel exactly as the shared
+  peers corpus says, in both languages".
+  - It reads `🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-peers/🔣️.json` through a new `peersCorpus` constant and two corpus
+    types in the file header.
+  - It builds the replica's `HistoryEntry` rows from the corpus rows.
+  - Nothing else in the file changed, apart from one line in its docstring.
+- **What it checks, per case and locale:**
+  - `timeTravelPeerPresenceV1` returns exactly the corpus chips `{actor, text, badge}`, and no `historyEdit` wire field
+    reaches the roster peers.
+  - The overlay notes, joined with ` · ` and sorted by key, equal the corpus notes; this is the same representation the
+    wgpu law compares.
+  - The interpreter-rendered history body shows each row's note.
+  - The `PresenceBar` chip carries `data-presence-activity` exactly for editing peers, its accessible name
+    (`dom-accessibility-api`) includes the activity text, and its `peer-activity-badge:<actor>` shows the corpus badge.
+- **Result.** Both shells now assert the same expected chips and notes: React through this test, wgpu through
+  `the_shared_peer_history_edit_corpus_holds_on_wgpu` and the UI-crate notes law.
+- **Coordination.** W2-B (a1e3416acfb374001) was told what changed. I did not touch ShellHost or the worker.
+
+### H2. Runs (foreground)
+
+| Run | Result |
+| --- | --- |
+| React suite, explicit include at `long` level: `bun ./📜️script.ts test long "⏪️time-travel/🧪️tests/🧩️component" --reporter=verbose` | **17/17**; the new test ran (195 ms) |
+| React typecheck (`bun ./📜️script.ts typecheck`) | exit 2, **2 errors, neither mine**: `🧑‍🎨engine/🧪️tests/🔌️plugin-runtime/🟦️.tsx:1140` and `:1445`, where the `PluginWasmHandle` fakes lack `readAppDocumentIdentity` after someone's handle change. `⏪️time-travel`'s test typechecks clean (the tsconfig includes `🧱️elements/**`). |
+
+The `fundamental`/`quick` levels include only `⚡️quick`, so this suite has to be run at `long` or above with a file
+filter.
+

@@ -1,0 +1,29 @@
+{
+  "artifact": null,
+  "annex": null,
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "loadCases": {
+    "values": [
+      {
+        "id": "q-imposed",
+        "name": "Imposed Q",
+        "kind": "imposed",
+        "category": "office"
+      }
+    ]
+  },
+  "memberActions": null,
+  "joints": null,
+  "fatigueDetails": null,
+  "fireExposures": null,
+  "coldFormedMembers": null,
+  "platedPanels": null,
+  "siloShells": null,
+  "tensionComponents": null,
+  "bridgeFatigue": null,
+  "towerLegs": null,
+  "piles": null,
+  "craneRunways": null
+}

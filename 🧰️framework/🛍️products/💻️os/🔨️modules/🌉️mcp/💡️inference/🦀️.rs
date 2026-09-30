@@ -1258,8 +1258,8 @@ pub fn interrupt_inference_operation(label: &str) -> bool {
 /// checked phase on one per-`DocumentScope` gate, so at most one such wait per document is live.
 pub fn inference_operation_label(space_id: &str, document_id: &str, job_id: Option<&str>) -> String {
     match job_id {
-        Some(job_id) => format!("gis-map:{space_id}/{document_id}/{job_id}"),
-        None => format!("gis-map:{space_id}/{document_id}/*"),
+        Some(job_id) => format!("inference:{space_id}/{document_id}/{job_id}"),
+        None => format!("inference:{space_id}/{document_id}/*"),
     }
 }
 

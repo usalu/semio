@@ -61,7 +61,7 @@ fn every_shell_to_gateway_frame_decodes_from_its_shared_fixture() {
     assert_eq!(decode_app_frame(&fixture("transactionRedone")), Ok(AppFrame::TransactionRedone { group_id: "edit_8".to_string() }));
     assert_eq!(decode_app_frame(&fixture("artifact")), Ok(AppFrame::Artifact { pack: vec![1, 2, 3, 4], spr: vec![5, 6] }));
     assert_eq!(decode_app_frame(&fixture("exported")), Ok(AppFrame::Exported { port: "pdf".to_string(), descriptor: vec![1], data: vec![2, 3] }));
-    assert_eq!(decode_app_frame(&fixture("error")), Ok(AppFrame::Error(Fault { code: "mutation.rejected".to_string(), message: "the document is read-only for this actor".to_string() })));
+    assert_eq!(decode_app_frame(&fixture("error")), Ok(AppFrame::Error(Fault { code: "app.command.rejected".to_string(), message: "the document is read-only for this actor".to_string() })));
 }
 
 #[test]

@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeIdealLoadsSystemOutdoorAirPerArea, base: &Ene
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Ideal loads system {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_outdoor_air_per_area_m3_s_m2.is_finite() || payload.new_outdoor_air_per_area_m3_s_m2 < 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("An outdoor air rate per floor area must be a non-negative finite number, got {}.", payload.new_outdoor_air_per_area_m3_s_m2), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("An outdoor air rate per floor area must be a non-negative finite number, got {}.", payload.new_outdoor_air_per_area_m3_s_m2), [payload.id.0.to_string()]);
     }
     if existing.outdoor_air_per_area_m3_s_m2 == payload.new_outdoor_air_per_area_m3_s_m2 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Ideal loads system {} already has that outdoor air rate per floor area.", payload.id.0));

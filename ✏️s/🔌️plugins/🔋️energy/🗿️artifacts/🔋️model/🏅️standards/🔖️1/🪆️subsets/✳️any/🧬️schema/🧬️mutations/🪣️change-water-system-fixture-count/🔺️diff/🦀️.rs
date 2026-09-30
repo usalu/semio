@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeWaterSystemFixtureCount, base: &EnergyModelSn
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Water system {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if payload.new_fixture_count == 0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Water system {} needs at least one fixture.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Water system {} needs at least one fixture.", payload.id.0), [payload.id.0.to_string()]);
     }
     if existing.fixture_count == payload.new_fixture_count {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Water system {} already carries this fixture_count: {}.", payload.id.0, payload.new_fixture_count));

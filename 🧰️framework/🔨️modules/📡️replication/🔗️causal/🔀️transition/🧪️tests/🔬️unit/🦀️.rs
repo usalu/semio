@@ -116,8 +116,8 @@ fn none() -> std::collections::HashSet<String> {
 /// 🧮️ Edits fold into HLC order regardless of the order they are listed in.
 #[test]
 fn fold_orders_edits_by_hlc_whatever_their_arrival() {
-    let forward = fold_history(&[edit("a", "x", 1), edit("b", "y", 2), edit("c", "x", 3)], &[], &none()).expect("fold");
-    let shuffled = fold_history(&[edit("c", "x", 3), edit("a", "x", 1), edit("b", "y", 2)], &[], &none()).expect("fold");
+    let forward = fold_history(&ArtifactId("doc".into()), &[edit("a", "x", 1), edit("b", "y", 2), edit("c", "x", 3)], &[], &none()).expect("fold");
+    let shuffled = fold_history(&ArtifactId("doc".into()), &[edit("c", "x", 3), edit("a", "x", 1), edit("b", "y", 2)], &[], &none()).expect("fold");
     assert_eq!(forward, shuffled);
     assert_eq!(forward.applied, vec!["a", "b", "c"]);
 }
@@ -126,10 +126,10 @@ fn fold_orders_edits_by_hlc_whatever_their_arrival() {
 #[test]
 fn revert_and_reinstate_toggle_membership_in_hlc_order() {
     let edits = [edit("a", "x", 1), edit("b", "y", 3)];
-    let reverted = fold_history(&edits, &[at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into())] }, "x", 2)], &none()).expect("fold");
+    let reverted = fold_history(&ArtifactId("doc".into()), &edits, &[at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into())] }, "x", 2)], &none()).expect("fold");
     assert_eq!(reverted.applied, vec!["b"]);
     assert_eq!(reverted.redo, vec!["a"]);
-    let reinstated = fold_history(&edits, &[at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into())] }, "x", 2), at(HistoryTransition::Reinstate { mutation_ids: vec![MutationId("op-a".into())] }, "x", 4)], &none()).expect("fold");
+    let reinstated = fold_history(&ArtifactId("doc".into()), &edits, &[at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into())] }, "x", 2), at(HistoryTransition::Reinstate { mutation_ids: vec![MutationId("op-a".into())] }, "x", 4)], &none()).expect("fold");
     assert_eq!(reinstated.applied, vec!["a", "b"]);
     assert!(reinstated.redo.is_empty());
 }
@@ -139,7 +139,7 @@ fn revert_and_reinstate_toggle_membership_in_hlc_order() {
 fn an_authors_new_edit_clears_only_its_own_redo() {
     let edits = [edit("a", "x", 1), edit("b", "y", 2), edit("c", "x", 5)];
     let transitions = [at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into())] }, "x", 3), at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-b".into())] }, "y", 4)];
-    let fold = fold_history(&edits, &transitions, &none()).expect("fold");
+    let fold = fold_history(&ArtifactId("doc".into()), &edits, &transitions, &none()).expect("fold");
     assert_eq!(fold.applied, vec!["c"]);
     assert_eq!(fold.redo, vec!["b"]);
 }
@@ -151,13 +151,13 @@ fn a_transition_naming_another_actors_operation_is_refused_whole() {
     let edits = [edit("a", "x", 1), edit("b", "y", 2)];
     let foreign = at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into())] }, "y", 3);
     let mixed = at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into()), MutationId("op-b".into())] }, "y", 4);
-    let fold = fold_history(&edits, &[foreign.clone(), mixed.clone()], &none()).expect("fold");
+    let fold = fold_history(&ArtifactId("doc".into()), &edits, &[foreign.clone(), mixed.clone()], &none()).expect("fold");
     assert_eq!(fold.applied, vec!["a", "b"]);
     assert!(fold.redo.is_empty());
     assert_eq!(fold.refused, vec![foreign.mutation_id.0.clone(), mixed.mutation_id.0.clone()]);
     let own = at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into())] }, "x", 5);
     let stolen = at(HistoryTransition::Reinstate { mutation_ids: vec![MutationId("op-a".into())] }, "y", 6);
-    let fold = fold_history(&edits, &[own, stolen.clone()], &none()).expect("fold");
+    let fold = fold_history(&ArtifactId("doc".into()), &edits, &[own, stolen.clone()], &none()).expect("fold");
     assert_eq!(fold.applied, vec!["b"]);
     assert_eq!(fold.redo, vec!["a"]);
     assert_eq!(fold.refused, vec![stolen.mutation_id.0.clone()]);
@@ -168,7 +168,7 @@ fn a_transition_naming_another_actors_operation_is_refused_whole() {
 fn commit_and_checkout_materialize_facts_and_positions() {
     let edits = [edit("a", "x", 1), edit("b", "x", 3)];
     let transitions = [at(commit("ck-1", None, &["a"]), "x", 2), at(commit("ck-2", Some("ck-1"), &["b"]), "x", 4), at(HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: None }, "x", 5)];
-    let fold = fold_history(&edits, &transitions, &none()).expect("fold");
+    let fold = fold_history(&ArtifactId("doc".into()), &edits, &transitions, &none()).expect("fold");
     assert_eq!(fold.applied, vec!["a"]);
     assert_eq!(fold.checkpoint.as_deref(), Some("ck-1"));
     assert_eq!(fold.checkpoints[1].change_ids, vec!["change-ck-1", "change-ck-2"]);
@@ -180,8 +180,46 @@ fn commit_and_checkout_materialize_facts_and_positions() {
 fn checkout_governs_concurrent_edits_by_hlc() {
     let edits = [edit("a", "x", 1), edit("late-old", "y", 3), edit("late-new", "y", 6)];
     let transitions = [at(commit("ck-1", None, &["a"]), "x", 2), at(HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: None }, "x", 5)];
-    let fold = fold_history(&edits, &transitions, &none()).expect("fold");
+    let fold = fold_history(&ArtifactId("doc".into()), &edits, &transitions, &none()).expect("fold");
     assert_eq!(fold.applied, vec!["a", "late-new"]);
+}
+
+/// 🌳️ The trunk is a first-class alternative: commits made while no branch is active grow its chain and list it first,
+/// a checkout naming it (or none) activates it with only unscoped and trunk-scoped supersessions, switching back to the
+/// branch restores the branch's line, and no branch may claim its id.
+#[test]
+fn the_trunk_is_a_first_class_alternative() {
+    let document = ArtifactId("doc".into());
+    let trunk = trunk_alternative_id(&document);
+    let edits = [edit("a", "x", 1), edit("b", "x", 5)];
+    let scoped = |scope: &str, operation: &str| HistoryTransition::Supersede(TransitionSupersede { scope: Some(scope.into()), inputs: vec![input(&format!("op-{operation}"), &[7])] });
+    let mut transitions = vec![
+        at(commit("ck-1", None, &["a"]), "x", 2),
+        at(HistoryTransition::Branch { alternative_id: "alt".into(), name: "Variant".into(), checkpoint_id: "ck-1".into() }, "x", 3),
+        at(commit("ck-2", Some("ck-1"), &["b"]), "x", 6),
+        at(HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: Some(trunk.clone()) }, "x", 7),
+        at(scoped(&trunk, "a"), "x", 8),
+        at(scoped("alt", "b"), "x", 9),
+    ];
+    let on_trunk = fold_history(&document, &edits, &transitions, &none()).expect("fold");
+    assert_eq!(on_trunk.trunk, trunk);
+    assert_eq!(on_trunk.alternative, None, "a checkout naming the trunk activates it");
+    assert_eq!(on_trunk.applied, vec!["a"]);
+    assert_eq!(on_trunk.alternatives.iter().map(|alternative| (alternative.id.as_str(), alternative.name.as_str(), alternative.checkpoint_ids.clone())).collect::<Vec<_>>(), vec![(trunk.as_str(), "", vec!["ck-1".to_string()]), ("alt", "Variant", vec!["ck-1".to_string(), "ck-2".to_string()])]);
+    assert_eq!(on_trunk.supersessions.keys().map(|id| id.0.as_str()).collect::<Vec<_>>(), vec!["op-a"], "only trunk-scoped and unscoped supersessions apply on the trunk");
+    transitions.push(at(HistoryTransition::Checkout { checkpoint_id: "ck-2".into(), alternative_id: Some("alt".into()) }, "x", 10));
+    let on_branch = fold_history(&document, &edits, &transitions, &none()).expect("fold");
+    assert_eq!((on_branch.alternative.as_deref(), on_branch.applied.clone()), (Some("alt"), vec!["a".to_string(), "b".to_string()]));
+    assert_eq!(on_branch.supersessions.keys().map(|id| id.0.as_str()).collect::<Vec<_>>(), vec!["op-b"]);
+    transitions.push(at(HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: None }, "x", 11));
+    transitions.push(at(commit("ck-3", Some("ck-1"), &[]), "x", 12));
+    let grown = fold_history(&document, &edits, &transitions, &none()).expect("fold");
+    assert_eq!(grown.alternatives[0].checkpoint_ids, vec!["ck-1", "ck-3"], "a commit made on the trunk grows its chain");
+    transitions.push(at(HistoryTransition::Branch { alternative_id: trunk.clone(), name: "Stolen".into(), checkpoint_id: "ck-1".into() }, "x", 13));
+    assert!(fold_history(&document, &edits, &transitions, &none()).is_err_and(|error| format!("{error:?}").contains("branch claims the trunk alternative")));
+    let bare = fold_history(&document, &edits[..1], &[], &none()).expect("fold");
+    assert!(bare.alternatives.is_empty(), "a trunk without a checkpoint is not listed");
+    assert_ne!(trunk_alternative_id(&ArtifactId("other".into())), trunk);
 }
 
 /// 🌿️ Branch roots an alternative, commits grow its chain, repin re-identifies the checkpoint everywhere.
@@ -194,9 +232,10 @@ fn branch_commit_and_repin_track_alternative_chains() {
         at(commit("ck-2", Some("ck-1"), &["b"]), "x", 5),
         at(HistoryTransition::Repin { checkpoint_id: "ck-2".into(), pinned_checkpoint_id: "ck-2p".into(), pins: vec![TransitionPin { child_uri: "semio://c".into(), checkpoint_id: "c-1".into() }] }, "x", 6),
     ];
-    let fold = fold_history(&edits, &transitions, &none()).expect("fold");
+    let fold = fold_history(&ArtifactId("doc".into()), &edits, &transitions, &none()).expect("fold");
     assert_eq!(fold.alternative.as_deref(), Some("alt"));
-    assert_eq!(fold.alternatives[0].checkpoint_ids, vec!["ck-1", "ck-2p"]);
+    assert_eq!(fold.alternatives[1].checkpoint_ids, vec!["ck-1", "ck-2p"]);
+    assert_eq!((fold.alternatives[0].id.as_str(), fold.alternatives[0].checkpoint_ids.clone()), (fold.trunk.as_str(), vec!["ck-1".to_string()]), "the root commit is the trunk's");
     assert_eq!(fold.checkpoint.as_deref(), Some("ck-2p"));
     assert_eq!(fold.checkpoints[1].pins.len(), 1);
     assert_eq!(fold.applied, vec!["a", "b"]);
@@ -208,14 +247,14 @@ fn excluded_edits_stay_inactive() {
     let edits = [edit("a", "x", 1), edit("q", "y", 2)];
     let excluded: std::collections::HashSet<String> = ["q".to_string()].into_iter().collect();
     let transitions = [at(commit("ck-1", None, &["a", "q"]), "x", 3), at(HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: None }, "x", 4)];
-    assert_eq!(fold_history(&edits, &transitions, &excluded).expect("fold").applied, vec!["a"]);
+    assert_eq!(fold_history(&ArtifactId("doc".into()), &edits, &transitions, &excluded).expect("fold").applied, vec!["a"]);
 }
 
 /// 🚫️ A transition naming an unknown operation or checkpoint is refused instead of silently skipped.
 #[test]
 fn dangling_references_are_refused() {
-    assert!(fold_history(&[], &[at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-ghost".into())] }, "x", 1)], &none()).is_err());
-    assert!(fold_history(&[], &[at(HistoryTransition::Checkout { checkpoint_id: "ghost".into(), alternative_id: None }, "x", 1)], &none()).is_err());
+    assert!(fold_history(&ArtifactId("doc".into()), &[], &[at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-ghost".into())] }, "x", 1)], &none()).is_err());
+    assert!(fold_history(&ArtifactId("doc".into()), &[], &[at(HistoryTransition::Checkout { checkpoint_id: "ghost".into(), alternative_id: None }, "x", 1)], &none()).is_err());
 }
 
 /// 🚫️ The event set is a set: a transition delivered twice into one log is refused, never folded twice.
@@ -223,7 +262,7 @@ fn dangling_references_are_refused() {
 fn a_repeated_transition_is_refused() {
     let edits = [edit("a", "x", 1)];
     let commit = at(commit("ck-1", None, &["a"]), "x", 2);
-    assert!(fold_history(&edits, &[commit.clone(), commit], &none()).is_err());
+    assert!(fold_history(&ArtifactId("doc".into()), &edits, &[commit.clone(), commit], &none()).is_err());
 }
 
 fn fixture_transition(json: &serde_json::Value) -> HistoryTransition {
@@ -312,7 +351,7 @@ fn durable_collaborative_redo_fixture_survives_reload_and_hub_restart() {
                 transitions.push(envelope);
             }
             "expect" => {
-                let fold = fold_history(&edits, &transitions, &none).unwrap_or_else(|error| panic!("{}: {error:?}", step["label"].as_str().unwrap_or("expect")));
+                let fold = fold_history(&document, &edits, &transitions, &none).unwrap_or_else(|error| panic!("{}: {error:?}", step["label"].as_str().unwrap_or("expect")));
                 let applied: Vec<String> = step["expect"]["applied"].as_array().expect("applied").iter().map(|id| id.as_str().expect("id").into()).collect();
                 let redo: Vec<String> = step["expect"]["redo"].as_array().expect("redo").iter().map(|id| id.as_str().expect("id").into()).collect();
                 assert_eq!(fold.applied, applied, "{}", step["label"].as_str().unwrap_or("applied"));
@@ -321,8 +360,8 @@ fn durable_collaborative_redo_fixture_survives_reload_and_hub_restart() {
                 assert_eq!(fold.refused, refused, "{}", step["label"].as_str().unwrap_or("refused"));
             }
             "reload" | "hub-restart" => {
-                let first = fold_history(&edits, &transitions, &none).expect("fold before restart");
-                let second = fold_history(&edits, &transitions, &none).expect("fold after restart");
+                let first = fold_history(&document, &edits, &transitions, &none).expect("fold before restart");
+                let second = fold_history(&document, &edits, &transitions, &none).expect("fold after restart");
                 assert_eq!(first, second, "{} must be a pure re-fold of the same event set", step["label"].as_str().unwrap_or("restart"));
             }
             other => panic!("unknown step kind {other}"),
@@ -365,6 +404,21 @@ fn the_language_agnostic_fixture_matches_the_codec_byte_for_byte() {
             other => panic!("{id}: unknown outcome {other}"),
         }
     }
+    for trunk in fixture["trunks"].as_array().expect("trunk vectors") {
+        let document = trunk["documentId"].as_str().expect("documentId");
+        let expected = trunk["alternativeId"].as_str().expect("alternativeId");
+        assert_eq!(trunk_alternative_id(&ArtifactId(document.into())), expected, "{document}: first-party trunk id");
+        let mut material = Vec::new();
+        crate::write_str(&mut material, "semio.history.trunk");
+        crate::write_str(&mut material, document);
+        assert_eq!(format!("trunk-{}", &blake3::hash(&material).to_hex()[..16]), expected, "{document}: third-party blake3 trunk id");
+    }
+    for row in fixture["shapes"].as_array().expect("shape rows") {
+        let shape = [HistoryShape::Document, HistoryShape::Config].into_iter().find(|shape| shape.name() == row["shape"].as_str().expect("shape")).expect("a known shape");
+        let admitted: Vec<&str> = HistoryTransitionKind::ALL.into_iter().filter(|kind| shape.admits(*kind)).map(HistoryTransitionKind::name).collect();
+        assert_eq!(admitted, row["admits"].as_array().expect("admits").iter().map(|kind| kind.as_str().expect("kind")).collect::<Vec<_>>(), "{}: admitted kinds", shape.name());
+    }
+    assert_eq!(every_transition().iter().map(HistoryTransition::kind).collect::<std::collections::HashSet<_>>().len(), HistoryTransitionKind::ALL.len(), "every kind is exercised");
 }
 
 /// 🛂️ Authoring refuses exactly what the codec refuses: no input, a repeated target, an oversized scope or payload.
@@ -440,6 +494,7 @@ fn the_supersede_fold_fixture_matches_the_fold_law() {
     let fixture = supersede_fold_fixture();
     assert_eq!(fixture["schema"].as_str(), Some("semio.history.supersede-fold"));
     let document = ArtifactId(fixture["documentId"].as_str().expect("documentId").into());
+    assert_eq!(fixture["trunkAlternativeId"].as_str(), Some(trunk_alternative_id(&document).as_str()));
     let edits: Vec<FoldEdit> = fixture["edits"]
         .as_array()
         .expect("edits")
@@ -457,15 +512,15 @@ fn the_supersede_fold_fixture_matches_the_fold_law() {
         match step["kind"].as_str().expect("step kind") {
             "transition" => transitions.push(fixture_step_envelope(&document, step)),
             "expect" => {
-                let fold = fold_history(&edits, &transitions, &none()).unwrap_or_else(|error| panic!("{label}: {error:?}"));
+                let fold = fold_history(&document, &edits, &transitions, &none()).unwrap_or_else(|error| panic!("{label}: {error:?}"));
                 assert_eq!(fold.alternative, step["expect"]["alternative"].as_str().map(str::to_string), "{label}: alternative");
                 assert_eq!(fold.supersessions, expected_supersessions(&step["expect"]), "{label}: supersessions");
             }
-            "reload" => assert_eq!(fold_history(&edits, &transitions, &none()).expect(label), fold_history(&edits, &transitions, &none()).expect(label), "{label}"),
+            "reload" => assert_eq!(fold_history(&document, &edits, &transitions, &none()).expect(label), fold_history(&document, &edits, &transitions, &none()).expect(label), "{label}"),
             "refuse" => {
                 let mut refused = transitions.clone();
                 refused.push(fixture_step_envelope(&document, &step["transition"]));
-                let error = fold_history(&edits, &refused, &none()).expect_err(label);
+                let error = fold_history(&document, &edits, &refused, &none()).expect_err(label);
                 assert!(format!("{error:?}").contains(step["detail"].as_str().expect("detail")), "{label}: {error:?}");
             }
             other => panic!("unknown step kind {other}"),
@@ -490,13 +545,13 @@ fn supersessions_are_a_function_of_the_event_set() {
         })
         .collect();
     let transitions: Vec<crate::causal::MutationEnvelope> = fixture["steps"].as_array().expect("steps").iter().filter(|step| step["kind"] == "transition").map(|step| fixture_step_envelope(&document, step)).collect();
-    let expected = fold_history(&edits, &transitions, &none()).expect("fold");
+    let expected = fold_history(&document, &edits, &transitions, &none()).expect("fold");
     assert!(!expected.supersessions.is_empty());
     for rotation in 1..transitions.len() {
         let mut shuffled = transitions.clone();
         shuffled.rotate_left(rotation);
         shuffled.reverse();
-        assert_eq!(fold_history(&edits, &shuffled, &none()).expect("fold"), expected, "rotation {rotation}");
+        assert_eq!(fold_history(&document, &edits, &shuffled, &none()).expect("fold"), expected, "rotation {rotation}");
     }
 }
 

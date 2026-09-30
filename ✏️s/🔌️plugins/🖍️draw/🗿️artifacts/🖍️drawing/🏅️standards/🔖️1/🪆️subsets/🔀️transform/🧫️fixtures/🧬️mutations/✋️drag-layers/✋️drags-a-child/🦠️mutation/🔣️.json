@@ -1,0 +1,9 @@
+{
+  "mutation": "dragLayers",
+  "targets": [
+    "shape-a",
+    "shape-b"
+  ],
+  "dx": 20.0,
+  "dy": -10.0
+}

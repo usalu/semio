@@ -496,6 +496,11 @@ mod oracles {
     }
 
     //#region 🔖️Parse
+    /// 🔘️ An ST_OnOff toggle (ECMA-376 Part 1 §17.17.4): on unless `w:val` switches it off with `0`/`false`/`off`.
+    fn on_off(node: &XNode) -> bool {
+        !matches!(node, XNode::Element { attrs, .. } if matches!(find_attr(attrs, "w:val"), Some("0" | "false" | "off")))
+    }
+
     fn run_from_xnode(node: &XNode) -> WRun {
         let mut run = WRun::default();
         let XNode::Element { children, .. } = node else { return run };
@@ -506,9 +511,9 @@ mod oracles {
                     for prop in inner {
                         let XNode::Element { name, .. } = prop else { continue };
                         match name.as_str() {
-                            "w:b" => run.bold = true,
-                            "w:i" => run.italic = true,
-                            "w:u" => run.underline = true,
+                            "w:b" => run.bold = on_off(prop),
+                            "w:i" => run.italic = on_off(prop),
+                            "w:u" => run.underline = !matches!(prop, XNode::Element { attrs, .. } if find_attr(attrs, "w:val") == Some("none")),
                             _ => {}
                         }
                     }
@@ -1187,12 +1192,49 @@ mod oracles {
     }
 
     //#region 🔖️Projection
+    /// 🌿️ An XML part's logical content — element names, attributes by name, text, in document order — as one
+    /// canonical string, so a digest over it moves with the content and never with a writer's layout of it (line ends,
+    /// whitespace inside a start tag, attribute order, quote style).
+    fn logical_xml(node: &XNode, out: &mut String) {
+        match node {
+            XNode::Text(text) => out.push_str(&format!("{text:?}")),
+            XNode::Element { name, attrs, children } => {
+                let mut sorted: Vec<&(String, String)> = attrs.iter().collect();
+                sorted.sort();
+                out.push('(');
+                out.push_str(name);
+                for (key, value) in sorted {
+                    out.push_str(&format!(" {key}={value:?}"));
+                }
+                for child in children {
+                    out.push(' ');
+                    logical_xml(child, out);
+                }
+                out.push(')');
+            }
+        }
+    }
+
+    /// 🧾️ A part's content digest: an XML-bearing part (ECMA-376 Part 2 §10.1.2.2 — an `+xml`/`/xml` content type or
+    /// an `.xml` name) digested over its logical content, whose bytes are writer freedom; any other part over its bytes.
+    fn part_digest(part: &OPart) -> String {
+        let xml = part.content_type.ends_with("+xml") || part.content_type.ends_with("/xml") || part.path.to_ascii_lowercase().ends_with(".xml");
+        match xml.then(|| parse_xml(&part.bytes).ok()).flatten() {
+            Some(root) => {
+                let mut canonical = String::new();
+                logical_xml(&root, &mut canonical);
+                digest(canonical.as_bytes())
+            }
+            None => digest(&part.bytes),
+        }
+    }
+
     /// 👁️ This subset's own semantic projection: `body`/`styles` — the ordered, document-order-
     /// sensitive WordprocessingML block tree and style list, independently re-derived by re-parsing
     /// `word/document.xml`/`word/styles.xml` through `quick-xml` — plus `parts`, every OTHER real OPC
     /// part (docProps/*, anything `set-part`/`remove-part` touched) projected as an UNORDERED
-    /// path-keyed map of `{contentType, digest}` so writer-freedom part order never registers as a
-    /// difference. `word/document.xml`/`word/styles.xml` themselves are excluded from `parts` since
+    /// path-keyed map of `{contentType, digest}` ([`part_digest`]) so writer-freedom part order and XML layout never
+    /// register as a difference. `word/document.xml`/`word/styles.xml` themselves are excluded from `parts` since
     /// two independent writers legitimately differ byte-for-byte on non-semantic form for the exact
     /// same document — that's exactly why `body`/`styles` exist as the typed comparison instead.
     pub fn project(bytes: &[u8]) -> Result<Json, String> {
@@ -1202,7 +1244,7 @@ mod oracles {
             .parts
             .iter()
             .filter(|part| part.path != pkg.main_path && Some(&part.path) != pkg.styles_path.as_ref())
-            .map(|part| (part.path.clone(), Json::Object(vec![("contentType".to_string(), Json::String(part.content_type.clone())), ("digest".to_string(), Json::String(digest(&part.bytes)))])))
+            .map(|part| (part.path.clone(), Json::Object(vec![("contentType".to_string(), Json::String(part.content_type.clone())), ("digest".to_string(), Json::String(part_digest(part)))])))
             .collect();
         part_entries.sort_by(|a, b| a.0.cmp(&b.0));
         Ok(Json::Object(vec![("body".to_string(), Json::Array(pkg.body.iter().map(block_to_json).collect())), ("styles".to_string(), Json::Array(pkg.styles.iter().map(style_to_json).collect())), ("parts".to_string(), Json::Object(part_entries))]))

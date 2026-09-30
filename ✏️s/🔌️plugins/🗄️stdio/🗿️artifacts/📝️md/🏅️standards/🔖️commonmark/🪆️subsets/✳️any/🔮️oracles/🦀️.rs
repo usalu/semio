@@ -247,16 +247,10 @@ mod live {
     //#endregion 🔖️Navigate
 
     //#region 🔖️Dispatch
-    /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized
-    /// bytes. An unrecognised kind is an error, never a silent no-op: a mutation that is quietly
-    /// skipped reports as a passing test.
-    pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
-        let text = std::str::from_utf8(input).map_err(|error| format!("input is not valid UTF-8: {error}"))?;
-        let arena = Arena::new();
-        let options = Options::default();
-        let root = parse_document(&arena, text, &options);
+    /// 🦠️ Applies one declared mutation kind to `root`, comrak's own AST of the real artifact. An unrecognised kind is an
+    /// error, never a silent no-op: a mutation that is quietly skipped reports as a passing test.
+    fn apply_to<'a>(arena: &'a Arena<'a>, root: &'a AstNode<'a>, spec: &Json) -> Result<(), String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
-
         match spec.str("kind").as_str() {
             "" => return Err("mutation spec carries no `kind`".to_string()),
             "set-snapshot" => {
@@ -265,7 +259,7 @@ mod live {
                 }
                 let snapshot = params.get("snapshot").ok_or("set-snapshot: params carry no 'snapshot'")?;
                 for block_json in snapshot.array("blocks") {
-                    root.append(build_block(&arena, &block_json)?);
+                    root.append(build_block(arena, &block_json)?);
                 }
             }
             "insert-block" => {
@@ -273,7 +267,7 @@ mod live {
                 let index = json_usize(&params, "index")?;
                 let block_json = params.get("block").ok_or("insert-block: params carry no 'block'")?;
                 let container = navigate(root, &path)?;
-                let new_node = build_block(&arena, block_json)?;
+                let new_node = build_block(arena, block_json)?;
                 insert_at(container, index, new_node);
             }
             "remove-block" => {
@@ -288,7 +282,7 @@ mod live {
                 let block_json = params.get("block").ok_or("replace-block: params carry no 'block'")?;
                 let container = navigate(root, &path)?;
                 let target = nth_child(container, index)?;
-                let new_node = build_block(&arena, block_json)?;
+                let new_node = build_block(arena, block_json)?;
                 target.insert_before(new_node);
                 target.detach();
             }
@@ -298,32 +292,59 @@ mod live {
                 let inlines_json = params.get("inlines").ok_or("set-inlines: params carry no 'inlines'")?;
                 let container = navigate(root, &path)?;
                 let target = nth_child(container, index)?;
-                let retargetable = matches!(target.data.borrow().value, NodeValue::Heading(_) | NodeValue::Paragraph);
-                if retargetable {
+                if matches!(target.data.borrow().value, NodeValue::Heading(_) | NodeValue::Paragraph) {
                     for child in target.children().collect::<Vec<_>>() {
                         child.detach();
                     }
-                    append_inlines(&arena, target, &as_array(Some(inlines_json)))?;
+                    append_inlines(arena, target, &as_array(Some(inlines_json)))?;
                 }
-                // 🍃 else: graceful no-op, mirroring `MdMutation::diff`'s own documented
-                // degrade-gracefully behavior for a `SetInlines` addressed at a non-text block.
             }
-            other => return Err(format!("mutation kind {:?} has no oracle implementation ({} input byte(s))", other, input.len())),
+            other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
         }
+        Ok(())
+    }
 
+    /// 🖨️ `comrak`'s CommonMark rendering of `root` — the raw bytes a result carries, never what it is judged by.
+    fn render<'a>(root: &'a AstNode<'a>) -> Result<Vec<u8>, String> {
         let mut out = String::new();
-        format_commonmark(root, &options, &mut out).map_err(|error| format!("comrak could not format the document: {error}"))?;
+        format_commonmark(root, &Options::default(), &mut out).map_err(|error| format!("comrak could not format the document: {error}"))?;
         Ok(out.into_bytes())
+    }
+
+    /// 🦠️ Applies one declared mutation kind to the real artifact and returns `comrak`'s rendering of the result together
+    /// with the projection of the EDITED AST itself. The projection is read off the tree the mutation produced, not off
+    /// the rendering: `comrak`'s writer emits a literal `<!-- end list -->` HTML block after every list that a code
+    /// block or another list follows (a guard against an indented code block or a same-marker list being absorbed),
+    /// which its own reader then reports as one more document block. That separator is the writer's, never the
+    /// mutation's, so routing the oracle's answer through it would judge the subject against content no mutation made.
+    ///
+    /// @see https://spec.commonmark.org/0.31.2/#lists — the blank HTML comment the spec names as the separator device
+    pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<(Vec<u8>, Json), String> {
+        let text = std::str::from_utf8(input).map_err(|error| format!("input is not valid UTF-8: {error}"))?;
+        let arena = Arena::new();
+        let root = parse_document(&arena, text, &Options::default());
+        apply_to(&arena, root, spec)?;
+        Ok((render(root)?, document_projection(root)))
+    }
+
+    /// ↩️ Applies `spec` and then its inverse (computed by [`inverse_mutation_spec`] from the ORIGINAL document's own
+    /// projection) to ONE parsed tree, exactly as the subject applies both steps to one snapshot, and returns the
+    /// rendering and the projection of the restored tree.
+    pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<(Vec<u8>, Json), String> {
+        let text = std::str::from_utf8(input).map_err(|error| format!("input is not valid UTF-8: {error}"))?;
+        let inverse = inverse_mutation_spec(input, spec)?;
+        let arena = Arena::new();
+        let root = parse_document(&arena, text, &Options::default());
+        apply_to(&arena, root, spec)?;
+        apply_to(&arena, root, &inverse)?;
+        Ok((render(root)?, document_projection(root)))
     }
 
     /// 🔁️ Parses one real artifact into `comrak`'s own AST and re-renders CommonMark from it alone.
     pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
         let text = std::str::from_utf8(input).map_err(|error| format!("input is not valid UTF-8: {error}"))?;
         let arena = Arena::new();
-        let options = Options::default();
-        let mut out = String::new();
-        format_commonmark(parse_document(&arena, text, &options), &options, &mut out).map_err(|error| format!("comrak could not format the document: {error}"))?;
-        Ok(out.into_bytes())
+        render(parse_document(&arena, text, &Options::default()))
     }
     //#endregion 🔖️Dispatch
 
@@ -336,10 +357,13 @@ mod live {
     pub fn project_md(input: &[u8]) -> Result<Json, String> {
         let text = std::str::from_utf8(input).map_err(|error| format!("input is not valid UTF-8: {error}"))?;
         let arena = Arena::new();
-        let options = Options::default();
-        let root = parse_document(&arena, text, &options);
+        Ok(document_projection(parse_document(&arena, text, &Options::default())))
+    }
+
+    /// 🌳️ The `MdSnapshot`-shaped projection of one `comrak` document tree, whether `comrak` read it or a mutation edited it.
+    fn document_projection<'a>(root: &'a AstNode<'a>) -> Json {
         let blocks: Vec<Json> = root.children().filter_map(project_block).collect();
-        Ok(Json::Object(vec![("schema".to_string(), Json::String("stdio.md".to_string())), ("blocks".to_string(), Json::Array(blocks))]))
+        Json::Object(vec![("schema".to_string(), Json::String("stdio.md".to_string())), ("blocks".to_string(), Json::Array(blocks))])
     }
 
     fn project_block<'a>(node: &'a AstNode<'a>) -> Option<Json> {
@@ -454,7 +478,7 @@ mod live {
     /// through that trait: this oracle module has no reachable path to the subject's own
     /// `protocol::Mutation` impl, and mirroring its algebra independently keeps the two
     /// implementations honestly separate.
-    pub fn inverse_mutation_spec(original_input: &[u8], spec: &Json) -> Result<Json, String> {
+    fn inverse_mutation_spec(original_input: &[u8], spec: &Json) -> Result<Json, String> {
         let kind = spec.str("kind");
         let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
         let original = project_md(original_input)?;
@@ -489,7 +513,7 @@ mod live {
 }
 
 #[cfg(feature = "oracles")]
-pub use live::{inverse_mutation_spec, oracle_apply_mutation, oracle_round_trip, project_md};
+pub use live::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_md};
 
 //#region 🔖️Unavailable
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all, and every
@@ -499,7 +523,10 @@ mod unavailable {
     use semio_repo_test_host::Json;
     const MESSAGE: &str = "the `oracles` feature is disabled — this host was not built with the registered reference implementations";
 
-    pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<(Vec<u8>, Json), String> {
+        Err(MESSAGE.to_string())
+    }
+    pub fn oracle_apply_mutation_inverse(_input: &[u8], _spec: &Json) -> Result<(Vec<u8>, Json), String> {
         Err(MESSAGE.to_string())
     }
     pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
@@ -508,11 +535,8 @@ mod unavailable {
     pub fn project_md(_input: &[u8]) -> Result<Json, String> {
         Err(MESSAGE.to_string())
     }
-    pub fn inverse_mutation_spec(_original_input: &[u8], _spec: &Json) -> Result<Json, String> {
-        Err(MESSAGE.to_string())
-    }
 }
 
 #[cfg(not(feature = "oracles"))]
-pub use unavailable::{inverse_mutation_spec, oracle_apply_mutation, oracle_round_trip, project_md};
+pub use unavailable::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_md};
 //#endregion 🔖️Unavailable

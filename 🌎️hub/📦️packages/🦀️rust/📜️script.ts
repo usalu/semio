@@ -2563,6 +2563,40 @@ function hubTestArtifactRoot(root: string): string {
   return path;
 }
 
+/** 🧱️ Checks Hub's projections and GIS witnesses against their general client contracts. */
+class InferenceClientContractTestScript extends BundleScript {
+  async run(): Promise<void> {
+    let cancelled = false;
+    const interrupt = (): void => { cancelled = true; };
+    process.on("SIGINT", interrupt);
+    process.on("SIGTERM", interrupt);
+    try {
+      const receipts = await runExactCargoLaws({
+        cwd: this.repoRoot,
+        ...exactCargoStageEnvironments(),
+        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ?? hubTestArtifactRoot(this.root),
+        buildBudgetMs: buildBudgetMs(),
+        listBudgetMs: 60_000,
+        lawBudgetMs: 120_000,
+        cancelled: () => cancelled,
+        progress: event => console.log(`inference-client-contract ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`),
+        groups: [{ package: "semio-hub", target: { kind: "test", name: "inference_client_contract" }, laws: [
+          "the_published_error_vocabulary_is_exactly_the_neutral_fixtures_and_status_alone_is_ambiguous",
+          "the_client_mirrors_the_neutral_fixtures_exact_fixed_limits",
+          "an_offered_page_carries_the_corpus_preview_and_a_forged_or_open_ring_is_refused",
+          "the_neutral_lifecycles_decode_into_the_closed_event_page_in_order",
+          "a_durable_approval_undo_posts_only_the_hub_target_frontier_and_retry_identity",
+          "the_hub_approval_request_consumes_the_framework_contract",
+        ] }],
+      });
+      console.log(`inference-client-contract: ${receipts.reduce((count, receipt) => count + receipt.assertions, 0)} exact native laws passed`);
+    } finally {
+      process.off("SIGINT", interrupt);
+      process.off("SIGTERM", interrupt);
+    }
+  }
+}
+
 /** 🎛️ The default dev loop runs on the crate's default features (`sqlite` + `native-artifact-execution`);
  * a leading `all-features` segment opts into the full directory-backend matrix (sqlite/postgres/neo4j
  * drivers linked) that the `test-all-features` nx target names, whose `postgres` laws additionally need
@@ -5391,7 +5425,7 @@ function executionTargetLeaseInstall(
 }
 
 async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1");
+  const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as ExecutionTargetLeaseFixture;
   const validateFields = hubSchemaExport(repoRoot, "schema://os.directory/DocumentExecutionTargetLeaseFieldsV1");
   if (fixture.schema !== "semio.os.document-execution-target-lease-corpus/v1" || fixture.version !== 1) throw new Error("execution target lease corpus schema drift");
@@ -9193,7 +9227,7 @@ function captureTrustedBootstrapCodecsV1(repoRoot: string, check: (stage?: strin
   const admission = { remaining: 128 * 1024 };
   let stdio: Uint8Array | undefined, gis: Uint8Array | undefined;
   try {
-    stdio = readStableBuildFile(join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json"), 64 * 1024, admission, check);
+    stdio = readStableBuildFile(join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json"), 64 * 1024, admission, check);
     gis = readStableBuildFile(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json"), 64 * 1024, admission, check);
     check("project-codecs");
     const decoder = new TextDecoder("utf-8", { fatal: true });
@@ -9223,7 +9257,7 @@ async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promi
   for (const row of fixture.cases) assert.deepEqual(Object.keys(row), ["change", "accepted", "schemaAccepted"]);
   assert.equal(new Set(fixture.cases.map((row: any) => row.change)).size, fixture.cases.length);
   const sourcePaths = {
-    stdio: "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+    stdio: "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
     gis: "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json",
   };
   const originals = { stdio: JSON.parse(readFileSync(join(repoRoot, sourcePaths.stdio), "utf8")), gis: JSON.parse(readFileSync(join(repoRoot, sourcePaths.gis), "utf8")) };
@@ -10000,7 +10034,7 @@ const TRUSTED_BOOTSTRAP_ALL_PACKAGES = "stdio,stdio-image,stdio-media,stdio-cad,
 export const TRUSTED_BOOTSTRAP_LINKED_PACKAGES = "stdio,gis";
 
 const TRUSTED_BOOTSTRAP_PACKAGES: readonly TrustedBootstrapPackageSpecV1[] = Object.freeze([
-  Object.freeze({ pluginId: "stdio", cargoPackage: "semio-s-plugin-stdio", componentPackageId: "semio:stdio", outputName: "semio_s_plugin_stdio.wasm", linkedCodecRegistry: "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json", opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio", cargoPackage: "semio-s-plugin-stdio", componentPackageId: "semio:stdio", outputName: "semio_s_plugin_stdio.wasm", linkedCodecRegistry: "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json", opensDocuments: true }),
   Object.freeze({ pluginId: "stdio-image", cargoPackage: "semio-s-plugin-stdio-image", componentPackageId: "semio:stdio-image", outputName: "semio_s_plugin_stdio_image.wasm", linkedCodecRegistry: null, opensDocuments: true }),
   Object.freeze({ pluginId: "stdio-media", cargoPackage: "semio-s-plugin-stdio-media", componentPackageId: "semio:stdio-media", outputName: "semio_s_plugin_stdio_media.wasm", linkedCodecRegistry: null, opensDocuments: true }),
   Object.freeze({ pluginId: "stdio-cad", cargoPackage: "semio-s-plugin-stdio-cad", componentPackageId: "semio:stdio-cad", outputName: "semio_s_plugin_stdio_cad.wasm", linkedCodecRegistry: null, opensDocuments: true }),
@@ -17687,6 +17721,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("foundation-source-check", HubFoundationSourceScript)
   .register("socket-grant-command-source-check", HubSocketGrantCommandSourceScript)
   .register("test", TestScript)
+  .register("test-inference-client-contract", InferenceClientContractTestScript)
   .register("directory-live-lanes", DirectoryLiveLanesScript)
   .register("hostile-input-check", HostileInputCheckScript)
   .register("artifact-cas-check", ArtifactCasCheckScript)

@@ -11,6 +11,10 @@ import type { AdmitLocalDocument, LocalCatalog, LocalDocument, LocalDocumentStor
 import { admitLocalDocument, diff as admitLocalDocumentDiff, inverse as admitLocalDocumentInverse, LOCAL_CATALOG_CONFIG_SCHEMA } from "./📥️admit-local-document/🟦️.ts";
 import type { RetireLocalDocument } from "./📤️retire-local-document/🟦️.ts";
 import { diff as retireLocalDocumentDiff, inverse as retireLocalDocumentInverse, retireLocalDocument } from "./📤️retire-local-document/🟦️.ts";
+import type { AttachLocalFolder, LocalFolderBinding, LocalFolderBindings, LocalFolderRef } from "./📎️attach-local-folder/🟦️.ts";
+import { attachLocalFolder, diff as attachLocalFolderDiff, inverse as attachLocalFolderInverse, LOCAL_FOLDERS_CONFIG_SCHEMA } from "./📎️attach-local-folder/🟦️.ts";
+import type { DetachLocalFolder } from "./✂️detach-local-folder/🟦️.ts";
+import { detachLocalFolder, diff as detachLocalFolderDiff, inverse as detachLocalFolderInverse } from "./✂️detach-local-folder/🟦️.ts";
 import type { Identity, SignIn } from "./🪪️sign-in/🟦️.ts";
 import { diff as signInDiff, inverse as signInInverse, signIn } from "./🪪️sign-in/🟦️.ts";
 import type { SignOut } from "./🚪️sign-out/🟦️.ts";
@@ -122,3 +126,21 @@ export function inverseLocalCatalogConfigMutation(mutation: LocalCatalogConfigMu
 export { admitLocalDocument, LOCAL_CATALOG_CONFIG_SCHEMA, retireLocalDocument };
 export type { AdmitLocalDocument, LocalCatalog, LocalDocument, LocalDocumentStorage, RetireLocalDocument };
 //#endregion 🔖️LocalCatalog
+
+//#region 🔖️LocalFolders
+/** 📁️ Typed, invertible local folder binding mutation vocabulary (persisted local-only). */
+export type LocalFoldersConfigMutation = ({ readonly mutation: "attachLocalFolder" } & AttachLocalFolder) | ({ readonly mutation: "detachLocalFolder" } & DetachLocalFolder);
+
+/** 🧮️ Delegates local-folder behavior to the direct semantic leaf named by the tag. */
+export function applyLocalFoldersConfigMutation(base: LocalFolderBindings, mutation: LocalFoldersConfigMutation): LocalFolderBindings {
+  return mutation.mutation === "attachLocalFolder" ? attachLocalFolderDiff(mutation, base) : detachLocalFolderDiff(mutation, base);
+}
+
+/** ↩️ Delegates local-folder inverse behavior to the direct semantic leaf named by the tag. */
+export function inverseLocalFoldersConfigMutation(mutation: LocalFoldersConfigMutation, base: LocalFolderBindings): LocalFoldersConfigMutation[] {
+  return mutation.mutation === "attachLocalFolder" ? attachLocalFolderInverse(mutation, base) : detachLocalFolderInverse(mutation, base);
+}
+
+export { attachLocalFolder, detachLocalFolder, LOCAL_FOLDERS_CONFIG_SCHEMA };
+export type { AttachLocalFolder, DetachLocalFolder, LocalFolderBinding, LocalFolderBindings, LocalFolderRef };
+//#endregion 🔖️LocalFolders

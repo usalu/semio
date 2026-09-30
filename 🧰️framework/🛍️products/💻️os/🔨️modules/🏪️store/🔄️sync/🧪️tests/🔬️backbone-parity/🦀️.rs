@@ -86,12 +86,15 @@ struct ParityHarness {
     observed_events: Vec<String>,
     outgoing: Vec<String>,
     last_outcome: Option<String>,
+    retracted: Vec<String>,
     socket: Option<tokio_tungstenite::WebSocketStream<tokio::net::TcpStream>>,
     document_id: String,
+    author: String,
 }
 
 impl ParityHarness {
     async fn open(document_id: &str, space_id: &str, actor: &str) -> Self {
+        let author = actor.to_string();
         ensure_demo_codec_registered().await;
         let (_, remote) = ChannelBackbone::pair("backbone-parity").await;
         let (_, receiver) = artifact_mailbox_pair();
@@ -114,11 +117,16 @@ impl ParityHarness {
             semio_framework_async::CancelToken::root_now(),
         )
         .await;
-        Self { actor, events, observed_events: Vec::new(), outgoing: Vec::new(), last_outcome: None, socket: None, document_id: document_id.into() }
+        Self { actor, events, observed_events: Vec::new(), outgoing: Vec::new(), last_outcome: None, retracted: Vec::new(), socket: None, document_id: document_id.into(), author }
     }
 
     fn drain_events(&mut self) {
         while let Ok(event) = self.events.try_recv() {
+            if let ArtifactEvent::DocumentBackbone { message } = &event {
+                if let Ok(crate::os_store::BackboneMessage::Retract { mutation_ids }) = crate::os_store::decode_hot_backbone_message_exact(message) {
+                    self.retracted.extend(mutation_ids);
+                }
+            }
             if let ArtifactEvent::CommandOutcome { outcome, .. } = &event {
                 self.last_outcome = Some(match outcome {
                     CommandAckOutcome::Accepted => "accepted".into(),
@@ -238,6 +246,13 @@ impl ParityHarness {
                 let envelope = parity_envelope(&self.document_id, dispatch["mutationId"].as_str().expect("id"), dispatch["n"].as_i64().unwrap_or(0) as i32).await;
                 self.actor.queue_test_outbox(vec![envelope]);
             }
+            "queueTransition" => {
+                let supersede = crate::os_spr::TransitionSupersede { scope: None, inputs: vec![crate::os_spr::SupersededInput { target: crate::os_spr::MutationId("ghost".into()), replacement: crate::os_spr::InputReplacement::Withdrawn }] };
+                let dependencies = supersede.targets();
+                let mut envelope = crate::os_spr::history_transition_envelope(&crate::os_spr::HistoryTransition::Supersede(supersede), &ArtifactId(self.document_id.clone()), &ActorId(self.author.clone()), dependencies, crate::os_spr::HybridLogicalTimestamp::new(1, 9));
+                envelope.mutation_id = crate::os_spr::MutationId(dispatch["mutationId"].as_str().expect("id").into());
+                self.actor.queue_test_outbox(vec![envelope]);
+            }
             "installSocketActor" => {
                 self.actor.install_test_socket_actor(dispatch["actor"].as_str().expect("actor"));
             }
@@ -298,6 +313,10 @@ impl ParityHarness {
             let expected: BTreeSet<String> = rows.iter().map(|row| row.as_str().expect("id").into()).collect();
             let actual: BTreeSet<String> = ingested.into_iter().collect();
             assert!(expected.is_subset(&actual), "ingested {expected:?} not in {actual:?}");
+        }
+        if let Some(rows) = expect.get("retractedMutationIds").and_then(|value| value.as_array()) {
+            let expected: Vec<String> = rows.iter().map(|row| row.as_str().expect("id").into()).collect();
+            assert_eq!(self.retracted, expected, "retractedMutationIds");
         }
         if let Some(outcome) = expect.get("commandOutcome").and_then(|value| value.as_str()) {
             assert_eq!(self.last_outcome.as_deref(), Some(outcome), "commandOutcome");

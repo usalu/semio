@@ -1,0 +1,54 @@
+{
+  "artifact": null,
+  "annex": null,
+  "structureKind": null,
+  "steelFYPa": null,
+  "beams": null,
+  "columns": null,
+  "slabs": {
+    "values": [
+      {
+        "id": "slab-S1",
+        "spanM": 3.0,
+        "support": "simply_supported",
+        "sheeting": {
+          "profile": "trapezoidal",
+          "heightM": 0.055,
+          "ribWidthM": 0.1,
+          "thicknessM": 0.0009,
+          "ribsParallelToBeam": false
+        },
+        "concreteThicknessM": 0.16,
+        "fCkPa": 30000000.0,
+        "mFactor": 180.0,
+        "kFactor": 0.05,
+        "asM2PerM": 0.00025,
+        "actions": [
+          {
+            "id": "G-slab",
+            "kind": "permanent",
+            "category": "self",
+            "stage": "composite",
+            "qAreaPa": 3500.0,
+            "fKN": 0.0,
+            "deltaSigmaKPa": 0.0,
+            "deltaTauKPa": 0.0
+          },
+          {
+            "id": "Q-slab",
+            "kind": "imposed",
+            "category": "B",
+            "stage": "composite",
+            "qAreaPa": 2000.0,
+            "fKN": 0.0,
+            "deltaSigmaKPa": 0.0,
+            "deltaTauKPa": 0.0
+          }
+        ]
+      }
+    ]
+  },
+  "fireRating": null,
+  "insulationThicknessM": null,
+  "fatigueDetail": null
+}

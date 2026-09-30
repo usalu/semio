@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "target": {
+    "plugin": "puzzle3d",
+    "urls": {
+      "react": "http://127.0.0.1:6313/?plugin=puzzle3d",
+      "wgpu": "http://127.0.0.1:6213/?plugin=puzzle3d"
+    },
+    "viewport": {
+      "width": 1600,
+      "height": 1000
+    },
+    "minimumWindows": 2,
+    "minimumStacks": 2,
+    "tabsPerSelectedStack": 1,
+    "dragThresholdPx": 6
+  },
+  "selectors": {
+    "reactMode": "[data-slot=\"mode\"]",
+    "reactStack": "[data-slot=\"mode-dock-stack\"][data-stack-path]",
+    "reactBody": "[data-slot=\"mode-dock-stack-body\"]",
+    "reactTab": "[data-slot=\"mode-dock-tab\"][data-window-id]",
+    "reactHandle": "[data-slot=\"drag-handle\"]",
+    "reactIndicator": "[data-slot=\"mode-dock-drop-indicator\"]",
+    "wgpuTabPrefix": "dock.tab.",
+    "wgpuHandleSuffix": ".drag"
+  },
+  "template": {
+    "mime": "application/x-compose-window-template",
+    "displayCategoryId": "framework.category.display",
+    "rowSuffix": ".projection.parallel.orthographic",
+    "selectionId": "orthographic",
+    "semantic": {
+      "projection": "orthographic",
+      "direction": [0, 0, 1],
+      "up": [0, 1, 0],
+      "vectorTolerance": 0.12
+    },
+    "neutralPayload": {
+      "windowKindId": "world",
+      "templateId": "orthographic"
+    }
+  },
+  "cases": [
+    {
+      "id": "split-left",
+      "kind": "split",
+      "side": "left",
+      "expectedRelation": "source-left-of-target",
+      "stackCountDelta": 0,
+      "consequence": "The source tab becomes the active lone stack immediately left of the target while every window identity is preserved."
+    },
+    {
+      "id": "split-right",
+      "kind": "split",
+      "side": "right",
+      "expectedRelation": "source-right-of-target",
+      "stackCountDelta": 0,
+      "consequence": "The source tab becomes the active lone stack immediately right of the target while every window identity is preserved."
+    },
+    {
+      "id": "split-top",
+      "kind": "split",
+      "side": "top",
+      "expectedRelation": "source-above-target",
+      "stackCountDelta": 0,
+      "consequence": "The source tab becomes the active lone stack immediately above the target while every window identity is preserved."
+    },
+    {
+      "id": "split-bottom",
+      "kind": "split",
+      "side": "bottom",
+      "expectedRelation": "source-below-target",
+      "stackCountDelta": 0,
+      "consequence": "The source tab becomes the active lone stack immediately below the target while every window identity is preserved."
+    },
+    {
+      "id": "tab-merge",
+      "kind": "merge",
+      "targetPosition": "after",
+      "stackCountDelta": -1,
+      "consequence": "The source and target share one stack in target-before-source order, the source is active, and no window identity is lost."
+    },
+    {
+      "id": "tab-reorder",
+      "kind": "reorder",
+      "setup": "merge-after",
+      "targetPosition": "before",
+      "stackCountDelta": -1,
+      "consequence": "After a physical merge setup, a second physical tab drag moves the source before the target without changing the window set or stack count."
+    },
+    {
+      "id": "escape-cancel",
+      "kind": "cancel",
+      "mechanism": "Escape",
+      "consequence": "Escape retires the promoted drag, restores the exact topology and body geometry, removes the preview, and the later physical pointer release commits nothing."
+    },
+    {
+      "id": "template-configuration",
+      "kind": "template",
+      "targetPosition": "after",
+      "windowCountDelta": 1,
+      "consequence": "A physical Display-template transfer creates one tab and preserves the orthographic top-view configuration exposed by both camera APIs."
+    }
+  ]
+}

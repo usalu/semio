@@ -3,9 +3,9 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 export type CargoDirectionDependency = Readonly<{ name: string; alias: string; owner: string | null; kind: "normal" | "dev" | "build"; optional: boolean; platform: string | null }>;
 export type CargoDirectionPackage = Readonly<{ name: string; owner: string; role: string | null; dependencies: readonly CargoDirectionDependency[] }>;
-export type CargoDirectionPolicy = Readonly<{ areaLayers: Readonly<Record<string, "framework" | "implementation" | "repo-wide">>; roles: readonly string[]; rules: Readonly<Record<string, Readonly<{ fromRoles: readonly string[]; toRoles: readonly string[] }>>> }>;
+export type CargoDirectionPolicy = Readonly<{ areaLayers: Readonly<Record<string, "framework" | "implementation" | "repo-wide">>; roles: readonly string[]; ownerRoles: readonly Readonly<{ path: string; roles: readonly string[] }>[]; rules: Readonly<Record<string, Readonly<{ fromRoles: readonly string[]; toRoles: readonly string[]; fromOwnerPaths?: readonly string[]; toOwnerSegments?: readonly string[] }>>> }>;
 export type CargoDirectionViolation = Readonly<{ rule: string; from: string; to: string; alias: string; kind: CargoDirectionDependency["kind"]; optional: boolean; platform: string | null }>;
-export type CargoDirectionProblem = Readonly<{ code: "missing-role" | "unknown-role" | "unclassified-owner"; owner: string }>;
+export type CargoDirectionProblem = Readonly<{ code: "missing-role" | "unknown-role" | "unclassified-owner" | "owner-role-mismatch" | "unclassified-role-owner"; owner: string }>;
 export type CargoDirectionReport = Readonly<{ packages: number; localDependencies: number; violations: readonly CargoDirectionViolation[]; problems: readonly CargoDirectionProblem[] }>;
 
 const object = (value: unknown): Record<string, any> => {
@@ -106,20 +106,28 @@ export function cargoDependencyDirectionReport(graph: readonly CargoDirectionPac
   const areas = Object.entries(object(policy.areaLayers)).sort(([a], [b]) => b.length - a.length);
   if (!areas.length || areas.some(([, layer]) => !["framework", "implementation", "repo-wide"].includes(layer)) || !Array.isArray(policy.roles) || !policy.roles.length || new Set(policy.roles).size !== policy.roles.length) throw new Error("Cargo direction requires declared physical areas and semantic roles");
   const layer = (owner: string): string | undefined => areas.find(([area]) => owner === area || owner.startsWith(`${area}/`))?.[1];
+  if (!Array.isArray(policy.ownerRoles) || !policy.ownerRoles.length || new Set(policy.ownerRoles.map((rule) => rule.path)).size !== policy.ownerRoles.length || policy.ownerRoles.some((rule) => !rule || typeof rule.path !== "string" || !rule.path || !Array.isArray(rule.roles) || !rule.roles.length || new Set(rule.roles).size !== rule.roles.length || rule.roles.some((role: string) => !policy.roles.includes(role)))) throw new Error("Cargo direction requires complete distinct owner role classifications");
+  const owners = policy.ownerRoles.map((rule) => ({ pattern: new RegExp(rule.path, "u"), roles: rule.roles }));
   const rules = Object.entries(object(policy.rules));
   if (!rules.length || rules.some(([, rule]) => [rule.fromRoles, rule.toRoles].some((roles) => !Array.isArray(roles) || !roles.length || roles.some((role: unknown) => typeof role !== "string" || !policy.roles.includes(role))))) throw new Error("Cargo direction policy references an unknown semantic role");
+  if (rules.some(([, rule]) => rule.toOwnerSegments !== undefined && (!Array.isArray(rule.toOwnerSegments) || !rule.toOwnerSegments.length || new Set(rule.toOwnerSegments).size !== rule.toOwnerSegments.length || rule.toOwnerSegments.some((segment: unknown) => typeof segment !== "string" || !segment || /[/\\]/u.test(segment) || segment === "." || segment === "..")))) throw new Error("Cargo direction policy requires exact owner segments");
+  if (rules.some(([, rule]) => rule.fromOwnerPaths !== undefined && (!Array.isArray(rule.fromOwnerPaths) || !rule.fromOwnerPaths.length || new Set(rule.fromOwnerPaths).size !== rule.fromOwnerPaths.length || rule.fromOwnerPaths.some((path: unknown) => typeof path !== "string" || !path)))) throw new Error("Cargo direction policy requires distinct source owner patterns");
+  const sourceOwners = new Map<string, readonly RegExp[]>(rules.map(([name, rule]) => [name, (rule.fromOwnerPaths ?? []).map((pattern: string) => new RegExp(pattern, "u"))]));
   const problems: CargoDirectionProblem[] = [], violations: CargoDirectionViolation[] = [];
   let localDependencies = 0;
   for (const pkg of graph) {
     if (!layer(pkg.owner)) problems.push({ code: "unclassified-owner", owner: pkg.owner });
     if (!pkg.role) problems.push({ code: "missing-role", owner: pkg.owner });
     else if (!policy.roles.includes(pkg.role)) problems.push({ code: "unknown-role", owner: pkg.owner });
+    const owner = owners.find((rule) => rule.pattern.test(pkg.owner));
+    if (!owner) problems.push({ code: "unclassified-role-owner", owner: pkg.owner });
+    else if (pkg.role && policy.roles.includes(pkg.role) && !owner.roles.includes(pkg.role)) problems.push({ code: "owner-role-mismatch", owner: pkg.owner });
     for (const dep of pkg.dependencies) {
       if (dep.owner === null) continue;
       const target = graph.find((pkg) => pkg.owner === dep.owner)!;
       localDependencies++;
       const forbidden = layer(pkg.owner) === "framework" && layer(target.owner) === "implementation" ? ["cargo-framework-no-implementation"] : [];
-      for (const [name, rule] of rules) if (rule.fromRoles.includes(pkg.role) && rule.toRoles.includes(target.role)) forbidden.push(name);
+      for (const [name, rule] of rules) if ((rule.fromRoles.includes(pkg.role) || sourceOwners.get(name)!.some((pattern) => pattern.test(pkg.owner))) && (rule.toRoles.includes(target.role) || rule.toOwnerSegments?.some((segment: string) => target.owner.split("/").includes(segment)))) forbidden.push(name);
       for (const rule of forbidden) violations.push({ rule, from: pkg.owner, to: target.owner, alias: dep.alias, kind: dep.kind, optional: dep.optional, platform: dep.platform });
     }
   }

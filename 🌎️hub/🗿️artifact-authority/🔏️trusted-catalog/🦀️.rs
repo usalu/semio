@@ -2743,14 +2743,14 @@ pub fn write_fixture_plugin_module(root: &Path, plugin_id: &str, package_id: &st
 /// 🧫️ Shares headless Stdio metadata between native GIS fixtures; synthetic bytes are never executed.
 #[cfg(all(feature = "native-artifact-execution", any(test, feature = "integration-fixtures")))]
 fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value, serde_json::Value), AuthorityError> {
-    let dependency = semio_s_plugin_stdio::registry::native_artifact_catalog_dependency().map_err(catalog_error)?;
+    let dependency = semio_s_plugin_stdio::catalog::native_artifact_catalog_dependency().map_err(catalog_error)?;
     let version = dependency.version.0.to_string();
-    let receipts = semio_s_plugin_stdio::registry::native_codec_factory_receipts().map_err(catalog_error)?;
+    let receipts = semio_s_plugin_stdio::catalog::native_codec_factory_receipts().map_err(catalog_error)?;
     let mut builder = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Stdio Fixture").version(version.clone()).package_id("semio:stdio");
-    for kind in semio_s_plugin_stdio::registry::native_codec_artifact_kinds() {
+    for kind in semio_s_plugin_stdio::catalog::native_codec_artifact_kinds() {
         builder = builder.artifact_kind(kind);
     }
-    let plugin = builder.contributes_topic(semio_s_plugin_stdio::registry::native_artifact_catalog_contribution().map_err(catalog_error)?).try_library().map_err(catalog_error)?;
+    let plugin = builder.contributes_topic(semio_s_plugin_stdio::catalog::native_artifact_catalog_contribution().map_err(catalog_error)?).try_library().map_err(catalog_error)?;
     let component = b"synthetic-stdio-component-for-linked-catalog-test";
     let component_sha256 = hex_lower(&Sha256::digest(component));
     let mut component_blake3 = Hasher::new();

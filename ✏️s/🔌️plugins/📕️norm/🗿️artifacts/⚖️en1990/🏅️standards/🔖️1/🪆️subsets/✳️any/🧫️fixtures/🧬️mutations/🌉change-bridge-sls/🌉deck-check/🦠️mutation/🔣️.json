@@ -1,0 +1,15 @@
+{
+  "mutation": "changeBridgeSls",
+  "newBridgeSls": [
+    {
+      "bridgeDeflection": 0.012,
+      "bridgeDeflectionLimit": 0.024,
+      "deckAcceleration": 0.5,
+      "deckAccelerationLimit": 0.7,
+      "deckTwist": 0.001,
+      "deckTwistLimit": 0.0015,
+      "id": "sls-deck",
+      "memberId": "beam-B1"
+    }
+  ]
+}

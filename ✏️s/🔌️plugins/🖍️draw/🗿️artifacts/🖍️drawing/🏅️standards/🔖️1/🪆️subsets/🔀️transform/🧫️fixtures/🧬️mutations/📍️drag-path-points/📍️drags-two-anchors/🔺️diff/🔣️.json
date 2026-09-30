@@ -1,0 +1,58 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "title": null,
+  "layers": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "path-a",
+        "patch": {
+          "visible": null,
+          "locked": null,
+          "name": null,
+          "opacity": null,
+          "blendMode": null,
+          "transformJson": null,
+          "fillJson": null,
+          "strokeJson": null,
+          "booleanOperation": null,
+          "traceParamsJson": null,
+          "layerJson": null,
+          "pathSegments": [
+            {
+              "kind": "move",
+              "to": [
+                10.0,
+                10.0
+              ]
+            },
+            {
+              "kind": "cubic",
+              "ctrl1": [
+                20.0,
+                30.0
+              ],
+              "ctrl2": [
+                40.0,
+                30.0
+              ],
+              "to": [
+                50.0,
+                10.0
+              ]
+            }
+          ],
+          "textContent": null,
+          "textSize": null,
+          "fillRule": null
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "assets": null,
+  "artboard": null
+}

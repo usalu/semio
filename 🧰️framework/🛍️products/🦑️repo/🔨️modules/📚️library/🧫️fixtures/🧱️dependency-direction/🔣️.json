@@ -468,6 +468,109 @@
       ],
       "dependencies": [],
       "forbidden": []
+    },
+    {
+      "id": "repo-source-implementation",
+      "from": "📜️script.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+          "syntax": "type",
+          "reference": "relative"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "s-module-plugin",
+      "from": "✏️s/🔨️modules/🧪️neutral/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+          "syntax": "dynamic",
+          "reference": "relative"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "s-module-plugin-subpath",
+      "from": "✏️s/🔨️modules/🧪️neutral/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+          "syntax": "type",
+          "reference": "package-subpath",
+          "package": "@semio-tech/cad-js"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "plugin-owner-artifact",
+      "from": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🟦️.ts",
+          "syntax": "type",
+          "reference": "relative"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "plugin-owner-extension-subpath",
+      "from": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️.ts",
+          "syntax": "export",
+          "reference": "package-subpath",
+          "package": "@semio-tech/cad-js-module-spatial-shape"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "artifact-consumes-plugin",
+      "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+          "syntax": "static",
+          "reference": "relative"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "extension-consumes-plugin",
+      "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+          "syntax": "static",
+          "reference": "relative"
+        }
+      ],
+      "forbidden": []
     }
   ],
   "graphCases": [
@@ -577,11 +680,11 @@
     },
     {
       "id": "unresolved-workspace-alias",
-      "accept": true
+      "accept": false
     },
     {
       "id": "unresolved-workspace-subpath",
-      "accept": true
+      "accept": false
     },
     {
       "id": "missing-scope-metadata",
@@ -589,6 +692,10 @@
     },
     {
       "id": "invalid-scope-pattern",
+      "accept": false
+    },
+    {
+      "id": "multiple-unresolved-local-sources",
       "accept": false
     }
   ],
@@ -661,6 +768,24 @@
       "accept": true
     },
     {
+      "id": "complete-repository-source-roots",
+      "roots": [
+        "📜️script.ts",
+        "🧰️framework"
+      ],
+      "files": [
+        "📜️script.ts",
+        "schema.json",
+        "🧰️framework/a.ts"
+      ],
+      "links": [],
+      "expectedSources": [
+        "📜️script.ts",
+        "🧰️framework/a.ts"
+      ],
+      "accept": true
+    },
+    {
       "id": "nonexcluded-linked-root-refused",
       "accept": false,
       "roots": [
@@ -703,7 +828,7 @@
       "id": "missing-workspace-alias",
       "specifier": "@neutral/framework",
       "authored": true,
-      "accept": true,
+      "accept": false,
       "owner": "🧰️framework",
       "forbidden": 0,
       "from": "🧰️framework/a.ts"
@@ -712,7 +837,7 @@
       "id": "missing-workspace-subpath",
       "specifier": "@neutral/framework/schema",
       "authored": true,
-      "accept": true,
+      "accept": false,
       "owner": "🧰️framework",
       "forbidden": 0,
       "from": "🧰️framework/a.ts"
@@ -749,7 +874,7 @@
       "specifier": "os-hub-ts/schema",
       "authored": true,
       "owner": "🌎️hub",
-      "accept": true,
+      "accept": false,
       "from": "🧰️framework/a.ts",
       "forbidden": 1
     },
@@ -758,7 +883,7 @@
       "specifier": "@semio-tech/ui-react/schema",
       "authored": true,
       "owner": "🧰️framework/🔨️modules/🖱️ui",
-      "accept": true,
+      "accept": false,
       "from": "🧰️framework/🔨️modules/🚪️io/a.ts",
       "forbidden": 1
     },
@@ -779,6 +904,250 @@
       "accept": true,
       "from": "🧰️framework/a.ts",
       "forbidden": 0
+    },
+    {
+      "id": "deleted-owned-package",
+      "specifier": "@semio-tech/deleted-plugin/schema",
+      "authored": false,
+      "owner": "",
+      "from": "🧰️framework/a.ts",
+      "forbidden": 0,
+      "accept": false
+    }
+  ],
+  "removabilityCases": [
+    {
+      "id": "removed-application",
+      "directories": [],
+      "manifests": {},
+      "expectedPackages": [],
+      "expectedPlugins": [],
+      "accept": true
+    },
+    {
+      "id": "removed-plugin",
+      "directories": [
+        "✏️s/🔌️plugins"
+      ],
+      "manifests": {},
+      "expectedPackages": [],
+      "expectedPlugins": [],
+      "accept": true
+    },
+    {
+      "id": "removed-artifact",
+      "directories": [
+        "✏️s/🔌️plugins/🧪️example/📦️packages/🟦️typescript"
+      ],
+      "manifests": {
+        "✏️s/🔌️plugins/🧪️example/📦️packages/🟦️typescript": {
+          "name": "@semio-tech/example",
+          "exports": {
+            ".": "./🟦️.ts"
+          }
+        }
+      },
+      "expectedPackages": [
+        "@semio-tech/example"
+      ],
+      "expectedPlugins": [
+        "🧪️example"
+      ],
+      "accept": true
+    },
+    {
+      "id": "new-owner-contribution",
+      "directories": [
+        "✏️s/🔌️plugins/🧪️example/📦️packages/🟦️typescript"
+      ],
+      "manifests": {
+        "✏️s/🔌️plugins/🧪️example/📦️packages/🟦️typescript": {
+          "name": "@semio-tech/example",
+          "exports": {
+            ".": "./🟦️.ts"
+          }
+        }
+      },
+      "expectedPackages": [
+        "@semio-tech/example"
+      ],
+      "expectedPlugins": [
+        "🧪️example"
+      ],
+      "accept": true
+    },
+    {
+      "id": "present-manifest-missing",
+      "directories": [
+        "✏️s/🔌️plugins/🧪️example/📦️packages/🟦️typescript"
+      ],
+      "manifests": {},
+      "expectedPackages": [],
+      "expectedPlugins": [],
+      "accept": false
+    },
+    {
+      "id": "present-malformed-manifest",
+      "directories": [
+        "✏️s/🔌️plugins/🧪️example/📦️packages/🟦️typescript"
+      ],
+      "manifests": {
+        "✏️s/🔌️plugins/🧪️example/📦️packages/🟦️typescript": "{"
+      },
+      "expectedPackages": [],
+      "expectedPlugins": [],
+      "accept": false
+    },
+    {
+      "id": "present-manifest-missing-name",
+      "directories": [
+        "✏️s/🔌️plugins/🧪️example/📦️packages/🟦️typescript"
+      ],
+      "manifests": {
+        "✏️s/🔌️plugins/🧪️example/📦️packages/🟦️typescript": {}
+      },
+      "expectedPackages": [],
+      "expectedPlugins": [],
+      "accept": false
+    }
+  ],
+  "publicExportCases": [
+    {
+      "id": "owner-public-spec-subpath",
+      "owner": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
+      "specifier": "@semio-tech/mit-bestand-praesentation-projektetage/spec",
+      "accept": true,
+      "conditions": [
+        "import",
+        "require",
+        "node",
+        "default"
+      ]
+    },
+    {
+      "id": "owner-undeclared-private-subpath",
+      "owner": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
+      "specifier": "@semio-tech/mit-bestand-praesentation-projektetage/private",
+      "accept": false,
+      "conditions": [
+        "import",
+        "require",
+        "node",
+        "default"
+      ]
+    },
+    {
+      "id": "owner-pseudo-package-refused",
+      "owner": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript",
+      "specifier": "@semio-tech/mit-bestand-praesentation-projektetage-spec",
+      "accept": false,
+      "conditions": [
+        "import",
+        "require",
+        "node",
+        "default"
+      ]
+    },
+    {
+      "id": "ui-authored-chrome-subpath",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "specifier": "@semio-tech/ui-react/chrome",
+      "accept": true,
+      "conditions": [
+        "import",
+        "require",
+        "node",
+        "default"
+      ]
+    },
+    {
+      "id": "ui-authored-i18n-subpath",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "specifier": "@semio-tech/ui-react/i18n",
+      "accept": true,
+      "conditions": [
+        "import",
+        "require",
+        "node",
+        "default"
+      ]
+    },
+    {
+      "id": "puzzle-artifact-owned-session",
+      "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🟦️typescript",
+      "specifier": "@semio-tech/puzzle-2d",
+      "accept": true,
+      "conditions": [
+        "import",
+        "require",
+        "node",
+        "default"
+      ]
+    },
+    {
+      "id": "sequence-authored-source-condition",
+      "owner": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🟦️typescript",
+      "specifier": "@semio-tech/sequence-sequence",
+      "accept": true,
+      "conditions": [
+        "semio-source",
+        "import",
+        "require",
+        "node",
+        "default"
+      ],
+      "target": "./🟦️.ts"
+    }
+  ],
+  "typeCases": [
+    {
+      "id": "jack-query-result-valid-table",
+      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🟦️.ts",
+      "name": "QueryResult",
+      "value": {
+        "kind": "table",
+        "columns": [
+          "value"
+        ],
+        "rows": [
+          [
+            1,
+            null,
+            "value",
+            true,
+            {
+              "nested": [
+                "value"
+              ]
+            }
+          ]
+        ]
+      },
+      "accept": true
+    },
+    {
+      "id": "jack-query-result-invalid-kind",
+      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🟦️.ts",
+      "name": "QueryResult",
+      "value": {
+        "kind": "missing",
+        "columns": [],
+        "rows": []
+      },
+      "accept": false
+    },
+    {
+      "id": "jack-query-result-invalid-row",
+      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🟦️.ts",
+      "name": "QueryResult",
+      "value": {
+        "kind": "table",
+        "columns": [],
+        "rows": [
+          1
+        ]
+      },
+      "accept": false
     }
   ]
 }

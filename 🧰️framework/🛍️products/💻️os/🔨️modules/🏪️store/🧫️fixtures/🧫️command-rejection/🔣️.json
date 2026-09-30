@@ -1,0 +1,276 @@
+{
+  "schema": "semio.store.command-rejection/v1",
+  "description": "Every producer of a refused command batch answers `CommandRejectionV1` (`🏪️store/🔄️sync/🧬️schema/🔣️command-rejection`). `hub` rows are the hub's `ApplyOutcome::Rejected` as it arrives: `reason` and the UTF-8 text of its `messages` bytes (the hub's `encode_messages` JSON, or anything else a wire may carry); `expect` is the one rejection both actors decode it into, exactly once. `local` rows are refusals an actor answers before any frame leaves it; `expect` is the rejection both actors emit. The Rust actor and the TypeScript actor must both produce every `expect` byte-for-byte in value (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING follow-up 3: a local counter `[69]` in the old `messages: bytes` slot reached the shell's JSON decode as the text `E` and threw out of the worker's message handler).",
+  "hub": [
+    {
+      "name": "a graded concurrent edit",
+      "reason": "command c-2 touches region(s) also touched by concurrent command c-1",
+      "messages": "[{\"level\":\"warning\",\"code\":\"mutation.clamped\",\"message\":\"command c-2 touches region(s) also touched by concurrent command c-1\",\"target\":[\"features/f-1/properties/name\"]}]",
+      "expect": {
+        "kind": "rejected",
+        "code": "hub.refused",
+        "reason": "command c-2 touches region(s) also touched by concurrent command c-1",
+        "messages": [
+          {
+            "level": "warning",
+            "code": "mutation.clamped",
+            "message": "command c-2 touches region(s) also touched by concurrent command c-1",
+            "target": [
+              "features/f-1/properties/name"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "a refused history step beside a graded conflict",
+      "reason": "rejected",
+      "messages": "[{\"level\":\"warning\",\"code\":\"mutation.clamped\",\"message\":\"region\"},{\"level\":\"error\",\"code\":\"history.transition-refused\",\"message\":\"the hub refused 1 history step(s)\",\"target\":[\"t-1\"],\"opIndex\":2}]",
+      "expect": {
+        "kind": "rejected",
+        "code": "hub.refused",
+        "reason": "rejected",
+        "messages": [
+          {
+            "level": "warning",
+            "code": "mutation.clamped",
+            "message": "region"
+          },
+          {
+            "level": "error",
+            "code": "history.transition-refused",
+            "message": "the hub refused 1 history step(s)",
+            "target": [
+              "t-1"
+            ],
+            "opIndex": 2
+          }
+        ]
+      }
+    },
+    {
+      "name": "an admission refusal carries no messages",
+      "reason": "socket subject actor mismatch",
+      "messages": "",
+      "expect": {
+        "kind": "rejected",
+        "code": "hub.refused",
+        "reason": "socket subject actor mismatch",
+        "messages": []
+      }
+    },
+    {
+      "name": "an empty target, a null opIndex and an unknown field read as absent",
+      "reason": "rejected",
+      "messages": "[{\"level\":\"info\",\"code\":\"mutation.note\",\"message\":\"n\",\"target\":[],\"opIndex\":null,\"extra\":1}]",
+      "expect": {
+        "kind": "rejected",
+        "code": "hub.refused",
+        "reason": "rejected",
+        "messages": [
+          {
+            "level": "info",
+            "code": "mutation.note",
+            "message": "n"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a single byte that is not JSON (the 69-envelope counter the old shape carried)",
+      "reason": "document backbone scope mismatch",
+      "messages": "E",
+      "expect": {
+        "kind": "rejected",
+        "code": "hub.unreadable",
+        "reason": "document backbone scope mismatch",
+        "messages": []
+      }
+    },
+    {
+      "name": "not an array",
+      "reason": "rejected",
+      "messages": "{\"code\":\"mutation.clamped\"}",
+      "expect": {
+        "kind": "rejected",
+        "code": "hub.unreadable",
+        "reason": "rejected",
+        "messages": []
+      }
+    },
+    {
+      "name": "a message without a code",
+      "reason": "rejected",
+      "messages": "[{\"level\":\"warning\",\"message\":\"m\"}]",
+      "expect": {
+        "kind": "rejected",
+        "code": "hub.unreadable",
+        "reason": "rejected",
+        "messages": []
+      }
+    },
+    {
+      "name": "an unknown level",
+      "reason": "rejected",
+      "messages": "[{\"level\":\"panic\",\"code\":\"c\",\"message\":\"m\"}]",
+      "expect": {
+        "kind": "rejected",
+        "code": "hub.unreadable",
+        "reason": "rejected",
+        "messages": []
+      }
+    },
+    {
+      "name": "a negative opIndex",
+      "reason": "rejected",
+      "messages": "[{\"level\":\"error\",\"code\":\"c\",\"message\":\"m\",\"opIndex\":-1}]",
+      "expect": {
+        "kind": "rejected",
+        "code": "hub.unreadable",
+        "reason": "rejected",
+        "messages": []
+      }
+    },
+    {
+      "name": "a target that is not a string list",
+      "reason": "rejected",
+      "messages": "[{\"level\":\"error\",\"code\":\"c\",\"message\":\"m\",\"target\":[1]}]",
+      "expect": {
+        "kind": "rejected",
+        "code": "hub.unreadable",
+        "reason": "rejected",
+        "messages": []
+      }
+    }
+  ],
+  "local": [
+    {
+      "code": "local.read-only",
+      "reason": "execution target is read-only",
+      "detail": {
+        "envelopes": 3
+      },
+      "expect": {
+        "kind": "rejected",
+        "code": "local.read-only",
+        "reason": "execution target is read-only",
+        "messages": [],
+        "detail": {
+          "envelopes": 3
+        }
+      }
+    },
+    {
+      "code": "local.queue-full",
+      "reason": "pending mutation queue full",
+      "detail": {
+        "envelopes": 2,
+        "limit": 1000
+      },
+      "expect": {
+        "kind": "rejected",
+        "code": "local.queue-full",
+        "reason": "pending mutation queue full",
+        "messages": [],
+        "detail": {
+          "envelopes": 2,
+          "limit": 1000
+        }
+      }
+    },
+    {
+      "code": "local.backbone-capacity",
+      "reason": "document backbone pending capacity",
+      "detail": {
+        "envelopes": 69,
+        "bytes": 40960,
+        "limit": 16777216
+      },
+      "expect": {
+        "kind": "rejected",
+        "code": "local.backbone-capacity",
+        "reason": "document backbone pending capacity",
+        "messages": [],
+        "detail": {
+          "envelopes": 69,
+          "bytes": 40960,
+          "limit": 16777216
+        }
+      }
+    },
+    {
+      "code": "local.backbone-duplicate",
+      "reason": "document backbone mutation identity is already retained",
+      "detail": {
+        "envelopes": 1
+      },
+      "expect": {
+        "kind": "rejected",
+        "code": "local.backbone-duplicate",
+        "reason": "document backbone mutation identity is already retained",
+        "messages": [],
+        "detail": {
+          "envelopes": 1
+        }
+      }
+    },
+    {
+      "code": "local.backbone-pair-unavailable",
+      "reason": "document backbone canonical pair unavailable",
+      "detail": {
+        "bytes": 40960
+      },
+      "expect": {
+        "kind": "rejected",
+        "code": "local.backbone-pair-unavailable",
+        "reason": "document backbone canonical pair unavailable",
+        "messages": [],
+        "detail": {
+          "bytes": 40960
+        }
+      }
+    },
+    {
+      "code": "local.backbone-scope-mismatch",
+      "reason": "document backbone scope mismatch",
+      "detail": {
+        "envelopes": 69
+      },
+      "expect": {
+        "kind": "rejected",
+        "code": "local.backbone-scope-mismatch",
+        "reason": "document backbone scope mismatch",
+        "messages": [],
+        "detail": {
+          "envelopes": 69
+        }
+      }
+    },
+    {
+      "code": "local.backbone-malformed",
+      "reason": "document backbone malformed",
+      "expect": {
+        "kind": "rejected",
+        "code": "local.backbone-malformed",
+        "reason": "document backbone malformed",
+        "messages": []
+      }
+    },
+    {
+      "code": "local.socket-frame-ceiling",
+      "reason": "document socket frame exceeds the socket's ceiling",
+      "detail": {
+        "envelopes": 1
+      },
+      "expect": {
+        "kind": "rejected",
+        "code": "local.socket-frame-ceiling",
+        "reason": "document socket frame exceeds the socket's ceiling",
+        "messages": [],
+        "detail": {
+          "envelopes": 1
+        }
+      }
+    }
+  ]
+}

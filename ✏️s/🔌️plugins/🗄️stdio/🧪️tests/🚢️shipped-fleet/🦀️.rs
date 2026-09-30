@@ -6,7 +6,7 @@ use semio_framework_plugin::kernel::ActivationEvent;
 use semio_framework_plugin::plugin_runtime::{install_plugin_bundle_result, PluginRuntime};
 use semio_framework_plugin::{ArtifactRuntimeCapabilityRequirement, Plugin, PluginApp, PluginAssemblyError};
 use semio_s_artifact_stdio_contract::editing::SNAPSHOT_EDIT_ACTION_IDS;
-use semio_s_plugin_stdio::registry::ArtifactAssembly;
+use semio_s_artifact_stdio_contract::ArtifactAssembly;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::OnceLock;
 
@@ -218,7 +218,7 @@ fn package_runtime_probe() {
     let id = std::env::var(PROBE_PACKAGE).expect("the parent law names one package");
     let package = shipped(PACKAGE_IDS.into_iter().find(|candidate| *candidate == id).expect("a stdio package id"));
     assert_eq!(package.descriptor.package_id, format!("semio:{id}"), "{id} assembles alone");
-    let assemblies = semio_s_plugin_stdio::registry::artifact_assemblies().expect("the stdio artifact assemblies");
+    let assemblies = semio_s_plugin_stdio::catalog::artifact_assemblies().expect("the stdio artifact assemblies");
     let mut unmet = Vec::new();
     for kind in activated_kinds(&package.descriptor) {
         let declaration = assemblies.iter().find_map(|assembly| match assembly {
@@ -303,7 +303,7 @@ fn package_contract_probe() {
 /// explicitly; the owner `stdio` hosts nothing.
 #[test]
 fn every_family_descriptor_hosts_exactly_its_owners_codecs_for_the_kinds_it_opens() {
-    let assemblies = semio_s_plugin_stdio::registry::artifact_assemblies().expect("the stdio artifact assemblies");
+    let assemblies = semio_s_plugin_stdio::catalog::artifact_assemblies().expect("the stdio artifact assemblies");
     let owner_codecs = assemblies
         .iter()
         .filter_map(|assembly| match assembly {

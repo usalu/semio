@@ -1,191 +1,67 @@
-//! 🦀️ DIN V 18599 exhaustive mutation case — Rust adapter. Ticket
-//! 26/08/23/END-TO-END-TESTING-REFACTOR, wave 14 (the no-oracle conversion). The recorded
-//! no-oracle decision `din18599-1-mutation-semantics` is gone from
-//! `../../🔣️oracle.json`, because a reference now
-//! exists to compare against: `s.norm.din18599` is a
-//! semio-native artifact with no third-party reader or writer, so its reference is a second
-//! IMPLEMENTATION: the independent Python `🐍️component.py` beside this file, registered as the
-//! oracle `din18599-1-python-independent`. This adapter is the SUBJECT half only — it drives this
-//! repository's own `apply_din18599_mutation` over the full 13-kind `Din18599Mutation`
-//! vocabulary.
+//! 🦀️ DIN V 18599 exhaustive mutation case — the Rust SUBJECT half. `s.norm.din18599` is a semio-native artifact with no
+//! third-party reader or writer, so its reference is the independent Python implementation registered as the oracle
+//! `din18599-1-python-independent`; this adapter drives this repository's own production dispatch over the whole
+//! `Din18599Mutation` vocabulary — a energy-balance building: document scalars, whole-facet system specifications, zone and element lists and the composed climate child.
 //!
-//! Twelve document-root scalars — use class, heated area, occupants, the transmission and
-//! ventilation heat-transfer coefficients H_T and H_V, internal and solar gains, system losses,
-//! renewable yield, the annual primary-energy limit, the energy carrier and the reference Q_p —
-//! each with its own `change-<field>` kind, plus ONE `update-climate`.
-//!
-//! ⚖️ WHERE THE ASSERTIONS LIVE. Every law this case claims is asserted IN ROLE inside the
-//! subject handlers as well as being compared against the oracle's answer, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` module (`law::mutation_is_observable`,
-//! `law::inverse_restores`, `law::round_trip_preserves`, `law::carrier_is_exact`) that the
-//! stdio mutation cases use, reached through the `oracleHostPackages` entry this plugin
-//! declares in `✏️s/🔌️plugins/📕️norm/🔣️oracle.json`. What `parity` adds on top is the
-//! one thing a single implementation can never provide: that a second implementation, written in
-//! another language from the same written specification, reaches the same document.
-//!
-//! 🌉️ HOW THE FIXTURES REACH TYPED VALUES. The generated test host links only
-//! `semio-repo-test-host`, the stdio law crate and — behind `sut` — this plugin's own crate;
-//! `serde`, `serde_json` and this crate's `protocol`/`store`/`vcs` extern-crate aliases are all
-//! unreachable from here. The subset's own production code therefore exports the bridges
-//! (`decode_din18599_snapshot_json`/`encode_din18599_snapshot_json`,
-//! `decode_din18599_dsl`/`encode_din18599_dsl`, `decode_din18599_pack`/`encode_din18599_pack`
-//! in `../../🧬️schema/📸️snapshot/🦀️.rs`;
-//! `decode_din18599_mutation_json`, `apply_din18599_mutation`, `inverse_din18599_mutation` in
-//! `../../🧬️schema/🧬️mutations/🦀️.rs`), whose
-//! signatures name only reachable types. This side reaches the committed vectors through
-//! `include_str!` and the Python side through the `asset://` URIs the feature declares, so both
-//! read the SAME committed bytes and neither holds a Rust or Python literal transcribed beside
-//! them that could drift from what the other one read.
-//!
-//! 🚧️ The Rust SUBJECT phase still cannot run: `semio-s-plugin-norm` does not compile (671 errors
-//! at the time of writing — a concurrent session is mid-flight across ~2000 files of this plugin,
-//! removing gratuitous `async fn` wrappers). `parity` therefore has nothing to compare the oracle
-//! against YET; the moment the crate is green it does, with no further change here. The subject half is
-//! written against the SYNC trait surface the fixture tests in this crate already call
-//! (`Mutation::diff`, `MutationDiff::apply`, `Mutation::inverse`, `ArtifactDsl`,
-//! `ArtifactPack`) rather than against the plugin's async wrappers, and is `sut`-gated so the
-//! oracle-only run never links it.
+//! ⚖️ Every law is asserted IN ROLE through the shared `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` module, reached
+//! through the `oracleHostPackages` entry of `✏️s/🔌️plugins/📕️norm/🔮️oracles/🔣️.json`. Both implementations read
+//! the SAME committed bytes: the feature is the single place a vector path is written down, and each handler resolves
+//! exactly the `(before, mutation, after, outcome)` URIs its own scenario's steps name.
 
-use semio_repo_test_host::{digest, parse_json, Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::law;
-
-//#region 🔖️Kinds
-/// 🏷️ Mirrors `Din18599Mutation::KINDS` (`../../🧬️schema/🧬️mutations/🦀️.rs`) —
-/// duplicated, not imported, because the oracle-only build must not link the subject crate. The
-/// contract's mutation-coverage gate keeps this list honest against the catalog;
-/// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
-#[cfg(feature = "sut")]
-const KINDS: &[&str] = &[
-    "change-use-class",
-    "change-net-floor-area-m2",
-    "update-climate",
-];
-
-/// 🗣️ The real committed DIN V 18599 document, read where the domain already keeps it.
-#[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
-//#endregion 🔖️Kinds
-
-//#region 🔖️Fixtures
-/// 🧫️ The committed `(before, mutation, after, outcome)` specification vector for one kind, read
-/// literally via `include_str!` — the same committed bytes the independent Python oracle reads through
-/// the `asset://` URIs the feature declares, so the two sides can never be comparing different inputs.
-/// One `include_str!` per committed file; the subject role decodes all four.
-#[cfg(feature = "sut")]
-fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
-    match kind {
-        "change-use-class" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️use-class/🏢️reclassifies-the-building-as-an-office/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️use-class/🏢️reclassifies-the-building-as-an-office/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️use-class/🏢️reclassifies-the-building-as-an-office/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️use-class/🏢️reclassifies-the-building-as-an-office/🎯️outcome/🔣️.json"),
-        ),
-        "change-net-floor-area-m2" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️net-floor-area-m2/📏️extends-net-floor-area-to-160-m2/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️net-floor-area-m2/📏️extends-net-floor-area-to-160-m2/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️net-floor-area-m2/📏️extends-net-floor-area-to-160-m2/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️net-floor-area-m2/📏️extends-net-floor-area-to-160-m2/🎯️outcome/🔣️.json"),
-        ),
-        "update-climate" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🌦️update-climate/🌧️refuses-a-negative-january-irradiance/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌦️update-climate/🌧️refuses-a-negative-january-irradiance/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌦️update-climate/🌧️refuses-a-negative-january-irradiance/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌦️update-climate/🌧️refuses-a-negative-january-irradiance/🎯️outcome/🔣️.json"),
-        ),
-        other => panic!("unknown din18599 mutation fixture kind: {other}"),
-    }
-}
-
-/// 🔎️ Parses one embedded fixture file into the framework's own dependency-free `Json`.
-#[cfg(feature = "sut")]
-fn canonical(text: &str) -> Json {
-    parse_json(text).unwrap_or_else(|error| panic!("committed fixture JSON must parse: {error}"))
-}
-
-/// 🎯️ The status the committed `🎯️outcome/🔣️.json` declares for one kind — `applied` or
-/// `rejected` — read out of the committed file rather than transcribed beside it, so the contract a
-/// row is held to cannot drift away from the vector that states it.
-#[cfg(feature = "sut")]
-fn committed_status(kind: &str) -> String {
-    let (_before, _mutation, _after, outcome) = fixture_text(kind);
-    canonical(outcome).str("status")
-}
-//#endregion 🔖️Fixtures
-
-//#region 🔖️Carrier
-/// 🧵️ The canonical carrier bytes as a comparable projection: the envelope preamble, every body line
-/// as written, and the digest and length of what was emitted. `.dsl.semio` has no grammar document in
-/// this repository — the committed `📖️.grammar.semio` is the repository-wide `payload = OCTET+`
-/// placeholder — so the identity scenario compares the two implementations at the carrier level rather
-/// than mapping carrier tokens onto the snapshot's enum spellings, a mapping nothing states. The
-/// independent Python implementation builds the identical shape from ITS re-emission, and `digest` is
-/// the coordinator's own sha256, so the two languages' bytes are directly comparable.
-#[cfg(feature = "sut")]
-fn carrier_projection(text: &str) -> Json {
-    let (preamble, body) = text.split_once('\n').unwrap_or((text, ""));
-    let body = body.strip_suffix('\n').unwrap_or(body);
-    let lines = if body.is_empty() { Vec::new() } else { body.split('\n').map(|line| Json::String(line.to_string())).collect::<Vec<Json>>() };
-    Json::Object(vec![
-        ("preamble".to_string(), Json::String(preamble.to_string())),
-        ("lines".to_string(), Json::Array(lines)),
-        ("dslDigest".to_string(), Json::String(digest(text.as_bytes()))),
-        ("dslLength".to_string(), Json::Number(text.as_bytes().len() as f64)),
-    ])
-}
-//#endregion 🔖️Carrier
+use semio_repo_test_host::Adapter;
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_s_artifact_norm_din18599::standards::v1::subsets::any::schema::mutations::{apply_din18599_mutation, decode_din18599_mutation_json, inverse_din18599_mutation, Din18599Mutation};
     use semio_s_artifact_norm_din18599::standards::v1::subsets::any::schema::snapshot::{decode_din18599_dsl, decode_din18599_pack, decode_din18599_snapshot_json, encode_din18599_dsl, encode_din18599_pack, encode_din18599_snapshot_json, Din18599Snapshot};
     use semio_s_plugin_stdio_test_oracle::law;
 
-    //#region 🔖️FixtureDecode
-    /// 🧫️ Decodes the SAME committed fixture text `../🦀️.rs::fixture_text` embeds, through
-    /// this subset's own production JSON bridge — real deserialization of the committed bytes, never
-    /// a Rust literal transcribed beside them.
-    fn snapshot_of(text: &str, label: &str, kind: &str) -> Result<Din18599Snapshot, String> {
-        decode_din18599_snapshot_json(text).map_err(|error| format!("mutate-din18599-1: the committed {label}-snapshot for {kind:?} must decode: {error}"))
+    /// 🗣️ The real committed DIN V 18599 document, read where the domain already keeps it.
+    const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
+
+    /// 🧫️ The committed `(before, mutation, after, outcome)` texts this scenario's steps name, in that role order.
+    fn vector(ctx: &Context) -> Result<[String; 4], String> {
+        let uris = ctx.step_fixture_uris();
+        let text = |suffix: &str| -> Result<String, String> {
+            let uri = uris.iter().find(|uri| uri.ends_with(suffix)).ok_or_else(|| format!("the scenario names no committed …{suffix}"))?;
+            String::from_utf8(ctx.fixture_bytes(uri)?).map_err(|error| format!("{uri}: {error}"))
+        };
+        Ok([text("⬅️before/🔣️.json")?, text("🦠️mutation/🔣️.json")?, text("➡️after/🔣️.json")?, text("🎯️outcome/🔣️.json")?])
     }
 
-    fn mutation_of(text: &str, kind: &str) -> Result<Din18599Mutation, String> {
-        decode_din18599_mutation_json(text).map_err(|error| format!("mutate-din18599-1: the committed mutation payload for {kind:?} must decode: {error}"))
+    fn snapshot_of(text: &str, label: &str) -> Result<Din18599Snapshot, String> {
+        decode_din18599_snapshot_json(text).map_err(|error| format!("the committed {label}-snapshot must decode: {error}"))
+    }
+
+    fn mutation_of(text: &str) -> Result<Din18599Mutation, String> {
+        decode_din18599_mutation_json(text).map_err(|error| format!("the committed mutation payload must decode: {error}"))
     }
 
     fn projection(snapshot: &Din18599Snapshot) -> Result<Json, String> {
         parse_json(&encode_din18599_snapshot_json(snapshot))
     }
 
-    /// 🚨️ A failure message that names WHAT disagreed, in the same JSON the fixtures are written in,
-    /// so a red scenario is readable without re-running anything.
+    /// 🚨️ A failure that names WHAT disagreed, in the JSON the vectors are written in.
     fn disagreement(what: &str, got: &Din18599Snapshot, expected: &Din18599Snapshot) -> String {
         format!("{what}\n     got: {}\nexpected: {}", encode_din18599_snapshot_json(got), encode_din18599_snapshot_json(expected))
     }
-    //#endregion 🔖️FixtureDecode
 
-    //#region 🔖️Handlers
-    /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed
-    /// after-snapshot, under whichever contract the committed `🎯️outcome` declares: an `applied`
-    /// vector must be accepted without a diagnostic and must move the projection (`law::
-    /// mutation_is_observable`), a `rejected` one must raise a diagnostic and leave the document
-    /// bit-identical. A handler that merely returned `Ok` would report a pass having checked nothing.
+    /// 🎯️ Applies the committed mutation to the committed before-snapshot and asserts the result IS the committed
+    /// after-snapshot under the committed outcome: an `applied` vector moves the document without a diagnostic, a
+    /// `rejected` one raises one and leaves the document bit-identical.
     pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |_ctx: &Context| {
-            let (before, mutation, after, _outcome) = super::fixture_text(kind);
-            let base = snapshot_of(before, "before", kind)?;
-            let expected = snapshot_of(after, "after", kind)?;
-            let mutation = mutation_of(mutation, kind)?;
-            let status = super::committed_status(kind);
-            let applied = apply_din18599_mutation(&base, &mutation);
-            let current = match (status.as_str(), applied) {
+        move |ctx: &Context| {
+            let [before, mutation, after, outcome] = vector(ctx)?;
+            let (base, expected, mutation) = (snapshot_of(&before, "before")?, snapshot_of(&after, "after")?, mutation_of(&mutation)?);
+            let status = parse_json(&outcome)?.str("status");
+            let current = match (status.as_str(), apply_din18599_mutation(&base, &mutation)) {
                 ("applied", Ok((snapshot, messages))) if messages.is_empty() => snapshot,
                 ("applied", Ok((_snapshot, messages))) => return Err(format!("mutate-{kind}: the committed vector declares this mutation applied, yet it raised {messages:?}")),
-                ("applied", Err(error)) => return Err(format!("mutate-{kind}: the committed vector declares this mutation applied, yet this implementation refused it: {error}")),
-                ("rejected", Ok((snapshot, messages))) if messages.is_empty() => return Err(format!("mutate-{kind}: the committed vector declares this mutation rejected, yet it raised no diagnostic at all — the document came back as {}", encode_din18599_snapshot_json(&snapshot))),
-                ("rejected", Ok((snapshot, _messages))) => snapshot,
-                ("rejected", Err(_error)) => base.clone(),
+                ("rejected", Ok((snapshot, messages))) if !messages.is_empty() => snapshot,
+                ("rejected", Ok(_)) => return Err(format!("mutate-{kind}: the committed vector declares this mutation rejected, yet it raised no diagnostic")),
+                (_, Err(error)) => return Err(format!("mutate-{kind}: production dispatch failed: {error}")),
                 (other, _) => return Err(format!("mutate-{kind}: unknown committed outcome status {other:?}")),
             };
             if current != expected {
@@ -201,30 +77,22 @@ mod subject {
         }
     }
 
-    /// ↩️ The metamorphic inverse law, asserted in role through `law::inverse_restores`: applying the
-    /// kind and then its OWN computed inverse must restore the committed before-snapshot exactly —
-    /// collection POSITION included, not merely membership. A kind the committed outcome declares
-    /// `applied` must additionally produce a non-empty inverse, because a mutation that changes the
-    /// document and reports nothing to undo silently breaks the event-sourced undo history.
-    /// The projection carries BOTH the mutated and the restored document: projecting only the restored
-    /// one would make every row of the table project the same value and the differential vacuous.
+    /// ↩️ The metamorphic inverse law: the mutation followed by its OWN computed inverse restores the committed
+    /// before-snapshot, position included; an applied kind must produce a non-empty inverse. The projection carries
+    /// BOTH the mutated and the restored document so the differential never compares one constant.
     pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |_ctx: &Context| {
-            let (before, mutation, _after, _outcome) = super::fixture_text(kind);
-            let base = snapshot_of(before, "before", kind)?;
-            let mutation = mutation_of(mutation, kind)?;
+        move |ctx: &Context| {
+            let [before, mutation, _after, outcome] = vector(ctx)?;
+            let (base, mutation) = (snapshot_of(&before, "before")?, mutation_of(&mutation)?);
             let original = projection(&base)?;
-            let mut current = match apply_din18599_mutation(&base, &mutation) {
-                Ok((snapshot, _messages)) => snapshot,
-                Err(error) => return Err(format!("inverse-{kind}: the forward mutation could not be applied to its own committed before-snapshot: {error}")),
-            };
+            let (mut current, _messages) = apply_din18599_mutation(&base, &mutation).map_err(|error| format!("inverse-{kind}: the forward mutation failed: {error}"))?;
             let mutated = projection(&current)?;
             let steps = inverse_din18599_mutation(&mutation, &base);
-            if super::committed_status(kind) == "applied" && steps.is_empty() {
+            if parse_json(&outcome)?.str("status") == "applied" && steps.is_empty() {
                 return Err(format!("inverse-{kind}: this kind changes the document, so its computed inverse must not be empty"));
             }
             for step in &steps {
-                current = apply_din18599_mutation(&current, step).map_err(|error| format!("inverse-{kind}: an inverse step was rejected: {error}"))?.0;
+                current = apply_din18599_mutation(&current, step).map_err(|error| format!("inverse-{kind}: an inverse step failed: {error}"))?.0;
             }
             let restored = projection(&current)?;
             law::inverse_restores(kind, &restored, &original)?;
@@ -236,49 +104,53 @@ mod subject {
         }
     }
 
-    /// 🔁️ The real committed document through every encoding it has. The DSL carrier is deliberately
-    /// byte-preserving here — the committed file IS this printer's own canonical output — so
-    /// `law::carrier_is_exact` is the correct half of the identity law and the usual
-    /// no-byte-pass-through inequality would be the wrong claim. What proves the document was PARSED
-    /// rather than copied is the agreement of three independently written codecs: the hand-written
-    /// DSL grammar, the hand-written binary pack protocol, and the JSON projection. A shortcut that
-    /// handed back its input bytes could not survive the pack leg.
+    /// 🧵️ The canonical carrier bytes as a comparable projection: preamble, body lines as written, and the digest and
+    /// length of what was emitted — the identical shape the Python implementation builds from ITS re-emission.
+    fn carrier_projection(text: &str) -> Json {
+        let (preamble, body) = text.split_once('\n').unwrap_or((text, ""));
+        let body = body.strip_suffix('\n').unwrap_or(body);
+        let lines = if body.is_empty() { Vec::new() } else { body.split('\n').map(|line| Json::String(line.to_string())).collect() };
+        Json::Object(vec![
+            ("preamble".to_string(), Json::String(preamble.to_string())),
+            ("lines".to_string(), Json::Array(lines)),
+            ("dslDigest".to_string(), Json::String(digest(text.as_bytes()))),
+            ("dslLength".to_string(), Json::Number(text.len() as f64)),
+        ])
+    }
+
+    /// 🔁️ The real committed document through every encoding it has: the DSL carrier re-emits byte for byte, and the
+    /// pack and JSON codecs reproduce the parsed document, so a shortcut that handed back its input could not pass.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(super::DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed DIN V 18599 artifact is not UTF-8: {error}"))?;
+        let text = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed artifact is not UTF-8: {error}"))?;
         let parsed = decode_din18599_dsl(&text)?;
         let reprinted = encode_din18599_dsl(&parsed);
         law::carrier_is_exact(reprinted.as_bytes(), text.as_bytes())?;
-        let reparsed = decode_din18599_dsl(&reprinted)?;
-        if reparsed != parsed {
-            return Err(disagreement("identity-round-trip: printing the document back to DSL and reparsing it lost content", &reparsed, &parsed));
+        if decode_din18599_dsl(&reprinted)? != parsed {
+            return Err("identity-round-trip: printing the document back to DSL and reparsing it lost content".to_string());
         }
         let repacked = decode_din18599_pack(&encode_din18599_pack(&parsed))?;
         if repacked != parsed {
-            return Err(disagreement("identity-round-trip: encoding the document to a pack and decoding it back lost content", &repacked, &parsed));
+            return Err(disagreement("identity-round-trip: the pack codec lost content", &repacked, &parsed));
         }
         let rejson = decode_din18599_snapshot_json(&encode_din18599_snapshot_json(&parsed))?;
         if rejson != parsed {
-            return Err(disagreement("identity-round-trip: encoding the document to JSON and decoding it back lost content", &rejson, &parsed));
+            return Err(disagreement("identity-round-trip: the JSON codec lost content", &rejson, &parsed));
         }
         law::round_trip_preserves(&projection(&repacked)?, &projection(&parsed)?)?;
         Ok(Outcome::with_raw(reprinted.as_bytes().to_vec(), carrier_projection(&reprinted)))
     }
-    //#endregion 🔖️Handlers
 }
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
-/// id, so the loop mirrors the feature's `Examples` tables exactly. SUBJECT role only: the reference
-/// answer now comes from the independent Python implementation registered as this subset's oracle, and
-/// registering this repository's own answer on the oracle side as well would compare it with
-/// itself.
+/// 🧭️ Registration by FULL expanded scenario id, one `mutate-`/`inverse-` pair per kind of the production vocabulary
+/// plus the carrier identity. SUBJECT role only: the reference answer comes from the independent Python oracle.
 pub fn adapter() -> Adapter {
     #[allow(unused_mut)]
     let mut built = Adapter::new("rust");
     #[cfg(feature = "sut")]
     {
-        for kind in KINDS {
+        for kind in semio_s_artifact_norm_din18599::standards::v1::subsets::any::schema::mutations::KINDS {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
         }
         built = built.subject("identity-round-trip", subject::round_trip);

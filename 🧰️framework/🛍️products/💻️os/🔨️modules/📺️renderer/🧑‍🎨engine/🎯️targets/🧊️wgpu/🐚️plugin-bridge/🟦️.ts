@@ -1235,12 +1235,16 @@ export interface WgpuPluginHandle extends MediaTransportPort {
   readonly dispose: () => Promise<void>;
 }
 
-/** 👥️ One instance's published ephemeral state as the JS bridge hands it to Rust: pack bytes, never number arrays. */
-export type WgpuEphemeralSnapshot = { readonly presence: Uint8Array; readonly presenceGeneration: number; readonly interaction: Uint8Array };
+/** 👥️ One instance's published ephemeral state as the JS bridge hands it to Rust: pack bytes, never number arrays —
+ * the app presence pack, the interaction slice, and the guest's own tool run and history edit (`AppFrame::Ephemeral`
+ * `tool_run` / `history_edit`, empty when it has none), which the presence heartbeat publishes like React's. */
+export type WgpuEphemeralSnapshot = { readonly presence: Uint8Array; readonly presenceGeneration: number; readonly interaction: Uint8Array; readonly toolRun: Uint8Array; readonly historyEdit: Uint8Array };
 
 /** 👥️ Projects the app channel's last ephemeral frame onto the bridge's byte shape. */
-export function wgpuEphemeralSnapshot(ephemeral: { readonly presence: readonly number[]; readonly presenceGeneration: number; readonly interaction: readonly number[] } | null): WgpuEphemeralSnapshot | null {
-  return ephemeral === null ? null : { presence: Uint8Array.from(ephemeral.presence), presenceGeneration: ephemeral.presenceGeneration, interaction: Uint8Array.from(ephemeral.interaction) };
+export function wgpuEphemeralSnapshot(ephemeral: { readonly presence: readonly number[]; readonly presenceGeneration: number; readonly interaction: readonly number[]; readonly toolRun: readonly number[]; readonly historyEdit: readonly number[] } | null): WgpuEphemeralSnapshot | null {
+  return ephemeral === null
+    ? null
+    : { presence: Uint8Array.from(ephemeral.presence), presenceGeneration: ephemeral.presenceGeneration, interaction: Uint8Array.from(ephemeral.interaction), toolRun: Uint8Array.from(ephemeral.toolRun), historyEdit: Uint8Array.from(ephemeral.historyEdit) };
 }
 
 /** 🐚️ Acquires a real actor through `ActivationRegistry`/`ShardClient` (replacing the deleted

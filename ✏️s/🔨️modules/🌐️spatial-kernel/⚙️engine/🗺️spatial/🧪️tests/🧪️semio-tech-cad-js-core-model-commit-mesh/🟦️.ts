@@ -1,19 +1,16 @@
 import { ObjectRef, SelectionTarget, deletableObjectIdsFromSelection, deleteObjectsFromModel } from "../../../📐️geometry/🟦️.ts";
-import type { SpatialTestDependencies } from "../../🟦️.ts";
+import { appendCommittedMeshFaceToModel, applyModelDiff } from "../../🟦️.ts";
+import { Model } from "../../../📐️geometry/🟦️.ts";
+import { preciseSpatialKernelMath } from "../../../🧮️preview/🟦️.ts";
+import { solidRef } from "@semio-tech/s-3d-js";
 import type { TypologyRef } from "../../../📐️geometry/🟦️.ts";
 import type { MeshTransfer } from "@semio-tech/s-3d-js";
 
-type TestSource = { readonly url: string };
-
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: SpatialTestDependencies, source: TestSource): Promise<void> {
-  const { Model, __spatialCoreTestKernel, __spatialCoreTestRuntime, appendCommittedMeshFaceToModel, applyModelDiff, solidRef } = dependencies;
-
-  __spatialCoreTestRuntime!.bootstrapCadModules();
-  const { preciseSpatialKernelMath } = __spatialCoreTestKernel!;
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>): Promise<void> {
   const M = preciseSpatialKernelMath;
   const { describe, expect, it } = vitest;
 
-  describe("@semio-tech/cad-js/core model commit mesh", () => {
+  describe("s.spatial-kernel model commit mesh", () => {
     it("appendCommittedMeshFaceToModel adds one mesh face from a triangle mesh", () => {
       const g = new Model();
       const mesh: MeshTransfer = {
@@ -31,7 +28,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(g.revision).toBeGreaterThan(0);
     });
   });
-  describe("@semio-tech/cad-js/core model diff", () => {
+  describe("s.spatial-kernel model diff", () => {
     it("applyModelDiff then inverse restores counts", () => {
       const g = new Model();
       const mesh: MeshTransfer = {

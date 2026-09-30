@@ -17,7 +17,7 @@ use crate::kernel::{SimulationConfig, SimulationEnvironment};
 use crate::model::{Construction, EntityId, EquipmentGain, Fenestration, GasKind, GasMaterial, GlazingMaterial, IdealLoadsSystem, Infiltration, Material, MechanicalVentilation, Model, OutsideBoundary, ScheduleId, ShadingSurface, Site, Surface, SurfaceClass, SurfaceRoughness, Thermostat, Zone};
 use crate::results::Results;
 use crate::schedule::{ConstantSchedule, DailySchedule, ScheduleInterpolation, ScheduleSet};
-use crate::site::EpwWeather;
+use crate::site::WeatherData;
 
 // #region 🔖️Registry
 /// 🗂️ Every §5.2 case this engine can build, in the standard's own order.
@@ -415,7 +415,7 @@ fn free_float(mut built: Model, name: &str) -> Model {
 /// `schedules` is copied out of the model, which is the authority: [`SimulationConfig`] still owns
 /// its own `ScheduleSet` because the kernel's admission census and close-step pump read it there,
 /// so the projection is derived here rather than duplicated by the caller.
-pub fn simulation_config(model: &Model, weather: Option<EpwWeather>, warmup_days: u32) -> SimulationConfig {
+pub fn simulation_config(model: &Model, weather: Option<WeatherData>, warmup_days: u32) -> SimulationConfig {
     SimulationConfig {
         environment: SimulationEnvironment::WeatherRunPeriod,
         zone_timestep_minutes: 10,
@@ -431,11 +431,10 @@ pub fn simulation_config(model: &Model, weather: Option<EpwWeather>, warmup_days
     }
 }
 
-/// 🏛️ Validate, then run, one case against an EPW text.
-pub fn run(case: &str, epw_text: &str, warmup_days: u32) -> Result<Results, Diagnostics> {
+/// 🏛️ Validates and runs one case against caller-supplied weather records.
+pub fn run(case: &str, weather: WeatherData, warmup_days: u32) -> Result<Results, Diagnostics> {
     let built = model(case).ok_or_else(|| single(Error::fatal(format!("no ANSI/ASHRAE 140 §5.2 case is registered as {case:?}"))))?;
     built.validate()?;
-    let weather = EpwWeather::parse(epw_text).map_err(single)?;
     let config = simulation_config(&built, Some(weather), warmup_days);
     crate::sim::Engine::run(built, config).map_err(single)
 }

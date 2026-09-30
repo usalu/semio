@@ -12,7 +12,7 @@ fn response_events_match_shared_vectors_and_undo() {
         assert_eq!(<FormMutation as protocol::OpBinary>::decode_op(&protocol::OpBinary::encode_op(&event).unwrap()).unwrap(), event);
         let outcome = event.diff(&before);
         if let Some(error) = case["error"].as_str() {
-            assert!(outcome.messages().iter().any(|message| message.code.0 == format!("forms.{error}")), "{}", case["name"]);
+            assert!(outcome.messages().iter().any(|message| message.code.0 == error), "{}", case["name"]);
         } else {
             let after = outcome.diff().apply(&before).unwrap();
             let actual: serde_json::Value = serde_json::from_str(&dsl::os_pack::json::to_json_string(&after.responses)).unwrap();

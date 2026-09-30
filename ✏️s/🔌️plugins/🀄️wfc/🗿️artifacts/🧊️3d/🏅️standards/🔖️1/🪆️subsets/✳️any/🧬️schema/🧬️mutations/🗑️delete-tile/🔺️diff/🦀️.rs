@@ -6,7 +6,7 @@ use crate::schema::snapshot::Wfc3dSnapshot;
 
 pub fn diff(payload: &super::DeleteTile, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
     if !base.tiles.iter().any(|tile| tile.id == payload.id) {
-        return protocol::MutationOutcome::error("wfc3d.tile.missing", format!("Tile \"{}\" does not exist.", payload.id), [payload.id.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Tile \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
     let rules_removed: Vec<String> = base.rules.iter().filter(|rule| rule.tile_a_id == payload.id || rule.tile_b_id == payload.id).map(|rule| rule.id.clone()).collect();
     let slots_upserted: Vec<(usize, crate::schema::snapshot::Slot3d)> = base
@@ -26,6 +26,6 @@ pub fn diff(payload: &super::DeleteTile, base: &Wfc3dSnapshot) -> protocol::Muta
     if cascaded_rules == 0 && cascaded_pins == 0 {
         outcome
     } else {
-        outcome.info("wfc3d.tile.references-cascaded", format!("Deleting tile \"{}\" also removed {cascaded_rules} rule(s) and released {cascaded_pins} slot pin(s).", payload.id))
+        outcome.info("mutation.cascade", format!("Deleting tile \"{}\" also removed {cascaded_rules} rule(s) and released {cascaded_pins} slot pin(s).", payload.id))
     }
 }

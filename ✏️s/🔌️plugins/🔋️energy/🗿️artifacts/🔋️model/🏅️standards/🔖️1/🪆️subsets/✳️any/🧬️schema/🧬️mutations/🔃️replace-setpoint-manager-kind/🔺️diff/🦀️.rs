@@ -10,13 +10,13 @@ pub fn diff(payload: &super::ReplaceSetpointManagerKind, base: &EnergyModelSnaps
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Setpoint manager {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !matches!(payload.new_kind.as_str(), "Scheduled" | "OutdoorAirReset" | "WarmestZone" | "ColdestZone") {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("{:?} is not a setpoint manager kind.", payload.new_kind), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("{:?} is not a setpoint manager kind.", payload.new_kind), [payload.id.0.to_string()]);
     }
     if payload.new_kind != "OutdoorAirReset" && !(payload.new_low_outdoor_c == 0.0 && payload.new_high_outdoor_c == 0.0 && payload.new_low_setpoint_c == 0.0 && payload.new_high_setpoint_c == 0.0) {
-        return protocol::MutationOutcome::error("mutation.invariant", "Only an OutdoorAirReset setpoint manager carries reset limits.".to_string(), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "Only an OutdoorAirReset setpoint manager carries reset limits.".to_string(), [payload.id.0.to_string()]);
     }
     if payload.new_kind == "OutdoorAirReset" && payload.new_high_outdoor_c <= payload.new_low_outdoor_c {
-        return protocol::MutationOutcome::error("mutation.invariant", "An outdoor air reset needs a high outdoor temperature above its low one.".to_string(), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "An outdoor air reset needs a high outdoor temperature above its low one.".to_string(), [payload.id.0.to_string()]);
     }
     let kind = if payload.new_kind == "OutdoorAirReset" {
         crate::model::SetpointManagerKind::OutdoorAirReset { low_outdoor_c: payload.new_low_outdoor_c, high_outdoor_c: payload.new_high_outdoor_c, low_setpoint_c: payload.new_low_setpoint_c, high_setpoint_c: payload.new_high_setpoint_c }

@@ -107,7 +107,7 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
       | remove-other-segment | {"index":0} |
       | change-re-encode-quality | {"quality":50} |
 
-  @id-mutate-raster
+  @id-mutate
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to a small document
@@ -143,7 +143,7 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
       | remove-other-segment | {"index":0} |
       | change-re-encode-quality | {"quality":50} |
 
-  @id-inverse-raster
+  @id-inverse
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores a small document

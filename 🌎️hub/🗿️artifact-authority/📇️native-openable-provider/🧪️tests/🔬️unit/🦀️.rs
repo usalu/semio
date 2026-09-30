@@ -2,7 +2,7 @@
 use super::*;
 
 fn receipts() -> Vec<NativeCodecFactoryReceipt> {
-    semio_s_plugin_stdio::registry::native_codec_factory_receipts().expect("verified stdio receipts")
+    semio_s_plugin_stdio::catalog::native_codec_factory_receipts().expect("verified stdio receipts")
 }
 
 #[test]

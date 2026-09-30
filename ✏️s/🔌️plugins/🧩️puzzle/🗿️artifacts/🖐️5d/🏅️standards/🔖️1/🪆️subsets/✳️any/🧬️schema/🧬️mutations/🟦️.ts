@@ -307,4 +307,34 @@ export type Puzzle5dMutation =
   | ({ mutation: "rotateTargetVolume" } & RotateTargetVolume)
   | ({ mutation: "scaleTargetVolume" } & ScaleTargetVolume)
   | ({ mutation: "changeTargetVolumeHidden" } & ChangeTargetVolumeHidden)
-  | ({ mutation: "changeTargetVolumeLocked" } & ChangeTargetVolumeLocked);
+  | ({ mutation: "changeTargetVolumeLocked" } & ChangeTargetVolumeLocked)
+  | ({ mutation: "dragSelection2d" } & DragSelection2d)
+  | ({ mutation: "dragSelection3d" } & DragSelection3d)
+  | ({ mutation: "rotateSelection3d" } & RotateSelection3d)
+  | ({ mutation: "scaleSelection3d" } & ScaleSelection3d);
+
+/** ✋️ `drag-selection2d` payload — part ids moved on the board by one relative flat offset. */
+export interface DragSelection2d {
+  targets: string[];
+  dx: number;
+  dy: number;
+}
+
+/** 🚚️ `drag-selection3d` payload — part and target-volume ids moved in the world by one relative offset. */
+export interface DragSelection3d {
+  targets: string[];
+  offset: [number, number, number];
+}
+
+/** 🔄️ `rotate-selection3d` payload — part and target-volume ids turned, each about its own origin, by `angle` radians about the world `axis`. */
+export interface RotateSelection3d {
+  targets: string[];
+  axis: [number, number, number];
+  angle: number;
+}
+
+/** 🔍️ `scale-selection3d` payload — part and target-volume ids whose scales are multiplied per axis by `factors`. */
+export interface ScaleSelection3d {
+  targets: string[];
+  factors: [number, number, number];
+}

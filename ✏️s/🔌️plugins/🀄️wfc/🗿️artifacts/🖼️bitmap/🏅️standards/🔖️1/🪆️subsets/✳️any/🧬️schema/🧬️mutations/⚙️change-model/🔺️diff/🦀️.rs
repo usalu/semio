@@ -13,7 +13,7 @@ pub fn diff(payload: &super::ChangeModel, base: &BitmapSnapshot) -> protocol::Mu
     }
     if let Some(ground) = payload.ground {
         if ground as usize >= base.input.palette.len() {
-            return protocol::MutationOutcome::fatal("mutation.unknown-palette-color", format!("Ground colour {ground} is not in this document's palette."), ["model".to_string()]);
+            return protocol::MutationOutcome::error("mutation.target-missing", format!("Ground colour {ground} is not in this document's palette."), ["model".to_string()]);
         }
     }
     let model = BitmapOverlappingModel { pattern_size: payload.pattern_size, symmetry: payload.symmetry, periodic_input: payload.periodic_input, ground: payload.ground };

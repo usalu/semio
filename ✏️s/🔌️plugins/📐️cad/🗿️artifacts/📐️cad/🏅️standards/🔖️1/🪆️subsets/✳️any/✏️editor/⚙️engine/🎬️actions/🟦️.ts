@@ -9,7 +9,7 @@ import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/s-3d-js
 import { AnchorAttachment, AnchorRecord, AnchorRef, EdgeRef, EffectSpec, Expr, ExprEnv, FaceRecord, FaceRef, InteractionEngagementControlKind, InteractionEngagementEntryControl, InteractionEvent, InteractionLengthEntrySpec, InteractionOutputBinding, InteractionScalarEntrySpec, InteractionSpec, Model, ModelEntityKind, PRIMITIVE_MODEL_ENTITY_KINDS, PathSegment, ResolvedInteractionEngagementControl, SelectionEvent, SelectionTarget, SolidRef, StateDefSpec, VertexRecord, VertexRef, WireRef, assertActionAvailableInModelDefinition, clearPathTarget, defaultModelDefinitionId, evalExpr, evalGuard, initialContextForSpec, listModelObjectsForModelDefinition, modelDefinitionSelectionEntityKinds, readPathTarget, writePathSegments, writePathTarget } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
 import { capabilityActionSpecJson, ensureTypologyObjectFromCreateDiff } from "../🧬️typology/🟦️.ts";
 import { EMPTY_MODEL_DIFF, EdgeRecordDiff, KernelQueryContext, ModelDiff, SpatialKernel, SpatialPreviewKernel, VertexRecordDiff, isEmptyModelDiff } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
-import { modelDefinitionActionCatalog } from "../📔️registry/🟦️.ts";
+import { modelDefinitionActionCatalog } from "../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
 import type { InteractionRuntime } from "../🗿️artifact/🟦️.ts";
 
 

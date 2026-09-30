@@ -1,6 +1,0 @@
-{
-  "ChangeElementOrientationDeg": {
-    "elementId": "wall-north",
-    "newOrientationDeg": 180.0
-  }
-}

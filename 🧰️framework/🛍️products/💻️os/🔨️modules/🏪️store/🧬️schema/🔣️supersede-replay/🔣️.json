@@ -58,7 +58,7 @@
         "edit": { "type": "integer", "minimum": 0 },
         "op": { "type": "integer", "minimum": 0 },
         "worst": { "enum": [null, "info", "warning", "error", "fatal"] },
-        "codes": { "type": "array", "items": { "enum": ["mutation.target-missing", "mutation.no-op", "mutation.partial", "mutation.clamped", "mutation.duplicate-id", "mutation.invariant", "mutation.cascade"] } },
+        "codes": { "type": "array", "items": { "enum": ["mutation.target-missing", "mutation.target-referenced", "mutation.target-mismatch", "mutation.no-op", "mutation.partial", "mutation.clamped", "mutation.duplicate-id", "mutation.invariant", "mutation.cascade"] } },
         "superseded": { "type": "boolean" },
         "withdrawn": { "type": "boolean" }
       }

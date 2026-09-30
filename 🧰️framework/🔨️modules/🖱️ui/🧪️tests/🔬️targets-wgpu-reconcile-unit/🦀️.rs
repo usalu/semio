@@ -109,6 +109,42 @@ fn an_editable_table_row_keeps_one_child_per_cell_and_its_remove_action_as_a_row
     assert_eq!(input.id, "cell-0");
 }
 
+/// 🌳️ A retained tree paints its sections in document order, including sections a later revision inserts ahead of the
+/// ones already shown — the parity half of the React `mergeTreeSectionOrder` law (a program that leads with a new section,
+/// like the history body's edit band, is never sunk below the sections a host already painted).
+#[test]
+fn a_retained_tree_paints_inserted_sections_where_the_document_puts_them() {
+    fn record(id: u64, key: &str, component: serde_json::Value, children: &[u64]) -> ui_contract::UiNodeRecord {
+        serde_json::from_value(serde_json::json!({
+            "id": id,
+            "key": key,
+            "children": children,
+            "component": component,
+            "layout": { "kind": "stack", "axis": "vertical", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "wrap": false, "grow": false },
+            "style": {},
+            "activity": "idle",
+            "accessibility": {}
+        }))
+        .expect("tree record fixture")
+    }
+    let section = |id: u64, key: &str| record(id, key, serde_json::json!({ "type": "treeSection", "label": key }), &[]);
+    let painted = |document: &UiDocumentTree| {
+        let root = document.record(ui_contract::UiNodeId(0)).expect("the tree");
+        let UiNode::Tree(tree) = ui_node_from_record(document, root, "history.sections", "s.test@1/*#editor") else { panic!("a tree paints as a tree") };
+        tree.sections.iter().map(|section| section.id.clone()).collect::<Vec<_>>()
+    };
+    let header = ui_contract::UiDocumentLeaseHeader { generation: 1, surface: ui_contract::SurfaceId::try_from("history.sections").expect("surface"), revision: ui_contract::UiRevision(0), root: ui_contract::UiNodeId(0), layout_epoch: 0, node_count: 5 };
+    let mut document = UiDocumentTree::new(header).expect("document");
+    document.try_upsert_record(record(0, "framework.history", serde_json::json!({ "type": "tree" }), &[1, 2])).expect("tree");
+    document.try_upsert_record(section(1, "framework.history.actions")).expect("actions");
+    document.try_upsert_record(section(2, "framework.history.commands")).expect("commands");
+    assert_eq!(painted(&document), ["framework.history.actions", "framework.history.commands"]);
+    document.try_upsert_record(section(3, "framework.history.timeTravel")).expect("band");
+    document.try_upsert_record(section(4, "framework.history.editor")).expect("editor");
+    document.try_upsert_record(record(0, "framework.history", serde_json::json!({ "type": "tree" }), &[3, 4, 1, 2])).expect("the reordered tree");
+    assert_eq!(painted(&document), ["framework.history.timeTravel", "framework.history.editor", "framework.history.actions", "framework.history.commands"]);
+}
+
 #[test]
 fn a_childless_table_row_never_implicitly_activates_its_first_row_action() {
     let row: ui_contract::UiNodeRecord = serde_json::from_value(serde_json::json!({
@@ -234,6 +270,7 @@ fn tree_item(id: &str, label: &str) -> UiTreeItemNode {
         drag_data: None,
         items: None,
         control: None,
+        content_lines: None,
         inline_toolbar: None,
         detail: None,
         dimmed: None,
@@ -347,6 +384,7 @@ fn tree_item_control_and_trailing_actions_become_retained_children_too() {
         window: None,
         granularity: None,
         control: Some(UiControlNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(true), menu: None })),
+        content_lines: None,
         inline_toolbar: None,
         detail: None,
         actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some(Label::data("Delete")), action: action(), placement: Some(UiTreeActionPlacement::Menu), disabled: false }]),

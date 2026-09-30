@@ -1,0 +1,81 @@
+{
+  "artifact": null,
+  "structureId": null,
+  "geotechnicalCategory": null,
+  "designSituation": null,
+  "designApproach": null,
+  "annex": null,
+  "groundwaterLevel": null,
+  "investigationDepth": null,
+  "layers": null,
+  "footings": null,
+  "piles": {
+    "values": [
+      {
+        "id": "pile-P1",
+        "pileType": "bored",
+        "diameter": 0.6,
+        "length": 14.0,
+        "count": 1,
+        "alphaS": 0.7,
+        "unitShaftResistance": 90000.0,
+        "unitBaseResistance": 3000000.0,
+        "compressionPermanent": 500000.0,
+        "compressionVariable": 100000.0,
+        "tensionPermanent": 0.0,
+        "tensionVariable": 0.0,
+        "testProfiles": [
+          {
+            "id": "test-1",
+            "shaftResistance": 1600000.0,
+            "baseResistance": 850000.0
+          },
+          {
+            "id": "test-2",
+            "shaftResistance": 1550000.0,
+            "baseResistance": 820000.0
+          },
+          {
+            "id": "test-3",
+            "shaftResistance": 1650000.0,
+            "baseResistance": 880000.0
+          }
+        ]
+      },
+      {
+        "id": "pile-P1-2",
+        "pileType": "bored",
+        "diameter": 0.6,
+        "length": 14.0,
+        "count": 1,
+        "alphaS": 0.7,
+        "unitShaftResistance": 90000.0,
+        "unitBaseResistance": 3000000.0,
+        "compressionPermanent": 500000.0,
+        "compressionVariable": 100000.0,
+        "tensionPermanent": 0.0,
+        "tensionVariable": 0.0,
+        "testProfiles": [
+          {
+            "id": "test-1",
+            "shaftResistance": 1600000.0,
+            "baseResistance": 850000.0
+          },
+          {
+            "id": "test-2",
+            "shaftResistance": 1550000.0,
+            "baseResistance": 820000.0
+          },
+          {
+            "id": "test-3",
+            "shaftResistance": 1650000.0,
+            "baseResistance": 880000.0
+          }
+        ]
+      }
+    ]
+  },
+  "retainingWalls": null,
+  "slopes": null,
+  "upliftCases": null
+}

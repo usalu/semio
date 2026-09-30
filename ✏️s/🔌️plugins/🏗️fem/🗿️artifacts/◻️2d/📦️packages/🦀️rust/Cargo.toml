@@ -6,7 +6,7 @@ rust-version.workspace = true
 description = "FEM 2d artifact"
 
 [package.metadata.semio]
-role = "s-module"
+role = "artifact"
 
 [lints]
 workspace = true
@@ -16,7 +16,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:machine", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
 
 [dependencies]
 semio-framework-dispatch-macros = { workspace = true }
@@ -36,6 +36,10 @@ semio-s-artifact-stdio-stl = { workspace = true }
 pack = { workspace = true }
 semio-framework-ui-contract = { workspace = true, optional = true }
 semio-framework-ui-scene = { workspace = true, optional = true }
+# 🛠️ The gumball tool is a `🔄️machine` statechart folded by the tool-machine runner; `statechart!` expands to
+# `machine::…`, so the dependency carries that name.
+machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine", default-features = false, features = ["macros"], optional = true }
+semio-framework-tool-machine = { workspace = true, optional = true }
 
 [dev-dependencies]
 # 🔮 Test-only CSV ORACLE: the third-party `csv` reader parses the node table export.

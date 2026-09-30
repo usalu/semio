@@ -1,10 +1,9 @@
-//! ↩️ `insert-element` inverse via snapshot restore of list fields.
+//! ↩️ `insert-element` inverse — removes the inserted element at its landing position, computed from BASE state; a missing target yields no step.
 
 use super::InsertElement;
+use crate::mutations::remove_element::RemoveElement;
 use crate::{Din4108Mutation, Din4108Snapshot};
 
-pub fn inverse(_payload: &InsertElement, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
-    // Whole-list restore is expressed by re-inserting base lists through set-like rebuilds in from_snapshot.
-    let _ = base;
-    Vec::new()
+pub fn inverse(payload: &InsertElement, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+    vec![Din4108Mutation::RemoveElement(RemoveElement { index: payload.index.min(base.elements.len()) })]
 }

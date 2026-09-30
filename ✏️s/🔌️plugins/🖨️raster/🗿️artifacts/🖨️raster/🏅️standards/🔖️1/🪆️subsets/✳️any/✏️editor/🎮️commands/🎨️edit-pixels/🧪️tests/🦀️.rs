@@ -153,7 +153,7 @@ fn pixel_source_preparation_is_bounded_and_cancellable() {
 
 #[test]
 fn protected_pixels_refuse_before_preparation() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧬️schema/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
     for id in ["locked-pixel","inherited-pixel"] {
         let command=EditPixels {layer_id:id.into(),expected_image_key:None,operation:r#"{"kind":"invert"}"#.into(),selection:None};

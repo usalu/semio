@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeFenestrationUValue, base: &EnergyModelSnapsho
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Fenestration {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_u_value_w_m2k.is_finite() || payload.new_u_value_w_m2k <= 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Fenestration {} needs a positive finite U-value, got {}.", payload.id.0, payload.new_u_value_w_m2k), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fenestration {} needs a positive finite U-value, got {}.", payload.id.0, payload.new_u_value_w_m2k), [payload.id.0.to_string()]);
     }
     if existing.u_value_w_m2k == payload.new_u_value_w_m2k {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fenestration {} already has this U-value.", payload.id.0));

@@ -1,5 +1,5 @@
 //! 🔺️ Diff for `RemoveContent`. A missing entry ⇒ Error `mutation.target-missing`; `from` past the stored
-//! leaf count ⇒ Error `mutation.content-gap`; `from` equal to the stored leaf count ⇒ Warning `mutation.no-op`.
+//! leaf count ⇒ Error `mutation.target-mismatch`; `from` equal to the stored leaf count ⇒ Warning `mutation.no-op`.
 use crate::diff::RemodelingDiff;
 use crate::RemodelingSnapshot;
 
@@ -11,7 +11,7 @@ pub fn diff(payload: &super::RemoveContent, base: &RemodelingSnapshot) -> protoc
     };
     let stored = artifact.chunks.len() as u64;
     if payload.from > stored {
-        return protocol::MutationOutcome::error("mutation.content-gap", format!("Content \"{}\" stores only {stored} leaves.", payload.content_id), target);
+        return protocol::MutationOutcome::error("mutation.target-mismatch", format!("Content \"{}\" stores only {stored} leaves.", payload.content_id), target);
     }
     if payload.from == stored {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Content \"{}\" stores no leaf from {stored} on.", payload.content_id));

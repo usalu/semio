@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-system-v-rd-n/schema.json",
+  "title": "ChangeSystemVRdN",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "buildingIndex",
+    "systemIndex",
+    "newBaseShearResistanceN"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSystemVRdN"
+    },
+    "buildingIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "description": {
+          "en": "Zero-based position of the building in its list.",
+          "de": "Nullbasierte Position des Gebäudes in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "systemIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Structural system",
+          "de": "Tragsystem"
+        },
+        "description": {
+          "en": "Zero-based position of the structural system within the building in its list.",
+          "de": "Nullbasierte Position des Tragsystems im Gebäude in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newBaseShearResistanceN": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Base shear resistance V_Rd",
+          "de": "Widerstand gegen die Gesamterdbebenkraft V_Rd"
+        },
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "step": 1000,
+        "precision": 0,
+        "group": "resistance",
+        "order": 30
+      }
+    }
+  }
+}

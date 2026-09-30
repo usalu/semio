@@ -1,6 +1,10 @@
 /** 🏛️ `UiTheme` model: paint-ref resolver, parse/serialize, shared by the token generator (`📽️projection`) and the
  * runtime theme engine (`🌓️theme`). Dependency-free by contract: the token generator runs on a fresh clone, before
  * `🤖️generated/🔤️tokens/🟦️.ts` exists, and the theme barrel that re-exports this model imports those tokens. */
+import geometryContract from "../📐️geometry/🧬️contract/🔣️.json";
+import geometryBindings from "../📐️geometry/🔣️.json";
+import canonicalTokens from "../../🔣️.json";
+
 //#region 🔖️types
 /** 🖌️ A single paint reference: a primitive token, a literal hex, or a blend of two tokens. */
 export interface ThemePaintRef {
@@ -49,6 +53,44 @@ export interface UiTheme {
   readonly icons?: UiThemeIcons;
 }
 //#endregion 🔖️types
+
+/** 📐️ The single resolved geometry authority for CSS and native theme scalars. */
+export interface ThemeGeometry {
+  readonly spacingPx: number;
+  readonly rootRemPx: number;
+  readonly scalars: Readonly<Record<string, number>>;
+  readonly cssVars: Readonly<Record<string, string>>;
+}
+
+/** 📏️ Resolves an authored bounded px/rem compact length against its explicit reference root. */
+export function resolveThemeSpacingPx(compact: string, rootRemPx: number): number {
+  if (!new RegExp(geometryContract.properties.compact.pattern).test(compact) || !Number.isFinite(rootRemPx) || rootRemPx <= 0) throw new Error("theme compact spacing must be nonnegative px/rem and rootRemPx positive");
+  const normalized = compact.trim().toLowerCase();
+  const unit = normalized.endsWith("rem") ? "rem" : normalized.endsWith("px") ? "px" : "";
+  const value = Number(unit ? normalized.slice(0, -unit.length) : normalized) * (unit === "rem" ? rootRemPx : 1);
+  if (!Number.isFinite(value) || value < 0) throw new Error("theme compact spacing is not finite and nonnegative");
+  return value;
+}
+
+/** 📐️ Resolves authored geometry metrics once for all target projections. */
+export function resolveThemeGeometry(theme: Pick<UiTheme, "spacing" | "metrics">): ThemeGeometry {
+  const rootValue = theme.metrics.dom?.rootRemPx ?? canonicalTokens.metrics.dom.rootRemPx;
+  if (typeof rootValue !== "number") throw new Error("theme.metrics.dom.rootRemPx must be scalar");
+  const spacingPx = resolveThemeSpacingPx(theme.spacing.compact ?? canonicalTokens.spacing.compact, rootValue);
+  const scalars: Record<string, number> = {};
+  const cssVars: Record<string, string> = { "--spacing-compact": `${spacingPx}px` };
+  for (const binding of geometryBindings.bindings) {
+    const defaults = canonicalTokens.metrics[binding.section as keyof typeof canonicalTokens.metrics] as Record<string, unknown>;
+    const value = theme.metrics[binding.section]?.[binding.key] ?? defaults[binding.key];
+    if (typeof value !== "number" || !Number.isFinite(value) || value < 0) throw new Error(`theme.metrics.${binding.section}.${binding.key} must be a finite nonnegative scalar`);
+    const resolved = value * (binding.unit === "spacing" ? spacingPx : 1);
+    if (!Number.isFinite(resolved)) throw new Error(`theme metric ${binding.key} overflows`);
+    scalars[binding.themeField] = resolved;
+    cssVars[binding.cssVar] = `${resolved}px`;
+  }
+  return { spacingPx, rootRemPx: rootValue, scalars, cssVars };
+}
+
 
 //#region 🔖️resolveTheme
 function parseHex6(hex: string): [number, number, number] {
@@ -286,6 +328,7 @@ export function parseUiTheme(json: unknown): UiTheme {
     appearances,
     ...(obj.icons !== undefined ? { icons: parseThemeIcons(obj.icons, "icons") } : {}),
   };
+  resolveThemeGeometry(theme);
   // Resolve every paint once so unknown token refs fail loudly at parse time.
   for (const appearance of THEME_APPEARANCE_NAMES) {
     resolveThemeAppearancePalettes(theme, appearance);

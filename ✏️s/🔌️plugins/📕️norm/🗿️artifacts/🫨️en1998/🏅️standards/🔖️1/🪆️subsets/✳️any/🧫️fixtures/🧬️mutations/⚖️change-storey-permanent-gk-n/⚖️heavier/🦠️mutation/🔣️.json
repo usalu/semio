@@ -1,0 +1,6 @@
+{
+  "mutation": "changeStoreyPermanentGkN",
+  "buildingIndex": 0,
+  "storeyIndex": 0,
+  "newPermanentGkN": 2500000.0
+}

@@ -1,0 +1,101 @@
+{
+  "annex": "De",
+  "title": "Liquid-retaining tank with FEM and anchor",
+  "designWorkingLifeYears": 50.0,
+  "deltaCDev": 0.01,
+  "cementType": "N",
+  "concreteGrades": [
+    {
+      "id": "c35",
+      "name": "C35/45",
+      "fCk": 35000000.0
+    }
+  ],
+  "reinforcementGrades": [
+    {
+      "id": "b500",
+      "name": "B500B",
+      "fYk": 500000000.0,
+      "eS": 200000000000.0,
+      "ductility": "b",
+      "k": 1.08,
+      "epsUk": 0.05
+    },
+    {
+      "id": "b500a",
+      "name": "B500A",
+      "fYk": 500000000.0,
+      "eS": 200000000000.0,
+      "ductility": "a",
+      "k": 1.05,
+      "epsUk": 0.025
+    },
+    {
+      "id": "b500c",
+      "name": "B500C",
+      "fYk": 550000000.0,
+      "eS": 200000000000.0,
+      "ductility": "c",
+      "k": 1.15,
+      "epsUk": 0.075
+    }
+  ],
+  "prestressSteels": [
+    {
+      "id": "yp1860",
+      "name": "Y1860S7",
+      "fPk": 1860000000.0,
+      "fP01k": 1700000000.0
+    },
+    {
+      "id": "yp1860b",
+      "name": "Y1770S7",
+      "fPk": 1770000000.0,
+      "fP01k": 1520000000.0
+    }
+  ],
+  "members": [],
+  "anchors": [
+    {
+      "id": "anc-1",
+      "hEf": 0.1,
+      "cracked": true,
+      "fUk": 900000000.0,
+      "fYk": 720000000.0,
+      "aS": 0.0001,
+      "d": 0.012,
+      "c1": 0.12,
+      "fCk": 35000000.0,
+      "actions": [
+        {
+          "id": "G",
+          "kind": "permanent",
+          "category": "self",
+          "source": "external",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 8000.0,
+          "vK": 4000.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        },
+        {
+          "id": "Q-office",
+          "kind": "imposed",
+          "category": "office",
+          "source": "external",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 5000.0,
+          "vK": 3000.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        }
+      ]
+    }
+  ]
+}

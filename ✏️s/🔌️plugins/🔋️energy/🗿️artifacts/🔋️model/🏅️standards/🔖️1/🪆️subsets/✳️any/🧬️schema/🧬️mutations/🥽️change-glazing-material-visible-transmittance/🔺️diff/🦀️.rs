@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeGlazingMaterialVisibleTransmittance, base: &E
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Glazing material {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_visible_transmittance.is_finite() || !(0.0..=1.0).contains(&payload.new_visible_transmittance) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Glazing material {}: visible transmittance must be a finite value in 0..=1, got {}.", payload.id.0, payload.new_visible_transmittance), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Glazing material {}: visible transmittance must be a finite value in 0..=1, got {}.", payload.id.0, payload.new_visible_transmittance), [payload.id.0.to_string()]);
     }
     if existing.visible_transmittance == payload.new_visible_transmittance {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Glazing material {} already carries this visible transmittance: {}.", payload.id.0, payload.new_visible_transmittance));

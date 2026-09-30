@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeSolarThermalSystemStorageVolume, base: &Energ
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Solar thermal system {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_storage_volume_m3.is_finite() || payload.new_storage_volume_m3 <= 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Solar thermal system {}: buffer volume (m³) must be a positive finite value, got {}.", payload.id.0, payload.new_storage_volume_m3), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Solar thermal system {}: buffer volume (m³) must be a positive finite value, got {}.", payload.id.0, payload.new_storage_volume_m3), [payload.id.0.to_string()]);
     }
     if existing.storage_volume_m3 == payload.new_storage_volume_m3 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Solar thermal system {} already carries this buffer volume (m³): {}.", payload.id.0, payload.new_storage_volume_m3));

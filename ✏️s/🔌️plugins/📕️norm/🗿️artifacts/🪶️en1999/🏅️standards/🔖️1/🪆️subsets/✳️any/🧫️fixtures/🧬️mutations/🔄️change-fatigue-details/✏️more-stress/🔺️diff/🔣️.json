@@ -1,0 +1,23 @@
+{
+  "artifact": null,
+  "annex": null,
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": [
+    {
+      "id": "fat-1",
+      "memberId": "purlin-1",
+      "detailCategory": "71",
+      "deltaSigmaC": 71000000.0,
+      "deltaSigmaEd": 40000000.0,
+      "nCycles": 6000000.0,
+      "m1": 4.3,
+      "m2": 6.3
+    }
+  ],
+  "coldFormed": null,
+  "shells": null
+}

@@ -18,7 +18,9 @@ use serde_json::Value;
 /// 🧮️ Semantic puzzle-5d document mutation vocabulary: id-keyed part create-delete plus per-2d/
 /// per-3d-projection field edits, grip membership, a grip-to-grip fastener connect/disconnect
 /// relationship, and document-level edits (label rename, domain/description change,
-/// kind-compatibility connect/disconnect, kind-catalog replace). There is deliberately no camera
+/// kind-compatibility connect/disconnect, kind-catalog replace), and the four parametric selection
+/// transforms (`drag-selection2d` on the board, `drag-`, `rotate-`, `scale-selection3d` in the world) that
+/// record a gesture's own inputs. There is deliberately no camera
 /// mutation: camera pose is session-only app runtime state (`ActionKind::View`), never a document
 /// operation. There is deliberately no whole-document mutation: import/reset/example-load goes
 /// through `store::ArtifactStore::reset` (non-history), never through this enum.
@@ -63,6 +65,10 @@ pub enum Puzzle5dMutation {
     ScaleTargetVolume(ScaleTargetVolume),
     ChangeTargetVolumeHidden(ChangeTargetVolumeHidden),
     ChangeTargetVolumeLocked(ChangeTargetVolumeLocked),
+    DragSelection2d(DragSelection2d),
+    DragSelection3d(DragSelection3d),
+    RotateSelection3d(RotateSelection3d),
+    ScaleSelection3d(ScaleSelection3d),
 }
 
 //#region 🏷️Kinds
@@ -106,6 +112,10 @@ pub const KINDS: &[&str] = &[
     "scale-target-volume",
     "change-target-volume-hidden",
     "change-target-volume-locked",
+    "drag-selection2d",
+    "drag-selection3d",
+    "rotate-selection3d",
+    "scale-selection3d",
 ];
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
@@ -130,6 +140,8 @@ pub use super::delete_part::{delete_part, DeletePart};
 pub use super::delete_target_volume::{delete_target_volume, DeleteTargetVolume};
 pub use super::disconnect_grips::{disconnect_grips, DisconnectGrips};
 pub use super::disconnect_kind_compatibility::{disconnect_kind_compatibility, DisconnectKindCompatibility};
+pub use super::drag_selection_2d::{drag_selection_2d, DragSelection2d};
+pub use super::drag_selection_3d::{drag_selection_3d, DragSelection3d};
 pub use super::edit_part_2d_text::{edit_part_2d_text, EditPart2dText};
 pub use super::edit_part_3d_label::{edit_part_3d_label, EditPart3dLabel};
 pub use super::move_part_2d::{move_part_2d, MovePart2d};
@@ -142,9 +154,134 @@ pub use super::replace_kind_catalogs::{replace_kind_catalogs, ReplaceKindCatalog
 pub use super::replace_part_2d_geometry::{replace_part_2d_geometry, ReplacePart2dGeometry};
 pub use super::replace_part_grip::{replace_part_grip, ReplacePartGrip};
 pub use super::rotate_part_3d::{rotate_part_3d, RotatePart3d};
+pub use super::rotate_selection_3d::{rotate_selection_3d, RotateSelection3d};
 pub use super::rotate_target_volume::{rotate_target_volume, RotateTargetVolume};
 pub use super::scale_part_3d::{scale_part_3d, ScalePart3d};
+pub use super::scale_selection_3d::{scale_selection_3d, ScaleSelection3d};
 pub use super::scale_target_volume::{scale_target_volume, ScaleTargetVolume};
+pub use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::mutations::{puzzle3d_selection_items as puzzle5d_selection_items, puzzle3d_selection_number as puzzle5d_selection_number, puzzle3d_selection_triple as puzzle5d_selection_triple, puzzle3d_targets_invariant as puzzle5d_targets_invariant, quat_from_axis_angle, quat_mul};
+
+//#region 🔖️SelectionTransform
+/// 🎛️ The ONE board↔world scale this artifact places and moves paired parts with — the linear inverse of
+/// `🧬️schema/💡️inferences/🎛️flat-position`'s plan projection, so a flat point and a world origin stay one
+/// consistent pair whichever pane the gesture came from. A flat unit is one board pixel; 48 of them make
+/// one world metre (the board's own default part box, `part_2d.width`/`height`).
+pub const PUZZLE5D_FLAT_TO_WORLD: f64 = 1.0 / 48.0;
+
+/// 🧭️ Shared diff of the four parametric selection leaves. `targets` is classified by document membership
+/// against `base`: a part id goes through `part` (its board projection for a 2d leaf, its world projection for
+/// a 3d one), a target-volume id through `volume` (`None` for the board, which paints no volume), each record
+/// transformed IN PLACE. An empty or repeated target set is the Fatal `mutation.invariant` the payload schema's
+/// `minItems`/`uniqueItems` forbid. Absent ids, locked records (a part's `2d.locked`) and records the leaf does
+/// not reach are skipped with one `mutation.partial` warning per reason (in that order, ids in payload order);
+/// nothing left is `mutation.target-missing`; an `identity` transform, or survivors that do not move, is
+/// `mutation.no-op`. Every moved record is patched whole from the base, in document order.
+pub fn puzzle5d_selection_diff(
+    base: &Puzzle5dSnapshot,
+    targets: &[String],
+    identity: bool,
+    part: impl Fn(&crate::Puzzle5dPart) -> crate::Puzzle5dPart,
+    volume: Option<&dyn Fn(&crate::Puzzle5dTargetVolume) -> crate::Puzzle5dTargetVolume>,
+) -> protocol::MutationOutcome<Puzzle5dDiff> {
+    use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dPartPatch, Puzzle5dPartPatchEntry, Puzzle5dPartsDelta, Puzzle5dTargetVolumePatch, Puzzle5dTargetVolumePatchEntry, Puzzle5dTargetVolumesDelta};
+    if let Err(reason) = puzzle5d_targets_invariant(targets) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
+    }
+    let (mut missing, mut locked, mut unreached, mut survivors) = (Vec::<String>::new(), Vec::<String>::new(), Vec::<String>::new(), std::collections::BTreeSet::<&str>::new());
+    for id in targets {
+        match (base.parts.iter().find(|entry| &entry.id == id), base.target_volumes.iter().find(|entry| &entry.id == id)) {
+            (Some(entry), _) if entry.part_2d.locked != Some(true) => {
+                survivors.insert(id.as_str());
+            }
+            (Some(_), _) => locked.push(id.clone()),
+            (None, Some(entry)) if entry.locked => locked.push(id.clone()),
+            (None, Some(_)) if volume.is_none() => unreached.push(id.clone()),
+            (None, Some(_)) => {
+                survivors.insert(id.as_str());
+            }
+            (None, None) => missing.push(id.clone()),
+        }
+    }
+    if survivors.is_empty() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is an unlocked part or target volume this transform reaches", targets.len()), targets.to_vec());
+    }
+    let partial: Vec<protocol::MutationMessage> = [(missing, "not in this puzzle"), (locked, "locked"), (unreached, "target volumes live in the world, not on the board")]
+        .into_iter()
+        .filter(|(ids, _)| !ids.is_empty())
+        .map(|(ids, reason)| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", ids.len(), targets.len(), ids.join(", "))).at(ids))
+        .collect();
+    let parts: Vec<Puzzle5dPartPatchEntry> = if identity {
+        Vec::new()
+    } else {
+        base.parts.iter().filter(|entry| survivors.contains(entry.id.as_str())).filter_map(|entry| Some(part(entry)).filter(|next| next != entry).map(|next| Puzzle5dPartPatchEntry { id: entry.id.clone(), patch: Puzzle5dPartPatch { replacement: Some(next) } })).collect()
+    };
+    let volumes: Vec<Puzzle5dTargetVolumePatchEntry> = match volume.filter(|_| !identity) {
+        Some(transform) => base
+            .target_volumes
+            .iter()
+            .filter(|entry| survivors.contains(entry.id.as_str()))
+            .filter_map(|entry| Some(transform(entry)).filter(|next| next != entry).map(|next| Puzzle5dTargetVolumePatchEntry { id: entry.id.clone(), patch: Puzzle5dTargetVolumePatch { replacement: Some(next) } }))
+            .collect(),
+        None => Vec::new(),
+    };
+    if parts.is_empty() && volumes.is_empty() {
+        return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(targets.to_vec())]));
+    }
+    protocol::MutationOutcome::new(Puzzle5dDiff {
+        parts: (!parts.is_empty()).then(|| Puzzle5dPartsDelta { patched: parts, ..Default::default() }),
+        target_volumes: (!volumes.is_empty()).then(|| Puzzle5dTargetVolumesDelta { patched: volumes, ..Default::default() }),
+        ..Default::default()
+    })
+    .absorb_messages(partial)
+}
+
+/// ↩️ Exact base-derived inverse of a selection transform: the absolute setters restoring every pose field its
+/// forward `outcome` changes — a part's board position, its world origin, orientation and scale, a target
+/// volume's origin, orientation and scale — so an undo never accumulates float error.
+pub fn puzzle5d_selection_inverse(base: &Puzzle5dSnapshot, outcome: protocol::MutationOutcome<Puzzle5dDiff>) -> Vec<Puzzle5dMutation> {
+    let (diff, _) = outcome.into_parts();
+    let mut steps = Vec::new();
+    for entry in diff.parts.iter().flat_map(|delta| &delta.patched) {
+        let (Some(before), Some(after)) = (base.parts.iter().find(|part| part.id == entry.id), entry.patch.replacement.as_ref()) else { continue };
+        if (before.part_2d.x, before.part_2d.y) != (after.part_2d.x, after.part_2d.y) {
+            steps.push(move_part_2d(before.id.clone(), before.part_2d.x, before.part_2d.y));
+        }
+        if before.part_3d.origin != after.part_3d.origin {
+            steps.push(move_part_3d(before.id.clone(), before.part_3d.origin));
+        }
+        if before.part_3d.orientation != after.part_3d.orientation {
+            steps.push(rotate_part_3d(before.id.clone(), before.part_3d.orientation));
+        }
+        if before.part_3d.scale != after.part_3d.scale {
+            steps.push(scale_part_3d(before.id.clone(), before.part_3d.scale));
+        }
+    }
+    for entry in diff.target_volumes.iter().flat_map(|delta| &delta.patched) {
+        let (Some(before), Some(after)) = (base.target_volumes.iter().find(|volume| volume.id == entry.id), entry.patch.replacement.as_ref()) else { continue };
+        if before.origin != after.origin {
+            steps.push(move_target_volume(before.id.clone(), before.origin));
+        }
+        if before.orientation != after.orientation {
+            steps.push(rotate_target_volume(before.id.clone(), before.orientation));
+        }
+        if before.scale != after.scale {
+            steps.push(scale_target_volume(before.id.clone(), before.scale));
+        }
+    }
+    steps
+}
+
+/// 📏️ A pose scale multiplied per axis by `factors`, always as a per-axis triple: a uniform scalar broadcasts
+/// first and an absent scale reads as `[1, 1, 1]`.
+pub fn puzzle5d_scaled(scale: Option<crate::Puzzle5dScale>, factors: [f64; 3]) -> crate::Puzzle5dScale {
+    let current = match scale {
+        Some(crate::Puzzle5dScale::Uniform(value)) => [value; 3],
+        Some(crate::Puzzle5dScale::Vec3(value)) => value,
+        None => [1.0; 3],
+    };
+    crate::Puzzle5dScale::Vec3([current[0] * factors[0], current[1] * factors[1], current[2] * factors[2]])
+}
+//#endregion 🔖️SelectionTransform
 
 //#region 🔖️SnapshotDelta
 /// 🔀️ Diffs two typed snapshots into a minimal semantic mutation set — the single source of truth

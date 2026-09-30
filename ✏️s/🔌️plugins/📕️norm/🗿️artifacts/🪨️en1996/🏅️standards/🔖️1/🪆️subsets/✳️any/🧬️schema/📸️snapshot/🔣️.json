@@ -333,7 +333,11 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
     },
     "WallLoadCase": {
       "title": "WallLoadCase",
@@ -517,7 +521,11 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
     },
     "WallOpening": {
       "title": "WallOpening",
@@ -572,7 +580,11 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
     },
     "MasonryWall": {
       "title": "MasonryWall",
@@ -1056,7 +1068,11 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
     },
     "AnnexChoice": {
       "title": "AnnexChoice",
@@ -1076,7 +1092,10 @@
             "de": "Deutscher Nationaler Anhang (DIN EN)"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "DesignSituation": {
       "title": "DesignSituation",
@@ -1106,7 +1125,10 @@
             "de": "Erdbeben"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "MasonryClass": {
       "title": "MasonryClass",
@@ -1141,7 +1163,10 @@
             "de": "Klasse 5"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "ExposureClass": {
       "title": "ExposureClass",
@@ -1176,7 +1201,10 @@
             "de": "MX5"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "MortarClass": {
       "title": "MortarClass",
@@ -1216,7 +1244,10 @@
             "de": "M20"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "MortarType": {
       "title": "MortarType",
@@ -1241,7 +1272,10 @@
             "de": "Leichtmauermörtel"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "UnitGroup": {
       "title": "UnitGroup",
@@ -1271,7 +1305,10 @@
             "de": "Gruppe 4"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "UnitMaterial": {
       "title": "UnitMaterial",
@@ -1301,7 +1338,10 @@
             "de": "Beton"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "WallType": {
       "title": "WallType",
@@ -1326,7 +1366,10 @@
             "de": "Nichttragende Wand"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

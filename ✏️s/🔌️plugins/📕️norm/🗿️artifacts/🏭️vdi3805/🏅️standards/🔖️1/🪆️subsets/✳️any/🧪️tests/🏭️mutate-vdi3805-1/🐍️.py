@@ -31,6 +31,7 @@ build_adapter = _vocabulary.build_adapter
 #: 🏷️ Every kind this subset's committed catalog declares, in catalog order.
 KINDS = [
     "change-manufacturer-file",
+    "change-limits",
     "change-correction-as-of",
     "change-strict-mode",
     "change-edition-profile",
@@ -52,24 +53,25 @@ KINDS = [
 
 #: 🧫️ The committed specification vector each kind publishes, as (triad directory, fixture name).
 VECTORS = {
-    "change-manufacturer-file": ("🏭️change-manufacturer-file", "✏️renames-the-header-manufacturer-to-acme"),
-    "change-correction-as-of": ("📅️change-correction-as-of", "📅️advances-the-correction-cut-off-to-2025-03"),
-    "change-strict-mode": ("🔒️change-strict-mode", "🔒️turns-strict-mode-on"),
-    "change-edition-profile": ("🔖️change-edition-profile", "🆕️switches-sheet-8-from-legacy-to-current"),
-    "remove-edition-profile": ("🧹️remove-edition-profile", "🧹️clears-the-sheet-8-legacy-override"),
-    "add-product": ("📦️add-product", "📦️appends-vlv-80-002-and-its-index-entry"),
-    "remove-product": ("🗑️remove-product", "🚫️removes-vlv-50-001-and-its-index-entry"),
-    "rename-product": ("🏷️rename-product", "🏷️retitles-vlv-50-001-and-resyncs-its-index-tags"),
-    "change-product-configuration": ("🎛️change-product-configuration", "📏️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn"),
-    "add-geometry": ("🧊️add-geometry", "🧊️adds-the-geom-valve-80-definition"),
-    "remove-geometry": ("🚮️remove-geometry", "🚫️removes-the-geom-valve-50-definition"),
-    "resize-geometry": ("📐️resize-geometry", "📐️doubles-the-geom-valve-50-bounding-box"),
-    "add-geometry-connection": ("🔌️add-geometry-connection", "🚰️attaches-the-drain-connection-to-geom-valve-50"),
-    "remove-geometry-connection": ("✂️remove-geometry-connection", "🔌️detaches-the-out-connection-from-geom-valve-50"),
-    "change-geometry-parameters": ("🧮️change-geometry-parameters", "➗️rescales-geom-valve-50-to-half-and-adds-clearance"),
-    "add-curve": ("📈️add-curve", "📈️adds-the-curve-dp-pressure-drop-curve"),
-    "remove-curve": ("📉️remove-curve", "🚫️removes-the-curve-kvs-flow-curve"),
-    "change-curve-points": ("📍️change-curve-points", "📍️resamples-curve-kvs-onto-three-points"),
+    "change-manufacturer-file": ("🏭️change-manufacturer-file", "✏️sets-file"),
+    "change-limits": ("🚧️change-limits", "🛡️tightens-every"),
+    "change-correction-as-of": ("📅️change-correction-as-of", "✏️sets-of"),
+    "change-strict-mode": ("🔒️change-strict-mode", "🔒️turns-strict"),
+    "change-edition-profile": ("🔖️change-edition-profile", "✏️to-current"),
+    "remove-edition-profile": ("🧹️remove-edition-profile", "➖️removes"),
+    "add-product": ("📦️add-product", "📦️appends-vlv-80-002"),
+    "remove-product": ("🗑️remove-product", "🚫️removes-vlv-50-001"),
+    "rename-product": ("🏷️rename-product", "🏷️retitles-vlv-50"),
+    "change-product-configuration": ("🎛️change-product-configuration", "✏️sets"),
+    "add-geometry": ("🧊️add-geometry", "🧊️adds-the-geom-valve"),
+    "remove-geometry": ("🚮️remove-geometry", "🚫️removes-the-geom"),
+    "resize-geometry": ("📐️resize-geometry", "📐️doubles-the-geom"),
+    "add-geometry-connection": ("🔌️add-geometry-connection", "➕️adds"),
+    "remove-geometry-connection": ("✂️remove-geometry-connection", "➖️removes"),
+    "change-geometry-parameters": ("🧮️change-geometry-parameters", "✏️sets"),
+    "add-curve": ("📈️add-curve", "📈️adds-the-curve-dp"),
+    "remove-curve": ("📉️remove-curve", "🚫️removes-the-curve"),
+    "change-curve-points": ("📍️change-curve-points", "✏️sets-points"),
 }
 
 #: 🗣️ The real committed VDI 3805 document, read where the domain already keeps it.
@@ -85,5 +87,5 @@ def adapter():
     """🧭️ Registration is by FULL expanded scenario id, so this mirrors the feature's `Examples` tables
     exactly. Oracle role only: registering these handlers as subjects as well would make the reference
     its own subject and manufacture a guaranteed-green self-comparison."""
-    return build_adapter(Subset("VDI 3805", KINDS, VECTORS, DSL_ASSET, ENVELOPE, vector_root="shared://🧬️mutations"))
+    return build_adapter(Subset("VDI 3805", KINDS, VECTORS, DSL_ASSET, ENVELOPE))
 # endregion 🔖️Registration

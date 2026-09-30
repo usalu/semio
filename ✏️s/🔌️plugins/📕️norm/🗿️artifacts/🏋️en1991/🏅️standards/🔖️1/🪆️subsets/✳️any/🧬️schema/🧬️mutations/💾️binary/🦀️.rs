@@ -1,4 +1,4 @@
-//! 💾️ En1991 mutation binary — delegates to JSON OpBinary in text facet.
+//! 💾️ En1991 mutation binary — the protocol-tagged payload frame of `📡️.protocol.semio` that the text facet's OpBinary writes.
 
 pub use crate::artifact_schema::mutations::text::*;
 

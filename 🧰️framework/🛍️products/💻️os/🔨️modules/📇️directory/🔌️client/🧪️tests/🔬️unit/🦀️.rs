@@ -408,7 +408,7 @@ fn document_expectation(schema: &str, surface_id: Option<&str>) -> DocumentSocke
 #[test]
 fn execution_target_status_vocabulary_matches_the_corpus() {
     use crate::os_directory::schema::{DocumentExecutionTargetLocaleV1, DocumentExecutionTargetStatusCodeV1};
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
     let status = corpus["expected"]["status"].as_object().expect("corpus status vocabulary");
     for (code, text) in status {
         let decoded: DocumentExecutionTargetStatusCodeV1 = crate::os_pack::json::from_json_str(&format!("\"{code}\"")).unwrap_or_else(|_| panic!("the Rust twin lacks status {code}"));
@@ -426,7 +426,7 @@ fn execution_target_status_vocabulary_matches_the_corpus() {
 /// same relation the retained `DocumentSocketAuthorityV1` uses.
 #[test]
 fn execution_target_lease_compares_every_plan_and_verified_byte_field() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
     let decode_fields =
         |value: &serde_json::Value| -> Result<DocumentExecutionTargetLeaseFieldsV1, ()> { crate::os_pack::json::from_json_str::<DocumentExecutionTargetLeaseFieldsV1>(&serde_json::to_string(value).expect("fields json")).map_err(|_| ()) };
     let manifest = decode_fields(&corpus["manifest"]).expect("corpus manifest");
@@ -766,20 +766,27 @@ async fn session_authority_client_preserves_canonical_binding_and_rejects_reorde
 }
 
 #[semio_framework_async_macros::async_test]
-async fn inference_client_refuses_substituted_hub_receipt_and_page_coordinates() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json")).expect("inference fixture");
-    let mut substituted_receipt = fixture["wire"]["receipt"].clone();
-    substituted_receipt["schema"] = serde_json::json!("semio.hub.inference-job-events/v1");
-    let mut substituted_page = fixture["wire"]["page"].clone();
-    substituted_page["jobId"] = serde_json::json!("2".repeat(32));
+async fn document_http_transport_preserves_scope_bounds_and_owner_decode() {
     let transport = FakeTransport::default();
-    transport.push_response(Ok(HttpResponse { status: 200, body: substituted_receipt.to_string().into_bytes() })).await;
-    transport.push_response(Ok(HttpResponse { status: 200, body: substituted_page.to_string().into_bytes() })).await;
-    let client = authenticated_client(transport, "inference-token");
-    let scope = DocumentScope { space_id: "space-inference".to_string(), document_id: "document-inference".to_string() };
-    let request = GisMapInferenceJobRequestV1 { schema: "semio.hub.inference-job/v1".to_string(), version: 1, request_id: "a".repeat(32), service_id: "s.gis.gismap.inference".to_string(), policy_version: 1, lifetime_ms: 60_000 };
-    assert_eq!(client.submit_gis_map_inference_job(&root_ctx(), &scope, &request).await, Err(GisMapInferencePortCodeV1::Invalid));
-    assert_eq!(client.read_gis_map_inference_events(&root_ctx(), &scope, "1".repeat(32).as_str(), 0).await, Err(GisMapInferencePortCodeV1::Invalid));
+    transport.push_response(Ok(HttpResponse { status: 200, body: br#"{"schema":"neutral.reply/v1","value":7}"#.to_vec() })).await;
+    transport.push_response(Ok(HttpResponse { status: 200, body: vec![b'x'; 65] })).await;
+    transport.push_response(Ok(HttpResponse { status: 401, body: b"private detail".to_vec() })).await;
+    let client = authenticated_client(transport.clone(), "port-token");
+    let scope = DocumentScope::new("space/one", "document?two");
+    let request = DocumentHttpRequestV1 { method: HttpMethod::Post, segments: vec!["neutral".into(), "job/one".into()], after: Some(7), body: Some(b"{}".to_vec()), request_max_bytes: 64, response_max_bytes: 64 };
+    let value = client.document_http_call(&root_ctx(), &scope, &request, |bytes| {
+        let value: serde_json::Value = serde_json::from_slice(bytes).map_err(|_| DocumentHttpPortCodeV1::Invalid)?;
+        (value["schema"] == "neutral.reply/v1").then_some(value["value"].as_u64().unwrap()).ok_or(DocumentHttpPortCodeV1::Invalid)
+    }).await.expect("owner decoder");
+    assert_eq!(value, 7);
+    assert!(transport.requests.lock().unwrap()[0].url.ends_with("/spaces/space%2Fone/documents/document%3Ftwo/neutral/job%2Fone?after=7"));
+    assert_eq!(transport.requests.lock().unwrap()[0].bearer.as_deref(), Some("port-token"));
+    assert_eq!(client.document_http_call(&root_ctx(), &scope, &request, |_| Ok(())).await, Err(DocumentHttpPortCodeV1::Bounds));
+    assert_eq!(client.document_http_call(&root_ctx(), &scope, &request, |_| Ok(())).await, Err(DocumentHttpPortCodeV1::Denied));
+    let ctx = root_ctx();
+    ctx.cancel.cancel_now();
+    assert_eq!(client.document_http_call(&ctx, &scope, &request, |_| Ok(())).await, Err(DocumentHttpPortCodeV1::Cancelled));
+    assert_eq!(transport.requests.lock().unwrap().len(), 3);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1021,7 +1028,7 @@ async fn cancellation_after_socket_open_closes_before_socket_hello() {
 #[semio_framework_async_macros::async_test]
 async fn execution_target_module_resolution_follows_the_serving_generation() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/📇️directory/🧩️execution-target-module-resolution-v1.json")).expect("resolution fixture");
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
     let hex_bytes = |text: &str| -> Vec<u8> { (0..text.len() / 2).map(|index| u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).expect("hex")).collect() };
     let component = hex_bytes(corpus["componentHex"].as_str().expect("component hex"));
     let descriptor = hex_bytes(corpus["descriptorHex"].as_str().expect("descriptor hex"));

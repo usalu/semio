@@ -7,7 +7,6 @@ use crate::standards::v1_7::subsets::base::schema::{
     diff::PdfDiff,
     snapshot::{ObjRef, PdfObject, PdfSnapshot},
 };
-use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -28,7 +27,7 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for EmbedFontFile {
         if let Some(id) = support::font_descriptors(&next).get(self.descriptor_ordinal).copied() {
             support::set_entry(&mut next, id, &self.key, PdfObject::Ref(self.program));
         }
-        MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
+        MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfEMutation> {

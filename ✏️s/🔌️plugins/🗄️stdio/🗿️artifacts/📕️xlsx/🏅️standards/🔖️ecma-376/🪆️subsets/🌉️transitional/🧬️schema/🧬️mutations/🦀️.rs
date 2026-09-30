@@ -20,12 +20,12 @@
 //! @see ../../🔣️oracle.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
-use crate::standards::v_ecma_376::subsets::base::schema::diff::{NamedModified, NamedTripleDiff, XlsxDiff, XlsxOpcContentTypesDiff, XlsxOpcCtEntriesDiff, XlsxOpcDiff, XlsxOpcPartDiff, XlsxOpcPartsDiff, XlsxOpcRelationshipsDiff};
+use crate::standards::v_ecma_376::subsets::base::schema::diff::{diff_set_snapshot, XlsxDiff};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
-use semio_s_artifact_stdio_xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
-use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPart};
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
+use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 
 //#region 🔖️Dialect
 /// 🏷️ ISO/IEC 29500-4 Transitional SpreadsheetML main namespace.
@@ -92,7 +92,7 @@ pub fn apply_xlsx_transitional_mutation(snapshot: &mut XlsxSnapshot, mutation: &
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -105,24 +105,6 @@ pub fn apply_xlsx_transitional_mutation(snapshot: &mut XlsxSnapshot, mutation: &
 fn main_part_path(base: &XlsxSnapshot) -> Option<String> {
     let relationship = base.opc.relationships_for("").iter().find(|relationship| relationship.rel_type.ends_with("/officeDocument"))?;
     Some(resolve_relationship_target("", &relationship.target))
-}
-
-/// 📰️ Whether a part is XML this vocabulary may rewrite. `.rels` parts never appear in `opc.parts`
-/// — they are decoded into `opc.relationships`, which the relationship-base axis addresses instead.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn is_xml_part(path: &str) -> bool {
-    let lower = path.to_ascii_lowercase();
-    lower.ends_with(".xml") || lower.ends_with(".vml")
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_part(part: &OpcPart) -> Option<XmlDocument> {
-    xml_document_from_text(std::str::from_utf8(&part.bytes).ok()?).ok()
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn serialize(document: &XmlDocument) -> Vec<u8> {
-    xml_document_to_text(document).into_bytes()
 }
 
 /// ✍️ Rewrites every attribute value equal to a member of `from` to `to`, through the whole
@@ -150,13 +132,12 @@ fn declares_namespace(node: &XmlNode, value: &str) -> bool {
     attrs.iter().any(|attr| attr.value == value) || children.iter().any(|child| declares_namespace(child, value))
 }
 
-/// 🔎️ Which member of a `[transitional, strict]` pair the package actually declares.
+/// 🔎️ Which member of a `[transitional, strict]` pair the package's logical XML parts actually declare.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn declared_pair_member(base: &XlsxSnapshot, pair: [&str; 2]) -> Option<String> {
-    pair.into_iter().find(|candidate| base.opc.parts.iter().filter(|part| is_xml_part(&part.path)).filter_map(parse_part).any(|document| document.root.as_ref().is_some_and(|root| declares_namespace(root, candidate)))).map(str::to_string)
+    pair.into_iter().find(|candidate| base.xml_parts.iter().any(|part| part.document.root.as_ref().is_some_and(|root| declares_namespace(root, candidate)))).map(str::to_string)
 }
 
-/// 🔎️ The relationship-type base the package's own relationships are built on.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn root_attribute(document: &XmlDocument, name: &str) -> Option<String> {
     let XmlNode::Element { attrs, .. } = document.root.as_ref()? else { return None };
@@ -166,7 +147,7 @@ fn root_attribute(document: &XmlDocument, name: &str) -> Option<String> {
 /// 🔎️ The main part's root `conformance` attribute, if it declares one.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn conformance_attribute(base: &XlsxSnapshot) -> Option<String> {
-    root_attribute(&parse_part(base.opc.part(&main_part_path(base)?)?)?, "conformance")
+    root_attribute(&base.xml_part(&main_part_path(base)?)?.document, "conformance")
 }
 
 /// ✍️ Sets — or, with `None`, removes — one attribute on the ROOT element only.
@@ -184,24 +165,17 @@ fn set_root_attribute(document: &mut XmlDocument, name: &str, value: Option<&str
     true
 }
 
-/// 🏅️ Stamps a whole snapshot into one conformance class: both namespace families, the
-/// `officeDocument` relationship base, and the main part's own `conformance` attribute. Bijective by
-/// construction, so stamping back is an exact inverse — which is what makes `SetSnapshot` invertible
-/// on this axis.
+/// 🏅️ Stamps a whole snapshot into one conformance class: both namespace families across every
+/// logical XML part, the `officeDocument` relationship base, and the main part's own `conformance`
+/// attribute. Bijective by construction, so stamping back is an exact inverse — which is what makes
+/// `SetSnapshot` invertible on this axis.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn stamp_conformance_class(mut snapshot: XlsxSnapshot, strict: bool) -> XlsxSnapshot {
     let index = usize::from(strict);
-    for part in snapshot.opc.parts.iter_mut() {
-        if !is_xml_part(&part.path) {
-            continue;
-        }
-        let Some(mut document) = parse_part(part) else { continue };
-        let Some(root) = document.root.as_mut() else { continue };
-        let mut changed = retarget_namespace(root, &MAIN_NAMESPACES, MAIN_NAMESPACES[index]);
-        changed |= retarget_namespace(root, &RELATIONSHIP_NAMESPACES, RELATIONSHIP_NAMESPACES[index]);
-        if changed {
-            part.bytes = serialize(&document);
-        }
+    for part in snapshot.xml_parts.iter_mut() {
+        let Some(root) = part.document.root.as_mut() else { continue };
+        retarget_namespace(root, &MAIN_NAMESPACES, MAIN_NAMESPACES[index]);
+        retarget_namespace(root, &RELATIONSHIP_NAMESPACES, RELATIONSHIP_NAMESPACES[index]);
     }
     for relationships in snapshot.opc.relationships.values_mut() {
         for relationship in relationships.iter_mut() {
@@ -210,11 +184,8 @@ pub fn stamp_conformance_class(mut snapshot: XlsxSnapshot, strict: bool) -> Xlsx
         }
     }
     if let Some(path) = main_part_path(&snapshot) {
-        if let Some(part) = snapshot.opc.part(&path).cloned() {
-            if let Some(mut document) = parse_part(&part) {
-                set_root_attribute(&mut document, "conformance", if strict { Some("strict") } else { None });
-                snapshot.opc.set_part(&part.path, &part.content_type, serialize(&document));
-            }
+        if let Some(part) = snapshot.xml_part_mut(&path) {
+            set_root_attribute(&mut part.document, "conformance", if strict { Some("strict") } else { None });
         }
     }
     snapshot
@@ -228,84 +199,52 @@ pub fn stamp_conformance_class_mutation(base: &XlsxSnapshot, strict: bool) -> Xl
 //#endregion 🔖️Helpers
 
 //#region 🔖️DiffBuilders
+/// 🔺️ The sparse diff carrying `base` to its edited copy `next`, through the base subset's own
+/// `diff_set_snapshot` — none when the edit changed nothing.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn opc_diff(parts: Option<XlsxOpcPartsDiff>, content_types: Option<XlsxOpcContentTypesDiff>, relationships: Option<XlsxOpcRelationshipsDiff>) -> XlsxDiff {
-    if parts.is_none() && content_types.is_none() && relationships.is_none() {
+fn diff_to(base: &XlsxSnapshot, next: XlsxSnapshot) -> XlsxDiff {
+    if next == *base {
         return XlsxDiff::default();
     }
-    XlsxDiff { opc: Some(XlsxOpcDiff { content_types, parts, relationships, comment: None }), ..Default::default() }
+    diff_set_snapshot(base, &next)
 }
 
-/// 🔺️ Sparse per-part diff: the touched parts only, each carrying just the fields that moved.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parts_diff(modified: Vec<(String, XlsxOpcPartDiff)>, added: Vec<OpcPart>, removed: Vec<String>) -> Option<XlsxOpcPartsDiff> {
-    if modified.is_empty() && added.is_empty() && removed.is_empty() {
-        return None;
-    }
-    Some(NamedTripleDiff { removed, modified: modified.into_iter().map(|(key, diff)| NamedModified { key, diff }).collect(), added, order: Vec::new() })
-}
-
-/// 🔺️ Sparse `[Content_Types].xml` override diff, keyed by the `/`-prefixed part name the typed
-/// table itself keys by. Whether the entry is an addition or a modification is read from the base,
-/// never assumed.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn overrides_diff(base: &XlsxSnapshot, path: &str, content_type: Option<&str>) -> Option<XlsxOpcContentTypesDiff> {
-    let key = format!("/{}", path.trim_start_matches('/'));
-    let present = base.opc.content_types.overrides.iter().any(|(name, _)| *name == key);
-    let entries: XlsxOpcCtEntriesDiff = match (present, content_type) {
-        (true, Some(content_type)) => NamedTripleDiff { modified: vec![NamedModified { key, diff: content_type.to_string() }], ..Default::default() },
-        (true, None) => NamedTripleDiff { removed: vec![key], ..Default::default() },
-        (false, Some(content_type)) => NamedTripleDiff { added: vec![(key, content_type.to_string())], ..Default::default() },
-        (false, None) => return None,
-    };
-    Some(XlsxOpcContentTypesDiff { defaults: None, overrides: Some(entries) })
-}
-
-/// 🔺️ The diff of retargeting one namespace family across every XML part that declares it.
+/// 🔺️ The diff of retargeting one namespace family across every logical XML part that declares it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_retarget_namespace(base: &XlsxSnapshot, from: [&str; 2], to: &str) -> XlsxDiff {
-    let mut modified = Vec::new();
-    for part in &base.opc.parts {
-        if !is_xml_part(&part.path) {
-            continue;
+    let mut next = base.clone();
+    for part in next.xml_parts.iter_mut() {
+        if let Some(root) = part.document.root.as_mut() {
+            retarget_namespace(root, &from, to);
         }
-        let Some(mut document) = parse_part(part) else { continue };
-        let Some(root) = document.root.as_mut() else { continue };
-        if !retarget_namespace(root, &from, to) {
-            continue;
-        }
-        modified.push((part.path.clone(), XlsxOpcPartDiff { content_type: None, bytes: Some(serialize(&document)) }));
     }
-    opc_diff(parts_diff(modified, Vec::new(), Vec::new()), None, None)
+    diff_to(base, next)
 }
 
 /// 🔺️ The diff of setting — or removing — the main part's root `conformance` attribute.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_conformance_attribute(base: &XlsxSnapshot, value: Option<&str>) -> XlsxDiff {
     let Some(path) = main_part_path(base) else { return XlsxDiff::default() };
-    let Some(part) = base.opc.part(&path) else { return XlsxDiff::default() };
-    let Some(mut document) = parse_part(part) else { return XlsxDiff::default() };
-    if !set_root_attribute(&mut document, "conformance", value) {
-        return XlsxDiff::default();
-    }
-    opc_diff(parts_diff(vec![(part.path.clone(), XlsxOpcPartDiff { content_type: None, bytes: Some(serialize(&document)) })], Vec::new(), Vec::new()), None, None)
+    let mut next = base.clone();
+    let Some(part) = next.xml_part_mut(&path) else { return XlsxDiff::default() };
+    set_root_attribute(&mut part.document, "conformance", value);
+    diff_to(base, next)
+}
+
+/// 🔺️ The diff of retyping one part: the logical XML part's own `content_type` and its
+/// `[Content_Types].xml` override move together, because the two can never be allowed to drift apart.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_set_content_type(base: &XlsxSnapshot, path: &str, content_type: &str) -> XlsxDiff {
+    let mut next = base.clone();
+    let Some(part) = next.xml_part_mut(path) else { return XlsxDiff::default() };
+    part.content_type = content_type.to_string();
+    next.opc.content_types.set_override(path, content_type);
+    diff_to(base, next)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn resolved_content_type(base: &XlsxSnapshot, path: &str) -> Option<String> {
     base.opc.content_types.resolve(path).map(str::to_string)
-}
-
-/// 🔺️ The diff of retyping one part: its own `content_type` field and its `[Content_Types].xml`
-/// override move together, because the two can never be allowed to drift apart.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_set_content_type(base: &XlsxSnapshot, path: &str, content_type: &str) -> XlsxDiff {
-    let Some(part) = base.opc.part(path) else { return XlsxDiff::default() };
-    if part.content_type == content_type && resolved_content_type(base, path).as_deref() == Some(content_type) {
-        return XlsxDiff::default();
-    }
-    let parts = parts_diff(vec![(part.path.clone(), XlsxOpcPartDiff { content_type: Some(content_type.to_string()), bytes: None })], Vec::new(), Vec::new());
-    opc_diff(parts, overrides_diff(base, path, Some(content_type)), None)
 }
 //#endregion 🔖️DiffBuilders
 

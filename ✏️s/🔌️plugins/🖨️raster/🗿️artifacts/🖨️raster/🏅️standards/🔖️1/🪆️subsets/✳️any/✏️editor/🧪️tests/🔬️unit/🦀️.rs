@@ -1302,7 +1302,7 @@ async fn protection_controls_publish_and_restore_retained_history() {
 #[test]
 fn structural_commands_refuse_protected_sources_and_destination_parents() {
     use protocol::Mutation;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️schema/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
     let history=semio_framework_plugin::HistoryView::empty();let doc=ArtifactView::new(&document,&history);
     let config=RasterConfig::default();let cfg=semio_framework_plugin::ConfigView {snapshot:&config,window:None};

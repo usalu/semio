@@ -81,6 +81,7 @@ fn tree_item(value: &Value) -> UiTreeItemNode {
         drag_data: None,
         items: None,
         control: None,
+        content_lines: None,
         inline_toolbar: None,
         detail: None,
         dimmed: None,

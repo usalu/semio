@@ -222,19 +222,19 @@ where
                 if history.doc_id != *expected_id || history.schema != *schema || history.composition.is_some() || !history.conflicts.is_empty() {
                     return self.reject(ConfigStoreHydrationDiagnostic::Identity);
                 }
+                if history.transitions.iter().any(|record| crate::os_spr::decode_history_transition(&record.payload).map_or(true, |transition| !crate::os_spr::HistoryShape::Config.admits(transition.kind()))) {
+                    return self.reject(ConfigStoreHydrationDiagnostic::Identity);
+                }
                 let fold = match history.fold() {
                     Ok(fold) => fold,
                     Err(_) => return self.reject(ConfigStoreHydrationDiagnostic::Replay),
                 };
-                if !fold.changes.is_empty() || !fold.checkpoints.is_empty() || !fold.alternatives.is_empty() || fold.alternative.is_some() || !fold.supersessions.is_empty() {
-                    *self.active = Some(crate::os_store::retirement::owned_retirement(fold));
-                    return self.reject(ConfigStoreHydrationDiagnostic::Identity);
-                }
                 let initial = self.initial.take().expect("typed config initial snapshot remains retained");
                 let current = self.current.take().expect("typed config current snapshot remains retained");
                 let expected_id = self.expected_id.take().expect("config identity remains retained");
                 let schema = self.schema.take().expect("config schema remains retained");
                 let mut envelope = crate::os_store::create_document_envelope::<P, M>(&schema, &expected_id, initial, None);
+                envelope.history_shape = crate::os_spr::HistoryShape::Config;
                 envelope.cursor = Some(crate::os_store::ArtifactCursor::new(fold.applied, fold.redo, fold.checkpoint));
                 envelope.transitions = history.transitions.iter().map(|transition| transition.to_envelope(&history.doc_id)).collect();
                 *self.source_edits = Some(std::mem::take(&mut history.edits).into_iter());

@@ -186,6 +186,18 @@ impl SnapshotEditError {
     fn new(code: &'static str, path: impl Into<String>, message: impl Into<String>) -> Self {
         Self { code, path: path.into(), message: message.into() }
     }
+
+    /// ⚖️ The frozen mutation outcome code this refusal reports as (`📡️replication/🎮️mutation/🧫️fixtures/🧫️outcome-code`):
+    /// an address the snapshot lacks is `target-missing`, a key it already holds `duplicate-id`, an edit the snapshot's
+    /// current shape contradicts `target-mismatch`, and a patch malformed or out of bounds on its own `invariant`.
+    pub fn outcome_code(&self) -> &'static str {
+        match self.code {
+            "snapshot-edit.path-missing" | "snapshot-edit.index-out-of-bounds" => "mutation.target-missing",
+            "snapshot-edit.key-exists" => "mutation.duplicate-id",
+            "snapshot-edit.ambiguous-object" | "snapshot-edit.not-container" | "snapshot-edit.not-object" | "snapshot-edit.descendant-move" | "snapshot-edit.invalid-move" | "snapshot-edit.schema-invalid" | "snapshot-edit.lossy-conversion" | "snapshot-edit.constraint-invalid" => "mutation.target-mismatch",
+            _ => "mutation.invariant",
+        }
+    }
 }
 
 impl std::fmt::Display for SnapshotEditError {

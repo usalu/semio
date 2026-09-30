@@ -1892,8 +1892,8 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts"), "parseBrowserActorUiPatchOfferV1" | "parseBrowserActorUiPatchResultV1"> & Pick<typeof import("../../🟦️.ts"), "BACKBONE_WORKER_WIRE_MAGIC" | "DIRECTORY_HTTP_TIMEOUT_MS" | "DirectoryClient" | "HUB_HEALTHY_RESET_MS" | "HUB_RECONNECT_MAX_MS" | "HUB_RECONNECT_MIN_MS" | "decodeBackboneWorkerRequest" | "decodeBackboneWorkerResponse" | "decodePackValue" | "encodeBackboneMessage" | "encodeBackboneWorkerRequest" | "encodeBackboneWorkerResponse" | "encodePackValue" | "parseDirectorySpaceAdministrationPageV1" | "parseDocumentBackboneMessage"> & Pick<typeof import("@semio-tech/framework"), "fetchWithTimeout">, source: TestSource): Promise<void> {
-  const { BACKBONE_WORKER_WIRE_MAGIC, DIRECTORY_HTTP_TIMEOUT_MS, DirectoryClient, HUB_HEALTHY_RESET_MS, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodePackValue, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodePackValue, fetchWithTimeout, parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1, parseDirectorySpaceAdministrationPageV1, parseDocumentBackboneMessage } = dependencies;
+export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts"), "parseBrowserActorUiPatchOfferV1" | "parseBrowserActorUiPatchResultV1"> & Pick<typeof import("../../🟦️.ts"), "BACKBONE_WORKER_WIRE_MAGIC" | "DIRECTORY_HTTP_TIMEOUT_MS" | "DirectoryClient" | "HUB_HEALTHY_RESET_MS" | "HUB_RECONNECT_MAX_MS" | "HUB_RECONNECT_MIN_MS" | "decodeBackboneWorkerRequest" | "decodeBackboneWorkerResponse" | "decodePackValue" | "encodeBackboneMessage" | "encodeBackboneWorkerRequest" | "encodeBackboneWorkerResponse" | "encodePackValue" | "parseDirectorySpaceAdministrationPageV1" | "parseDocumentBackboneMessage" | "decodeBackboneMessage" | "parseInboundDocumentBackboneMessage"> & Pick<typeof import("@semio-tech/framework"), "fetchWithTimeout">, source: TestSource): Promise<void> {
+  const { BACKBONE_WORKER_WIRE_MAGIC, DIRECTORY_HTTP_TIMEOUT_MS, DirectoryClient, HUB_HEALTHY_RESET_MS, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodePackValue, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodePackValue, fetchWithTimeout, parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1, parseDirectorySpaceAdministrationPageV1, parseDocumentBackboneMessage, parseInboundDocumentBackboneMessage } = dependencies;
   type BackboneWorkerRequest = import("../../🟦️.ts").BackboneWorkerRequest;
   type BackboneWorkerResponse = import("../../🟦️.ts").BackboneWorkerResponse;
   type BrowserActorUiMountedV1 = import("../../🟦️.ts").BrowserActorUiMountedV1;
@@ -2368,6 +2368,18 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(requestRound).toEqual(request);
       expect(responseRound).toEqual(response);
       expect(parseDocumentBackboneMessage((requestRound as typeof request).message.message).envelopes[0]?.timestamp.physical_ms).toBe(0xffff_ffff_ffff_ffffn);
+    });
+
+    it("encodes a retraction as the Rust store's exact vector and admits it only toward the store", () => {
+      const toHex = (bytes: Uint8Array) => Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+      for (const [mutationIds, hex] of [[[], "01040001000c00"], [["a"], "010401016101000c010600"]] as const) {
+        const encoded = encodeBackboneMessage({ kind: "retract", mutationIds });
+        expect(toHex(encoded)).toBe(hex);
+        expect(decodeBackboneMessage(encoded)).toEqual({ kind: "retract", mutationIds });
+        expect(parseInboundDocumentBackboneMessage(encoded)).toEqual(encoded);
+        expect(() => parseDocumentBackboneMessage(encoded)).toThrow("mutations required");
+      }
+      expect(() => decodeBackboneMessage(fromHex("01030001000c00"))).toThrow("member lanes are Rust-only");
     });
 
     it("rejects non-mutation, noncanonical and over-cap actor messages", () => {

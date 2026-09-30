@@ -23,7 +23,7 @@ impl protocol::MutationKind<JsonSnapshot, JsonMutation> for PatchSnapshot {
     fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonMutation as Mutation<JsonSnapshot>>::Diff> {
         match editing::apply_snapshot_patch(base, &self.patch) {
             Ok(next) => protocol::MutationOutcome::new(<JsonDiff as DiffAlgebra<JsonSnapshot>>::between(base, &next)),
-            Err(error) => protocol::MutationOutcome::error(error.code, error.message, [error.path]),
+            Err(error) => protocol::MutationOutcome::refuse(error.outcome_code(), format!("{}: {}", error.code, error.message), [error.path]),
         }
     }
 

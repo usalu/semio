@@ -15,3 +15,11 @@ fn progress_captions_preserve_counter_precision_and_explicit_locale() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for (key,locale) in [("en",Locale::En),("de",Locale::De)]{for count in fixture["counts"].as_array().unwrap(){let text=count.as_str().unwrap();for cancelling in [false,true]{let labels=&fixture["labels"][key];let expected=format!("{} · {}: {text}",labels[if cancelling{"cancelling"}else{"working"}].as_str().unwrap(),labels["units"].as_str().unwrap());assert_eq!(operation_progress_text(locale,text.parse().unwrap(),cancelling),expected);}}}
 }
+#[test]
+fn a_progress_change_dirties_exactly_the_declared_scope() {
+    let partial=||UiDirtyScope::Partial{window_bodies:Vec::new(),panel_bodies:vec!["layers".into()],utilities:false,tools:false,engagements:false,measures:false,labels:false};
+    assert_eq!(operation_progress_dirty_scope(false,||panic!("an unchanged operation never reads the declared scope")),None);
+    assert_eq!(operation_progress_dirty_scope(true,||UiDirtyScope::None),None,"an app that renders no progress is never widened");
+    assert_eq!(operation_progress_dirty_scope(true,partial),Some(partial()),"a partial scope survives");
+    assert_eq!(operation_progress_dirty_scope(true,||UiDirtyScope::Full),Some(UiDirtyScope::Full));
+}

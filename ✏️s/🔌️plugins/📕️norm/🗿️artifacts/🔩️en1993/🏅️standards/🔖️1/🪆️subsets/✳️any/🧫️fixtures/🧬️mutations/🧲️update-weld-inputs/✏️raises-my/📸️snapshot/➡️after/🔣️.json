@@ -1,0 +1,172 @@
+{
+  "annex": "De",
+  "materials": [
+    {
+      "id": "mat-s355",
+      "grade": "S355",
+      "fy": 355000000.0,
+      "fu": 510000000.0,
+      "eModulus": 210000000000.0,
+      "gModulus": 81000000000.0,
+      "subgrade": "J2",
+      "kind": "carbon"
+    }
+  ],
+  "sections": [
+    {
+      "id": "sec-heb240",
+      "designation": "HEB 240",
+      "kind": "rolledI",
+      "h": 0.24,
+      "b": 0.24,
+      "tw": 0.01,
+      "tf": 0.017,
+      "r": 0.021,
+      "area": 0.0106,
+      "shearAreaY": 0.00512,
+      "shearAreaZ": 0.0024,
+      "iy": 0.0001126,
+      "iz": 3.923e-05,
+      "it": 6.53e-07,
+      "iw": 4.87e-06,
+      "wElY": 0.000938,
+      "wElZ": 0.000327,
+      "wPlY": 0.001053,
+      "wPlZ": 0.000501,
+      "areaNet": 0.0095
+    }
+  ],
+  "members": [
+    {
+      "id": "member-b1",
+      "label": "Beam-column B1",
+      "memberType": "beamColumn",
+      "sectionId": "sec-heb240",
+      "materialId": "mat-s355",
+      "length": 4.0,
+      "bucklingLengthY": 4.0,
+      "bucklingLengthZ": 4.0,
+      "ltbLength": 4.0,
+      "ltbRestraintSpacing": 2.0,
+      "loadApplication": "shearCenter",
+      "endMomentRatioPsi": -1.0,
+      "momentDiagram": "linear",
+      "deflectionLimitRatio": 300.0,
+      "analysis": "elastic"
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "uls-1",
+      "name": "ULS gravity",
+      "kind": "imposed",
+      "category": "office"
+    },
+    {
+      "id": "sls-1",
+      "name": "SLS characteristic",
+      "kind": "imposed",
+      "category": "office"
+    }
+  ],
+  "memberActions": [
+    {
+      "id": "act-b1-uls",
+      "memberId": "member-b1",
+      "loadCaseId": "uls-1",
+      "action": {
+        "n": 200000.0,
+        "vy": 0.0,
+        "vz": 50000.0,
+        "my": 120000.0,
+        "mz": 0.0,
+        "t": 0.0
+      }
+    },
+    {
+      "id": "act-b1-sls",
+      "memberId": "member-b1",
+      "loadCaseId": "sls-1",
+      "action": {
+        "n": 0.0,
+        "vy": 0.0,
+        "vz": 30000.0,
+        "my": 45000.0,
+        "mz": 0.0,
+        "t": 0.0
+      }
+    }
+  ],
+  "joints": [
+    {
+      "id": "joint-j1",
+      "kind": "bolted",
+      "memberId": "member-b1",
+      "boltClass": "8.8",
+      "boltDiameter": 0.02,
+      "boltRows": 2,
+      "boltsPerRow": 2,
+      "pitch": 0.06,
+      "gauge": 0.06,
+      "endDistance": 0.04,
+      "edgeDistance": 0.04,
+      "shearPlanes": 1,
+      "plateThickness": 0.01,
+      "plateFu": 510000000.0,
+      "weldThroat": 0.0,
+      "weldLength": 0.0,
+      "weldFu": 510000000.0,
+      "weldGrade": "S355",
+      "actions": [
+        {
+          "id": "jf-1",
+          "loadCaseId": "g-permanent",
+          "shear": 80000.0,
+          "tension": 0.0
+        }
+      ],
+      "category": "A",
+      "frictionMu": 0.5,
+      "preloadForce": 0.0,
+      "slipFactorKs": 1.0,
+      "frictionSurfaces": 1
+    }
+  ],
+  "fatigueDetails": [
+    {
+      "id": "fat-1",
+      "memberId": "member-b1",
+      "category": 71,
+      "method": "damage_tolerant",
+      "spectrum": [
+        {
+          "id": "fb-1",
+          "deltaSigma": 50000000.0,
+          "cycles": 2000000.0
+        }
+      ]
+    }
+  ],
+  "fireExposures": [
+    {
+      "id": "fire-1",
+      "memberId": "member-b1",
+      "rating": "r60",
+      "protectionThickness": 0.02,
+      "sectionFactor": 150.0,
+      "mu0": 0.5,
+      "designTemperature": 550.0,
+      "protectionConductivity": 0.2,
+      "protectionDensity": 800.0,
+      "protectionSpecificHeat": 1700.0
+    }
+  ],
+  "coldFormedMembers": [],
+  "platedPanels": [],
+  "siloShells": [],
+  "tensionComponents": [],
+  "bridgeFatigue": [],
+  "towerLegs": [],
+  "piles": [],
+  "craneRunways": []
+}

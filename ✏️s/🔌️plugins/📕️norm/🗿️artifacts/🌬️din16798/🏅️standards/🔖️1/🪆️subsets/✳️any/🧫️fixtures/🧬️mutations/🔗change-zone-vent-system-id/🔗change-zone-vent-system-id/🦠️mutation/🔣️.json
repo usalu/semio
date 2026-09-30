@@ -1,0 +1,6 @@
+{
+  "ChangeZoneVentSystemId": {
+    "zoneId": "zone-office",
+    "newVentSystemId": "vent-meeting"
+  }
+}

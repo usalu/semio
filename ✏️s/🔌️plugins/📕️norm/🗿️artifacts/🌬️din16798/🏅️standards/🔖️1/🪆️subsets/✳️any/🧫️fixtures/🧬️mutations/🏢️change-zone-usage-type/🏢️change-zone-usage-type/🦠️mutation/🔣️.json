@@ -1,0 +1,6 @@
+{
+  "ChangeZoneUsageType": {
+    "zoneId": "zone-office",
+    "newUsageType": "meeting"
+  }
+}

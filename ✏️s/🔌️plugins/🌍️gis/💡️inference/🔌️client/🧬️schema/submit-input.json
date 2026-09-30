@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gis:document-http/submit-input",
+  "$ref": "#/$defs/InferenceRequestV1",
+  "$defs": {
+    "InferenceRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "requestId",
+        "serviceId",
+        "policyVersion",
+        "lifetimeMs"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.inference-request/v1"
+        },
+        "version": {
+          "const": 1
+        },
+        "requestId": {
+          "$ref": "#/$defs/id"
+        },
+        "serviceId": {
+          "const": "s.gis.gismap.inference"
+        },
+        "policyVersion": {
+          "const": 1
+        },
+        "lifetimeMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120000
+        }
+      }
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    }
+  }
+}

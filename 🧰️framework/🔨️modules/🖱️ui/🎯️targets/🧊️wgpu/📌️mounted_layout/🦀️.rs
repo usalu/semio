@@ -4,8 +4,8 @@
 use crate::wgpu::arena::NodeId;
 use crate::wgpu::component::ui::{UiNode, UiTreeItemNode, UiTreeNode};
 use crate::wgpu::engine::UiSurfaceToken;
-use crate::wgpu::flex::{field_chrome_metrics, section_chrome_metrics, FlexRect, FlexTree, LayoutJobStage, LayoutJobStep, LayoutNodeKind, MeasureConstraint, FIELD_DETAIL_FONT_SIZE, SECTION_TITLE_FONT_SIZE};
-use crate::wgpu::layout::{gap_for_token, padding_for_token, tree_section_header_height, tree_window_row_extent_px, tree_window_spacer_px, TreeRowMetrics, TREE_ROW_MAX_DEPTH};
+use crate::wgpu::flex::{field_chrome_metrics, section_chrome_metrics, FlexRect, FlexTree, LayoutJobStage, LayoutJobStep, LayoutNodeKind, MeasureConstraint, TreeContentFlow, FIELD_DETAIL_FONT_SIZE, SECTION_TITLE_FONT_SIZE};
+use crate::wgpu::layout::{gap_for_token, padding_for_token, tree_content_height, tree_section_header_height, tree_window_row_extent_px, tree_window_spacer_px, TreeRowMetrics, TREE_ROW_MAX_DEPTH};
 use crate::wgpu::text::{is_wrap_space, may_break_between};
 use crate::wgpu::theme::Theme;
 use crate::wgpu::tree::{AcceptedLayout, NodeFlags, NodeKey, UiTree};
@@ -458,6 +458,7 @@ struct LayoutInputNode {
     glyph_start: usize,
     glyph_end: usize,
     chrome: ChromeTextRanges,
+    content: Option<TreeContentFlow>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -909,6 +910,7 @@ impl MountedLayoutJob {
             return (0, 0);
         };
         let parent_kind = parent.and_then(|index| self.nodes.get(index)).map(|input| input.kind);
+        let content = self.tree_content(tree, id, parent);
         let tree_inline_control = matches!(parent_kind, Some(LayoutNodeKind::TreeRow { .. } | LayoutNodeKind::TableRow { .. }));
         let tree_detail = parent.and_then(|index| self.nodes.get(index)).is_some_and(|owner| is_tree_item_detail(tree, id, owner.id));
         let popup_overlay_row = tree.is_open_select_popup_row(id);
@@ -923,11 +925,12 @@ impl MountedLayoutJob {
                     UiNode::Tree(tree_node) => {
                         LayoutNodeKind::Tree { height: retained_tree_height(tree, id, tree_node, &self.row_metrics), header: if document_table(tree, id).is_some() { self.row_metrics.header_height } else { 0.0 }, reversed: root_reversed }
                     }
-                    UiNode::Stack(stack) => tree_row_kind(tree, id, parent_kind, &self.row_metrics).unwrap_or(LayoutNodeKind::Stack {
+                    UiNode::Stack(stack) => content.is_none().then(|| tree_row_kind(tree, id, parent_kind, &self.row_metrics)).flatten().unwrap_or(LayoutNodeKind::Stack {
                         horizontal: stack.direction == "horizontal",
                         gap: gap_for_token(&self.theme, stack.gap.as_deref()),
                         padding: padding_for_token(&self.theme, stack.padding.as_deref()),
                     }),
+                    UiNode::Field(_) | UiNode::Section(_) if content.is_some() => LayoutNodeKind::Leaf,
                     UiNode::Field(_) => LayoutNodeKind::Field { top: 0.0, bottom: 0.0 },
                     UiNode::Section(_) => LayoutNodeKind::Section { gap: self.theme.gap_standard, top: 0.0, bottom: 0.0 },
                     UiNode::Button(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: Some(self.theme.padding_standard) },
@@ -948,19 +951,20 @@ impl MountedLayoutJob {
         };
         let index = self.nodes.len();
         let chrome = match &node.spec.0 {
+            UiNode::Section(_) | UiNode::Field(_) if content.is_some() => ChromeTextRanges::None,
             UiNode::Section(section) => ChromeTextRanges::Section { title: section.label.as_ref().map(|_| GlyphRange::default()) },
             UiNode::Field(field) => ChromeTextRanges::Field { label: GlyphRange::default(), description: field.description.as_ref().map(|_| GlyphRange::default()), error: field.error.as_ref().map(|_| GlyphRange::default()) },
             UiNode::Slider(slider) if slider.unit.as_deref().is_some_and(|unit| !unit.is_empty()) => ChromeTextRanges::SliderUnit { label: GlyphRange::default() },
             _ => ChromeTextRanges::None,
         };
-        let input = LayoutInputNode { id, parent, first_child: None, last_child: None, next_sibling: None, kind, intrinsic: IntrinsicSize::default(), glyph_start: 0, glyph_end: 0, chrome };
+        let input = LayoutInputNode { id, parent, first_child: None, last_child: None, next_sibling: None, kind, intrinsic: IntrinsicSize::default(), glyph_start: 0, glyph_end: 0, chrome, content };
         if let Err(owner) = self.nodes.try_push(input) {
             self.rejected_node = Some(owner);
             self.fault = Some(MountedLayoutFault::NodeCredits);
             return (0, 0);
         }
         let metrics = retained_tree_row_metrics(tree, id, &self.row_metrics);
-        if !self.flex.push(kind, parent, node.layout_spec.as_ref(), &metrics, parent_kind) {
+        if !self.flex.push(kind, parent, node.layout_spec.as_ref(), &metrics, parent_kind, content) {
             self.fault = Some(MountedLayoutFault::Solver);
             return (0, 0);
         }
@@ -1001,6 +1005,41 @@ impl MountedLayoutJob {
             self.admission = AdmissionPhase::Unwind;
         }
         (1, 0)
+    }
+
+    /// 🧺️ How the node `id` under the admitted node `parent` lays out as tree-row content, when it is: a direct content
+    /// child of a row whose content is more than one inline control takes its slot below the content before it
+    /// (`reconcile::tree_row_content_lines`), a content container's children stack as columns and lines.
+    fn tree_content(&self, tree: &UiTree, id: NodeId, parent: Option<usize>) -> Option<TreeContentFlow> {
+        let owner = self.nodes.get(parent?)?;
+        let document = tree.document()?;
+        let record = document.record(tree.document_id(id)?)?;
+        let metrics = retained_tree_row_metrics(tree, id, &self.row_metrics);
+        let (line, band) = (metrics.content_line_height(), metrics.content_line_height() + metrics.gap);
+        let (above, below) = match &record.component {
+            ui_contract::Component::Container(props) => crate::wgpu::reconcile::tree_content_label_lines(props),
+            _ => (0, 0),
+        };
+        let (above, below) = (above as f32 * band, below as f32 * band);
+        let container = matches!(record.component, ui_contract::Component::Container(_));
+        if owner.content.is_some() {
+            return Some(if container { TreeContentFlow::Column { above, below } } else { TreeContentFlow::Line { height: line } });
+        }
+        if !matches!(owner.kind, LayoutNodeKind::TreeRow { .. }) {
+            return None;
+        }
+        let row = document.record(tree.document_id(owner.id)?)?;
+        let total = crate::wgpu::reconcile::tree_row_content_lines(document, row)?;
+        let lines_of = |child: &ui_contract::UiNodeRecord| u16::try_from(crate::wgpu::reconcile::tree_content_lines(document, child, 0)).unwrap_or(u16::MAX);
+        let mut before = 0_u32;
+        for child in crate::wgpu::reconcile::tree_row_content(document, row) {
+            if child.id == record.id {
+                let top = (metrics.row_height - tree_content_height(u16::try_from(total).unwrap_or(u16::MAX), line, metrics.gap)) * 0.5 + before as f32 * band;
+                return Some(TreeContentFlow::Slot { top, height: tree_content_height(lines_of(child), line, metrics.gap), above, below, container });
+            }
+            before += u32::from(lines_of(child));
+        }
+        None
     }
 
     fn admit_text_one(&mut self, tree: &UiTree) -> (usize, usize) {

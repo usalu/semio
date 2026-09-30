@@ -9,7 +9,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   type TypologyRef = core.TypologyRef;
 
   const { describe, expect, it } = vitest;
-  const { runtime, brepjs } = await import("@semio-tech/cad-js");
+  const runtime = await import("../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts");
+  const brepjs = await import("../../../../🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts");
   const { bootstrapCadModules } = runtime;
   const { BrepjsKernel } = brepjs;
   const { Model, applyModelDiff, computeStat, loadStatDefinition, objectsForStatCompute } = core;

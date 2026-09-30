@@ -357,3 +357,25 @@ describe("canvas paints resolve the shell's appearance scope, not the document r
   });
 });
 // #endregion 🖼️CanvasAppearanceScope
+
+// #region 🪪️ContextIdentity
+describe("one shell-scope context per page", () => {
+  it("lets a hook of a second evaluation of the module read the provider the first one mounted", async () => {
+    const first = await import("../../🟦️.tsx");
+    const secondEvaluation = "../../🟦️.tsx?evaluation=second";
+    const second = (await import(/* @vite-ignore */ secondEvaluation)) as typeof first;
+    expect(second).not.toBe(first);
+    expect(second.ShellScopeContext).toBe(first.ShellScopeContext);
+    const scope = first.createShellScope({ shellId: "shell-identity", storage: createMemoryStoragePort() });
+    const seen: string[] = [];
+    function Probe(): React.ReactElement {
+      seen.push(second.useShellScope().shellId);
+      return <span>{second.useShellScopeOptional()?.shellId}</span>;
+    }
+    const view = render(<first.ShellScopeProvider scope={scope}><Probe /></first.ShellScopeProvider>);
+    expect(seen).toContain("shell-identity");
+    expect(view.container.textContent).toBe("shell-identity");
+    view.unmount();
+  });
+});
+// #endregion 🪪️ContextIdentity

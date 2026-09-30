@@ -6,8 +6,9 @@ The second producer this case's differential comparison needs is
 imported here rather than copied. Its module docstring carries the survey that established no
 third-party library reads or writes `s.norm.*`, the two committed documents it was written from, and
 the honest boundary on the `.dsl.semio` carrier. This file adds no verb, no addressing rule and no
-carrier rule: everything below is DATA read off this subset's own committed catalog, its own
-committed specification vectors and its own committed example document.
+carrier rule: the kind list and the vector each kind publishes are READ from this subset's committed
+`en1990-1-any` catalog, never transcribed beside it, and the rest is the subset's real committed
+document and its envelope token.
 
 Stating it this way is the point. The fifteen norm adapters used to hold fifteen byte-identical
 copies of that engine, which made the reference surface read as fifteen independent implementations
@@ -18,7 +19,9 @@ in all fifteen cases, and that is now visible instead of pretended.
 from __future__ import annotations
 
 # region 🔖️Imports
+import json
 from importlib import import_module
+from pathlib import Path
 
 _vocabulary = import_module("🐍️")
 Subset = _vocabulary.Subset
@@ -28,33 +31,14 @@ build_adapter = _vocabulary.build_adapter
 
 
 # region 🔖️Vocabulary
-#: 🏷️ Every kind this subset's committed catalog declares, in catalog order.
-KINDS = [
-    "change-annex",
-    "change-permanent-action",
-    "change-resistance",
-    "change-consequence-class",
-    "change-seismic-action",
-    "insert-variable-action",
-    "remove-variable-action",
-    "change-variable-action-category",
-    "change-variable-action-value",
-    "reorder-variable-actions",
-]
+#: 📇️ This subset's committed `en1990-1-any` catalog, read where the subset keeps it.
+CATALOG = next(entry for entry in json.loads((Path(__file__).resolve().parents[2] / "🔮️oracles" / "🔣️.json").read_text(encoding="utf-8"))["mutationCatalogs"] if entry["id"] == "en1990-1-any")
+
+#: 🏷️ Every kind the catalog declares, in catalog order.
+KINDS = CATALOG["kinds"]
 
 #: 🧫️ The committed specification vector each kind publishes, as (triad directory, fixture name).
-VECTORS = {
-    "change-annex": ("🌍️change-annex", "🌐️switches-the-national-annex-from-de-to-en"),
-    "change-permanent-action": ("⚓️change-permanent-action", "⚓️raises-the-permanent-action-to-62-5-kn"),
-    "change-resistance": ("🛡️change-resistance", "🛡️raises-the-design-resistance-to-320-kn"),
-    "change-consequence-class": ("⚠️change-consequence-class", "🏗️escalates-the-building-from-cc2-to-cc3"),
-    "change-seismic-action": ("🌋️change-seismic-action", "🌋️enables-the-seismic-situation-with-an-85-kn-a-ed"),
-    "insert-variable-action": ("➕️insert-variable-action", "❄️seeds-the-first-variable-action-q-snow-at-12-5-kn"),
-    "remove-variable-action": ("🗑️remove-variable-action", "🚫️refuses-to-remove-action-0-from-an-unseeded-child-slot"),
-    "change-variable-action-category": ("🏷️change-variable-action-category", "🚫️refuses-to-recategorise-a-missing-action-0"),
-    "change-variable-action-value": ("🏋️change-variable-action-value", "⛔️refuses-to-revalue-a-missing-action-0"),
-    "reorder-variable-actions": ("🔀️reorder-variable-actions", "⛔️refuses-to-move-action-0-to-slot-1-in-an-empty-list"),
-}
+VECTORS = {vector["mutationId"]: (vector["mutationDirectoryName"], vector["scenarios"][0]["directoryName"]) for vector in CATALOG["vectors"]}
 
 #: 🗣️ The real committed EN 1990 document, read where the domain already keeps it.
 DSL_ASSET = "asset://🏢️high-consequence-office/🏢️high-consequence-office/🗣️.dsl.semio"
@@ -69,5 +53,5 @@ def adapter():
     """🧭️ Registration is by FULL expanded scenario id, so this mirrors the feature's `Examples` tables
     exactly. Oracle role only: registering these handlers as subjects as well would make the reference
     its own subject and manufacture a guaranteed-green self-comparison."""
-    return build_adapter(Subset("EN 1990", KINDS, VECTORS, DSL_ASSET, ENVELOPE, vector_root="shared://🧬️mutations"))
+    return build_adapter(Subset("EN 1990", KINDS, VECTORS, DSL_ASSET, ENVELOPE))
 # endregion 🔖️Registration

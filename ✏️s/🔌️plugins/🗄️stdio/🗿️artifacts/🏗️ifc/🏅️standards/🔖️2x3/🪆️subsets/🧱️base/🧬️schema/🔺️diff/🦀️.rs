@@ -48,19 +48,19 @@ fn validate_ifc2x3_diff(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> MutationApp
     let mut base_ids = BTreeSet::new();
     for instance in &base.document.instances {
         if !base_ids.insert(instance.id) {
-            return Err(MutationApplyError::new("duplicate-base-target", "base instance ids must be unique").at(["instances", &instance.id.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-base-target", "base instance ids must be unique").at(["instances", &instance.id.to_string()]));
         }
     }
     let mut removed = BTreeSet::new();
     for &id in &diff.removed_instances {
         if !base_ids.contains(&id) || !removed.insert(id) {
-            return Err(MutationApplyError::new("invalid-remove-target", "instance removal target must exist exactly once").at(["instances", &id.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-remove-target", "instance removal target must exist exactly once").at(["instances", &id.to_string()]));
         }
     }
     let mut upserted = BTreeSet::new();
     for instance in &diff.upserted_instances {
         if removed.contains(&instance.id) || !upserted.insert(instance.id) {
-            return Err(MutationApplyError::new("invalid-upsert-target", "instance upsert target must be unique and not removed").at(["instances", &instance.id.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-upsert-target", "instance upsert target must be unique and not removed").at(["instances", &instance.id.to_string()]));
         }
     }
     let mut final_ids = base_ids;
@@ -72,12 +72,12 @@ fn validate_ifc2x3_diff(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> MutationApp
         let mut ordered = BTreeSet::new();
         for &id in order {
             if !final_ids.contains(&id) || !ordered.insert(id) {
-                return Err(MutationApplyError::new("invalid-instance-order", "instance order must contain each final id exactly once").at(["instanceOrder", &id.to_string()]));
+                return Err(MutationApplyError::new("mutation.apply.invalid-instance-order", "instance order must contain each final id exactly once").at(["instanceOrder", &id.to_string()]));
             }
         }
         if ordered != final_ids {
             let missing = final_ids.difference(&ordered).next().copied().unwrap_or_default();
-            return Err(MutationApplyError::new("invalid-instance-order", "instance order must contain each final id exactly once").at(["instanceOrder", &missing.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-instance-order", "instance order must contain each final id exactly once").at(["instanceOrder", &missing.to_string()]));
         }
     }
     Ok(())

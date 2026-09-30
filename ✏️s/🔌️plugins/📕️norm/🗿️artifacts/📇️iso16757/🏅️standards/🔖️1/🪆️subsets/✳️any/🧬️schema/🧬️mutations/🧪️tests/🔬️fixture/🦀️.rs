@@ -1,60 +1,59 @@
-
-#[path = "../../🔒️add-selection-constraint/🧪️tests/🔒️appends-a-width-under-800-constraint/🦀️.rs"]
-mod tests_add_selection_constraint_appends_a_width_under_800_constraint;
-#[path = "../../🔄️change-exchange-process/🧪️tests/🔄️advances-the-exchange-stage-to-determine-product/🦀️.rs"]
-mod tests_change_exchange_process_advances_the_exchange_stage_to_determine_product;
-#[path = "../../🎛️change-part-number-input/🧪️tests/🔢️raises-the-height-part-number-input-to-750/🦀️.rs"]
-mod tests_change_part_number_input_raises_the_height_part_number_input_to_750;
-#[path = "../../🎯️change-selection-class/🧪️tests/🎯️retargets-the-selection-at-the-towel-radiator-class/🦀️.rs"]
-mod tests_change_selection_class_retargets_the_selection_at_the_towel_radiator_class;
-#[path = "../../🧵️change-selection-series/🧪️tests/🧵️narrows-the-selection-to-the-pr-plus-series/🦀️.rs"]
-mod tests_change_selection_series_narrows_the_selection_to_the_pr_plus_series;
-#[path = "../../📦️introduce-product/🧪️tests/📦️appends-a-pr900-product-to-the-existing-series/🦀️.rs"]
-mod tests_introduce_product_appends_a_pr900_product_to_the_existing_series;
-#[path = "../../🧺️introduce-product-group/🧪️tests/🧺️appends-a-towel-radiators-group/🦀️.rs"]
-mod tests_introduce_product_group_appends_a_towel_radiators_group;
-#[path = "../../📐️introduce-property-definition/🧪️tests/📏️appends-a-selection-scoped-length-property/🦀️.rs"]
-mod tests_introduce_property_definition_appends_a_selection_scoped_length_property;
-#[path = "../../🌳️introduce-subject/🧪️tests/🌳️appends-a-towel-radiator-subject-under-the-radiator-parent/🦀️.rs"]
-mod tests_introduce_subject_appends_a_towel_radiator_subject_under_the_radiator_parent;
-#[path = "../../🧹️retire-product-group/🧪️tests/🚫️removes-the-radiators-group-and-strands-its-class/🦀️.rs"]
-mod tests_retire_product_group_removes_the_radiators_group_and_strands_its_class;
-#[path = "../../🚫️retire-product/🧪️tests/🚫️removes-the-pr600-product-from-the-catalogue/🦀️.rs"]
-mod tests_retire_product_removes_the_pr600_product_from_the_catalogue;
-#[path = "../../🧽️retire-property-definition/🧪️tests/🚫️removes-the-height-property-definition/🦀️.rs"]
-mod tests_retire_property_definition_removes_the_height_property_definition;
-#[path = "../../✂️retire-subject/🧪️tests/🚫️removes-the-radiator-subject-from-the-dictionary/🦀️.rs"]
-mod tests_retire_subject_removes_the_radiator_subject_from_the_dictionary;
-#[path = "../../🔌️remove-part-number-input/🧪️tests/🔢️drops-the-length-part-number-input/🦀️.rs"]
-mod tests_remove_part_number_input_drops_the_length_part_number_input;
-#[path = "../../🔓️remove-selection-constraint/🧪️tests/🔓️drops-the-trailing-length-constraint/🦀️.rs"]
-mod tests_remove_selection_constraint_drops_the_trailing_length_constraint;
-#[path = "../../📇️rename-catalogue/🧪️tests/📇️restamps-the-catalogue-as-the-2026-edition/🦀️.rs"]
-mod tests_rename_catalogue_restamps_the_catalogue_as_the_2026_edition;
-#[path = "../../🏭️rename-manufacturer/🧪️tests/🏭️adds-the-ag-suffix-to-the-manufacturer/🦀️.rs"]
-mod tests_rename_manufacturer_adds_the_ag_suffix_to_the_manufacturer;
-#[path = "../../🗂️rename-product-group/🧪️tests/✏️renames-the-radiators-group-to-panel-radiators/🦀️.rs"]
-mod tests_rename_product_group_renames_the_radiators_group_to_panel_radiators;
-#[path = "../../🏷️rename-product/🧪️tests/✏️renames-pr600-to-the-compact-variant-name/🦀️.rs"]
-mod tests_rename_product_renames_pr600_to_the_compact_variant_name;
-#[path = "../../🧮️replace-part-number-rule/🧪️tests/🧮️swaps-the-literal-rule-for-a-height-driven-script/🦀️.rs"]
-mod tests_replace_part_number_rule_swaps_the_literal_rule_for_a_height_driven_script;
-#[path = "../../🚦️change-script-limits/🧪️tests/🚦️doubles-the-step-budget-and-quintuples-the-timeout/🦀️.rs"]
-mod tests_change_script_limits_doubles_the_step_budget_and_quintuples_the_timeout;
-
-#[path = "../../🏷️introduce-product-class/🧪️tests/🏷️appends-a-towel-radiator-class/🦀️.rs"]
-mod tests_introduce_product_class_appends_a_towel_radiator_class;
-#[path = "../../🗑️retire-product-class/🧪️tests/🗑️removes-the-panel-radiator-class/🦀️.rs"]
-mod tests_retire_product_class_removes_the_panel_radiator_class;
-#[path = "../../📚introduce-product-series/🧪️tests/📚appends-a-pr-plus-series/🦀️.rs"]
-mod tests_introduce_product_series_appends_a_pr_plus_series;
-#[path = "../../🗑️retire-product-series/🧪️tests/🗑️removes-the-pr-series/🦀️.rs"]
-mod tests_retire_product_series_removes_the_pr_series;
-#[path = "../../🔎introduce-product-index/🧪️tests/🔎appends-a-pr600-index/🦀️.rs"]
-mod tests_introduce_product_index_appends_a_pr600_index;
-#[path = "../../🗑️retire-product-index/🧪️tests/🗑️removes-the-pr600-index/🦀️.rs"]
-mod tests_retire_product_index_removes_the_pr600_index;
-#[path = "../../📐introduce-geometry-object/🧪️tests/📐appends-a-pr600-geometry/🦀️.rs"]
-mod tests_introduce_geometry_object_appends_a_pr600_geometry;
-#[path = "../../🗑️retire-geometry-object/🧪️tests/🗑️removes-the-pr600-geometry/🦀️.rs"]
-mod tests_retire_geometry_object_removes_the_pr600_geometry;
+//! 🧫️ One canonical test per committed ISO 16757 specification vector.
+#[path = "../../🔄️change-exchange-process/🧪️tests/✏️determine/🦀️.rs"]
+mod vector_change_exchange_process_determine;
+#[path = "../../🚦️change-script-limits/🧪️tests/✏️to-20000/🦀️.rs"]
+mod vector_change_script_limits_to_20000;
+#[path = "../../🧮️replace-part-number-rule/🧪️tests/✏️scripted/🦀️.rs"]
+mod vector_replace_part_number_rule_scripted;
+#[path = "../../🎛️change-part-number-input/🧪️tests/✏️to-750/🦀️.rs"]
+mod vector_change_part_number_input_to_750;
+#[path = "../../🔌️remove-part-number-input/🧪️tests/➖️length/🦀️.rs"]
+mod vector_remove_part_number_input_length;
+#[path = "../../🎯️change-selection-class/🧪️tests/✏️to-class/🦀️.rs"]
+mod vector_change_selection_class_to_class;
+#[path = "../../🧵️change-selection-series/🧪️tests/✏️to-series/🦀️.rs"]
+mod vector_change_selection_series_to_series;
+#[path = "../../🔒️add-selection-constraint/🧪️tests/➕️width/🦀️.rs"]
+mod vector_add_selection_constraint_width;
+#[path = "../../🔓️remove-selection-constraint/🧪️tests/➖️drops/🦀️.rs"]
+mod vector_remove_selection_constraint_drops;
+#[path = "../../📇️rename-catalogue/🧪️tests/✏️to-fixture/🦀️.rs"]
+mod vector_rename_catalogue_to_fixture;
+#[path = "../../🏭️rename-manufacturer/🧪️tests/✏️appends-ag/🦀️.rs"]
+mod vector_rename_manufacturer_appends_ag;
+#[path = "../../🧺️introduce-product-group/🧪️tests/➕️towel/🦀️.rs"]
+mod vector_introduce_product_group_towel;
+#[path = "../../🧹️retire-product-group/🧪️tests/➖️retires/🦀️.rs"]
+mod vector_retire_product_group_retires;
+#[path = "../../🗂️rename-product-group/🧪️tests/✏️to-panel/🦀️.rs"]
+mod vector_rename_product_group_to_panel;
+#[path = "../../📦️introduce-product/🧪️tests/➕️introduces/🦀️.rs"]
+mod vector_introduce_product_introduces;
+#[path = "../../🚫️retire-product/🧪️tests/➖️pr600/🦀️.rs"]
+mod vector_retire_product_pr600;
+#[path = "../../🏷️rename-product/🧪️tests/✏️renames-pr600/🦀️.rs"]
+mod vector_rename_product_renames_pr600;
+#[path = "../../📐️introduce-property-definition/🧪️tests/➕️new/🦀️.rs"]
+mod vector_introduce_property_definition_new;
+#[path = "../../🧽️retire-property-definition/🧪️tests/➖️height/🦀️.rs"]
+mod vector_retire_property_definition_height;
+#[path = "../../🌳️introduce-subject/🧪️tests/🌳️appends-towel/🦀️.rs"]
+mod vector_introduce_subject_appends_towel;
+#[path = "../../✂️retire-subject/🧪️tests/➖️retires-subject/🦀️.rs"]
+mod vector_retire_subject_retires_subject;
+#[path = "../../🏷️introduce-product-class/🧪️tests/➕️towel/🦀️.rs"]
+mod vector_introduce_product_class_towel;
+#[path = "../../🗑️retire-product-class/🧪️tests/➖️retires/🦀️.rs"]
+mod vector_retire_product_class_retires;
+#[path = "../../📚introduce-product-series/🧪️tests/➕️pr-plus/🦀️.rs"]
+mod vector_introduce_product_series_pr_plus;
+#[path = "../../🗑️retire-product-series/🧪️tests/➖️retires/🦀️.rs"]
+mod vector_retire_product_series_retires;
+#[path = "../../🔎introduce-product-index/🧪️tests/➕️introduces/🦀️.rs"]
+mod vector_introduce_product_index_introduces;
+#[path = "../../🗑️retire-product-index/🧪️tests/➖️retires/🦀️.rs"]
+mod vector_retire_product_index_retires;
+#[path = "../../📐introduce-geometry-object/🧪️tests/➕️introduces/🦀️.rs"]
+mod vector_introduce_geometry_object_introduces;
+#[path = "../../🗑️retire-geometry-object/🧪️tests/➖️retires/🦀️.rs"]
+mod vector_retire_geometry_object_retires;

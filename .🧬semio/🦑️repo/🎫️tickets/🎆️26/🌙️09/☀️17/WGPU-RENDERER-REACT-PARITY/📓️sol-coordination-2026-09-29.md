@@ -58,3 +58,11 @@ The channel-version census passed with pin 20, thirty registered consumers and z
 The first current native and Wasm builds stopped on source snapshots taken during the identity protocol edit and a wrong test-only tree import; those are repaired and fresh builds have started. No native assertion pass is claimed yet. The React reference booted in the in-app browser on port 7300, presented Top and Perspective windows, and the tour Skip button dismissed the overlay; its error/warning console was empty at that checkpoint. The WGPU staged baseline remains faulted until fresh Wasm/component activation.
 
 A parity review found transient occlusion must preserve the media player: dropping slots during a menu would cancel playback and reload exported bytes. The collector and page host are being changed to retain owned descriptors with explicit occlusion, hide covered controls, and preserve playback through hide/show.
+
+## Current Integrated Gate Results
+
+The complete browser gate passed fifty files and 536 tests in the current integrated snapshot. The new Wasm compile preflight succeeded through Cargo and Nx; this confirms source compilation, not a freshly activated browser binary. The nine-vector spawned routing oracle passed fifteen assertions; the genuine native red baseline previously executed and failed before the routing repair.
+
+The full native green attempt compiled and ran 552 of 1571 selected tests: 550 passed and two media-slot assertions failed, after which nextest stopped the remaining tests. Those failures concern numeric fixture representation and oversized descriptor publication and are assigned to the media-slot owner; the full native gate is still pending. The trusted document identity kernel law executed successfully once; newly added malformed-payload cases still need a fresh run.
+
+A real media-app acceptance command is now registered in the WGPU package router, Nx project, package scripts and editor launch configuration. Its current producer fixture deliberately checks the same unsupported media capability emitted by both React and WGPU app sources. Real WAV/MP4 playback is separately verified against the production browser host, without claiming the app producer already exports playback. A custom theme metric divergence is being fixed from a neutral schema and shared vectors by the React/theme and native-shell owners.

@@ -1,0 +1,14 @@
+{
+  "angle": 3.141592653589793,
+  "axis": [
+    1.0,
+    0.0,
+    0.0
+  ],
+  "mutation": "rotateSelection3d",
+  "targets": [
+    "part-b",
+    "volume-2",
+    "part-ghost"
+  ]
+}

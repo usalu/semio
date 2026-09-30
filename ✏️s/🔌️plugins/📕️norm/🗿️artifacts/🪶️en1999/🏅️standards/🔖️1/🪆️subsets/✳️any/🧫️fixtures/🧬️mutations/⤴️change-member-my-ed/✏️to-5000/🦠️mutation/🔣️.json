@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberMYEd",
+  "memberId": "purlin-1",
+  "actionId": "G",
+  "newMYK": 5000.0
+}

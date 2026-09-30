@@ -1,0 +1,103 @@
+{
+  "annex": "de",
+  "site": {
+    "seismicZone": "zone2",
+    "aGr": 0.6,
+    "deGroundCombo": "B-R",
+    "importanceClass": "II"
+  },
+  "buildings": [],
+  "bridges": [
+    {
+      "id": "br-1",
+      "periodRatio": 2.0,
+      "fundamentalPeriodS": 1.2,
+      "vRdN": 2000000.0,
+      "bearingDRdM": 0.4,
+      "permanentGkN": 8000000.0,
+      "correlatedOccupancy": true,
+      "variables": [
+        {
+          "id": "br-q1",
+          "category": "F",
+          "qkN": 1500000.0
+        }
+      ]
+    }
+  ],
+  "assessments": [
+    {
+      "id": "as-1",
+      "knowledgeLevel": "kl2",
+      "limitState": "sd",
+      "supportedBuildingId": "bldg-office",
+      "rKN": 500000.0,
+      "gammaEl": 1.0
+    }
+  ],
+  "silos": [
+    {
+      "id": "si-1",
+      "heightM": 12.0,
+      "radiusM": 4.0,
+      "permanentGkN": 1200000.0,
+      "contentQkN": 4000000.0,
+      "contentCategory": "E",
+      "fillingRatio": 0.85,
+      "nRdN": 2000000.0,
+      "vRdN": 1500000.0,
+      "qNominal": 1.2
+    }
+  ],
+  "tanks": [
+    {
+      "id": "tk-1",
+      "heightM": 10.0,
+      "radiusM": 5.0,
+      "permanentGkN": 800000.0,
+      "contentQkN": 5000000.0,
+      "contentCategory": "E",
+      "fillingRatio": 0.9,
+      "vRdN": 3000000.0
+    }
+  ],
+  "foundations": [
+    {
+      "id": "fd-1",
+      "supportedBuildingId": "bldg-office",
+      "areaM2": 200.0,
+      "pRdPa": 400000.0,
+      "hRdN": 500000.0,
+      "kFoundation": 800000.0,
+      "kSoil": 300000.0
+    }
+  ],
+  "retainingWalls": [
+    {
+      "id": "rw-1",
+      "heightM": 4.5,
+      "phiDeg": 32.0,
+      "soilGamma": 18000.0,
+      "r": 1.5,
+      "hRdNPerM": 250000.0
+    }
+  ],
+  "towers": [
+    {
+      "id": "tw-1",
+      "heightM": 45.0,
+      "mRdNm": 8000000.0,
+      "isChimney": false,
+      "qNominal": 2.5,
+      "permanentGkN": 1000000.0,
+      "correlatedOccupancy": true,
+      "variables": [
+        {
+          "id": "tw-q1",
+          "category": "E",
+          "qkN": 50000.0
+        }
+      ]
+    }
+  ]
+}

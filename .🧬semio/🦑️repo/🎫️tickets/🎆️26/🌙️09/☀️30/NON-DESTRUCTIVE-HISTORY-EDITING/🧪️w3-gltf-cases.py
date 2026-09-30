@@ -54,35 +54,28 @@ for fixture in sorted(CORPUS.glob("*/*/*")):
     unit = leaf / "🧪️tests/🔬️unit/🦀️.rs"
     kind = re.search(r'kind: "([a-z0-9-]+)"', source).group(1)
     implemented = leaf / "🧪️tests" / case / "🦀️.rs"
-    witness = direct if direct.is_file() else implemented if implemented.is_file() else None
-    if witness:
-        identity = next(line.strip() for line in witness.read_text(encoding="utf-8").splitlines() if "SEMANTICS.kind" in line)
-    else:
-        record = re.search(r"impl protocol::MutationKind<GltfSnapshot, GltfMutation> for (\w+)", source).group(1)
-        identity = f'assert_eq!(<{record} as protocol::MutationKind<GltfSnapshot, GltfMutation>>::SEMANTICS.kind, "{kind}");'
-    extra = ""
-    if unit.is_file():
-        body = unit.read_text(encoding="utf-8").split("use super::*;\n", 1)[1].strip("\n")
-        extra = f"\n\n{body}"
-    elif not direct.is_file() and implemented.is_file():
-        tail = implemented.read_text(encoding="utf-8").split("\n}\n", 1)[1].strip("\n")
-        extra = f"\n\n{tail}" if tail else ""
     name = f"case_{slug(case).replace('-', '_')}"
     emoji = EMOJI.match(case).group(0)
     relative = f"{entity}/{verb}/{case}"
-    write(
-        leaf / "🧪️tests" / case / "🦀️.rs",
-        f"""//! {emoji} `{kind}` implementation case `{case}`: the committed fixture bundle
+    header = f"""//! {emoji} `{kind}` implementation case `{case}`: the committed fixture bundle
 //! `♾️any/🧫️fixtures/🧬️mutations/{relative}/` holds every corpus law, and the leaf keeps its language-neutral semantic identity.
-use super::*;
-
-#[test]
-fn committed_case_holds_the_corpus_law() {{
-    {identity}
-    super::super::component::fixture_corpus_tests::assert_case("{relative}");
-}}{extra}
-""",
-    )
+"""
+    law = f'super::super::component::fixture_corpus_tests::assert_case("{relative}");'
+    if implemented.is_file() and law in implemented.read_text(encoding="utf-8"):
+        pass
+    elif direct.is_file() and len(re.findall(r"\bfn ", direct.read_text(encoding="utf-8"))) > 1:
+        write(implemented, f"{header}{direct.read_text(encoding='utf-8').rstrip()}\n\n#[test]\nfn committed_case_holds_the_corpus_law() {{\n    {law}\n}}\n")
+    else:
+        if direct.is_file():
+            identity = next(line.strip() for line in direct.read_text(encoding="utf-8").splitlines() if "SEMANTICS.kind" in line)
+        else:
+            record = re.search(r"impl protocol::MutationKind<GltfSnapshot, GltfMutation> for (\w+)", source).group(1)
+            identity = f'assert_eq!(<{record} as protocol::MutationKind<GltfSnapshot, GltfMutation>>::SEMANTICS.kind, "{kind}");'
+        extra = ""
+        if unit.is_file():
+            body = unit.read_text(encoding="utf-8").split("use super::*;\n", 1)[1].strip("\n")
+            extra = f"\n\n{body}"
+        write(implemented, f"{header}use super::*;\n\n#[test]\nfn committed_case_holds_the_corpus_law() {{\n    {identity}\n    {law}\n}}{extra}\n")
     mount = MOUNT.format(path=case, name=name)
     updated = source
     if direct.is_file():

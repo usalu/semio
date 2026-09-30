@@ -80,7 +80,8 @@
         "insert-edge",
         "remove-edge",
         "set-edge-endpoints",
-        "set-edge-kind"
+        "set-edge-kind",
+        "drag-nodes"
       ]
     }
   ],
@@ -93,6 +94,27 @@
       "standardDirectoryName": "🔖️v1",
       "subsetDirectoryName": "🌊️flow",
       "mutations": [
+        {
+          "id": "drag-nodes",
+          "capability": "semio-v1-flow-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "drag-nodes",
+            "bridgeVersion": 1,
+            "variant": "DragNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-flow-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
         {
           "id": "insert-edge",
           "capability": "semio-v1-flow-mutate",

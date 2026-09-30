@@ -81,3 +81,9 @@ record rotate-objects tag=22
 field payload bytes
 record scale-objects tag=23
 field payload bytes
+record drag-selection tag=24
+field payload bytes
+record rotate-selection tag=25
+field payload bytes
+record scale-selection tag=26
+field payload bytes

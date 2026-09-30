@@ -54,66 +54,40 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
   oracle module as UNOBSERVABLE and pinned there by a test that flips red the moment the vocabulary
   or the fixture changes.
 
-  The inverse law is not scoped down either, with one exception, on one axis, for three kinds,
-  stated here in full.
+  The inverse law is not scoped down at all: every kind, on every axis, contentOperators included.
 
-  THE ONE AXIS THE REFERENCE'S UNDO CANNOT CARRY, FOUND BY ASSERTING THE LAW RATHER THAN BY
-  REASONING ABOUT IT. remove-page, append-page-content and set-page-content all have to REBUILD a
-  page's content stream on the way back. The vocabulary carries the page's typed operator list
-  (PdfPage.content, and every Examples row below is the leaf wire payload those three kinds decode
-  from, BT /F1 12 Tf 72 720 Td (…) Tj ET spelled as PdfOp records), so the subject restores the
-  original stream exactly. The reference cannot: its undo captures a page's prior text through Tj
-  alone and rebuilds the minimal five-operator stream from it, and page 8 of this thesis carries 294
-  operators — glyph positioning, graphics state, the lot — set with TJ. Those three inverse
-  scenarios therefore compare the oracle's projection with pages.N.contentOperators dropped and
-  nothing else dropped: declared version, page count, every page's media box, crop box, rotation,
-  the whole objectGraph surface and — critically — the shown text all stay under the full law, and
-  every other kind in the catalog stays under it on every axis including contentOperators.
+  THE AXIS THE REFERENCE'S UNDO USED TO DROP, AND HOW IT CARRIES IT NOW. remove-page,
+  append-page-content and set-page-content all have to put a page's content stream back on the way
+  back. The vocabulary carries the page's typed operator list (PdfPage.content; every Examples row
+  below is the leaf wire payload those three kinds decode from, BT /F1 12 Tf 72 720 Td (…) Tj ET
+  spelled as PdfOp records), so the subject restores the original stream exactly. The reference's
+  undo used to capture a page's prior text through Tj alone and rebuild a minimal stream from it,
+  while page 8 of this thesis carries 294 operators set with TJ — so those three inverses were
+  compared with pages.N.contentOperators dropped and still left red. The undo now captures the
+  page's operators verbatim, as lopdf decodes them, in the wire's generic unknown PdfOp record,
+  and re-encodes exactly those; the carve-out is gone and all three are held to the full law.
 
   All three laws are proven again at unit level, against the same real document and the same
   Examples rows, by `every_declared_kind_is_observable_and_its_inverse_restores_the_document` in
   ../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs, so the argument holds without the
   runner too.
 
-  A SECOND, SMALLER DEFECT THE SAME LAW EXPOSED, AND IT WAS FIXED RATHER THAN EXEMPTED. This thesis
-  sets its type with TJ, the positioned-array form, so the independent reader projects most of its
-  pages as text: []. The oracle's own writer used to encode an empty text as () Tj — a text-showing
-  operator showing the empty string — which turned such a page into one projecting as text: [""].
-  It now writes BT ET, which is the faithful reconstruction of "no text", and the text axis passes
-  under the full law.
-
-  THE DEFECT THE DIFFERENTIAL RUN FOUND, AND IT WAS FIXED IN THE CODEC RATHER THAN EXEMPTED. The
-  first time this case actually ran oracle AGAINST subject it scored the ratio recorded in the
-  ticket, not here, and ten of its thirteen failures were one bug: PdfSnapshot carries the document twice — pages/info are the
-  resolved authoring lanes every page and metadata mutation edits, objects/trailer are the retained
-  native carrier — and encode_pdf serialized the carrier ALONE whenever it was non-empty. On this
-  thesis it always is, so set-page-rotation, set-page-media-box, set-page-crop-box, set-page-content,
-  append-page-content, insert-page, remove-page, move-page and set-info all applied
-  cleanly to the snapshot and then vanished on export: the subject's own reader projected 65 pages
-  where the oracle had 64, rotate 0 where the oracle had 90, title "" where the oracle had the
-  stamped one. That is a mutation reporting as applied that no reader can find in the bytes, and it
-  contradicted PdfPage's own docstring ("the writer regenerates a fresh content stream from it on
-  encode"). ../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🦀️.rs now writes the authored lanes
-  back onto the retained graph before serializing — patching the leaf page objects in place,
-  rebuilding /Kids and /Count when the page SET changes, appending rather than re-rendering when a
-  page's text only grew, and re-stating /Info as the whole record PdfInfo declares itself to be —
-  and rewrites nothing that did not move. Parity went 24/37 to 34/37 with no comparison profile
-  touched, no ignoreKeys added and no fixture swapped.
-
-  THE THREE THAT REMAIN, AND WHY THEY ARE LEFT RED. inverse-remove-page, inverse-append-page-content
-  and inverse-set-page-content still diverge, on ONE axis and one only: pages.N.contentOperators.
-  Every other axis agrees exactly — page count, media box, crop box, rotation, the shown text and
-  the whole objectGraph. The subject restores the page's ORIGINAL content stream (294, 148 and 289
-  operators respectively) because returning the authored lane to its base value leaves the retained
-  carrier untouched, so the writer has nothing to rewrite; the reference lands on a two-operator
-  BT ET, because its own capture of a page's prior text reads only the Tj operator and this thesis
-  sets its type with TJ, so it undoes the mutation from an empty string. Both sides project text: []
-  and agree there — the loss is in the reference's round trip, not in the projection and not in this
-  implementation. The subject half proves it rather than asserting it in prose: its inverse-<kind>
-  handler holds all sixteen kinds to the inverse law with NO carve-out at all, contentOperators
-  included, and all sixteen pass. Dropping the axis from the comparison would make these three go
-  green while hiding exactly that fact, so they stay red and attributed. The oracle half keeps its
-  own documented one-axis exemption for the same three kinds, because on ITS side the loss is real.
+  THE DEFECTS THE DIFFERENTIAL RUNS FOUND, EACH FIXED IN THE CODEC RATHER THAN EXEMPTED. PdfSnapshot
+  carries the document twice — pages/info and the other typed lanes are the authoring surface every
+  typed mutation edits, objects/trailer the retained native carrier every COS-level mutation edits.
+  First, encode_pdf serialized the carrier ALONE, so every page and metadata edit applied to the
+  snapshot and vanished on export. Its first fix then regenerated every typed object whenever any
+  lane moved: a page edit re-stated the whole catalog (inlining /Names /Dests, adding
+  /OpenAction /Type), a direct COS edit to an object a typed lane owns (set-object-value #145, the
+  catalog's own dict entries, remove-object #3015) was overwritten by the stale typed lane, and
+  set-trailer-entry's custom key was never written. Now a COS-level mutation carries every typed lane
+  its edit moves (io's carry_graph_edit), and ../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🦀️.rs
+  reconciles with incremental-writer semantics: a graph that spells every typed lane is written as
+  it stands; a moved lane re-states only what it owns — a page's moved entries in place, the page
+  tree flat when the page SEQUENCE changed, /Info in place, a catalog lane's own entries — and the
+  grafted graph is read back until it spells the typed lanes; every other object, dictionary entry
+  and trailer entry survives untouched. No comparison profile was touched, no ignoreKeys added and no
+  fixture swapped.
 
   @id-mutate
   @level-exhaustive

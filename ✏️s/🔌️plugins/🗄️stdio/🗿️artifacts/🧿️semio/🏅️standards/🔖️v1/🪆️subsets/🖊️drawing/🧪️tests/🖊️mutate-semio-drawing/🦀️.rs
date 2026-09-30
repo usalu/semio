@@ -105,12 +105,15 @@ mod subject {
     /// 🌳️ A structural census of the scene graph, so a mutation that lands in the wrong branch shows
     /// up as a shape difference and not only as a deep value difference: per layer, the node kind
     /// histogram, the maximum depth and the total segment count. Computed over the snapshot's own
-    /// JSON wire form, so this adapter never re-declares the node union.
+    /// JSON wire form and keyed by its own `kind` tags — the schema's four `DrawNode` variants always
+    /// present, any other tag counted under itself — so a node is never tallied under a kind it is not.
     fn shape_json(document: &Json) -> Json {
-        fn walk(node: &Json, level: usize, counts: &mut [usize; 4], depth: &mut usize, segments: &mut usize) {
+        fn walk(node: &Json, level: usize, counts: &mut Vec<(String, usize)>, depth: &mut usize, segments: &mut usize) {
             let kind = node.str("kind");
-            let at = ["path", "text", "group-nodes", "image"].iter().position(|candidate| *candidate == kind.as_str()).unwrap_or(0);
-            counts[at] += 1;
+            match counts.iter_mut().find(|(tag, _)| *tag == kind) {
+                Some((_, count)) => *count += 1,
+                None => counts.push((kind.clone(), 1)),
+            }
             *depth = (*depth).max(level);
             if kind == "path" {
                 *segments += node.array("segments").len();
@@ -123,7 +126,7 @@ mod subject {
             .array("layers")
             .iter()
             .map(|layer| {
-                let mut counts = [0usize; 4];
+                let mut counts: Vec<(String, usize)> = ["path", "text", "group", "image"].iter().map(|tag| (tag.to_string(), 0)).collect();
                 let mut depth = 0usize;
                 let mut segments = 0usize;
                 if let Some(root) = layer.get("root") {
@@ -132,15 +135,7 @@ mod subject {
                 Json::Object(vec![
                     ("id".to_string(), Json::String(layer.str("id"))),
                     ("visible".to_string(), Json::Bool(matches!(layer.get("visible"), Some(Json::Bool(true))))),
-                    (
-                        "nodes".to_string(),
-                        Json::Object(vec![
-                            ("path".to_string(), number(counts[0])),
-                            ("text".to_string(), number(counts[1])),
-                            ("group-nodes".to_string(), number(counts[2])),
-                            ("image".to_string(), number(counts[3])),
-                        ]),
-                    ),
+                    ("nodes".to_string(), Json::Object(counts.into_iter().map(|(tag, count)| (tag, number(count))).collect())),
                     ("depth".to_string(), number(depth)),
                     ("segments".to_string(), number(segments)),
                 ])

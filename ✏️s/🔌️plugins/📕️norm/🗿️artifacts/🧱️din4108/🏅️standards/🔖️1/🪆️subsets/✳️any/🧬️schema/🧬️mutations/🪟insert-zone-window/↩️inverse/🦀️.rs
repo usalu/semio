@@ -1,10 +1,9 @@
-//! ↩️ `insert-zone-window` inverse via snapshot restore of list fields.
+//! ↩️ `insert-zone-window` inverse — removes the inserted window at its landing position, computed from BASE state; a missing target yields no step.
 
 use super::InsertZoneWindow;
+use crate::mutations::remove_zone_window::RemoveZoneWindow;
 use crate::{Din4108Mutation, Din4108Snapshot};
 
-pub fn inverse(_payload: &InsertZoneWindow, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
-    // Whole-list restore is expressed by re-inserting base lists through set-like rebuilds in from_snapshot.
-    let _ = base;
-    Vec::new()
+pub fn inverse(payload: &InsertZoneWindow, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+    base.zones.iter().find(|zone| zone.id == payload.zone_id).map(|zone| vec![Din4108Mutation::RemoveZoneWindow(RemoveZoneWindow { zone_id: payload.zone_id.clone(), index: payload.index.min(zone.windows.len()) })]).unwrap_or_default()
 }

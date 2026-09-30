@@ -459,13 +459,13 @@ mod tests {
     }
 
     /// 🧮️ The complete history position (applied, redo, checkpoint, alternative) the event log of `edits` + `transitions` folds to.
-    fn workflow_history<'a>(edits: impl IntoIterator<Item = &'a store::Edit<workflow::WorkflowMutation>>, transitions: &[protocol::MutationEnvelope], conflicts: &[protocol::Conflict]) -> protocol::HistoryFold {
-        store::fold_event_log::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&edits.into_iter().collect::<Vec<_>>(), transitions, conflicts).expect("event log folds")
+    fn workflow_history<'a>(document_id: &str, edits: impl IntoIterator<Item = &'a store::Edit<workflow::WorkflowMutation>>, transitions: &[protocol::MutationEnvelope], conflicts: &[protocol::Conflict]) -> protocol::HistoryFold {
+        store::fold_event_log::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(document_id, &edits.into_iter().collect::<Vec<_>>(), transitions, conflicts).expect("event log folds")
     }
 
     /// 🧮️ [`workflow_history`] of one host backbone document.
     fn document_history(document: &OsWorkflowArtifactDocument) -> protocol::HistoryFold {
-        workflow_history(document.vcs.edits.iter(), &document.transitions, &document.conflicts)
+        workflow_history(&document.id, document.vcs.edits.iter(), &document.transitions, &document.conflicts)
     }
 
     #[test]
@@ -499,7 +499,7 @@ mod tests {
         let parsed = resolve_kernel_future(store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops)).expect("backbone text decodes");
         assert!(parsed.envelope.edit_messages.iter().eq(document.edit_messages.iter()));
         assert_eq!(parsed.envelope.conflicts, document.conflicts);
-        assert_eq!(workflow_history(parsed.envelope.vcs.edits.iter(), &parsed.envelope.transitions, &parsed.envelope.conflicts), document_history(&document));
+        assert_eq!(workflow_history(&parsed.envelope.id, parsed.envelope.vcs.edits.iter(), &parsed.envelope.transitions, &parsed.envelope.conflicts), document_history(&document));
 
         let mut invalid = document.clone();
         invalid.conflicts[0].id = protocol::ConflictId("conflict-invalid".into());
@@ -527,7 +527,7 @@ mod tests {
 
         let text = export_backbone_dsl(&document).expect("text encode");
         let parsed = resolve_kernel_future(store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops)).expect("text decode");
-        assert_eq!(workflow_history(parsed.envelope.vcs.edits.iter(), &parsed.envelope.transitions, &parsed.envelope.conflicts), history);
+        assert_eq!(workflow_history(&parsed.envelope.id, parsed.envelope.vcs.edits.iter(), &parsed.envelope.transitions, &parsed.envelope.conflicts), history);
     }
 
     #[test]

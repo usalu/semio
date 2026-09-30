@@ -11,7 +11,7 @@ variables [id:TEXT category:TEXT qk:NUM] {
 accidentals [id:TEXT ad:NUM] {
   A-impact 180000
 }
-seismics [id:TEXT a-ek:NUM importance-class:TEXT] {
+seismics [id:TEXT a-ek:NUM importance-class:ENUM] {
   E-1 150000 iii
 }
 members [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {

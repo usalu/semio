@@ -760,11 +760,7 @@ pub fn target_volume_flat_rect(volume: &Puzzle5dTargetVolume) -> [f64; 4] {
     [volume.origin[0] * to_flat, -volume.origin[1] * to_flat, extent[0].abs() * to_flat, extent[1].abs() * to_flat]
 }
 
-/// 🎛️ The ONE board↔world scale this artifact places and moves paired parts with — the linear inverse of
-/// `🧬️schema/💡️inferences/🎛️flat-position`'s plan projection, so a flat point and a world origin stay one
-/// consistent pair whichever pane the gesture came from. A flat unit is one board pixel; 48 of them make
-/// one world metre (the board's own default part box, `part_2d.width`/`height`).
-pub const PUZZLE5D_FLAT_TO_WORLD: f64 = 1.0 / 48.0;
+pub use crate::standards::v1::subsets::any::schema::mutations::PUZZLE5D_FLAT_TO_WORLD;
 
 /// 🎨️ Palette drop: creates a free paired part at the flat drop point, deriving the volume origin from the nearest peer part's offset.
 pub fn add_palette_part(envelope: &mut Puzzle5dScene, part_kind: &str, x: f64, y: f64) {

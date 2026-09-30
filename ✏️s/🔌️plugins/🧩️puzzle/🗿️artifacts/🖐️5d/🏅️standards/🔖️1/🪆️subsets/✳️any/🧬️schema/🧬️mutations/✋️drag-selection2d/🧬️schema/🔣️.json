@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/mutation/drag-selection2d/schema.json",
+  "title": "DragSelection2d",
+  "description": "The `drag-selection2d` mutation record — a relative drag of parts on the board by one flat offset; internally tagged `\"mutation\": \"dragSelection2d\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targets",
+    "dx",
+    "dy"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "dragSelection2d",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Parts",
+          "de": "Teile"
+        },
+        "description": {
+          "en": "Parts whose board position moves; locked or missing ones are skipped.",
+          "de": "Teile, deren Brettposition sich verschiebt; gesperrte oder fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": [
+            "part"
+          ],
+          "domain": "vortex",
+          "granularity": "part"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "dx": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset X",
+          "de": "Versatz X"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "offset",
+        "order": 20
+      }
+    },
+    "dy": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset Y",
+          "de": "Versatz Y"
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "offset",
+        "order": 30
+      }
+    }
+  }
+}

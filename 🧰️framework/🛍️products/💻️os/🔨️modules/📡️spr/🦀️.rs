@@ -29,7 +29,7 @@ pub use crate::os_spr::causal::{
     DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES, DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES,
 };
 pub use crate::os_spr::causal::transition::{
-    decode_history_transition, encode_history_transition, fold_history, history_transition_envelope, history_transition_from_envelope, history_transition_id, is_history_transition, FoldAlternative, FoldChange, FoldCheckpoint, FoldEdit, HistoryFold, HistoryTransition,
+    decode_history_transition, encode_history_transition, fold_history, history_transition_envelope, history_transition_from_envelope, history_transition_id, is_history_transition, trunk_alternative_id, HistoryShape, HistoryTransitionKind, FoldAlternative, FoldChange, FoldCheckpoint, FoldEdit, HistoryFold, HistoryTransition,
     TransitionAuthor, TransitionCheckpoint, TransitionPin, EffectiveSupersession, InputReplacement, SupersededInput, TransitionSupersede, HISTORY_TRANSITION_SCHEMA, SUPERSEDE_PAYLOAD_MAX_BYTES, SUPERSEDE_SCOPE_MAX_BYTES,
 };
 pub use crate::os_spr::channel::{

@@ -1,0 +1,94 @@
+{
+  "contract": "mutation-wire-witness-v1",
+  "kindId": "mutation-wire-witness",
+  "directoryName": "🧾️wire-witness",
+  "parentKindIds": [
+    "fixtures",
+    "members-of-schema",
+    "plugin-test-mutations",
+    "store-fixture-mutations"
+  ],
+  "witnessNodes": 3,
+  "witnessLeaves": [
+    "🦠️mutation/🔣️.json"
+  ],
+  "resolutions": [
+    {
+      "id": "leaf-local-fixture-scope",
+      "name": "🧾️wire-witness",
+      "parentKindId": "fixtures",
+      "expectedKindId": "mutation-wire-witness"
+    },
+    {
+      "id": "mirrored-registered-leaf",
+      "name": "🧾️wire-witness",
+      "parentKindId": "members-of-schema",
+      "expectedKindId": "mutation-wire-witness"
+    },
+    {
+      "id": "mirrored-plugin-test-leaf",
+      "name": "🧾️wire-witness",
+      "parentKindId": "plugin-test-mutations",
+      "expectedKindId": "mutation-wire-witness"
+    },
+    {
+      "id": "mirrored-store-leaf",
+      "name": "🧾️wire-witness",
+      "parentKindId": "store-fixture-mutations",
+      "expectedKindId": "mutation-wire-witness"
+    },
+    {
+      "id": "outside-fixture-scope-tests",
+      "name": "🧾️wire-witness",
+      "parentKindId": "tests",
+      "expectedKindId": null
+    },
+    {
+      "id": "outside-fixture-scope-subset",
+      "name": "🧾️wire-witness",
+      "parentKindId": "subset",
+      "expectedKindId": null
+    },
+    {
+      "id": "unparented",
+      "name": "🧾️wire-witness",
+      "parentKindId": null,
+      "expectedKindId": null
+    },
+    {
+      "id": "plural-slug",
+      "name": "🧾️wire-witnesses",
+      "parentKindId": "fixtures",
+      "expectedKindId": null
+    },
+    {
+      "id": "foreign-emoji",
+      "name": "🧫️wire-witness",
+      "parentKindId": "members-of-schema",
+      "expectedKindId": null
+    }
+  ],
+  "placements": [
+    {
+      "id": "leaf-local-fixture-scope",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction",
+      "leafRoots": [
+        "🧬️mutations/🔁️set-state"
+      ],
+      "witnessRoot": "🧬️mutations/🔁️set-state/🧫️fixtures/🧾️wire-witness",
+      "grandparentKindId": "plugin-test-mutations",
+      "parentKindId": "fixtures"
+    },
+    {
+      "id": "subset-fixture-mirror",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run",
+      "leafRoots": [
+        "🧬️schema/🧬️mutations/🚀️start-run",
+        "🧫️fixtures/🧬️mutations/🚀️start-run"
+      ],
+      "witnessRoot": "🧫️fixtures/🧬️mutations/🚀️start-run/🧾️wire-witness",
+      "grandparentKindId": "schema",
+      "parentKindId": "members-of-schema"
+    }
+  ]
+}

@@ -118,7 +118,7 @@ import {
   worldEntitySelectable,
 } from "@semio-tech/infinite-world-r3f";
 
-import { emptyMeshTransfer, kernelGeometry, solidRef, type FaceGroup, type FaceInfo, type MeshTransfer, type Vec3 } from "../📔️registry/🟦️.ts";
+import { emptyMeshTransfer, kernelGeometry, solidRef, type FaceGroup, type FaceInfo, type MeshTransfer, type Vec3 } from "../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
 import {
   expandSelectionTargetsForAccept,
   getActiveSelectionSpec,
@@ -6758,7 +6758,7 @@ export function SelectionPropertiesPane({ model, kernel, activeModelDefinitionId
 
 // #region ­ƒº¬Tests
 const __cadRendererTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️.ts") : null;
-const __cadRendererTestKernel = import.meta.vitest ? await import("../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️.ts") : null;
+const __cadRendererTestKernel = import.meta.vitest ? await import("../../../../../../../../../🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts") : null;
 
 /** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️repluserfacingsuggestiondetail/🟦️.tsx`. */
 export type RendererTestDependencies = {

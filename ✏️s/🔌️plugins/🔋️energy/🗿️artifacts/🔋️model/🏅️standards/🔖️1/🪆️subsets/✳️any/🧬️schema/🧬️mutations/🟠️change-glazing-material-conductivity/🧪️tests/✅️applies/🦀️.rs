@@ -21,7 +21,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.zones.push(zone(1, "ZONE ONE"));
     model.glazing_materials.push(fixtures::glazing_material(1, "CLEAR 3MM"));
     model.gas_materials.push(fixtures::gas_material(2, "AIR GAP 13MM"));
-    (snapshot(model), super::change_glazing_material_conductivity(crate::model::EntityId(1), 1.06))
+    (snapshot(model), super::change_glazing_material_conductivity(crate::model::EntityId(1), 1.4))
 }
 
 fn case() -> Case {

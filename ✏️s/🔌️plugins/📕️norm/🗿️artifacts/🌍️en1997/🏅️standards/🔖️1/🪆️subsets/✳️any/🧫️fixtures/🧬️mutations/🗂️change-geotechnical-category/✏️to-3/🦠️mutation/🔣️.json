@@ -1,0 +1,4 @@
+{
+  "mutation": "changeGeotechnicalCategory",
+  "newGeotechnicalCategory": 3
+}

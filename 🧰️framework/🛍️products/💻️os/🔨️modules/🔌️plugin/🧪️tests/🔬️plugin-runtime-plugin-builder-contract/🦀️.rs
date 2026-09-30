@@ -405,6 +405,23 @@ mod plugin_builder_contract_tests {
         }
     }
 
+    thread_local! {
+        /// 📨️ Every host event `TestApp::host_event` received on this test thread, in order.
+        static TEST_HOST_EVENTS: std::cell::RefCell<Vec<HostEvent>> = const { std::cell::RefCell::new(Vec::new()) };
+    }
+
+    /// 📨️ Takes the host events recorded on this test thread.
+    fn take_test_host_events() -> Vec<HostEvent> {
+        TEST_HOST_EVENTS.with(|events| std::mem::take(&mut *events.borrow_mut()))
+    }
+
+    /// 🪟️ A view of the two-window roster `main-1`/`main-2` targeting `target` under `utility`.
+    fn host_event_view(target: &str, utility: Option<&str>) -> ViewModel {
+        let roster = vec![ViewWindowInstance { id: "main-1".into(), window_kind_id: "main".into() }, ViewWindowInstance { id: "main-2".into(), window_kind_id: "main".into() }];
+        let view = ViewModel { window_instances: roster, ..ViewModel::default() }.for_window_instance(target).expect("a roster window");
+        ViewModel { active_utility_id: utility.map(str::to_string), ..view }
+    }
+
     /// 🧪️ App under test. `received_actions` records every command id THIS app's own `handle` was
     /// actually called with — used to prove framework-owned interceptions (e.g. `noteShellCommand`)
     /// never reach it.
@@ -936,6 +953,13 @@ mod plugin_builder_contract_tests {
 
         fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
             Some(std::sync::Arc::new(PublicationPresenceRetirementFactory))
+        }
+
+        /// 📨️ Records every host event on this test thread; a blur answers the lane-less `noopMutation`, so a law sees
+        /// that a host event's own dispatch is never a history row.
+        fn host_event(event: &HostEvent) -> Option<TestCommand> {
+            TEST_HOST_EVENTS.with(|events| events.borrow_mut().push(event.clone()));
+            matches!(event, HostEvent::WindowBlurred { .. }).then_some(TestCommand::NoopMutation)
         }
 
         /// 🐢️ Wave B34: the synthetic app's DECLARED interaction scope, the fixture behind
@@ -5913,7 +5937,7 @@ mod plugin_builder_contract_tests {
             columns: Vec::new(),
             can_undo: true,
             can_redo: false,
-            active_alternative_id: None,
+            active_alternative_id: None, alternatives: Vec::new(),
             current_checkpoint_id: None,
             commands: vec![
                 CommandView {
@@ -5993,7 +6017,7 @@ mod plugin_builder_contract_tests {
             columns: Vec::new(),
             can_undo: true,
             can_redo: false,
-            active_alternative_id: None,
+            active_alternative_id: None, alternatives: Vec::new(),
             current_checkpoint_id: None,
             commands: vec![CommandView {
                 seq: 1,
@@ -6051,7 +6075,7 @@ mod plugin_builder_contract_tests {
             transaction: None,
             mutations: Vec::new(),
         };
-        let history = HistoryView { columns: Vec::new(), can_undo: true, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, commands: vec![entry(1, 1), entry(2, 3)], command_filter: HistoryCommandFilter::All };
+        let history = HistoryView { columns: Vec::new(), can_undo: true, can_redo: false, active_alternative_id: None, alternatives: Vec::new(), current_checkpoint_id: None, commands: vec![entry(1, 1), entry(2, 3)], command_filter: HistoryCommandFilter::All };
         let panel = ui_history_panel(&history, None, "ctrl", Locale::En, false, &ViewModel::default()).await.expect("an oversized command label must not fail admission");
         for (index, expected_tail) in [(0, UI_TEXT_CLIP_MARK), (1, UI_TEXT_CLIP_MARK)] {
             let Component::TreeItem(props) = &panel.children[1].children[index].component else { panic!("expected a TreeItem") };
@@ -6090,7 +6114,7 @@ mod plugin_builder_contract_tests {
             transaction: None,
             mutations: Vec::new(),
         };
-        HistoryView { columns: Vec::new(), can_undo: true, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, commands: (1..=rows as u64).map(entry).collect(), command_filter: HistoryCommandFilter::All }
+        HistoryView { columns: Vec::new(), can_undo: true, can_redo: false, active_alternative_id: None, alternatives: Vec::new(), current_checkpoint_id: None, commands: (1..=rows as u64).map(entry).collect(), command_filter: HistoryCommandFilter::All }
     }
 
     /// 🧾️ The body as the host reads it — `BuiltChildren` is retained page transport and refuses a
@@ -6263,6 +6287,72 @@ mod plugin_builder_contract_tests {
         let mut app = contract_app().await;
         let result = app.dispatch_typed(TestCommand::ViewNoScope, &meta()).await.expect("viewNoScope");
         assert_eq!(result.ui_scope, UiDirtyScope::None);
+    }
+
+    /// 📨️ LAW: a utility switch a dispatch's view shows is exactly one `UtilityChanged` for its window, delivered before the
+    /// dispatch; the first view of a window, an unchanged utility and a window the view names no utility for deliver none.
+    #[semio_framework_async_macros::async_test]
+    async fn a_utility_switch_in_a_dispatch_view_delivers_one_host_event_to_its_window() {
+        let mut app = contract_app().await;
+        take_test_host_events();
+        let under = |view: ViewModel| ActionMeta { view_state: Some(view), ..meta() };
+        app.dispatch_typed(TestCommand::Increment, &under(host_event_view("main-1", Some("select")))).await.expect("the first view");
+        app.dispatch_typed(TestCommand::Increment, &under(host_event_view("main-1", Some("select")))).await.expect("the same utility");
+        assert_eq!(take_test_host_events(), Vec::new(), "neither the first view of a window nor an unchanged utility is a switch");
+        app.dispatch_typed(TestCommand::Increment, &under(host_event_view("main-1", Some("brush")))).await.expect("the switch");
+        assert_eq!(take_test_host_events(), vec![HostEvent::UtilityChanged { window_id: "main-1".into(), from: Some("select".into()), to: Some("brush".into()) }]);
+        app.dispatch_typed(TestCommand::Increment, &under(host_event_view("main-2", None))).await.expect("another window");
+        assert_eq!(take_test_host_events(), Vec::new(), "main-2 is seen first, and this view names no utility for main-1");
+    }
+
+    /// 📨️ LAW: a forwarded `hostEvent{windowId, kind}` reaches the app as its typed event for that window, the app's typed
+    /// answer dispatches without a history row of its own, and an unknown kind is refused.
+    #[semio_framework_async_macros::async_test]
+    async fn a_forwarded_host_event_reaches_the_app_and_its_answer_is_never_a_history_row() {
+        let mut app = contract_app().await;
+        take_test_host_events();
+        let under = ActionMeta { view_state: Some(host_event_view("main-1", None)), ..meta() };
+        for (kind, event) in [
+            ("blur", HostEvent::WindowBlurred { window_id: "main-2".into() }),
+            ("captureLost", HostEvent::PointerCaptureLost { window_id: "main-2".into() }),
+            ("retiring", HostEvent::Retiring { window_id: "main-2".into() }),
+        ] {
+            app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&dv(json!({ "windowId": "main-2", "kind": kind }))), &under).await.unwrap_or_else(|fault| panic!("{kind}: {fault:?}"));
+            assert_eq!(take_test_host_events(), vec![event], "{kind}");
+        }
+        let history = app.test_history().await;
+        assert!(history.commands.is_empty(), "the answer to a blur is never a history row: {:?}", history.commands.iter().map(|entry| &entry.action_id).collect::<Vec<_>>());
+        let refused = app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&dv(json!({ "windowId": "main-1", "kind": "wobble" }))), &under).await;
+        assert_eq!(refused.err().map(|fault| fault.code), Some(FaultCode::new("hostEvent.invalid")));
+    }
+
+    /// 🙈️ A `View` verb that edited no store and carries no inverse is no history row, while a mutation next to it is.
+    #[semio_framework_async_macros::async_test]
+    async fn a_pure_view_verb_is_no_history_row() {
+        let mut app = contract_app().await;
+        app.dispatch_typed(TestCommand::ViewNoScope, &meta()).await.expect("viewNoScope");
+        app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
+        app.dispatch_typed(TestCommand::ViewPartialScope, &meta()).await.expect("viewPartialScope");
+        let history = app.test_history().await;
+        let rows: Vec<&str> = history.commands.iter().map(|entry| entry.action_id.as_str()).collect();
+        assert_eq!(rows, vec!["increment"], "pure view verbs never become rows");
+    }
+
+    /// 🙈️ The row predicate: interactions never, views only with an edit or inverse, everything else always.
+    #[test]
+    fn history_rows_exclude_interactions_and_pure_views() {
+        for (kind, edited, inverse, expected) in [
+            (ActionKind::Interaction, true, true, false),
+            (ActionKind::View, false, false, false),
+            (ActionKind::View, true, false, true),
+            (ActionKind::View, false, true, true),
+            (ActionKind::Mutation, false, false, true),
+            (ActionKind::History, false, false, true),
+            (ActionKind::Clipboard, false, false, true),
+            (ActionKind::Shell, false, false, true),
+        ] {
+            assert_eq!(history_row_is_recorded(kind, edited, inverse), expected, "{kind:?} edited={edited} inverse={inverse}");
+        }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -7198,16 +7288,18 @@ mod plugin_builder_contract_tests {
         assert!(app.interaction_state().await.selection.get("items").is_none_or(|selection| selection.ids.is_empty()), "the deleted id must be pruned from selection automatically");
     }
 
+    /// 🙈️ Interaction verbs (pick, hover, clear selection) change no history, so they are never history rows:
+    /// only the seeding edit stays in the log.
     #[semio_framework_async_macros::async_test]
-    async fn interaction_verbs_are_recorded_under_the_interaction_action_kind() {
+    async fn interaction_verbs_never_become_history_rows() {
         let mut app = interaction_app_under_test().await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).await.expect("seed label");
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
+        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1"))).await;
+        reserved_action(&mut app, CLEAR_SELECTION_ACTION_ID, None).await;
         let history = app.test_history().await;
-        let row = history.commands.first().expect("one logged row");
-        assert_eq!(row.action_id, INTERACTION_SELECT_ACTION_ID);
-        assert_eq!(row.kind, ActionKind::Interaction);
-        assert!(!row.revertible, "an Interaction-kind row carries no edit/config_edit/inverse — never revertible");
+        let kinds: Vec<(&str, ActionKind)> = history.commands.iter().map(|entry| (entry.action_id.as_str(), entry.kind)).collect();
+        assert_eq!(kinds, vec![("setLabel", ActionKind::Mutation)], "only the seeding edit is a row");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -7555,7 +7647,7 @@ mod plugin_builder_contract_tests {
         let ids = view.get("selectedIds").and_then(DslValue::as_array).expect("selectedIds");
         assert!(ids.iter().any(|id| id.as_str() == Some("item-1")), "leftover selected ids {ids:?}");
         let history = app.test_history().await;
-        assert!(history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID && entry.kind == ActionKind::Interaction), "the folded verb still records its `Interaction` command-log row");
+        assert!(!history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID || entry.kind == ActionKind::Interaction), "the folded verb is never a history row");
         close_reserved_app(&mut app);
     }
 
@@ -7641,7 +7733,7 @@ mod plugin_builder_contract_tests {
         let ids = view.get("selectedIds").and_then(DslValue::as_array).expect("selectedIds");
         assert!(ids.iter().any(|id| id.as_str() == Some("item-1")), "leftover selected ids {ids:?}");
         let history = app.test_history().await;
-        assert!(history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID && entry.kind == ActionKind::Interaction), "the folded verb still records its `Interaction` command-log row");
+        assert!(!history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID || entry.kind == ActionKind::Interaction), "the folded verb is never a history row");
         close_reserved_app(&mut app);
     }
 
@@ -7767,8 +7859,8 @@ mod plugin_builder_contract_tests {
                 return Err(format!("leftover selected ids {ids:?}"));
             }
             let history = app.test_history().await;
-            if !history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID && entry.kind == ActionKind::Interaction) {
-                return Err("the folded verb still records its `Interaction` command-log row".into());
+            if history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID || entry.kind == ActionKind::Interaction) {
+                return Err("the folded verb is never a history row".into());
             }
             Ok(())
         }

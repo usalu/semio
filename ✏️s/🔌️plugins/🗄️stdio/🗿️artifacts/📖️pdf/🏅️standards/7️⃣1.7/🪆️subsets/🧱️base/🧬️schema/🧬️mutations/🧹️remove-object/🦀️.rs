@@ -19,8 +19,8 @@ pub struct RemoveObject {
 impl MutationKind<PdfSnapshot, PdfMutation> for RemoveObject {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "object", kind: "remove-object", record: "Remove" };
 
-    fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_remove_object(self.id))
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        MutationOutcome::new(diff::diff_graph_edit(base, diff::diff_remove_object(self.id)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {

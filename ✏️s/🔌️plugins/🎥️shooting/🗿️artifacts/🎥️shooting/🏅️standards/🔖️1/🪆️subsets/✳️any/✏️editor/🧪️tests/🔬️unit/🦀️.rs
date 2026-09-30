@@ -76,6 +76,29 @@ pub(crate) mod context {
         Dispatched { result, lanes: settled.lanes }
     }
 
+    /// 🧾️ Dispatches `command` as the host does and drives its retained publication home like [`dispatch`], answering
+    /// the applied history rows with document ops that its completions upserted — how a law reads the one history row
+    /// a gesture leaves.
+    pub async fn dispatch_rows(app: &mut ShootingApp, command: ShootingCommand) -> Vec<semio_framework::kernel::HistoryEntry> {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+        let mut rows = Vec::new();
+        while app.has_pending_typed_operations() {
+            assert!(std::time::Instant::now() < deadline, "the typed operation settles within 30 seconds");
+            app.maintenance_step(1, 65_536).expect("maintenance step");
+            app.advance_typed_operation_publication().await.expect("advance the publication");
+            while let Some(page) = app.take_typed_operation_result_page(SHOOTING_TEST_INSTANCE) {
+                assert_ne!(page.lane, TypedOperationResultLane::Fault, "the retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
+                assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge the result page"), "the app accepts its own result token");
+            }
+            while app.take_typed_operation_effect().is_some() || app.take_typed_operation_event().is_some() || app.take_typed_operation_ui_scope().is_some() || app.take_typed_operation_composed_result().is_some() {}
+            while let Some(completion) = app.take_typed_operation_completion().await.expect("take the completion") {
+                rows.extend(completion.history_patch.into_iter().flat_map(|patch| patch.upserts).filter(|row| row.applied && !row.op_lines.is_empty()));
+            }
+        }
+        rows
+    }
+
     /// 🧾️ A settled dispatch: the immediate answer plus the store lanes the retained publication
     /// actually wrote (a mounted app publishes AFTER answering, so `result.mutations` is always empty).
     pub struct Dispatched {

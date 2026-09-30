@@ -1,54 +1,12 @@
-//! 🦀️ EN 1994 exhaustive mutation case — Rust adapter. Ticket
-//! 26/08/23/END-TO-END-TESTING-REFACTOR, wave 14 (the no-oracle conversion). The recorded
-//! no-oracle decision `en1994-1-mutation-semantics` is gone from
-//! `../../🔣️oracle.json`, because a reference now
-//! exists to compare against: `s.norm.en1994` is a
-//! semio-native artifact with no third-party reader or writer, so its reference is a second
-//! IMPLEMENTATION: the independent Python `🐍️component.py` beside this file, registered as the
-//! oracle `en1994-1-python-independent`. This adapter is the SUBJECT half only — it drives this
-//! repository's own `apply_en1994_mutation` over the full 22-kind `En1994Mutation` vocabulary.
-//!
-//! Twenty-two document-root scalars, one `change-<field>` each: national annex, the design
-//! actions M_Ed and V_Ed, the plastic-resistance pair M_pl,a / M_pl,Rd with the
-//! degree-of-connection eta and the longitudinal shear resistance V_L,Rd, the fire inputs
-//! (insulation thickness, rating, deck type), the fatigue inputs (stress range and detail
-//! category), and the stud-connector set — shank diameter, stud height, f_ck, f_u, E_cm, the
-//! per-stud design shear, span, f_y, cycle count and the stud stress range.
-//!
-//! ⚖️ WHERE THE ASSERTIONS LIVE. Every law this case claims is asserted IN ROLE inside the
-//! subject handlers as well as being compared against the oracle's answer, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` module (`law::mutation_is_observable`,
-//! `law::inverse_restores`, `law::round_trip_preserves`, `law::carrier_is_exact`) that the
-//! stdio mutation cases use, reached through the `oracleHostPackages` entry this plugin
-//! declares in `✏️s/🔌️plugins/📕️norm/🔣️oracle.json`. What `parity` adds on top is the
-//! one thing a single implementation can never provide: that a second implementation, written in
-//! another language from the same written specification, reaches the same document.
-//!
-//! 🌉️ HOW THE FIXTURES REACH TYPED VALUES. The generated test host links only
-//! `semio-repo-test-host`, the stdio law crate and — behind `sut` — this plugin's own crate;
-//! `serde`, `serde_json` and this crate's `protocol`/`store`/`vcs` extern-crate aliases are all
-//! unreachable from here. The subset's own production code therefore exports the bridges
-//! (`decode_en1994_snapshot_json`/`encode_en1994_snapshot_json`,
-//! `decode_en1994_dsl`/`encode_en1994_dsl`, `decode_en1994_pack`/`encode_en1994_pack` in
-//! `../../🧬️schema/📸️snapshot/🦀️.rs`;
-//! `decode_en1994_mutation_json`, `apply_en1994_mutation`, `inverse_en1994_mutation` in
-//! `../../🧬️schema/🧬️mutations/🦀️.rs`), whose
-//! signatures name only reachable types. This side reaches the committed vectors through
-//! `include_str!` and the Python side through the `asset://` URIs the feature declares, so both
-//! read the SAME committed bytes and neither holds a Rust or Python literal transcribed beside
-//! them that could drift from what the other one read.
-//!
-//! 🚧️ The Rust SUBJECT phase still cannot run: `semio-s-plugin-norm` does not compile (671 errors
-//! at the time of writing — a concurrent session is mid-flight across ~2000 files of this plugin,
-//! removing gratuitous `async fn` wrappers). `parity` therefore has nothing to compare the oracle
-//! against YET; the moment the crate is green it does, with no further change here. The subject half is
-//! written against the SYNC trait surface the fixture tests in this crate already call
-//! (`Mutation::diff`, `MutationDiff::apply`, `Mutation::inverse`, `ArtifactDsl`,
-//! `ArtifactPack`) rather than against the plugin's async wrappers, and is `sut`-gated so the
-//! oracle-only run never links it.
+//! 🦀️ EN 1994 exhaustive mutation case — the Rust SUBJECT adapter over the current 25-kind `En1994Mutation`
+//! vocabulary. Every kind applies its committed vector (`../../🧫️fixtures/🧬️mutations/<leaf>/<scenario>`) through the
+//! subset's production bridges and asserts, in role, the committed after-snapshot, that the document moved and that
+//! its own inverse restores the before-snapshot; `identity-round-trip` re-emits the committed carrier through the DSL,
+//! pack and JSON codecs. The reference answer is the shared Python norm engine (`../🐍️.py`).
 
-use semio_repo_test_host::{digest, parse_json, Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::law;
+use semio_repo_test_host::Adapter;
+#[cfg(feature = "sut")]
+use semio_repo_test_host::{digest, parse_json, Json};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `En1994Mutation::KINDS` (`../../🧬️schema/🧬️mutations/🦀️.rs`) —
@@ -58,27 +16,30 @@ use semio_s_plugin_stdio_test_oracle::law;
 #[cfg(feature = "sut")]
 const KINDS: &[&str] = &[
     "change-annex",
-    "change-m-ed-knm",
-    "change-v-ed-kn",
-    "change-m-pla",
-    "change-m-pl-rd",
-    "change-eta",
-    "change-vl-rd",
-    "change-insulation-thickness-mm",
+    "change-structure-kind",
+    "change-steel-fy-pa",
     "change-fire-rating",
-    "change-deck-type",
-    "change-delta-sigma-mpa",
+    "change-insulation-thickness-m",
     "change-fatigue-detail",
-    "change-d-mm",
-    "change-h-sc-mm",
-    "change-f-ck-mpa",
-    "change-fu-mpa",
-    "change-e-cm-mpa",
-    "change-v-ed-per-stud-kn",
-    "change-span-m",
-    "change-fy-mpa",
-    "change-n-cycles-stud",
-    "change-delta-tau-stud-mpa",
+    "insert-beam",
+    "remove-beam",
+    "change-beam-action-q-area-pa",
+    "change-beam-stud-spacing-m",
+    "change-beam-span-m",
+    "change-beam-slab-thickness-m",
+    "change-beam-stud-diameter-m",
+    "change-beam-stud-count",
+    "change-beam-stud-fu-pa",
+    "change-beam-transverse-as",
+    "change-beam-construction",
+    "insert-column",
+    "remove-column",
+    "change-column-action-force-n",
+    "change-column-kind",
+    "insert-slab",
+    "remove-slab",
+    "change-slab-action-q-area-pa",
+    "change-slab-thickness-m",
 ];
 
 /// 🗣️ The real committed EN 1994 document, read where the domain already keeps it.
@@ -98,136 +59,154 @@ const PACK_ASSET: &str = "asset://🌉️composite-bridge-girder/🎒️.pack.se
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "change-annex" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌐️switches-national-annex-to-en/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌐️switches-national-annex-to-en/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌐️switches-national-annex-to-en/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌐️switches-national-annex-to-en/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌐️switches-national/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌐️switches-national/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌐️switches-national/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌐️switches-national/🎯️outcome/🔣️.json"),
         ),
-        "change-m-ed-knm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-m-ed-knm/🌀️raises-design-moment-to-320-knm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-m-ed-knm/🌀️raises-design-moment-to-320-knm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-m-ed-knm/🌀️raises-design-moment-to-320-knm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-m-ed-knm/🌀️raises-design-moment-to-320-knm/🎯️outcome/🔣️.json"),
+        "change-structure-kind" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🏗️change-structure-kind/✏️to-bridge/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏗️change-structure-kind/✏️to-bridge/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏗️change-structure-kind/✏️to-bridge/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏗️change-structure-kind/✏️to-bridge/🎯️outcome/🔣️.json"),
         ),
-        "change-v-ed-kn" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-v-ed-kn/⬆️raises-design-shear-to-225-kn/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-v-ed-kn/⬆️raises-design-shear-to-225-kn/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-v-ed-kn/⬆️raises-design-shear-to-225-kn/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-v-ed-kn/⬆️raises-design-shear-to-225-kn/🎯️outcome/🔣️.json"),
-        ),
-        "change-m-pla" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🦾️change-m-pla/🦾️raises-steel-plastic-moment-to-128-knm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🦾️change-m-pla/🦾️raises-steel-plastic-moment-to-128-knm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🦾️change-m-pla/🦾️raises-steel-plastic-moment-to-128-knm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🦾️change-m-pla/🦾️raises-steel-plastic-moment-to-128-knm/🎯️outcome/🔣️.json"),
-        ),
-        "change-m-pl-rd" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-m-pl-rd/🛡️raises-plastic-moment-resistance-to-375-knm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-m-pl-rd/🛡️raises-plastic-moment-resistance-to-375-knm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-m-pl-rd/🛡️raises-plastic-moment-resistance-to-375-knm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-m-pl-rd/🛡️raises-plastic-moment-resistance-to-375-knm/🎯️outcome/🔣️.json"),
-        ),
-        "change-eta" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🤝️change-eta/🤝️raises-shear-connection-degree-to-0-875/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🤝️change-eta/🤝️raises-shear-connection-degree-to-0-875/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🤝️change-eta/🤝️raises-shear-connection-degree-to-0-875/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🤝️change-eta/🤝️raises-shear-connection-degree-to-0-875/🎯️outcome/🔣️.json"),
-        ),
-        "change-vl-rd" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-vl-rd/↔️raises-longitudinal-shear-resistance-to-240-kn/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-vl-rd/↔️raises-longitudinal-shear-resistance-to-240-kn/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-vl-rd/↔️raises-longitudinal-shear-resistance-to-240-kn/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-vl-rd/↔️raises-longitudinal-shear-resistance-to-240-kn/🎯️outcome/🔣️.json"),
-        ),
-        "change-insulation-thickness-mm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧯️change-insulation-thickness-mm/🧣️thickens-fire-insulation-to-40-mm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧯️change-insulation-thickness-mm/🧣️thickens-fire-insulation-to-40-mm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧯️change-insulation-thickness-mm/🧣️thickens-fire-insulation-to-40-mm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧯️change-insulation-thickness-mm/🧣️thickens-fire-insulation-to-40-mm/🎯️outcome/🔣️.json"),
+        "change-steel-fy-pa" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-steel-fy-pa/🏋️upgrades-fy/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-steel-fy-pa/🏋️upgrades-fy/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-steel-fy-pa/🏋️upgrades-fy/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-steel-fy-pa/🏋️upgrades-fy/🎯️outcome/🔣️.json"),
         ),
         "change-fire-rating" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-rating/🧯️upgrades-fire-rating-to-r90/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-rating/🧯️upgrades-fire-rating-to-r90/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-rating/🧯️upgrades-fire-rating-to-r90/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-rating/🧯️upgrades-fire-rating-to-r90/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-rating/🔥️upgrades-to-r90/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-rating/🔥️upgrades-to-r90/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-rating/🔥️upgrades-to-r90/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-rating/🔥️upgrades-to-r90/🎯️outcome/🔣️.json"),
         ),
-        "change-deck-type" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🪜️change-deck-type/↩️switches-deck-to-re-entrant/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🪜️change-deck-type/↩️switches-deck-to-re-entrant/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🪜️change-deck-type/↩️switches-deck-to-re-entrant/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🪜️change-deck-type/↩️switches-deck-to-re-entrant/🎯️outcome/🔣️.json"),
-        ),
-        "change-delta-sigma-mpa" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📊️change-delta-sigma-mpa/📈️raises-steel-stress-range-to-96-mpa/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📊️change-delta-sigma-mpa/📈️raises-steel-stress-range-to-96-mpa/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📊️change-delta-sigma-mpa/📈️raises-steel-stress-range-to-96-mpa/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📊️change-delta-sigma-mpa/📈️raises-steel-stress-range-to-96-mpa/🎯️outcome/🔣️.json"),
+        "change-insulation-thickness-m" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🧯️change-insulation-thickness-m/✏️to-0/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧯️change-insulation-thickness-m/✏️to-0/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧯️change-insulation-thickness-m/✏️to-0/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧯️change-insulation-thickness-m/✏️to-0/🎯️outcome/🔣️.json"),
         ),
         "change-fatigue-detail" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-fatigue-detail/🪡️switches-fatigue-detail-to-flange-butt-weld/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-fatigue-detail/🪡️switches-fatigue-detail-to-flange-butt-weld/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-fatigue-detail/🪡️switches-fatigue-detail-to-flange-butt-weld/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-fatigue-detail/🪡️switches-fatigue-detail-to-flange-butt-weld/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-fatigue-detail/✏️to-flange/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-fatigue-detail/✏️to-flange/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-fatigue-detail/✏️to-flange/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-fatigue-detail/✏️to-flange/🎯️outcome/🔣️.json"),
         ),
-        "change-d-mm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-d-mm/⭕️thickens-stud-shank-to-22-mm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-d-mm/⭕️thickens-stud-shank-to-22-mm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-d-mm/⭕️thickens-stud-shank-to-22-mm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-d-mm/⭕️thickens-stud-shank-to-22-mm/🎯️outcome/🔣️.json"),
+        "insert-beam" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-beam/➕️inserts-beam/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-beam/➕️inserts-beam/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-beam/➕️inserts-beam/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-beam/➕️inserts-beam/🎯️outcome/🔣️.json"),
         ),
-        "change-h-sc-mm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-h-sc-mm/📏️lengthens-stud-to-125-mm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-h-sc-mm/📏️lengthens-stud-to-125-mm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-h-sc-mm/📏️lengthens-stud-to-125-mm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-h-sc-mm/📏️lengthens-stud-to-125-mm/🎯️outcome/🔣️.json"),
+        "remove-beam" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-beam/➖️removes-beam/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-beam/➖️removes-beam/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-beam/➖️removes-beam/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-beam/➖️removes-beam/🎯️outcome/🔣️.json"),
         ),
-        "change-f-ck-mpa" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧱️change-f-ck-mpa/🧱️upgrades-concrete-cylinder-strength-to-40-mpa/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧱️change-f-ck-mpa/🧱️upgrades-concrete-cylinder-strength-to-40-mpa/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧱️change-f-ck-mpa/🧱️upgrades-concrete-cylinder-strength-to-40-mpa/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧱️change-f-ck-mpa/🧱️upgrades-concrete-cylinder-strength-to-40-mpa/🎯️outcome/🔣️.json"),
+        "change-beam-action-q-area-pa" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-beam-action-q-area-pa/✏️sets/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-beam-action-q-area-pa/✏️sets/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-beam-action-q-area-pa/✏️sets/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-beam-action-q-area-pa/✏️sets/🎯️outcome/🔣️.json"),
         ),
-        "change-fu-mpa" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/💪️change-fu-mpa/💪️upgrades-stud-ultimate-strength-to-500-mpa/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/💪️change-fu-mpa/💪️upgrades-stud-ultimate-strength-to-500-mpa/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/💪️change-fu-mpa/💪️upgrades-stud-ultimate-strength-to-500-mpa/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/💪️change-fu-mpa/💪️upgrades-stud-ultimate-strength-to-500-mpa/🎯️outcome/🔣️.json"),
+        "change-beam-stud-spacing-m" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-beam-stud-spacing-m/✏️to-0-15/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-beam-stud-spacing-m/✏️to-0-15/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-beam-stud-spacing-m/✏️to-0-15/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-beam-stud-spacing-m/✏️to-0-15/🎯️outcome/🔣️.json"),
         ),
-        "change-e-cm-mpa" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🪨️change-e-cm-mpa/🪨️raises-concrete-modulus-to-35000-mpa/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🪨️change-e-cm-mpa/🪨️raises-concrete-modulus-to-35000-mpa/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🪨️change-e-cm-mpa/🪨️raises-concrete-modulus-to-35000-mpa/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🪨️change-e-cm-mpa/🪨️raises-concrete-modulus-to-35000-mpa/🎯️outcome/🔣️.json"),
+        "change-beam-span-m" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-beam-span-m/📏️sets-span-10m/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-beam-span-m/📏️sets-span-10m/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-beam-span-m/📏️sets-span-10m/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-beam-span-m/📏️sets-span-10m/🎯️outcome/🔣️.json"),
         ),
-        "change-v-ed-per-stud-kn" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📌️change-v-ed-per-stud-kn/📌️raises-per-stud-shear-to-62-5-kn/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📌️change-v-ed-per-stud-kn/📌️raises-per-stud-shear-to-62-5-kn/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📌️change-v-ed-per-stud-kn/📌️raises-per-stud-shear-to-62-5-kn/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📌️change-v-ed-per-stud-kn/📌️raises-per-stud-shear-to-62-5-kn/🎯️outcome/🔣️.json"),
+        "change-beam-slab-thickness-m" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-beam-slab-thickness-m/✏️to-0-16/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-beam-slab-thickness-m/✏️to-0-16/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-beam-slab-thickness-m/✏️to-0-16/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-beam-slab-thickness-m/✏️to-0-16/🎯️outcome/🔣️.json"),
         ),
-        "change-span-m" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-span-m/📏️lengthens-span-to-12-m/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-span-m/📏️lengthens-span-to-12-m/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-span-m/📏️lengthens-span-to-12-m/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-span-m/📏️lengthens-span-to-12-m/🎯️outcome/🔣️.json"),
+        "change-beam-stud-diameter-m" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-beam-stud-diameter-m/✏️to-0-022/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-beam-stud-diameter-m/✏️to-0-022/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-beam-stud-diameter-m/✏️to-0-022/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-beam-stud-diameter-m/✏️to-0-022/🎯️outcome/🔣️.json"),
         ),
-        "change-fy-mpa" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-fy-mpa/🏋️upgrades-steel-yield-to-460-mpa/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-fy-mpa/🏋️upgrades-steel-yield-to-460-mpa/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-fy-mpa/🏋️upgrades-steel-yield-to-460-mpa/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-fy-mpa/🏋️upgrades-steel-yield-to-460-mpa/🎯️outcome/🔣️.json"),
+        "change-beam-stud-count" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/#️⃣change-beam-stud-count/#️⃣sets-count/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/#️⃣change-beam-stud-count/#️⃣sets-count/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/#️⃣change-beam-stud-count/#️⃣sets-count/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/#️⃣change-beam-stud-count/#️⃣sets-count/🎯️outcome/🔣️.json"),
         ),
-        "change-n-cycles-stud" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-n-cycles-stud/🔢️raises-stud-cycle-count-to-5000000/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-n-cycles-stud/🔢️raises-stud-cycle-count-to-5000000/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-n-cycles-stud/🔢️raises-stud-cycle-count-to-5000000/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-n-cycles-stud/🔢️raises-stud-cycle-count-to-5000000/🎯️outcome/🔣️.json"),
+        "change-beam-stud-fu-pa" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/💪️change-beam-stud-fu-pa/💪️sets-fu/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/💪️change-beam-stud-fu-pa/💪️sets-fu/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/💪️change-beam-stud-fu-pa/💪️sets-fu/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/💪️change-beam-stud-fu-pa/💪️sets-fu/🎯️outcome/🔣️.json"),
         ),
-        "change-delta-tau-stud-mpa" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-delta-tau-stud-mpa/🔩️raises-stud-shear-stress-range-to-110-mpa/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-delta-tau-stud-mpa/🔩️raises-stud-shear-stress-range-to-110-mpa/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-delta-tau-stud-mpa/🔩️raises-stud-shear-stress-range-to-110-mpa/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-delta-tau-stud-mpa/🔩️raises-stud-shear-stress-range-to-110-mpa/🎯️outcome/🔣️.json"),
+        "change-beam-transverse-as" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-beam-transverse-as/↔️sets-as/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-beam-transverse-as/↔️sets-as/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-beam-transverse-as/↔️sets-as/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-beam-transverse-as/↔️sets-as/🎯️outcome/🔣️.json"),
+        ),
+        "change-beam-construction" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🛠️change-beam-construction/✏️sets/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🛠️change-beam-construction/✏️sets/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🛠️change-beam-construction/✏️sets/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🛠️change-beam-construction/✏️sets/🎯️outcome/🔣️.json"),
+        ),
+        "insert-column" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/➗️insert-column/➗️inserts-column/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➗️insert-column/➗️inserts-column/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➗️insert-column/➗️inserts-column/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➗️insert-column/➗️inserts-column/🎯️outcome/🔣️.json"),
+        ),
+        "remove-column" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/⛔️remove-column/⛔️removes-column/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⛔️remove-column/⛔️removes-column/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⛔️remove-column/⛔️removes-column/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⛔️remove-column/⛔️removes-column/🎯️outcome/🔣️.json"),
+        ),
+        "change-column-action-force-n" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-column-action-force-n/⬇️sets-n/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-column-action-force-n/⬇️sets-n/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-column-action-force-n/⬇️sets-n/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-column-action-force-n/⬇️sets-n/🎯️outcome/🔣️.json"),
+        ),
+        "change-column-kind" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↪️change-column-kind/↪️sets-kind/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↪️change-column-kind/↪️sets-kind/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↪️change-column-kind/↪️sets-kind/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↪️change-column-kind/↪️sets-kind/🎯️outcome/🔣️.json"),
+        ),
+        "insert-slab" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/➕insert-slab/➕inserts-slab/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕insert-slab/➕inserts-slab/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕insert-slab/➕inserts-slab/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕insert-slab/➕inserts-slab/🎯️outcome/🔣️.json"),
+        ),
+        "remove-slab" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/➖remove-slab/➖removes-slab/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖remove-slab/➖removes-slab/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖remove-slab/➖removes-slab/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖remove-slab/➖removes-slab/🎯️outcome/🔣️.json"),
+        ),
+        "change-slab-action-q-area-pa" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-slab-action-q-area-pa/✏️sets/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-slab-action-q-area-pa/✏️sets/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-slab-action-q-area-pa/✏️sets/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-slab-action-q-area-pa/✏️sets/🎯️outcome/🔣️.json"),
+        ),
+        "change-slab-thickness-m" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📏change-slab-thickness-m/📏sets-thickness/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏change-slab-thickness-m/📏sets-thickness/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏change-slab-thickness-m/📏sets-thickness/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏change-slab-thickness-m/📏sets-thickness/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-en1994-1: no committed fixture is registered for kind {other:?}"),
     }
@@ -402,7 +381,7 @@ mod subject {
             return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different document than the committed text artifact", &twin, &parsed));
         }
         law::round_trip_preserves(&projection(&repacked)?, &projection(&parsed)?)?;
-        Ok(Outcome::with_raw(reprinted.as_bytes().to_vec(), carrier_projection(&reprinted)))
+        Ok(Outcome::with_raw(reprinted.as_bytes().to_vec(), super::carrier_projection(&reprinted)))
     }
     //#endregion 🔖️Handlers
 }

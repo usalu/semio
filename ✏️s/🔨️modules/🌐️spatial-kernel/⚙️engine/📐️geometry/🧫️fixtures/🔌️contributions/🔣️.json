@@ -1,0 +1,61 @@
+{
+  "schema": "s.spatial-kernel.model-definition-contributions/v1",
+  "steps": [
+    {
+      "operation": "inspect",
+      "ids": []
+    },
+    {
+      "operation": "register",
+      "owner": "shape",
+      "manifest": {
+        "schema": "spatial.modelDefinition",
+        "id": "shape",
+        "kinds": [
+          "solid"
+        ],
+        "label": "Shape",
+        "version": "1"
+      },
+      "ids": [
+        "shape"
+      ]
+    },
+    {
+      "operation": "register",
+      "owner": "energy",
+      "manifest": {
+        "schema": "spatial.modelDefinition",
+        "id": "energy",
+        "kinds": [
+          "solid"
+        ],
+        "label": "Energy",
+        "version": "1"
+      },
+      "ids": [
+        "energy",
+        "shape"
+      ]
+    },
+    {
+      "operation": "remove",
+      "owner": "shape",
+      "ids": [
+        "energy"
+      ]
+    },
+    {
+      "operation": "remove",
+      "owner": "shape",
+      "ids": [
+        "energy"
+      ]
+    },
+    {
+      "operation": "remove",
+      "owner": "energy",
+      "ids": []
+    }
+  ]
+}

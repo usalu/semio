@@ -11,17 +11,25 @@ pub fn reject(code: impl Into<String>, path: impl Into<String>, detail: impl Int
     GltfTopLevelMutationRejection { code: code.into(), path: path.into(), detail: detail.into() }
 }
 
-/// 📨️ Converts a glTF mutation rejection into its protocol severity, target and owned detail.
+/// ⚖️ The frozen mutation outcome code a glTF rejection reports as: an address the document lacks is `target-missing`, an
+/// identity it already holds `duplicate-id`, an edit the document's current shape contradicts `target-mismatch`, a payload
+/// malformed on its own `invariant` (`📡️replication/🎮️mutation/🧫️fixtures/🧫️outcome-code`).
+pub(crate) fn rejection_outcome_code(code: &str) -> &'static str {
+    match code.strip_prefix("gltf.mutation.").unwrap_or(code) {
+        "no-observable-change" => "mutation.no-op",
+        "duplicate-id" | "duplicate-extension" | "duplicate-scene-root" => "mutation.duplicate-id",
+        "index-out-of-range" | "insert-out-of-range" | "position-out-of-range" | "reference-out-of-range" | "relation-absent" | "extension-absent" | "missing" | "missing-mesh" | "not-found" | "invalid-reference" => "mutation.target-missing",
+        "stale-diff" | "stale-inverse" | "node-cycle" | "invalid-permutation" | "invalid-child-link" | "invalid-index-accessor" | "morph-target-arity" | "morph-weight-arity" | "collection-overflow" | "reference-overflow" | "buffer-alignment" | "extension-required" | "required-extension-not-used" => "mutation.target-mismatch",
+        _ => "mutation.invariant",
+    }
+}
+
+/// 📨️ Converts a glTF mutation rejection into its protocol outcome: the vocabulary code at its level, the glTF code kept in
+/// the message, the rejection path as the target.
 pub(crate) fn rejection_outcome(code: &str, path: &str, detail: String) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
     let target = path.split('/').filter(|part| !part.is_empty()).map(str::to_string).collect::<Vec<_>>();
-    if code.contains("no-observable-change") {
-        return protocol::MutationOutcome::new(Default::default()).warn("mutation.no-op", detail);
+    match rejection_outcome_code(code) {
+        "mutation.no-op" => protocol::MutationOutcome::new(Default::default()).warn("mutation.no-op", format!("{code}: {detail}")),
+        outcome_code => protocol::MutationOutcome::refuse(outcome_code, format!("{code}: {detail}"), target),
     }
-    if code.contains("duplicate") {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", detail, target);
-    }
-    if code.contains("out-of-range") || code.contains("missing") || code.contains("not-found") {
-        return protocol::MutationOutcome::error("mutation.target-missing", detail, target);
-    }
-    protocol::MutationOutcome::fatal("mutation.invariant", format!("{code}: {detail}"), target)
 }

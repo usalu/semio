@@ -1,0 +1,87 @@
+{
+  "schema": "drawing.document",
+  "id": "drawing-fixture",
+  "title": "Fixture Base",
+  "layers": [
+    {
+      "kind": "shape",
+      "id": "shape-a",
+      "name": "Alpha",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blendMode": "normal",
+      "transform": {
+        "x": 20.0,
+        "y": -10.0,
+        "scaleX": 1.0,
+        "scaleY": 1.0,
+        "rotation": 0.0,
+        "shear": 0.0
+      },
+      "attributes": {
+        "fillRule": "evenodd"
+      },
+      "shapeKind": "rect",
+      "rect": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 120.0,
+        "height": 60.0
+      }
+    },
+    {
+      "kind": "group",
+      "id": "group-a",
+      "name": "Scaled Group",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blendMode": "normal",
+      "transform": {
+        "x": 100.0,
+        "y": 50.0,
+        "scaleX": 2.0,
+        "scaleY": 2.0,
+        "rotation": 0.0,
+        "shear": 0.0
+      },
+      "attributes": {
+        "fillRule": "evenodd"
+      },
+      "children": [
+        {
+          "kind": "shape",
+          "id": "shape-b",
+          "name": "Beta",
+          "visible": true,
+          "locked": false,
+          "opacity": 1.0,
+          "blendMode": "normal",
+          "transform": {
+            "x": 20.0,
+            "y": 5.0,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "rotation": 0.0,
+            "shear": 0.0
+          },
+          "attributes": {
+            "fillRule": "evenodd"
+          },
+          "shapeKind": "rect",
+          "rect": {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 120.0,
+            "height": 60.0
+          }
+        }
+      ]
+    }
+  ],
+  "artboard": {
+    "width": 640.0,
+    "height": 480.0
+  }
+}

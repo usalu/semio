@@ -26,7 +26,7 @@ impl MutationKind<PdfSnapshot, PdfA1Mutation> for ClearPageText {
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         if !self.valid(base) {
-            return MutationOutcome::error("stdio.pdf.clear-page-text.invalid-target", "Page target or geometry is outside the PDF 1.4 domain", self.target());
+            return MutationOutcome::error("mutation.target-missing", "Page target or geometry is outside the PDF 1.4 domain", self.target());
         }
         MutationOutcome::new(PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff { text: Some(String::new()), ..Default::default() } }], ..Default::default() }) })
     }

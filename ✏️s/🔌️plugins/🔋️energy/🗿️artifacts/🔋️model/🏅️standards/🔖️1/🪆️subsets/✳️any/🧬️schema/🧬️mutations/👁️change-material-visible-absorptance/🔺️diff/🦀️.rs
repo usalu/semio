@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeMaterialVisibleAbsorptance, base: &EnergyMode
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Material {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !(0.0..=1.0).contains(&payload.new_visible_absorptance) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Material {}: visible absorptance must be a fraction in [0, 1], got {}.", payload.id.0, payload.new_visible_absorptance), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Material {}: visible absorptance must be a fraction in [0, 1], got {}.", payload.id.0, payload.new_visible_absorptance), [payload.id.0.to_string()]);
     }
     if existing.visible_absorptance == payload.new_visible_absorptance {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Material {} already carries this visible absorptance: {}.", payload.id.0, payload.new_visible_absorptance));

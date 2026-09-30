@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeInfiltrationDesignFlowAch, base: &EnergyModel
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Infiltration {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_design_flow_ach.is_finite() || payload.new_design_flow_ach < 0.0 {
-        return protocol::MutationOutcome::error(
+        return protocol::MutationOutcome::fatal(
             "mutation.invariant",
             format!("Infiltration {}: design flow (air changes per hour) must be a finite non-negative value, got {}.", payload.id.0, payload.new_design_flow_ach),
             [payload.id.0.to_string()],

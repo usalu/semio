@@ -1,6 +1,7 @@
 {
   "schema": "semio.history.supersede-fold",
   "documentId": "doc-supersede-fold",
+  "trunkAlternativeId": "trunk-dcc26f4ceb8fc889",
   "edits": [
     {
       "id": "e-a1",
@@ -451,6 +452,201 @@
       }
     },
     {
+      "kind": "transition",
+      "id": "st-1",
+      "actor": "alice",
+      "logicalMs": 18,
+      "transition": {
+        "kind": "supersede",
+        "scope": "trunk-dcc26f4ceb8fc889",
+        "inputs": [
+          {
+            "target": "op-a-2",
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "2a"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "expect",
+      "label": "a supersession scoped to the trunk applies while the trunk is active",
+      "expect": {
+        "alternative": null,
+        "supersessions": [
+          {
+            "target": "op-a-1",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "07"
+            }
+          },
+          {
+            "target": "op-a-2",
+            "transitionId": "st-1",
+            "actor": "alice",
+            "logicalMs": 18,
+            "scope": "trunk-dcc26f4ceb8fc889",
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "2a"
+            }
+          },
+          {
+            "target": "op-a-3",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "withdrawn"
+            }
+          },
+          {
+            "target": "op-b-1",
+            "transitionId": "s-tie-b",
+            "actor": "bob",
+            "logicalMs": 17,
+            "scope": null,
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "1b"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "transition",
+      "id": "co-2",
+      "actor": "bob",
+      "logicalMs": 19,
+      "transition": {
+        "kind": "checkout",
+        "checkpointId": "ck-1",
+        "alternativeId": "alt-1"
+      }
+    },
+    {
+      "kind": "expect",
+      "label": "switching to a branch drops the trunk-scoped supersession",
+      "expect": {
+        "alternative": "alt-1",
+        "supersessions": [
+          {
+            "target": "op-a-1",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "07"
+            }
+          },
+          {
+            "target": "op-a-3",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "withdrawn"
+            }
+          },
+          {
+            "target": "op-b-1",
+            "transitionId": "s-tie-b",
+            "actor": "bob",
+            "logicalMs": 17,
+            "scope": null,
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "1b"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "transition",
+      "id": "co-3",
+      "actor": "bob",
+      "logicalMs": 20,
+      "transition": {
+        "kind": "checkout",
+        "checkpointId": "ck-1",
+        "alternativeId": "trunk-dcc26f4ceb8fc889"
+      }
+    },
+    {
+      "kind": "expect",
+      "label": "a checkout naming the trunk activates it like a checkout naming none",
+      "expect": {
+        "alternative": null,
+        "supersessions": [
+          {
+            "target": "op-a-1",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "07"
+            }
+          },
+          {
+            "target": "op-a-2",
+            "transitionId": "st-1",
+            "actor": "alice",
+            "logicalMs": 18,
+            "scope": "trunk-dcc26f4ceb8fc889",
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "2a"
+            }
+          },
+          {
+            "target": "op-a-3",
+            "transitionId": "s-2",
+            "actor": "alice",
+            "logicalMs": 11,
+            "scope": null,
+            "replacement": {
+              "kind": "withdrawn"
+            }
+          },
+          {
+            "target": "op-b-1",
+            "transitionId": "s-tie-b",
+            "actor": "bob",
+            "logicalMs": 17,
+            "scope": null,
+            "replacement": {
+              "kind": "input",
+              "schema": "demo/v1",
+              "payloadHex": "1b"
+            }
+          }
+        ]
+      }
+    },
+    {
       "kind": "reload",
       "label": "a reload re-folds the same event set to the same supersessions"
     },
@@ -476,6 +672,23 @@
         }
       },
       "detail": "unknown operation op-ghost"
+    },
+    {
+      "kind": "refuse",
+      "label": "a branch cannot claim the trunk alternative",
+      "transition": {
+        "kind": "transition",
+        "id": "br-trunk",
+        "actor": "bob",
+        "logicalMs": 21,
+        "transition": {
+          "kind": "branch",
+          "alternativeId": "trunk-dcc26f4ceb8fc889",
+          "name": "Stolen",
+          "checkpointId": "ck-1"
+        }
+      },
+      "detail": "branch claims the trunk alternative"
     }
   ]
 }

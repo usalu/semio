@@ -36,6 +36,8 @@ enum DrawingMutationFields {
     Stroke { id: String, value: Option<StrokeStyle> },
     Segments { id: String, value: Option<Vec<PathSegment>> },
     Layer { parent: Option<String>, value: Option<Box<DrawingLayerNode>> },
+    Targets(Option<Vec<String>>),
+    PointTargets(Vec<crate::mutations::DrawingPathPointTarget>),
 }
 
 enum DrawingLayerFields {
@@ -300,6 +302,10 @@ impl DrawingOwnedRetirement {
                     DuplicateLayer(payload) => DrawingMutationFields::String(payload.layer_id),
                     DeleteLayer(payload) => DrawingMutationFields::String(payload.layer_id),
                     ReorderLayer(payload) => DrawingMutationFields::Strings { first: payload.layer_id, second: payload.parent_id },
+                    DragLayers(payload) => DrawingMutationFields::Targets(Some(payload.targets)),
+                    RotateLayers(payload) => DrawingMutationFields::Targets(Some(payload.targets)),
+                    ScaleLayers(payload) => DrawingMutationFields::Targets(Some(payload.targets)),
+                    DragPathPoints(payload) => DrawingMutationFields::PointTargets(payload.targets),
                 };
                 *self.owner = Some(DrawingRetirementOwner::MutationFields(fields));
                 Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
@@ -367,6 +373,20 @@ impl DrawingOwnedRetirement {
                         Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Layer(*value.take().expect("Drawing layer remains exact"))))
                     }
                     _ => {
+                        drop(self.owner.take());
+                        Ok(store::SnapshotRetirementStep::Complete)
+                    }
+                },
+                DrawingMutationFields::Targets(values) => match values.take() {
+                    Some(values) => Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Strings(values))),
+                    None => {
+                        drop(self.owner.take());
+                        Ok(store::SnapshotRetirementStep::Complete)
+                    }
+                },
+                DrawingMutationFields::PointTargets(values) => match values.pop() {
+                    Some(target) => Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::String(target.layer_id))),
+                    None => {
                         drop(self.owner.take());
                         Ok(store::SnapshotRetirementStep::Complete)
                     }
@@ -3597,6 +3617,10 @@ impl DrawingMutationDigestAuthority {
             DrawingMutation::UpdateText(_) => 16,
             DrawingMutation::SetLayerFillRule(_) => 17,
             DrawingMutation::SetGroupIsolation(_) => 18,
+            DrawingMutation::DragLayers(_) => 19,
+            DrawingMutation::RotateLayers(_) => 20,
+            DrawingMutation::ScaleLayers(_) => 21,
+            DrawingMutation::DragPathPoints(_) => 22,
         }
     }
 
@@ -3604,6 +3628,17 @@ impl DrawingMutationDigestAuthority {
         self.credit.seal(digest, cx)?;
         self.terminal = true;
         Ok(true)
+    }
+
+    /// 🧮️ The scalar parameters of a selection transform leaf in declaration order, and how many there are.
+    fn selection_scalars(mutation: &DrawingMutation) -> ([f64; 4], usize) {
+        match mutation {
+            DrawingMutation::DragLayers(value) => ([value.dx, value.dy, 0.0, 0.0], 2),
+            DrawingMutation::RotateLayers(value) => ([value.pivot_x, value.pivot_y, value.angle, 0.0], 3),
+            DrawingMutation::ScaleLayers(value) => ([value.pivot_x, value.pivot_y, value.scale_x, value.scale_y], 4),
+            DrawingMutation::DragPathPoints(value) => ([value.dx, value.dy, 0.0, 0.0], 2),
+            _ => ([0.0; 4], 0),
+        }
     }
 
     fn step(&mut self, mutation: &DrawingMutation, digest: &mut store::ArtifactStoreInitializationDigest, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
@@ -3623,6 +3658,16 @@ impl DrawingMutationDigestAuthority {
                     self.credit.observe(digest, 2, &[u8::from(value.parent_id.is_some())], cx)?;
                     self.phase = if value.parent_id.is_some() { 2 } else { 3 };
                 }
+                DrawingMutation::DragLayers(crate::mutations::DragLayers { targets, .. }) | DrawingMutation::RotateLayers(crate::mutations::RotateLayers { targets, .. }) | DrawingMutation::ScaleLayers(crate::mutations::ScaleLayers { targets, .. }) => {
+                    self.credit.source_vec(targets)?;
+                    self.credit.scalar_usize(digest, 2, targets.len(), cx)?;
+                    self.phase = 2;
+                }
+                DrawingMutation::DragPathPoints(value) => {
+                    self.credit.source_vec(&value.targets)?;
+                    self.credit.scalar_usize(digest, 2, value.targets.len(), cx)?;
+                    self.phase = 2;
+                }
                 _ => {
                     let target = DrawingMutationCandidateAuthority::target_owner(mutation).ok_or("drawing-store.mutation-target-owner")?;
                     self.credit.observe_owned_string(digest, 2, target, false, cx)?;
@@ -3632,6 +3677,44 @@ impl DrawingMutationDigestAuthority {
             return Ok(false);
         }
         match mutation {
+            DrawingMutation::DragLayers(crate::mutations::DragLayers { targets, .. }) | DrawingMutation::RotateLayers(crate::mutations::RotateLayers { targets, .. }) | DrawingMutation::ScaleLayers(crate::mutations::ScaleLayers { targets, .. }) => {
+                if let Some(target) = targets.get(self.segment_index) {
+                    self.credit.observe_owned_string(digest, 3, target, false, cx)?;
+                    self.segment_index += 1;
+                    return Ok(false);
+                }
+                let (scalars, count) = Self::selection_scalars(mutation);
+                let offset = usize::from(self.phase - 2);
+                if offset < count {
+                    self.credit.scalar_f64(digest, 4 + offset as u16, scalars[offset], cx)?;
+                    self.phase += 1;
+                    Ok(false)
+                } else {
+                    self.finish(digest, cx)
+                }
+            }
+            DrawingMutation::DragPathPoints(value) => {
+                if let Some(target) = value.targets.get(self.segment_index) {
+                    self.credit.observe_owned_string(digest, 3, &target.layer_id, false, cx)?;
+                    let point = match target.point {
+                        crate::schema::geometry::editing::PathPoint::Anchor => 0u64,
+                        crate::schema::geometry::editing::PathPoint::Control1 => 1,
+                        crate::schema::geometry::editing::PathPoint::Control2 => 2,
+                    };
+                    self.credit.scalar_usize(digest, 4, (target.index as u64).checked_mul(3).and_then(|index| index.checked_add(point)).ok_or("drawing-store.mutation-point-index-overflow")? as usize, cx)?;
+                    self.segment_index += 1;
+                    return Ok(false);
+                }
+                let (scalars, count) = Self::selection_scalars(mutation);
+                let offset = usize::from(self.phase - 2);
+                if offset < count {
+                    self.credit.scalar_f64(digest, 5 + offset as u16, scalars[offset], cx)?;
+                    self.phase += 1;
+                    Ok(false)
+                } else {
+                    self.finish(digest, cx)
+                }
+            }
             DrawingMutation::UpdatePathGeometry(value) => match self.phase {
                 2 => {
                     self.credit.source_vec(&value.segments)?;
@@ -4337,6 +4420,8 @@ impl DrawingMutationCandidateAuthority {
             DrawingMutation::ReorderLayer(value) => &value.layer_id,
             DrawingMutation::UpdatePathGeometry(value) => &value.layer_id,
             DrawingMutation::UpdateText(value) => &value.layer_id,
+            DrawingMutation::DragLayers(crate::mutations::DragLayers { targets, .. }) | DrawingMutation::RotateLayers(crate::mutations::RotateLayers { targets, .. }) | DrawingMutation::ScaleLayers(crate::mutations::ScaleLayers { targets, .. }) => targets.first().map_or("", String::as_str),
+            DrawingMutation::DragPathPoints(value) => value.targets.first().map_or("", |target| target.layer_id.as_str()),
         }
     }
 
@@ -4360,7 +4445,47 @@ impl DrawingMutationCandidateAuthority {
             DrawingMutation::ReorderLayer(value) => Some(&value.layer_id),
             DrawingMutation::UpdatePathGeometry(value) => Some(&value.layer_id),
             DrawingMutation::UpdateText(value) => Some(&value.layer_id),
+            DrawingMutation::DragLayers(crate::mutations::DragLayers { targets, .. }) | DrawingMutation::RotateLayers(crate::mutations::RotateLayers { targets, .. }) | DrawingMutation::ScaleLayers(crate::mutations::ScaleLayers { targets, .. }) => targets.first(),
+            DrawingMutation::DragPathPoints(value) => value.targets.first().map(|target| &target.layer_id),
         }
+    }
+
+    /// 🧭️ Applies one relative selection transform through its own diff — the leaf resolves every addressed layer against
+    /// its parent chain on `source`, and each patched transform or path geometry lands in place; the replaced geometry is
+    /// retired through the candidate's retirement owner.
+    fn apply_selection_transform(&mut self, source: &mut DrawingSnapshot, mutation: &DrawingMutation) -> Result<(), &'static str> {
+        let outcome = <DrawingMutation as Mutation<DrawingSnapshot>>::diff(mutation, source);
+        if !outcome.is_applicable(protocol::MergePolicy::default()) {
+            return Err("drawing-store.selection-transform-rejected");
+        }
+        let mut retired: Vec<PathSegment> = Vec::new();
+        for entry in outcome.diff().layers.iter().flat_map(|delta| delta.patched.iter()) {
+            let mut fault = None;
+            let found = crate::schema::update_layer_in_tree(&mut source.layers, &entry.id, &mut |layer| {
+                if let Some(transform) = entry.patch.transform_json.as_deref() {
+                    match dsl::json::from_json_str::<crate::DrawingTransform>(transform) {
+                        Ok(transform) => crate::schema::layer_base_mut(layer).transform = transform,
+                        Err(_) => fault = Some("drawing-store.selection-transform-json"),
+                    }
+                }
+                if let Some(segments) = entry.patch.path_segments.as_ref() {
+                    match layer {
+                        DrawingLayerNode::Path(path) => retired.extend(std::mem::replace(&mut path.segments, segments.clone())),
+                        _ => fault = Some("drawing-store.path-target-kind"),
+                    }
+                }
+            });
+            if let Some(fault) = fault {
+                return Err(fault);
+            }
+            if !found {
+                return Err("drawing-store.mutation-target-lost");
+            }
+        }
+        if !retired.is_empty() {
+            *self.retirement = Some(Box::new(DrawingOwnedRetirement::new(DrawingRetirementOwner::Segments(retired))));
+        }
+        Ok(())
     }
 
     fn parent(mutation: &DrawingMutation) -> Option<&str> {
@@ -4578,7 +4703,7 @@ impl DrawingMutationCandidateAuthority {
             DrawingMutationCandidatePhase::BindOverlay => {
                 self.clone_work = None;
                 self.overlay = Some(DrawingMutationOverlayPatch::bind(source));
-                if matches!(mutation, DrawingMutation::DuplicateLayer(_)) {
+                if matches!(mutation, DrawingMutation::DuplicateLayer(_) | DrawingMutation::DragLayers(_) | DrawingMutation::RotateLayers(_) | DrawingMutation::ScaleLayers(_) | DrawingMutation::DragPathPoints(_)) {
                     self.phase = DrawingMutationCandidatePhase::Apply;
                 } else {
                     self.locator = Some(DrawingLayerLocator::new());
@@ -4768,6 +4893,13 @@ impl DrawingMutationCandidateAuthority {
                         self.phase = DrawingMutationCandidatePhase::RebuildSource;
                         return Ok(false);
                     }
+                    DrawingMutation::DragLayers(_) | DrawingMutation::RotateLayers(_) | DrawingMutation::ScaleLayers(_) | DrawingMutation::DragPathPoints(_) => {
+                        self.apply_selection_transform(source, mutation)?;
+                        self.overlay.as_mut().ok_or("drawing-store.mutation-overlay-missing")?.commit(source)?;
+                        self.phase = DrawingMutationCandidatePhase::Complete;
+                        cx.consume_fuel(1);
+                        return Ok(false);
+                    }
                     _ => {}
                 }
                 let address = self.primary;
@@ -4874,6 +5006,9 @@ impl DrawingMutationCandidateAuthority {
                     DrawingMutation::UpdateLayerTraceParams(_) => return Err("drawing-store.mutation-trace-invalid"),
                     DrawingMutation::CreateLayer(_) | DrawingMutation::DuplicateLayer(_) | DrawingMutation::DeleteLayer(_) | DrawingMutation::ReorderLayer(_) => {
                         unreachable!("structural Drawing mutations start retained rebuild before scalar mutation")
+                    }
+                    DrawingMutation::DragLayers(_) | DrawingMutation::RotateLayers(_) | DrawingMutation::ScaleLayers(_) | DrawingMutation::DragPathPoints(_) => {
+                        unreachable!("selection transforms apply their resolved patches before scalar mutation")
                     }
                 }
                 self.overlay.as_mut().ok_or("drawing-store.mutation-overlay-missing")?.commit(source)?;

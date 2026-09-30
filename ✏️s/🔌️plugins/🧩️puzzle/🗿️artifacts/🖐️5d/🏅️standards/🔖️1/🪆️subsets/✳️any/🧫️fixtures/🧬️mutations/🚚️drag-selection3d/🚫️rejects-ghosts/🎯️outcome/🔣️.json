@@ -1,0 +1,8 @@
+{
+  "code": "mutation.target-missing",
+  "path": [
+    "part-ghost",
+    "volume-ghost"
+  ],
+  "status": "rejected"
+}

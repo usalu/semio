@@ -195,3 +195,111 @@ That changes content only and cannot affect types.
    coordinator because the other W2-R groups need the same regeneration. The lint does not read the hashes.
 5. **Test-fixture leaves untouched.** Leaves under `🧫️fixtures` (the plugin/spr/store test aggregates) are test inputs, and some
    tests assert their roster rows, so no annotations were added to them.
+
+## 6. Follow-up — invariant refusals are negative witnesses (fem, remodel) and the fem3d retained-limits twin
+
+Coordinator decision: a fixture whose outcome is `mutation.invariant` must fail its leaf schema (`📋️design.md` §11, W2-S F16).
+Status: **DONE and VERIFIED** — both lints report 0 findings for fem and remodel. Tool: `🧪️w2-r-mid-invariant-bounds.py`
+(ticket root) for every JSON change; the Rust, TS, Python and feature changes were made by hand.
+
+### 6.1 Value ranges → hard bounds
+
+These are exactly what the Rust guards refuse. In the table, "> 0" means `exclusiveMinimum: 0`.
+
+| Leaf | Bounds |
+|---|---|
+| fem2d `create-material`/`replace-material` | `e`, `rho` > 0; `nu` in (−1, 0.5) |
+| fem3d `create-material`/`replace-material` | the same, plus `g` > 0 |
+| fem2d `create-section`/`replace-section` | `area`, `iy` > 0 |
+| fem3d `create-section`/`replace-section` | `area`, `iy`, `iz`, `j` > 0 |
+| fem2d `create-region`/`replace-region` | `outline` minItems 3; every hole minItems 3; `thickness`, `meshSize` > 0 |
+| fem3d `create-solid`/`replace-solid` | `outline` minItems 3; every hole minItems 3; `height`, `meshSize` > 0; `layers` minimum 1 |
+| fem2d/3d `update-analysis-settings` | `modalCount`, `bucklingCount` minimum 1; `deformationScale` > 0 |
+| remodel `update-geo-params` | `gsdM`, `dsmCellM`, `dtmFilterRadiusM` > 0; `orthoMaxPx` minimum 1 |
+| remodel `update-feature-params` | `targetCount` minimum 1; `edgeThreshold` minimum 0 |
+| remodel `update-ingest-params` | `frameSampleStride`, `maxFrames` minimum 1; `minSharpness` minimum 0 |
+| remodel `update-match-params` | `ratioTest` in (0, 1] |
+
+**`x-semio-ui` stays coherent.** The reader refuses a soft range outside the hard bounds, so `nu` `softMax` was lowered from 0.5 to
+0.49. The same change was made in `🧪️w2-r-mid-annotate-inputs.py`.
+
+**Descriptions.** The 29 fem2d leaf descriptions no longer say "Structural only". They now say that the hard bounds and
+`x-semio-invariant` state exactly the payload-intrinsic breaches `mutations::guards` refuses, and that refusals depending on the
+base belong to the diff alone.
+
+### 6.2 Cross-field invariants → root `x-semio-invariant`
+
+The fixture outcome names the invariant with `"invariant"`.
+
+| Leaves | Invariant ids | Fixture that names one |
+|---|---|---|
+| fem2d `create-region`/`replace-region` | `region-outline-encloses-area`, `region-hole-encloses-area`, `region-holes-inside-outline` | `denies-loose-hole-d9efa1` → `region-holes-inside-outline` |
+| fem3d `create-solid`/`replace-solid` | `solid-outline-encloses-area`, `solid-hole-encloses-area`, `solid-holes-inside-outline` | `sliver-outline-316a7c` → `solid-outline-encloses-area` |
+| fem2d `create-combination`/`replace-combination` | `combination-not-self-weighted` | `self-term-0f54d1` |
+
+fem3d combinations are not affected. A 3D term can only name a load case, so a self-term there is already `target-missing`.
+
+### 6.3 State-dependent refusals → `mutation.target-missing` (Error)
+
+All four remodel guards below were recoded identically in the Rust diff and its doc comment, the TS twin
+(`🧬️mutations/🟦️.ts`) and the Python reference (`🐍️.py`, docstring included).
+
+| Leaf | Refusal | Changes beyond the recode |
+|---|---|---|
+| `create-rig-extrinsic` | unknown camera | fixture outcome, `🥒️.feature` rows (both scenarios), fixture test (code and `Severity::Error`) |
+| `create-stream` | unknown camera | same as above; the target is now the **missing camera id**, and the fixture `path` changed from `orbit-quaternary` to `orbit-cam-absent` |
+| `add-stream-frame` | owner stream of another media kind | same as the first row |
+| `add-gcp-observation` | unknown stream | none: it has no fixture, and it was recoded only for consistency |
+
+The editor comment and test comment in `add-stream` no longer cite a "FATAL invariant".
+
+### 6.4 fem window-config TS twin (`✏️s/🔌️plugins/🏗️fem/🧪️tests/🪟️window-config-contract/🟦️.ts`)
+
+The Rust side is right. `FEM3D_RETAINED_TOOL_IDS` has 36 entries, the retained-route law asserts 36, and the fixture carries 36
+routes. The schema `✏️editor/🎮️commands/🧬️schema/🚧️retained-limits/🔣️.json` was stale: its `routes` tuple had 18 entries and
+`min/maxItems` 18.
+
+I extended the tuple to 36 const rows (`id`, `disposition`, `lanes`, `blocker`) from the Rust-verified fixture and set
+`min/maxItems` to 36. The first 18 rows were compared first and all matched.
+
+### 6.5 Verification (all run, foreground, rustc gate)
+
+| Command | Result |
+|---|---|
+| `bun ./📜️script.ts schema mutation-payloads --under ✏️s/🔌️plugins/🏗️fem` | **0 findings**; 236/236 fixtures; 16 negatives, 3 of them via `x-semio-invariant` (before: 16 `negative`) |
+| `… --under ✏️s/🔌️plugins/📸️remodel` | **0 findings**; 136/136; 4 negatives (before: 7 `negative`; 3 became positive) |
+| `bun ./📜️script.ts schema mutation-inputs --under` fem / remodel | 0 / 0 findings (85/85, 56/56) |
+| `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-w2rmid cargo test -p semio-s-artifact-fem-2d -p semio-s-artifact-fem-3d --lib -- standards::` | **818 + 923 passed, 0 failed**, including `semio_payload_law_fem2d_mutation` and `semio_payload_law_fem3d_mutation` and all the negative fixture tests |
+| `… cargo test -p semio-s-artifact-remodel-remodeling --lib` | 1296 passed, 7 failed; see the note below |
+| `bun test …/📸️remodeling/…/🧬️schema/🧪️tests/🧩️suite/🟦️.ts` (TS twin against every fixture outcome, codes and paths) | 1368 pass, 0 fail |
+| `bun ./📜️script.ts oracle exhaustive --owner …/📸️remodeling/…/✳️any --case 📸️mutate-remodeling-1` (Python reference) | 275/275 |
+| `bun ✏️s/🔌️plugins/🏗️fem/🧪️tests/🪟️window-config-contract/🟦️.ts` | exit 0 |
+| `tsc --strict` over the remodel mutations twin | 0 errors in the edited file; siblings have their own errors under this ad-hoc config |
+
+**The 7 remodel failures.** All the recoded and schema-related tests in the remodel run are green:
+- the three refusal fixture suites (`declared_refusal_holds`, etc.);
+- `semio_payload_law_remodeling_mutation`.
+
+The 7 failures, re-run in isolation (1 of them then passed), are in untouched editor code that never reaches the four recoded
+guards:
+- 4 of them are the 8 ms worker-ceiling timing laws, which were run with 15–22 concurrent rustc;
+- `export_qc_report_is_a_no_op_without_a_report` fails with `remodeling.qc-report.missing`;
+- the report component and window-ownership tests fail with "Observations column" / "report render did not consume isolated
+  table selection".
+
+I could not run them against the pre-change tree, so "pre-existing" is inferred rather than proven.
+
+**Not run:** the Rust subject and parity phases of `📸️mutate-remodeling-1`, which would need another adapter build. The Python
+reference (275/275) and the Rust fixture tests assert the same codes.
+
+**Files.**
+- fem schemas: 20 leaf schemas with bounds or invariants (fem2d material, section, region, analysis and combination; fem3d
+  material, section, solid and analysis), plus the fem2d description-only leaves.
+- fem outcomes: 3 outcome files.
+- fem3d `🚧️retained-limits/🔣️.json`.
+- remodel schemas: 4 leaf schemas.
+- remodel code: 4 `🔺️diff/🦀️.rs`, `🧬️mutations/🟦️.ts`, `🧪️tests/📸️mutate-remodeling-1/{🐍️.py,🥒️.feature}`.
+- remodel fixtures: 3 fixture tests and 3 outcomes.
+- remodel editor: `✏️editor/🎮️commands/🌱️add-stream/{🦀️.rs,🧪️tests/🔬️unit/🦀️.rs}` and the `🛠️edit-calibration` unit-test comment, which still cited
+  "FATAL" for an unknown stream.
+- Logs: `🗑️generated/w2r-mid/{payloads-after-*.txt,cargo-fem.txt,cargo-remodel*.txt}`.

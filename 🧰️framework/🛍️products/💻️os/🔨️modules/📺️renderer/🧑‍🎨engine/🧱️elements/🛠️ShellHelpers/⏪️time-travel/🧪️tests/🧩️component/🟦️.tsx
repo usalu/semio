@@ -1,8 +1,9 @@
 /** 🧪️ The React time-travel chrome against the language-neutral band corpus (`🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-band`):
  * every stage's lines in English and German, the controls with what disables them, the reserved verbs they dispatch with the
  * session generation, the remappable chords (never Escape, never from a form field) published on `aria-keyshortcuts`, the
- * window indicator's accessible name, and the framework history body rendered through the interpreter instead of a
- * host-built tab. Third-party oracles: Ajv validates the corpus against its schema and the kernel's own
+ * window indicator's accessible name, the framework history body rendered through the interpreter instead of a
+ * host-built tab, and peers' open history edits against the peers corpus the wgpu shell asserts too
+ * (`🧫️time-travel-peers`). Third-party oracles: Ajv validates the corpus against its schema and the kernel's own
  * `HistoryTimeTravel` wire schema, `dom-accessibility-api` names the indicator, `@testing-library/user-event` types the
  * chords, and the `⏪️time-travel` module's `TIME_TRAVEL_LABELS` is the independent source of every stage and refusal text. */
 import { readFileSync } from "node:fs";
@@ -33,6 +34,15 @@ const readJson = (path: string): any => JSON.parse(readFileSync(path, "utf8"));
 const corpus = readJson(join(shellHelpers, "🧫️fixtures", "🧫️time-travel-band", "🔣️.json"));
 type Case = { readonly name: string; readonly session: HistoryTimeTravel; readonly text: Readonly<Record<"en" | "de", Record<string, string | null>>>; readonly controls: readonly { readonly control: string; readonly action: string; readonly disabledBy: string | null }[]; readonly indicator: Readonly<Record<"en" | "de", string>> };
 const cases = corpus.cases as readonly Case[];
+/** 👥️ The peers' history-edit corpus (`🧫️time-travel-peers`) both shells assert: the rows a replica holds, the peers on
+ * its roster, and per locale every editing peer's chip and every history-body node's note. */
+const peersCorpus = readJson(join(shellHelpers, "🧫️fixtures", "🧫️time-travel-peers", "🔣️.json"));
+type PeersCorpusRow = { readonly seq: number; readonly editId: string; readonly mutations: readonly { readonly mutationId: string; readonly label: { readonly en: string; readonly de: string } }[] };
+type PeersCorpusCase = {
+  readonly name: string;
+  readonly peers: readonly { readonly actor: string; readonly label: string; readonly historyEdit?: { readonly mutationId: string; readonly stage: "editing" | "replaying" | "reviewing" | "choosing" | "finalizing"; readonly drafts: number } }[];
+  readonly expect: Readonly<Record<"en" | "de", { readonly chips: readonly { readonly actor: string; readonly text: string; readonly badge: string }[]; readonly notes: readonly { readonly key: string; readonly text: string }[] }>>;
+};
 const axes = { terminology: corpus.axes.terminology as string };
 const LOCALES = ["en", "de"] as const;
 
@@ -313,44 +323,41 @@ describe("🕰️ the framework history body renders through the interpreter", (
     expect([panelActionRoutesThroughHostV1({ controllerId: controller, action: "redo" }), panelActionRoutesThroughHostV1({ controllerId: controller, action: "historyEditRerun" })]).toEqual([false, false]);
   });
 
-  it("marks the rows a peer edits in time travel with that peer's name, in both languages, labelled from the local rows", () => {
-    const label = { native: { en: "Drag selection", de: "Auswahl ziehen" }, reuse: { en: "Drag selection", de: "Auswahl ziehen" } };
-    const entries = [{ seq: 4, editId: "e-4", actionId: "drag", label, kind: "mutation", timestamp: "t", mutations: [{ mutationId: "m-2", position: 0, opIndex: 0, label }] }] as unknown as Parameters<typeof timeTravelPeerPresenceV1>[1];
-    const peers = [
-      { actor: "ada", label: "Ada", historyEdit: { mutationId: "m-2", stage: "editing", drafts: 0 } },
-      { actor: "bo", label: "Bo", historyEdit: { mutationId: "m-gone", stage: "reviewing", drafts: 1 } },
-      { actor: "cy", label: "Cy" },
-    ] as const;
-    const expected = {
-      en: { ada: "Ada is editing Drag selection in time travel", bo: "Bo is editing the history in time travel", row: "Ada is editing this in time travel" },
-      de: { ada: "Ada bearbeitet Auswahl ziehen in der Zeitreise", bo: "Bo bearbeitet den Verlauf in der Zeitreise", row: "Ada bearbeitet dies in der Zeitreise" },
-    };
-    for (const locale of LOCALES) {
-      syncShellLabelLocale(locale);
-      const presence = timeTravelPeerPresenceV1(peers, entries, { terminology: "native", locale });
-      expect(presence.peers.map((peer) => [peer.actor, peer.activity?.text ?? null, "historyEdit" in peer])).toEqual([["ada", expected[locale].ada, false], ["bo", expected[locale].bo, false], ["cy", null, false]]);
-      expect([...presence.overlay.byKey].map(([key, entry]) => [key, entry.notes])).toEqual([
-        ["framework.history.mutation.m-2", [expected[locale].row]],
-        ["framework.history.entry.4", [expected[locale].row]],
-        ["framework.history.mutation.m-gone", [String(shellLabel("ui.timeTravel.peer.editingRow", { name: "Bo" }))]],
-      ]);
-      const store = new UiDocumentStore("panel:framework.panel.history");
-      store.loadSnapshot(builtNodeToSnapshot("panel:framework.panel.history", body));
-      const tab = { kind: { kind: "app" as const, id: "framework.panel.history" }, label, group: "settings" as const, bodyKey: "framework.body.history", children: [] };
-      const leaf = panelTabDefinitionToNode(tab as Parameters<typeof panelTabDefinitionToNode>[0], "settings", { "framework.panel.history": store }, () => undefined, 1, overlay);
-      if (leaf.kind !== "leaf") throw new Error("history tab is a leaf");
-      const source = leaf.trees[0]!.tree;
-      const config = "resolveTree" in source ? source.resolveTree() : source;
-      const view = render(createElement(UiPresenceOverlayContext.Provider, { value: presence.overlay, children: createElement(Fragment, null, config.emptyState) }));
-      expect(view.container.textContent).toContain(expected[locale].row);
-      const roster = render(createElement(PresenceBar, { peers: presence.peers }));
-      const chip = roster.container.querySelector<HTMLElement>('[data-row-id="peer:ada"]')!;
-      expect([chip.hasAttribute("data-presence-activity"), computeAccessibleName(chip).includes(expected[locale].ada), roster.container.querySelector('[data-row-id="peer:cy"]')!.hasAttribute("data-presence-activity")]).toEqual([true, true, false]);
-      view.unmount();
-      roster.unmount();
+  it("marks the rows and chips of peers editing in time travel exactly as the shared peers corpus says, in both languages", () => {
+    const localized = (text: { readonly en: string; readonly de: string }) => ({ native: text, reuse: text });
+    const rows = peersCorpus.rows as readonly PeersCorpusRow[];
+    const entries = rows.map((row) => ({ seq: row.seq, editId: row.editId, actionId: "apply", label: localized({ en: "Apply", de: "Anwenden" }), kind: "mutation", timestamp: "t", mutations: row.mutations.map((mutation, index) => ({ mutationId: mutation.mutationId, position: index, opIndex: index, label: localized(mutation.label) })) })) as unknown as Parameters<typeof timeTravelPeerPresenceV1>[1];
+    const peerBody = node("framework.history", { type: "tree", interactionDomain: null }, [
+      section("framework.history.commands", "Commands", rows.map((row) => treeItem(`framework.history.entry.${row.seq}`, row.mutations[0]!.label.en, [button(`framework.history.entry.${row.seq}.edit`, "Edit", bind(controller, "historyEditBegin", { mutationId: row.mutations[0]!.mutationId }))]))),
+    ]);
+    for (const peerCase of peersCorpus.cases as readonly PeersCorpusCase[]) {
+      for (const locale of LOCALES) {
+        syncShellLabelLocale(locale);
+        const expected = peerCase.expect[locale];
+        const presence = timeTravelPeerPresenceV1(peerCase.peers, entries, { terminology: "native", locale });
+        expect(presence.peers.some((peer) => "historyEdit" in peer), `${peerCase.name} (${locale}): the wire field never reaches the roster`).toBe(false);
+        expect(presence.peers.flatMap((peer) => (peer.activity === undefined ? [] : [{ actor: peer.actor, text: peer.activity.text, badge: peer.activity.badge }])), `${peerCase.name} (${locale}): chips`).toEqual(expected.chips);
+        expect([...presence.overlay.byKey].map(([key, entry]) => ({ key, text: (entry.notes ?? []).join(" · ") })).sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0)), `${peerCase.name} (${locale}): notes`).toEqual(expected.notes);
+        const store = new UiDocumentStore("panel:framework.panel.history");
+        store.loadSnapshot(builtNodeToSnapshot("panel:framework.panel.history", peerBody));
+        const tab = { kind: { kind: "app" as const, id: "framework.panel.history" }, label: localized({ en: "History", de: "Verlauf" }), group: "settings" as const, bodyKey: "framework.body.history", children: [] };
+        const leaf = panelTabDefinitionToNode(tab as Parameters<typeof panelTabDefinitionToNode>[0], "settings", { "framework.panel.history": store }, () => undefined, 1, overlay);
+        if (leaf.kind !== "leaf") throw new Error("history tab is a leaf");
+        const source = leaf.trees[0]!.tree;
+        const config = "resolveTree" in source ? source.resolveTree() : source;
+        const view = render(createElement(UiPresenceOverlayContext.Provider, { value: presence.overlay, children: createElement(Fragment, null, config.emptyState) }));
+        for (const note of expected.notes.filter((entry) => entry.key.startsWith("framework.history.entry."))) expect(view.container.textContent, `${peerCase.name} (${locale}): ${note.key}`).toContain(note.text);
+        const roster = render(createElement(PresenceBar, { peers: presence.peers }));
+        for (const peer of peerCase.peers) {
+          const chip = roster.container.querySelector<HTMLElement>(`[data-row-id="peer:${peer.actor}"]`)!;
+          const activity = expected.chips.find((entry) => entry.actor === peer.actor);
+          expect([chip.hasAttribute("data-presence-activity"), activity === undefined || computeAccessibleName(chip).includes(activity.text), roster.container.querySelector(`[data-row-id="peer-activity-badge:${peer.actor}"]`)?.textContent ?? null], `${peerCase.name} (${locale}): ${peer.actor}`).toEqual([activity !== undefined, true, activity?.badge ?? null]);
+        }
+        view.unmount();
+        roster.unmount();
+      }
     }
     syncShellLabelLocale("en");
-    expect(timeTravelPeerPresenceV1([{ actor: "cy", label: "Cy" }], entries, { terminology: "native", locale: "en" }).overlay.byKey.size).toBe(0);
   });
 
   it("publishes this human's own history edit, tool run and interaction in the presence heartbeat, and nothing it does not carry", () => {

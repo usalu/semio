@@ -163,6 +163,12 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
         }
         let Some(record) = document.record(pending.id) else { continue };
         let mut node = accessibility_projection_node(record, pending.depth);
+        if let Some(note) = tree.presence_note(record.key.as_str()) {
+            node.description = Some(match node.description.take() {
+                Some(description) => format!("{description} · {note}"),
+                None => note.to_string(),
+            });
+        }
         let mut slider_editor_text = None;
         if node.label.is_none()
             && matches!(

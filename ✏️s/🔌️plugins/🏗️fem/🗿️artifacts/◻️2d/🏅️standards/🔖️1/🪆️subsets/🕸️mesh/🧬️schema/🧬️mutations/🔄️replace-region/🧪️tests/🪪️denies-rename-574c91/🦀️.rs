@@ -13,7 +13,7 @@
 //! the payload below was accepted (see `📓️w13-fem2d-semantics.md` for the per-kind rule table).
 //!
 //! 🪪️ Renaming the panel would orphan the wind case's area load while presenting itself as a geometry
-//! edit. `mutation.id-mismatch`, FATAL.
+//! edit. `mutation.target-mismatch`, an Error.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
@@ -53,8 +53,8 @@ fn the_refusal_is_the_declared_diagnostic() {
     assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "replace-region/denies-rename-574c91: a rejecting replace-region must carry the empty diff, never a half-built delta");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
-    assert_eq!(messages[0].code.0, "mutation.id-mismatch", "replace-region/denies-rename-574c91: the refusal is reported as mutation.id-mismatch");
-    assert_eq!(messages[0].level, protocol::Severity::Fatal, "a replacement that renames its target is an identity breach — Fatal, and no merge policy may absorb it");
+    assert_eq!(messages[0].code.0, "mutation.target-mismatch", "replace-region/denies-rename-574c91: the refusal is reported as mutation.target-mismatch");
+    assert_eq!(messages[0].level, protocol::Severity::Error, "a replacement that renames its target contradicts the target it selects — the state-dependent Error");
     assert_eq!(messages[0].target, vec!["wall1".to_string(), "wall2".to_string()], "the diagnostic addresses the target first, then every referrer");
     let semantics = <Fem2dMutation as protocol::SemanticMutation<Fem2dSnapshot>>::semantics(&mutation());
     assert_eq!(semantics.kind, "replace-region", "the fixture must be bound to replace-region's own descriptor");

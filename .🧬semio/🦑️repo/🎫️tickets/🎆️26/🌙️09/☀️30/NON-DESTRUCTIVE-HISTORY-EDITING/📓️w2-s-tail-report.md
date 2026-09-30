@@ -152,3 +152,79 @@ and the os leaves under `🧰️framework/🛍️products/💻️os/**` (workflo
 | `schema mutation-payloads --json`, scope filter | 0 findings; census clean: dag 17/17, flow 10/10, imperative 10/10, layout 28/28, math 17/17, os 27/27, process 16/16, sequence 8/8 |
 | `schema mutation-inputs --json`, scope filter | 0 findings; declared = inputs: dag 36, flow 27, imperative 14, layout 131, math 33, os 136, process 26, sequence 17 |
 | `.venv/bin/python 🧪️w2-s-e-check.py` | 189 leaves, 901 `x-semio-ui` valid, 0 invalid schemas, 122 fixture wires, 0 rejections |
+
+## 7. Follow-up (coordinator requests): witnesses, negative fixtures, dag rows, flow
+
+### 7.1 Layout wire witnesses (design §11)
+
+- 17 payload-only witnesses at `✳️any/🧫️fixtures/🧬️mutations/<leaf>/🧾️wire-witness/🦠️mutation/🔣️.json` for the leaves no quintet
+  covered (the 14 former stubs plus `update-paragraph-style`, `update-text-frame`, `update-layer`): canonical aggregate wire
+  (`{"<Variant>": <camelCase payload>}`, `Option` as `null`, `f64` with a fraction, f32 colour channels exactly representable).
+  Written by `🧪️w2-s-e-layout-witnesses.py`.
+- Proven canonical by `committed_wire_witnesses_are_the_canonical_wire` in the aggregate unit tests
+  (`store::os_store::test_support::assert_wire_witness::<LayoutMutation>`) and picked up by the derived
+  `semio_payload_law_layout_mutation`. Layout census: 45/45 leaves witnessed, 45/45 fixtures clean.
+- Stale layout tests found while running the crate (pre-existing, not caused by this WP) and fixed at the source:
+  - 17 committed `🔺️diff/🔣️.json` lacked the `null` members the `LayoutDiff` patch structs gained with the later leaves
+    (page `frame_layer`/`frame_order`/`guides`/`layer_*`/`overrides`/`parent_page_id`, frame `inset_*`/`story_id`/`thread_next`,
+    link/story patch members). `🧪️w2-s-e-layout-diff-fixtures.py` inserts exactly the missing members from the produced diff and
+    refuses to write unless the result equals it (17/17 equal).
+  - `semantic_kinds_cover_every_variant` asserted 28 kinds; it now ties `kinds()` to `KINDS` and pins 45.
+
+### 7.2 dag feature rows
+
+`🌳️mutate-dag-1/🥒️.feature`: the `replace-node-kind` rows (mutate and inverse) and the `create-node` rows carried
+`variadicInputs`/`variadicOutputs`, but the Rust wire of the shared os `DagNodeKind` is `variadic_inputs`/`variadic_outputs`
+(explicit `#[value(rename)]`); FromValue silently ignored the camelCase keys. Rows now carry the exact wire (F10). The subject
+already decodes `params` generically (`decode_dag_mutation_json`); the Python oracle does not read `params`.
+
+### 7.3 Flow editor source contract
+
+`✏️editor/🧪️tests/🔬️source-contract/🟦️.ts` (run by `bun ./📜️script.ts test-source` in `🌊️flow/📦️packages/🦀️rust`) now passes:
+- the demo asset is the host-grammar content genesis (`demo_example_ships_the_laid_out_default_graph_as_its_content_genesis`),
+  not a JSON snapshot: the test asserts the host grammar and its three widgets instead of `JSON.parse`-ing it;
+- the `duplicate-widget` check uses the repo's strict x-semio oracle (`semioSchemaAjvV1`) on the full tagged wire (the leaf
+  declares the `mutation` const) instead of a bare Ajv that refused `x-semio-ui`;
+- the interactive-job catalogue check knows the fifth factory `FlowContributionsJobFactory` (`FLOW_CONTRIBUTIONS_TOOL_IDS`).
+
+### 7.4 Negative witnesses (F16), fixed at the source
+
+| Fixture | Kind | Fix |
+|---|---|---|
+| flow `duplicate-widget` onto a taken id | state-dependent | New `PlanError::Refused(MutationMessage)` (replaces the string-only `Invalid`) in `📡️spr/🎮️command`: `fold_plan_diff` emits a composite precondition's own coded refusal; any other planning failure stays `mutation.invariant`. The flow precondition answers `mutation.duplicate-id` at `new_id`, `mutation.target-missing` at the source, `mutation.invariant` for `new_id == source_id`. Outcome → `duplicate-id` at `["note-beta"]`; leaf + plan tests updated. |
+| forms `create-block` for a missing step | state-dependent | Error `mutation.target-missing` at the step (like its three siblings); outcome, leaf docs, leaf test, unit law (`assert_missing_target_is_error`) and the Python second implementation (its sibling rules also said `invariant` against the Rust) updated; positive witness `➕create-block/🧾️wire-witness` + `committed_wire_witnesses_are_the_canonical_wire`. |
+| trinity jack `create-edge` endpoints absent | state-dependent | Error `mutation.target-missing` addressed by the absent node ids (`["shaft","capsule-a"]`); a malformed port key stays the payload invariant and the leaf schema now states it (`pattern: ^[^@]+@.+$` on `source`/`target`); positive witness `🌉️create-edge/🧾️wire-witness` + test in the aggregate's structural suite. |
+| animate `resize-tile-crop` zero-width crop | range | `newCrop.width`/`height` `exclusiveMinimum: 0` — a clean negative. |
+| dag `reorder-nodes` duplicate id in the order | range | `order` `uniqueItems: true` — a clean negative. |
+| sequence `connect-steps` step to itself | cross-field | leaf `x-semio-invariant: [{id: "no-self-loop", description {en, de}}]`, outcome `"invariant": "no-self-loop"` — counted as a declared invariant. |
+
+### 7.5 `FlowMutation` cold retirement
+
+Both flow aggregates now declare `retire_cold = retire_flow_mutation`: the plugin `FlowMutation` retires the `Widget` of
+`create-widget`/`replace-widget`, the os vcs `FlowMutation` the `Widget` of `add-widget`/`change-widget` and the
+`FlowHostSnapshot` of `replace-flow-host-snapshot` (both own fail-closed `Dictionary`/`OrderedSet`/`OrderedMap`/`Tree` roots).
+
+### 7.6 Verification (follow-up)
+
+| Command | Result |
+|---|---|
+| `schema mutation-payloads --json` | 0 findings for layout, math, process, imperative, sequence, flow, dag, os, trinity, forms, animate; layout 45/45 witnessed, sequence 1 declared invariant, animate/dag 1 clean negative each |
+| `schema mutation-inputs --json` | 0 findings for the same owners |
+| `cargo check -p semio-s-artifact-flow-flow -p semio-s-artifact-forms-forms -p semio-s-artifact-trinity-jack -p semio-s-artifact-layout-layout --target wasm32-wasip2` (compiles the os kernel `PlanError` change and the os flow retire) | Finished |
+| `cargo test -p semio-s-artifact-flow-flow --lib` | **259 passed**, 0 failed (duplicate-widget refusal/plan tests, payload law) |
+| `cargo test -p semio-framework-artifact-flow-flow --lib` | 45 passed, 1 failed: `slider_label_tests::authored_slider_labels_survive_json_dag_and_chrome` (`WidgetDescriptor` accepts a widget without `label`), pre-existing and unrelated; `vcs::mutations::semio_payload_law_flow_mutation` passes |
+| `bun ./📜️script.ts test-source` (flow package) | exit 0 |
+| `cargo test -p semio-s-artifact-forms-forms -p semio-s-artifact-trinity-jack --lib` | forms **230/230**, jack **176/176** (recoded refusals, new witnesses) |
+| `cargo test -p semio-s-artifact-layout-layout --lib` | **482 passed**, 2 failed — both editor behaviour tests outside the mutation vocabulary and untouched by this WP: `patch_document::…patch_frame_sets_flags` (a locked frame now refuses the visibility toggle) and `panels::document::…granularity…` (a page row lost its action); witnesses, payload law, all 28 quintets and the kinds test pass |
+| `cargo test -p semio-s-artifact-mathematical-equation --lib` | **393 passed**, 1 failed: `viewer::…geometry::render_produces_a_table_scene_with_one_row_per_point` (renderer table JSON contract, peer area); the two leaf tests that asserted snake_case keys now assert the camelCase wire |
+| `cargo test -p semio-s-artifact-process-process3d --lib` | **361 passed**, 1 failed: `every_example_fixture_carries_its_canonical_child_handles` (the drilled-plate stock B-Rep handle digest drifted; the handle hashes B-Rep content, not the `WorkingSolid` wire) |
+| `cargo test -p semio-s-artifact-sequence-sequence -p semio-s-artifact-dag-dag --lib` | sequence **207/207**, dag **214/214** |
+| `cargo test -p semio-s-artifact-animate-presentation --lib` | 336 passed, 1 failed: `video::program::…a_demo_scene_is_one_still_scene_for_every_captured_frame` (video frame sampling, unrelated to the crop schema bound) |
+| `bun 🧪️w2-s-e-strict-ajv.ts` (scope + jack, forms, animate) | **275 compiled, 0 failed** (incl. `x-semio-invariant`, `pattern`, `uniqueItems`, `exclusiveMinimum`) |
+| `.venv/bin/python 🧪️w2-s-e-check.py` | 189 leaves, 901 `x-semio-ui` valid, 192 fixture wires (2 negatives rejected or declared), 0 rejections |
+| `.venv/bin/python 🧪️w2-s-e-layout-oracle.py` | 52/52 |
+
+Open from this round: the layout diff JSON Schema (`🧬️schema/🔺️diff/🔣️.json`) does not describe the patch members the Rust
+`LayoutDiff` gained (`frame_layer`, `frame_order`, `guides`, `layer_*`, `inset_*`, …) — diff parity, outside the payload lint.
+The jack `create-edge` `source`/`target` annotations are node-reference pickers although the wire is a `nodeId@portId` port key.
+

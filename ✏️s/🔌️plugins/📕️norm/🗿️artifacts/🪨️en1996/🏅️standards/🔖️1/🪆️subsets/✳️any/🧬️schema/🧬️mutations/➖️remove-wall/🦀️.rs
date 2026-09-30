@@ -29,5 +29,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for RemoveWall {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/➖️applies-remove-wall/🦀️.rs"]
+#[path = "🧪️tests/➖️removes-first-wall/🦀️.rs"]
 mod named_test;

@@ -1,0 +1,13 @@
+{
+  "mutation": "setParagraphStyle",
+  "address": {
+    "partPath": "word/document.xml",
+    "nodePath": [
+      0,
+      0
+    ],
+    "expectedName": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+    "revision": "fa12140ebd91a775"
+  },
+  "styleId": "Normal"
+}

@@ -79,7 +79,7 @@ def canonical_index(collection, identifier):
 
 def diff_change_seed(document, payload):
     if document["seed"] == payload["seed"]:
-        return empty_diff(), [("warning", "wfc3d.seed.unchanged")]
+        return empty_diff(), [("warning", "mutation.no-op")]
     delta = empty_diff()
     delta["seed"] = payload["seed"]
     return delta, []
@@ -88,12 +88,12 @@ def diff_change_seed(document, payload):
 def diff_create_slot(document, payload):
     slot = payload["slot"]
     if find(document["slots"], slot["id"])[1] is not None:
-        return empty_diff(), [("fatal", "wfc3d.slot.duplicate-id")]
+        return empty_diff(), [("fatal", "mutation.duplicate-id")]
     if slot["width"] <= 0 or slot["height"] <= 0 or slot["depth"] <= 0:
-        return empty_diff(), [("fatal", "wfc3d.slot.degenerate-box")]
+        return empty_diff(), [("fatal", "mutation.invariant")]
     pinned = slot.get("pinnedTileId")
     if pinned is not None and find(document["tiles"], pinned)[1] is None:
-        return empty_diff(), [("fatal", "wfc3d.slot.unknown-pinned-tile")]
+        return empty_diff(), [("error", "mutation.target-missing")]
     delta = empty_diff()
     delta["slotsUpserted"] = [[payload["index"], slot]]
     return delta, []
@@ -102,20 +102,20 @@ def diff_create_slot(document, payload):
 def diff_delete_slot(document, payload):
     index, _ = find(document["slots"], payload["id"])
     if index is None:
-        return empty_diff(), [("error", "wfc3d.slot.missing")]
+        return empty_diff(), [("error", "mutation.target-missing")]
     incident = [edge["id"] for edge in document["edges"] if payload["id"] in (edge["fromSlotId"], edge["toSlotId"])]
     delta = empty_diff()
     delta["slotsRemoved"] = [payload["id"]]
     delta["edgesRemoved"] = incident
-    return delta, ([("info", "wfc3d.slot.edges-cascaded")] if incident else [])
+    return delta, ([("info", "mutation.cascade")] if incident else [])
 
 
 def diff_move_slot(document, payload):
     index, slot = find(document["slots"], payload["id"])
     if index is None:
-        return empty_diff(), [("error", "wfc3d.slot.missing")]
+        return empty_diff(), [("error", "mutation.target-missing")]
     if (slot["x"], slot["y"], slot["z"]) == (payload["x"], payload["y"], payload["z"]):
-        return empty_diff(), [("warning", "wfc3d.slot.position-unchanged")]
+        return empty_diff(), [("warning", "mutation.no-op")]
     moved = dict(slot)
     moved["x"], moved["y"], moved["z"] = payload["x"], payload["y"], payload["z"]
     delta = empty_diff()
@@ -126,11 +126,11 @@ def diff_move_slot(document, payload):
 def diff_resize_slot(document, payload):
     index, slot = find(document["slots"], payload["id"])
     if index is None:
-        return empty_diff(), [("error", "wfc3d.slot.missing")]
+        return empty_diff(), [("error", "mutation.target-missing")]
     if payload["width"] <= 0 or payload["height"] <= 0 or payload["depth"] <= 0:
-        return empty_diff(), [("fatal", "wfc3d.slot.degenerate-box")]
+        return empty_diff(), [("fatal", "mutation.invariant")]
     if (slot["width"], slot["height"], slot["depth"]) == (payload["width"], payload["height"], payload["depth"]):
-        return empty_diff(), [("warning", "wfc3d.slot.extent-unchanged")]
+        return empty_diff(), [("warning", "mutation.no-op")]
     resized = dict(slot)
     resized["width"], resized["height"], resized["depth"] = payload["width"], payload["height"], payload["depth"]
     delta = empty_diff()
@@ -141,14 +141,14 @@ def diff_resize_slot(document, payload):
 def diff_connect_slots(document, payload):
     edge = payload["edge"]
     if find(document["edges"], edge["id"])[1] is not None:
-        return empty_diff(), [("fatal", "wfc3d.edge.duplicate-id")]
+        return empty_diff(), [("fatal", "mutation.duplicate-id")]
     if find(document["slots"], edge["fromSlotId"])[1] is None or find(document["slots"], edge["toSlotId"])[1] is None:
-        return empty_diff(), [("error", "wfc3d.slot.missing")]
+        return empty_diff(), [("error", "mutation.target-missing")]
     if edge["fromSlotId"] == edge["toSlotId"]:
-        return empty_diff(), [("fatal", "wfc3d.edge.self-loop")]
+        return empty_diff(), [("fatal", "mutation.invariant")]
     pair = {edge["fromSlotId"], edge["toSlotId"]}
     if any(existing["relation"] == edge["relation"] and {existing["fromSlotId"], existing["toSlotId"]} == pair for existing in document["edges"]):
-        return empty_diff(), [("warning", "wfc3d.edge.already-connected")]
+        return empty_diff(), [("warning", "mutation.no-op")]
     delta = empty_diff()
     delta["edgesUpserted"] = [[payload["index"], edge]]
     return delta, []
@@ -157,7 +157,7 @@ def diff_connect_slots(document, payload):
 def diff_disconnect_slots(document, payload):
     index, _ = find(document["edges"], payload["id"])
     if index is None:
-        return empty_diff(), [("error", "wfc3d.edge.missing")]
+        return empty_diff(), [("error", "mutation.target-missing")]
     delta = empty_diff()
     delta["edgesRemoved"] = [payload["id"]]
     return delta, []
@@ -166,11 +166,11 @@ def diff_disconnect_slots(document, payload):
 def diff_pin_slot(document, payload):
     index, slot = find(document["slots"], payload["id"])
     if index is None:
-        return empty_diff(), [("error", "wfc3d.slot.missing")]
+        return empty_diff(), [("error", "mutation.target-missing")]
     if find(document["tiles"], payload["tileId"])[1] is None:
-        return empty_diff(), [("error", "wfc3d.tile.missing")]
+        return empty_diff(), [("error", "mutation.target-missing")]
     if slot.get("pinnedTileId") == payload["tileId"]:
-        return empty_diff(), [("warning", "wfc3d.slot.pin-unchanged")]
+        return empty_diff(), [("warning", "mutation.no-op")]
     pinned = dict(slot)
     pinned["pinnedTileId"] = payload["tileId"]
     delta = empty_diff()
@@ -181,9 +181,9 @@ def diff_pin_slot(document, payload):
 def diff_unpin_slot(document, payload):
     index, slot = find(document["slots"], payload["id"])
     if index is None:
-        return empty_diff(), [("error", "wfc3d.slot.missing")]
+        return empty_diff(), [("error", "mutation.target-missing")]
     if slot.get("pinnedTileId") is None:
-        return empty_diff(), [("warning", "wfc3d.slot.pin-absent")]
+        return empty_diff(), [("warning", "mutation.no-op")]
     released = {key: value for key, value in slot.items() if key != "pinnedTileId"}
     delta = empty_diff()
     delta["slotsUpserted"] = [[index, released]]
@@ -193,9 +193,9 @@ def diff_unpin_slot(document, payload):
 def diff_create_tile(document, payload):
     tile = payload["tile"]
     if find(document["tiles"], tile["id"])[1] is not None:
-        return empty_diff(), [("fatal", "wfc3d.tile.duplicate-id")]
+        return empty_diff(), [("fatal", "mutation.duplicate-id")]
     if not tile["weight"] > 0:
-        return empty_diff(), [("fatal", "wfc3d.tile.non-positive-weight")]
+        return empty_diff(), [("fatal", "mutation.invariant")]
     delta = empty_diff()
     delta["tilesUpserted"] = [[payload["index"], tile]]
     return delta, []
@@ -204,7 +204,7 @@ def diff_create_tile(document, payload):
 def diff_delete_tile(document, payload):
     index, _ = find(document["tiles"], payload["id"])
     if index is None:
-        return empty_diff(), [("error", "wfc3d.tile.missing")]
+        return empty_diff(), [("error", "mutation.target-missing")]
     rules = [rule["id"] for rule in document["rules"] if payload["id"] in (rule["tileAId"], rule["tileBId"])]
     released = []
     for slot_index, slot in enumerate(document["slots"]):
@@ -214,17 +214,17 @@ def diff_delete_tile(document, payload):
     delta["tilesRemoved"] = [payload["id"]]
     delta["rulesRemoved"] = rules
     delta["slotsUpserted"] = released
-    return delta, ([("info", "wfc3d.tile.references-cascaded")] if rules or released else [])
+    return delta, ([("info", "mutation.cascade")] if rules or released else [])
 
 
 def diff_change_tile_weight(document, payload):
     index, tile = find(document["tiles"], payload["id"])
     if index is None:
-        return empty_diff(), [("error", "wfc3d.tile.missing")]
+        return empty_diff(), [("error", "mutation.target-missing")]
     if not payload["weight"] > 0:
-        return empty_diff(), [("fatal", "wfc3d.tile.non-positive-weight")]
+        return empty_diff(), [("fatal", "mutation.invariant")]
     if tile["weight"] == payload["weight"]:
-        return empty_diff(), [("warning", "wfc3d.tile.weight-unchanged")]
+        return empty_diff(), [("warning", "mutation.no-op")]
     reweighted = dict(tile)
     reweighted["weight"] = payload["weight"]
     delta = empty_diff()
@@ -235,9 +235,9 @@ def diff_change_tile_weight(document, payload):
 def diff_change_tile_media(document, payload):
     index, tile = find(document["tiles"], payload["id"])
     if index is None:
-        return empty_diff(), [("error", "wfc3d.tile.missing")]
+        return empty_diff(), [("error", "mutation.target-missing")]
     if tile["media"] == payload["media"]:
-        return empty_diff(), [("warning", "wfc3d.tile.media-unchanged")]
+        return empty_diff(), [("warning", "mutation.no-op")]
     redressed = dict(tile)
     redressed["media"] = payload["media"]
     delta = empty_diff()
@@ -248,9 +248,9 @@ def diff_change_tile_media(document, payload):
 def diff_create_rule(document, payload):
     rule = payload["rule"]
     if find(document["rules"], rule["id"])[1] is not None:
-        return empty_diff(), [("fatal", "wfc3d.rule.duplicate-id")]
+        return empty_diff(), [("fatal", "mutation.duplicate-id")]
     if find(document["tiles"], rule["tileAId"])[1] is None or find(document["tiles"], rule["tileBId"])[1] is None:
-        return empty_diff(), [("fatal", "wfc3d.rule.unknown-tile")]
+        return empty_diff(), [("error", "mutation.target-missing")]
     delta = empty_diff()
     delta["rulesUpserted"] = [[payload["index"], rule]]
     return delta, []
@@ -259,7 +259,7 @@ def diff_create_rule(document, payload):
 def diff_delete_rule(document, payload):
     index, _ = find(document["rules"], payload["id"])
     if index is None:
-        return empty_diff(), [("error", "wfc3d.rule.missing")]
+        return empty_diff(), [("error", "mutation.target-missing")]
     delta = empty_diff()
     delta["rulesRemoved"] = [payload["id"]]
     return delta, []

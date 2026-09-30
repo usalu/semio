@@ -74,7 +74,7 @@ fn inspector_mask_controls_emit_semantic_changes_and_restore_history() {
 
 #[test]
 fn property_commands_enforce_neutral_protection_capabilities() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧬️schema/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let id=case["id"].as_str().unwrap();

@@ -5,29 +5,69 @@ schema norm.en1990.mutations
 start record
 framing record
 
-# Real `En1990Mutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's own payload.
-# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
-# derives every tag from these records at compile time (`dsl::protocol_record::tag_u8`).
+# `En1990Mutation` op frame (`semio_s_artifact_norm_contract::payload_op_binary`): `format u8` (`OP_BINARY_FORMAT`), then
+# `tag u8`, then the leaf payload (`Mutation::payload_value`) as canonical UTF-8 JSON to the end of the op. Each record is
+# one mutation kind at its wire tag; this file is the only source of those tags, looked up by the kind's semantic kind.
 header fixed 2
 field format u8
 field tag u8
 record change-annex tag=0
 field payload bytes
-record change-permanent-action tag=1
+record change-project-id tag=1
 field payload bytes
-record change-resistance tag=2
+record change-altitude-m tag=28
 field payload bytes
-record change-consequence-class tag=3
+record change-consequence-class tag=2
 field payload bytes
-record change-seismic-action tag=4
+record change-reliability-class tag=3
 field payload bytes
-record insert-variable-action tag=5
+record change-design-working-life-category tag=4
 field payload bytes
-record remove-variable-action tag=6
+record change-design-working-life-years tag=5
 field payload bytes
-record change-variable-action-category tag=7
+record change-reference-period-years tag=6
 field payload bytes
-record change-variable-action-value tag=8
+record change-supervision-level tag=7
 field payload bytes
-record reorder-variable-actions tag=9
+record change-inspection-level tag=8
+field payload bytes
+record change-beta-computed tag=9
+field payload bytes
+record change-permanents tag=10
+field payload bytes
+record change-variables tag=11
+field payload bytes
+record change-accidentals tag=12
+field payload bytes
+record change-seismics tag=13
+field payload bytes
+record change-members tag=14
+field payload bytes
+record change-bridge-sls tag=29
+field payload bytes
+record change-effects tag=15
+field payload bytes
+record remove-effect tag=27
+field payload bytes
+record remove-member tag=25
+field payload bytes
+record remove-seismic tag=23
+field payload bytes
+record remove-accidental tag=21
+field payload bytes
+record remove-variable tag=19
+field payload bytes
+record remove-permanent tag=17
+field payload bytes
+record insert-effect tag=26
+field payload bytes
+record insert-member tag=24
+field payload bytes
+record insert-seismic tag=22
+field payload bytes
+record insert-accidental tag=20
+field payload bytes
+record insert-variable tag=18
+field payload bytes
+record insert-permanent tag=16
 field payload bytes

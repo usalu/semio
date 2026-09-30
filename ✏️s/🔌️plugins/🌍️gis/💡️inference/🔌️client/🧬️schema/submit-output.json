@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gis:document-http/submit-output",
+  "$ref": "#/$defs/GisMapInferencePortReceipt",
+  "$defs": {
+    "GisMapInferencePortReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "jobId",
+        "state",
+        "proposalState",
+        "proposalHash",
+        "cursor",
+        "expiresAtMs"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.inference-job-receipt/v1"
+        },
+        "jobId": {
+          "$ref": "#/$defs/GisMapInferencePortHex32"
+        },
+        "state": {
+          "$ref": "#/$defs/GisMapInferencePortJobState"
+        },
+        "proposalState": {
+          "$ref": "#/$defs/GisMapInferencePortProposalState"
+        },
+        "proposalHash": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/GisMapInferencePortHex64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cursor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16
+        },
+        "expiresAtMs": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "GisMapInferencePortHex64": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "GisMapInferencePortProposalState": {
+      "enum": [
+        "none",
+        "offered",
+        "approved",
+        "stale",
+        "cancelled"
+      ]
+    },
+    "GisMapInferencePortJobState": {
+      "enum": [
+        "accepted",
+        "running",
+        "succeeded",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "GisMapInferencePortHex32": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    }
+  }
+}

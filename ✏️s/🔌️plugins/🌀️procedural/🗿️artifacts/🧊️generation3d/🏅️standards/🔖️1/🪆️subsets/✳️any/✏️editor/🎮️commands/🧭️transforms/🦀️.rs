@@ -12,16 +12,19 @@ pub fn selection_ids(ids: &[String], fallback: &[String]) -> Vec<String> {
     if ids.is_empty() { fallback.to_vec() } else { ids.to_vec() }
 }
 
-/// 🧷️ Accepts a pinned gesture instance only while the same component set continues through its transforms.
-pub fn validate_component_gesture(snapshot: &FlowHostSnapshot, instances: &[String], selected: &[String]) -> Result<(), Fault> {
-    if instances.is_empty() || selected.is_empty() { return Ok(()); }
+/// 🧷️ Accepts pinned components only while the same set continues through its transforms.
+pub fn validate_component_gesture(snapshot: &FlowHostSnapshot, pinned: &[String], selected: &[String]) -> Result<(), Fault> {
+    if pinned.is_empty() { return Ok(()); }
+    let (origin, pinned_components) = component_group(pinned).map_err(Fault::from)?;
     let (target, components) = component_group(selected).map_err(Fault::from)?;
-    if instances.len() != 1 { return Err(Fault::from("Transform components of one mesh at a time")); }
+    if origin.granularity != target.granularity || origin.index != target.index || pinned_components != components {
+        return Err(Fault::from("The component selection changed during the transform"));
+    }
     let mut widget_id = target.widget;
     let mut channel = target.channel;
     let mut visited = std::collections::BTreeSet::new();
     while visited.insert(widget_id) {
-        if instances[0] == widget_id || instances[0] == format!("{widget_id}@{channel}#{}", target.index) { return Ok(()); }
+        if origin.widget == widget_id && origin.channel == channel { return Ok(()); }
         let Some(Widget::Neuron { neuron_kind, params, .. }) = snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == widget_id) else { break };
         if !matches!(neuron_kind.as_str(), "brep.mesh.translateComponents" | "brep.mesh.rotateComponents" | "brep.mesh.scaleComponents") || channel != "meshOut" { break; }
         let text = |key| params.get(key).and_then(|value| value.as_dictionary()).and_then(|value| value.get("value")).and_then(|value| value.as_atom()).and_then(|value| value.as_str());

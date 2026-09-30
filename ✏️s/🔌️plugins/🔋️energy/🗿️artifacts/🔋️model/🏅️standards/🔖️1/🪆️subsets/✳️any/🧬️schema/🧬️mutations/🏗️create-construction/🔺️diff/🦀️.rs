@@ -7,7 +7,7 @@ use crate::EnergyModelSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateConstruction, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
     if base.model.constructions.iter().any(|item| item.id == payload.id) {
-        return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Construction {} already exists.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Construction {} already exists.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.constructions.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} constructions.", payload.index, base.model.constructions.len()), [payload.id.0.to_string()]);

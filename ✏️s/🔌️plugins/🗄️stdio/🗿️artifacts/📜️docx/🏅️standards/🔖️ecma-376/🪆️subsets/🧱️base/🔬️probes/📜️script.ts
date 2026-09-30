@@ -15,9 +15,11 @@
 // the SAME typed view `../🔣️oracle.json`'s `semantic-docx-ecma-376-mutate-v1` comparisonProfile
 // documents: `body` (the ordered `w:body` block tree — paragraphs with style ref + ordered runs,
 // tables with ordered rows/cells, recursively) and `styles` (the ordered `w:styles` list, id/name/
-// basedOn), both order-sensitive; every OTHER real OPC part compared by content-type + digest as an
-// unordered path-keyed map; `[Content_Types].xml` and every `*.rels` part excluded entirely as
-// regenerated OPC plumbing. This file performs no mutation semantics of its own.
+// basedOn), both order-sensitive, run flags read as ECMA-376's ST_OnOff toggles (`<w:b w:val="0"/>` is not bold);
+// every OTHER real OPC part compared by content-type + digest as an unordered path-keyed map — the digest of an
+// XML-bearing part taken over its logical content, since its bytes are writer freedom exactly as `word/document.xml`'s
+// are; `[Content_Types].xml` and every `*.rels` part excluded entirely as regenerated OPC plumbing. This file performs
+// no mutation semantics of its own.
 //
 // Usage — one probe per invocation, one typed report on stdout:
 //   bun 📜️script.ts docx-import  --input <a.docx>
@@ -106,11 +108,17 @@ function digestOf(bytes: Buffer): string {
   return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
 }
 
+/** 🔘️ An ST_OnOff toggle (ECMA-376 Part 1 §17.17.4): present and not switched off by `w:val` `0`/`false`/`off`. */
+function onOff(node: PNode | undefined): boolean {
+  return node !== undefined && !["0", "false", "off"].includes(attr(node, "w:val") ?? "true");
+}
+
 function walkRun(node: PNode): ProjectedRun {
   const rPr = findChild(node, "w:rPr");
-  const bold = rPr !== undefined && findChild(rPr, "w:b") !== undefined;
-  const italic = rPr !== undefined && findChild(rPr, "w:i") !== undefined;
-  const underline = rPr !== undefined && findChild(rPr, "w:u") !== undefined;
+  const bold = rPr !== undefined && onOff(findChild(rPr, "w:b"));
+  const italic = rPr !== undefined && onOff(findChild(rPr, "w:i"));
+  const u = rPr !== undefined ? findChild(rPr, "w:u") : undefined;
+  const underline = u !== undefined && attr(u, "w:val") !== "none";
   const t = findChild(node, "w:t");
   return { text: t !== undefined ? textOf(t) : "", bold, italic, underline };
 }
@@ -167,6 +175,22 @@ function resolveContentType(contentTypes: ContentTypes, path: string): string {
   return contentTypes.defaults.get(ext) ?? "application/octet-stream";
 }
 
+/** 🧾️ Whether a part carries XML (ECMA-376 Part 2 §10.1.2.2): an `+xml`/`/xml` content type or an `.xml` name. */
+function isXmlPart(path: string, contentType: string): boolean {
+  return contentType.endsWith("+xml") || contentType.endsWith("/xml") || path.toLowerCase().endsWith(".xml");
+}
+
+/** 🌿️ An XML part's logical content — element names, attributes keyed by name, text and document order — as
+ *  one canonical string, so the digest over it moves with the content and never with the writer's layout of it
+ *  (line ends, whitespace inside a start tag, attribute order, quote style). */
+function logicalXml(nodes: PNode[]): unknown[] {
+  return nodes.map((node) => {
+    if ("#text" in node) return node["#text"];
+    const attributes = Object.entries(node[":@"] ?? {}).sort(([left], [right]) => left.localeCompare(right));
+    return [tagOf(node), attributes, logicalXml(kids(node))];
+  });
+}
+
 /** 📎️ Every real OPC part beyond `word/document.xml`/`word/styles.xml` — `[Content_Types].xml` and
  *  every `*.rels` part are excluded entirely, exactly as `semantic-docx-ecma-376-mutate-v1` documents:
  *  both sides regenerate them deterministically from the typed content-types/relationships tables, and
@@ -203,7 +227,9 @@ async function readDocx(path: string): Promise<DocxProjection> {
   for (const entry of entries) {
     if (entry.name === "word/document.xml" || entry.name === "word/styles.xml" || isExcludedFromOtherParts(entry.name)) continue;
     const bytes2 = await entry.async("nodebuffer");
-    otherParts[entry.name] = { contentType: resolveContentType(contentTypes, entry.name), digest: digestOf(bytes2), size: bytes2.length };
+    const contentType = resolveContentType(contentTypes, entry.name);
+    const content = isXmlPart(entry.name, contentType) ? Buffer.from(JSON.stringify(logicalXml(XML.parse(bytes2.toString("utf8")) as PNode[]))) : bytes2;
+    otherParts[entry.name] = { contentType, digest: digestOf(content), size: content.length };
   }
 
   return { body, styles, otherParts };

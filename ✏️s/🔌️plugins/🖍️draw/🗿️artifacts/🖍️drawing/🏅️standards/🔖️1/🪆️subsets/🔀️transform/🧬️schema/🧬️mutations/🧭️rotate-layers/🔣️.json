@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🧭️rotate-layers",
+  "semanticKind": "rotate-layers",
+  "displayName": "Rotate Layers",
+  "emoji": "🧭️",
+  "aggregateVariant": "RotateLayers",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "rotate-layers",
+  "binaryTag": 19,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

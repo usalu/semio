@@ -1,0 +1,6 @@
+{
+  "ChangeVentDuctClass": {
+    "ventId": "vent-central",
+    "newDuctClass": "D"
+  }
+}

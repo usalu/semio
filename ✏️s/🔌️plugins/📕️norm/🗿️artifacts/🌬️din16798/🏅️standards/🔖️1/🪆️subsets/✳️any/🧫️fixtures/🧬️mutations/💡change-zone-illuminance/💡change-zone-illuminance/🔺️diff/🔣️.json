@@ -1,0 +1,39 @@
+{
+  "artifact": null,
+  "annex": null,
+  "thetaRmC": null,
+  "outdoorCo2Ppm": null,
+  "zones": {
+    "values": [
+      {
+        "id": "zone-office",
+        "name": "Open office",
+        "usageType": "office",
+        "floorAreaM2": 200.0,
+        "occupants": 20,
+        "comfortCategory": "II",
+        "pollutionClass": "low",
+        "comfortModel": "fixed_hvac",
+        "tOpWinterC": 22.0,
+        "tOpSummerC": 24.5,
+        "airSpeedMS": 0.1,
+        "clothingClo": 0.5,
+        "metabolicRateMet": 1.2,
+        "rhPercent": 45.0,
+        "outdoorAirSuppliedM3H": 1008.0,
+        "co2Ppm": 900.0,
+        "illuminanceLx": 750.0,
+        "noiseDb": 34.0,
+        "turbulenceIntensityPercent": 40.0,
+        "ventMethod": "method_1_perceived_air_quality",
+        "ventSystemId": "vent-central"
+      }
+    ]
+  },
+  "ventSystems": null,
+  "envelopeN50HInv": null,
+  "envelopeVolumeM3": null,
+  "cellarAreaM2": null,
+  "cellarVentilationM3H": null,
+  "nightSetbackK": null
+}

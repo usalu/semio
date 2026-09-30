@@ -2146,7 +2146,7 @@ export function conflictResolutionFromU8(value: number): ConflictResolution | un
 /** 📨️ One outcome-carried diagnostic from a `Mutation`/`MutationKind::diff` — TS twin of
  * Rust `MutationMessage` (`📡️spr/🎮️command/🦀️.rs` region `🔖️Message`,
  * `#[serde(rename_all = "camelCase")]`). `level` reuses {@link Severity}; `code` is one of the
- * frozen seven `mutation.*` codes (contract-freeze §C2 — no per-plugin codes, ever); `message` is
+ * frozen nine `mutation.*` codes (contract-freeze §C2 plus the 2026-09-30 state-dependent Error codes — no per-plugin codes, ever); `message` is
  * English prose (UI localizes by `code`, never by parsing `message`); `target`/`opIndex` are
  * `#[serde(skip_serializing_if)]` on the Rust side, so both are absent (not merely empty) from the
  * pack-decoded JSON when unset. */
@@ -2227,7 +2227,7 @@ export type EditMessages = { readonly edit_id: string; readonly messages: readon
 
 /** 📤️ The report one LOCAL dispatch produces — TS twin of Rust `DispatchReport`. Packed onto
  * the wire as `AppFrame::Invocation.messages` (successful dispatch) and `AppFrame::Error.report`
- * (rejected dispatch, `Fault.code == "mutation.rejected"`). */
+ * (rejected dispatch, `Fault.code == "app.command.rejected"`). */
 export type DispatchReport = {
   readonly policy: MergePolicy;
   readonly worst: Severity | null;

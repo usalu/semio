@@ -1,0 +1,49 @@
+{
+  "artifact": null,
+  "annex": null,
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "loadCases": null,
+  "memberActions": null,
+  "joints": null,
+  "fatigueDetails": {
+    "values": [
+      {
+        "id": "fat-1",
+        "memberId": "member-b1",
+        "category": 90,
+        "method": "safe_life",
+        "spectrum": [
+          {
+            "id": "fb-1",
+            "deltaSigma": 95000000.0,
+            "cycles": 2000000.0
+          }
+        ]
+      },
+      {
+        "id": "fat-1-2",
+        "memberId": "member-b1",
+        "category": 90,
+        "method": "safe_life",
+        "spectrum": [
+          {
+            "id": "fb-1",
+            "deltaSigma": 95000000.0,
+            "cycles": 2000000.0
+          }
+        ]
+      }
+    ]
+  },
+  "fireExposures": null,
+  "coldFormedMembers": null,
+  "platedPanels": null,
+  "siloShells": null,
+  "tensionComponents": null,
+  "bridgeFatigue": null,
+  "towerLegs": null,
+  "piles": null,
+  "craneRunways": null
+}

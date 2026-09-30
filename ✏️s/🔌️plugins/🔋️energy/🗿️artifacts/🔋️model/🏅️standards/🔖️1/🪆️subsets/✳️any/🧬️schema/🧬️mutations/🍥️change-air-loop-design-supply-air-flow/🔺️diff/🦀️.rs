@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeAirLoopDesignSupplyAirFlow, base: &EnergyMode
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Air loop {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_design_supply_air_flow_m3_s.is_finite() || payload.new_design_supply_air_flow_m3_s <= 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("A design supply air flow must be a positive finite number, got {}.", payload.new_design_supply_air_flow_m3_s), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("A design supply air flow must be a positive finite number, got {}.", payload.new_design_supply_air_flow_m3_s), [payload.id.0.to_string()]);
     }
     if existing.design_supply_air_flow_m3_s == payload.new_design_supply_air_flow_m3_s {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Air loop {} already has that design supply air flow.", payload.id.0));

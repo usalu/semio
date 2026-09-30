@@ -66,7 +66,7 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   (`shared://🎨️replace-palette-entry-applied/⬅️before.bmp`) — the same palette storage the real
   plan has, so the row still lands on an indexed document.
 
-  ⚠️ KNOWN OPEN DIVERGENCE — `mutate-raster-replace-pixel-data` (this case's parity ratio is recorded
+  ⚠️ KNOWN OPEN DIVERGENCE — `mutate-replace-pixel-data` (this case's parity ratio is recorded
   in the ticket, not here). The row fills the
   whole raster with rgb(200,40,40), a colour the 7-entry table has no entry for. The
   oracle answers by switching the document to 24-bit direct colour (`storage: direct`,
@@ -98,7 +98,7 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
       | remove-palette-entry | {"index":239} |
       | replace-palette-entry | {"index":239,"entry":{"b":1,"g":2,"r":3,"reserved":0}} |
 
-  @id-mutate-raster
+  @id-mutate
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to a small indexed document
@@ -131,7 +131,7 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
       | remove-palette-entry | {"index":239} |
       | replace-palette-entry | {"index":239,"entry":{"b":1,"g":2,"r":3,"reserved":0}} |
 
-  @id-inverse-raster
+  @id-inverse
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores a small indexed document

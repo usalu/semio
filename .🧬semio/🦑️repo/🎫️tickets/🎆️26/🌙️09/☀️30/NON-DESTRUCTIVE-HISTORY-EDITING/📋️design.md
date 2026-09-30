@@ -259,3 +259,39 @@ Negative witnesses (11:45): a fixture whose outcome is a refusal with `mutation.
 Value ranges are hard bounds in the schema; state-dependent refusals use `target-missing`/`duplicate-id`; payload-intrinsic
 cross-field invariants that draft-07 cannot state are declared in the leaf schema's `x-semio-invariant: [{id,
 description{en,de}}]` and the refusal outcome names `"invariant": "<id>"`.
+
+Outcome-code vocabulary extension (18:20): the frozen set grows from 7 to 9 generic codes — `mutation.target-referenced`
+(Error; the target is still referenced) and `mutation.target-mismatch` (Error; the payload is inconsistent with the
+target's current state). No per-plugin codes. Enforced at persistence (`expected_mutation_message_level`), in the
+outcome-law gate, the TS twins, i18n (en/de) and the oracles.
+
+## 12. Composed children (coordinator decision, 22:10)
+
+Every mutation in history is editable, including ops that land in an owned composed-child store (flow's
+`s.stdio.semio@v1/flow` content child is the first consumer; owner of the change: W3-T-FLOWCAD).
+
+- **Transactions span parent + owned children.** `Emit.transaction` together with `child_emits` is legal; the same
+  `TransactionRef` is stamped on every op of the gesture in whichever store it lands (parent and child lanes).
+  `tool_transaction_shape_fault` keeps refusing only a coalesced amend and children the app does not own.
+- **History lists child-member mutations**, grouped by `TransactionRef`, labelled from the child leaf, keyed by the owning
+  store: `HistoryMutationEntry.store` (member id `<slot>/<childId>`; absent = the app's own document store).
+- **Time travel on a child mutation** targets that member store (`historyEditBegin{mutationId, store?}`):
+  `state_before` / `begin_report_replay` / `commit_finished_replay` run on the child store; after accept/finalize the parent
+  re-derives from the replayed child (a stale parent scene never re-mints or retires the live child). Downstream parent
+  mutations that depend on the child replay report outcomes the same way.
+- **Flow**: relative child leaf `translate-nodes {targets, dx, dy}` in the stdio semio flow subset; flow drag tool machine;
+  React host journals node drags as `move` rows like wgpu; no per-tick amend and no whole-snapshot `SetSnapshot` for drags.
+
+## §13 Wave-2 tool decisions (coordinator, from `📓️audit-remaining-tools.md` §6)
+
+1. Continuous controls: ONE `ScrubMachine<M>` in `🛠️tool-machine` (idle → scrubbing; Tick/Commit/Abort{blur|captureLost|frozen|baseMoved|retired};
+   Upsert replace-by-key + Commit). The runtime routes any action whose args carry `gesture` (+ `commit`) into a runner persisted in the
+   window transient (like puzzle 2d `select_tool`) and emits `Emit::commit_transaction` on commit. The leaf is the ABSOLUTE set
+   (`set-x{target, value}`) — for a slider the intent is the value. Plugins only supply the leaf constructor. No plugin-local scrub machines.
+2. Typing: a typing run is a tool machine yielding ONE net leaf per commit (prose: net `splice-text`; single buffers: final text;
+   structured text: explicit Apply via `TextWindowKit`). Commit on idle (≤ 1 s), caret jump, blur, Enter (single-line), pagehide /
+   visibilitychange, explicit apply, any non-typing verb; abort only on baseMoved conflict / frozen time travel. The pending run is
+   published as EPHEMERAL SHARED preview (presence) so co-editors see typing live without history micro-mutations. Short single-line
+   fields: `commit("blur")` + Enter = one dispatch. `Emit::amend`/`AmendLast` and static coalesce keys are deleted at closure.
+3. Node-graph guests: the flow executor defines the gesture record `{gestureId, kind: move, nodeIds, dx, dy}` + composed-child
+   transactions (§12); guests implement `move-nodes{ids, dx, dy}` + reuse the node-drag machine.

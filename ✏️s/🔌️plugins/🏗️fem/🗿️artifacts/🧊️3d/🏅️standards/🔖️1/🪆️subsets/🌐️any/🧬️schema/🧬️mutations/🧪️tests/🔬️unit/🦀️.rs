@@ -404,11 +404,12 @@ async fn replace_combination_missing_target_is_error() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn replace_node_rename_is_fatal() {
+async fn replace_node_rename_is_a_target_mismatch_error() {
     let (base, ..) = cantilever_fixture();
     let outcome = Fem3dMutation::ReplaceNode(replace_node::ReplaceNode { id: "n1".into(), new_node: FemNode { id: "n9".into(), x: 0.0, y: 0.0, z: 0.0 } }).diff(&base);
-    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Error));
+    assert_eq!(outcome.messages()[0].code.0, "mutation.target-mismatch");
+    assert_eq!(*outcome.diff(), Fem3dDiff::default());
 }
 
 #[semio_framework_async_macros::async_test]

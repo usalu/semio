@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.din16798` — checked against PyPI, which serves no `din16798`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../../../../../🧪️tests/mutate-din16798-1/🐍️component.py`, all 62 kinds of `Din16798Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `din16798-1-mutate`'s external-oracle requirement for its 62-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 62 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.din16798` — checked against PyPI, which serves no `din16798`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../🧪️tests/🌬️mutate-din16798-1/🐍️.py` (engine `✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🐍️.py`), all 41 kinds of `Din16798Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `din16798-1-mutate`'s external-oracle requirement for its 41-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 41 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -49,7 +49,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": "📓️taxonomy.md; 📓️derivation-rules.md; .dsl.semio",
         "fixtureCoverage": {
-          "vectors": 62,
+          "vectors": 41,
           "capabilitiesCovered": [
             "din16798-1-mutate"
           ]
@@ -71,7 +71,7 @@
           "mutationDirectoryName": "🌍️change-annex",
           "scenarios": [
             {
-              "id": "smoke-change-annex",
+              "id": "change-annex",
               "directoryName": "🌍️change-annex"
             }
           ]
@@ -82,7 +82,7 @@
           "mutationDirectoryName": "🔄️change-theta-rm",
           "scenarios": [
             {
-              "id": "smoke-change-theta-rm",
+              "id": "change-theta-rm",
               "directoryName": "🔄️change-theta-rm"
             }
           ]
@@ -93,7 +93,7 @@
           "mutationDirectoryName": "🌫️change-outdoor-co2",
           "scenarios": [
             {
-              "id": "smoke-change-outdoor-co2",
+              "id": "change-outdoor-co2",
               "directoryName": "🌫️change-outdoor-co2"
             }
           ]
@@ -104,7 +104,7 @@
           "mutationDirectoryName": "🏠️change-envelope-n50",
           "scenarios": [
             {
-              "id": "smoke-change-envelope-n50",
+              "id": "change-envelope-n50",
               "directoryName": "🏠️change-envelope-n50"
             }
           ]
@@ -115,7 +115,7 @@
           "mutationDirectoryName": "📦️change-envelope-volume",
           "scenarios": [
             {
-              "id": "smoke-change-envelope-volume",
+              "id": "change-envelope-volume",
               "directoryName": "📦️change-envelope-volume"
             }
           ]
@@ -126,7 +126,7 @@
           "mutationDirectoryName": "🏚️change-cellar-area",
           "scenarios": [
             {
-              "id": "smoke-change-cellar-area",
+              "id": "change-cellar-area",
               "directoryName": "🏚️change-cellar-area"
             }
           ]
@@ -137,7 +137,7 @@
           "mutationDirectoryName": "🌀change-cellar-ventilation",
           "scenarios": [
             {
-              "id": "smoke-change-cellar-ventilation",
+              "id": "change-cellar-ventilation",
               "directoryName": "🌀change-cellar-ventilation"
             }
           ]
@@ -148,7 +148,7 @@
           "mutationDirectoryName": "🌙️change-night-setback",
           "scenarios": [
             {
-              "id": "smoke-change-night-setback",
+              "id": "change-night-setback",
               "directoryName": "🌙️change-night-setback"
             }
           ]
@@ -159,7 +159,7 @@
           "mutationDirectoryName": "➕️insert-zone",
           "scenarios": [
             {
-              "id": "smoke-insert-zone",
+              "id": "insert-zone",
               "directoryName": "➕️insert-zone"
             }
           ]
@@ -170,7 +170,7 @@
           "mutationDirectoryName": "➖️remove-zone",
           "scenarios": [
             {
-              "id": "smoke-remove-zone",
+              "id": "remove-zone",
               "directoryName": "➖️remove-zone"
             }
           ]
@@ -181,7 +181,7 @@
           "mutationDirectoryName": "🏢️change-zone-usage-type",
           "scenarios": [
             {
-              "id": "smoke-change-zone-usage-type",
+              "id": "change-zone-usage-type",
               "directoryName": "🏢️change-zone-usage-type"
             }
           ]
@@ -192,7 +192,7 @@
           "mutationDirectoryName": "📐️change-zone-floor-area",
           "scenarios": [
             {
-              "id": "smoke-change-zone-floor-area",
+              "id": "change-zone-floor-area",
               "directoryName": "📐️change-zone-floor-area"
             }
           ]
@@ -203,7 +203,7 @@
           "mutationDirectoryName": "👥️change-zone-occupants",
           "scenarios": [
             {
-              "id": "smoke-change-zone-occupants",
+              "id": "change-zone-occupants",
               "directoryName": "👥️change-zone-occupants"
             }
           ]
@@ -214,7 +214,7 @@
           "mutationDirectoryName": "🛋️change-zone-comfort-category",
           "scenarios": [
             {
-              "id": "smoke-change-zone-comfort-category",
+              "id": "change-zone-comfort-category",
               "directoryName": "🛋️change-zone-comfort-category"
             }
           ]
@@ -225,7 +225,7 @@
           "mutationDirectoryName": "🏭️change-zone-pollution-class",
           "scenarios": [
             {
-              "id": "smoke-change-zone-pollution-class",
+              "id": "change-zone-pollution-class",
               "directoryName": "🏭️change-zone-pollution-class"
             }
           ]
@@ -236,7 +236,7 @@
           "mutationDirectoryName": "🧭️change-zone-comfort-model",
           "scenarios": [
             {
-              "id": "smoke-change-zone-comfort-model",
+              "id": "change-zone-comfort-model",
               "directoryName": "🧭️change-zone-comfort-model"
             }
           ]
@@ -247,7 +247,7 @@
           "mutationDirectoryName": "❄️change-zone-t-op-winter",
           "scenarios": [
             {
-              "id": "smoke-change-zone-t-op-winter",
+              "id": "change-zone-t-op-winter",
               "directoryName": "❄️change-zone-t-op-winter"
             }
           ]
@@ -258,7 +258,7 @@
           "mutationDirectoryName": "☀️change-zone-t-op-summer",
           "scenarios": [
             {
-              "id": "smoke-change-zone-t-op-summer",
+              "id": "change-zone-t-op-summer",
               "directoryName": "☀️change-zone-t-op-summer"
             }
           ]
@@ -269,7 +269,7 @@
           "mutationDirectoryName": "💨change-zone-air-speed",
           "scenarios": [
             {
-              "id": "smoke-change-zone-air-speed",
+              "id": "change-zone-air-speed",
               "directoryName": "💨change-zone-air-speed"
             }
           ]
@@ -280,7 +280,7 @@
           "mutationDirectoryName": "👔change-zone-clothing",
           "scenarios": [
             {
-              "id": "smoke-change-zone-clothing",
+              "id": "change-zone-clothing",
               "directoryName": "👔change-zone-clothing"
             }
           ]
@@ -291,7 +291,7 @@
           "mutationDirectoryName": "🏃️change-zone-metabolic-rate",
           "scenarios": [
             {
-              "id": "smoke-change-zone-metabolic-rate",
+              "id": "change-zone-metabolic-rate",
               "directoryName": "🏃️change-zone-metabolic-rate"
             }
           ]
@@ -302,7 +302,7 @@
           "mutationDirectoryName": "💧️change-zone-rh",
           "scenarios": [
             {
-              "id": "smoke-change-zone-rh",
+              "id": "change-zone-rh",
               "directoryName": "💧️change-zone-rh"
             }
           ]
@@ -313,7 +313,7 @@
           "mutationDirectoryName": "💨️change-zone-outdoor-air",
           "scenarios": [
             {
-              "id": "smoke-change-zone-outdoor-air",
+              "id": "change-zone-outdoor-air",
               "directoryName": "💨️change-zone-outdoor-air"
             }
           ]
@@ -324,7 +324,7 @@
           "mutationDirectoryName": "🫧change-zone-co2",
           "scenarios": [
             {
-              "id": "smoke-change-zone-co2",
+              "id": "change-zone-co2",
               "directoryName": "🫧change-zone-co2"
             }
           ]
@@ -335,7 +335,7 @@
           "mutationDirectoryName": "💡change-zone-illuminance",
           "scenarios": [
             {
-              "id": "smoke-change-zone-illuminance",
+              "id": "change-zone-illuminance",
               "directoryName": "💡change-zone-illuminance"
             }
           ]
@@ -346,7 +346,7 @@
           "mutationDirectoryName": "🔊️change-zone-noise",
           "scenarios": [
             {
-              "id": "smoke-change-zone-noise",
+              "id": "change-zone-noise",
               "directoryName": "🔊️change-zone-noise"
             }
           ]
@@ -357,7 +357,7 @@
           "mutationDirectoryName": "🔗change-zone-vent-system-id",
           "scenarios": [
             {
-              "id": "smoke-change-zone-vent-system-id",
+              "id": "change-zone-vent-system-id",
               "directoryName": "🔗change-zone-vent-system-id"
             }
           ]
@@ -368,7 +368,7 @@
           "mutationDirectoryName": "💨change-zone-turbulence",
           "scenarios": [
             {
-              "id": "smoke-change-zone-turbulence",
+              "id": "change-zone-turbulence",
               "directoryName": "💨change-zone-turbulence"
             }
           ]
@@ -379,7 +379,7 @@
           "mutationDirectoryName": "📐️change-zone-vent-method",
           "scenarios": [
             {
-              "id": "smoke-change-zone-vent-method",
+              "id": "change-zone-vent-method",
               "directoryName": "📐️change-zone-vent-method"
             }
           ]
@@ -390,7 +390,7 @@
           "mutationDirectoryName": "🆕️insert-vent-system",
           "scenarios": [
             {
-              "id": "smoke-insert-vent-system",
+              "id": "insert-vent-system",
               "directoryName": "🆕️insert-vent-system"
             }
           ]
@@ -401,7 +401,7 @@
           "mutationDirectoryName": "🗑️remove-vent-system",
           "scenarios": [
             {
-              "id": "smoke-remove-vent-system",
+              "id": "remove-vent-system",
               "directoryName": "🗑️remove-vent-system"
             }
           ]
@@ -412,7 +412,7 @@
           "mutationDirectoryName": "⚙️change-vent-system-type",
           "scenarios": [
             {
-              "id": "smoke-change-vent-system-type",
+              "id": "change-vent-system-type",
               "directoryName": "⚙️change-vent-system-type"
             }
           ]
@@ -423,7 +423,7 @@
           "mutationDirectoryName": "🌀️change-vent-sfp",
           "scenarios": [
             {
-              "id": "smoke-change-vent-sfp",
+              "id": "change-vent-sfp",
               "directoryName": "🌀️change-vent-sfp"
             }
           ]
@@ -434,7 +434,7 @@
           "mutationDirectoryName": "🎓️change-vent-sfp-class",
           "scenarios": [
             {
-              "id": "smoke-change-vent-sfp-class",
+              "id": "change-vent-sfp-class",
               "directoryName": "🎓️change-vent-sfp-class"
             }
           ]
@@ -445,7 +445,7 @@
           "mutationDirectoryName": "♻️change-vent-heat-recovery",
           "scenarios": [
             {
-              "id": "smoke-change-vent-heat-recovery",
+              "id": "change-vent-heat-recovery",
               "directoryName": "♻️change-vent-heat-recovery"
             }
           ]
@@ -456,7 +456,7 @@
           "mutationDirectoryName": "🏞️change-vent-oda-class",
           "scenarios": [
             {
-              "id": "smoke-change-vent-oda-class",
+              "id": "change-vent-oda-class",
               "directoryName": "🏞️change-vent-oda-class"
             }
           ]
@@ -467,7 +467,7 @@
           "mutationDirectoryName": "🧽change-vent-filter-sup",
           "scenarios": [
             {
-              "id": "smoke-change-vent-filter-sup",
+              "id": "change-vent-filter-sup",
               "directoryName": "🧽change-vent-filter-sup"
             }
           ]
@@ -478,7 +478,7 @@
           "mutationDirectoryName": "📅️change-vent-inspection",
           "scenarios": [
             {
-              "id": "smoke-change-vent-inspection",
+              "id": "change-vent-inspection",
               "directoryName": "📅️change-vent-inspection"
             }
           ]
@@ -489,7 +489,7 @@
           "mutationDirectoryName": "🧱change-vent-duct-class",
           "scenarios": [
             {
-              "id": "smoke-change-vent-duct-class",
+              "id": "change-vent-duct-class",
               "directoryName": "🧱change-vent-duct-class"
             }
           ]
@@ -500,7 +500,7 @@
           "mutationDirectoryName": "🕳️change-vent-duct-leakage",
           "scenarios": [
             {
-              "id": "smoke-change-vent-duct-leakage",
+              "id": "change-vent-duct-leakage",
               "directoryName": "🕳️change-vent-duct-leakage"
             }
           ]
@@ -511,11 +511,54 @@
           "mutationDirectoryName": "🌬️change-vent-design-airflow",
           "scenarios": [
             {
-              "id": "smoke-change-vent-design-airflow",
+              "id": "change-vent-design-airflow",
               "directoryName": "🌬️change-vent-design-airflow"
             }
           ]
         }
+      ],
+      "kinds": [
+        "change-annex",
+        "change-theta-rm",
+        "change-outdoor-co2",
+        "change-envelope-n50",
+        "change-envelope-volume",
+        "change-cellar-area",
+        "change-cellar-ventilation",
+        "change-night-setback",
+        "insert-zone",
+        "remove-zone",
+        "change-zone-usage-type",
+        "change-zone-floor-area",
+        "change-zone-occupants",
+        "change-zone-comfort-category",
+        "change-zone-pollution-class",
+        "change-zone-comfort-model",
+        "change-zone-t-op-winter",
+        "change-zone-t-op-summer",
+        "change-zone-air-speed",
+        "change-zone-clothing",
+        "change-zone-metabolic-rate",
+        "change-zone-rh",
+        "change-zone-outdoor-air",
+        "change-zone-co2",
+        "change-zone-illuminance",
+        "change-zone-noise",
+        "change-zone-vent-system-id",
+        "change-zone-turbulence",
+        "change-zone-vent-method",
+        "insert-vent-system",
+        "remove-vent-system",
+        "change-vent-system-type",
+        "change-vent-sfp",
+        "change-vent-sfp-class",
+        "change-vent-heat-recovery",
+        "change-vent-oda-class",
+        "change-vent-filter-sup",
+        "change-vent-inspection",
+        "change-vent-duct-class",
+        "change-vent-duct-leakage",
+        "change-vent-design-airflow"
       ]
     }
   ],
@@ -529,33 +572,13 @@
       "subsetDirectoryName": "✳️any",
       "mutations": [
         {
-          "id": "change-air-speed-ms",
+          "id": "change-annex",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-air-speed-ms",
-            "bridgeVersion": 1,
-            "variant": "ChangeAirSpeedMS"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-annex",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
           ],
           "productionDispatch": {
             "operation": "change-annex",
@@ -570,27 +593,7 @@
           ]
         },
         {
-          "id": "change-bedrooms",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-bedrooms",
-            "bridgeVersion": 1,
-            "variant": "ChangeBedrooms"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-cellar-area-m2",
+          "id": "change-theta-rm",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -599,9 +602,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-cellar-area-m2",
+            "operation": "change-theta-rm",
             "bridgeVersion": 1,
-            "variant": "ChangeCellarAreaM2"
+            "variant": "ChangeThetaRm"
           },
           "oracleRequirements": [
             {
@@ -611,7 +614,7 @@
           ]
         },
         {
-          "id": "change-cellar-ventilation-m3-h",
+          "id": "change-outdoor-co2",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -620,9 +623,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-cellar-ventilation-m3-h",
+            "operation": "change-outdoor-co2",
             "bridgeVersion": 1,
-            "variant": "ChangeCellarVentilationM3H"
+            "variant": "ChangeOutdoorCo2"
           },
           "oracleRequirements": [
             {
@@ -632,27 +635,7 @@
           ]
         },
         {
-          "id": "change-chiller-type",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-chiller-type",
-            "bridgeVersion": 1,
-            "variant": "ChangeChillerType"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-co2-ppm",
+          "id": "change-envelope-n50",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -661,9 +644,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-co2-ppm",
+            "operation": "change-envelope-n50",
             "bridgeVersion": 1,
-            "variant": "ChangeCo2Ppm"
+            "variant": "ChangeEnvelopeN50"
           },
           "oracleRequirements": [
             {
@@ -673,27 +656,7 @@
           ]
         },
         {
-          "id": "change-comfort-category",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-comfort-category",
-            "bridgeVersion": 1,
-            "variant": "ChangeComfortCategory"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-cooling-delta-th",
+          "id": "change-envelope-volume",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -702,9 +665,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-cooling-delta-th",
+            "operation": "change-envelope-volume",
             "bridgeVersion": 1,
-            "variant": "ChangeCoolingDeltaTH"
+            "variant": "ChangeEnvelopeVolume"
           },
           "oracleRequirements": [
             {
@@ -714,7 +677,7 @@
           ]
         },
         {
-          "id": "change-cooling-gains-kwh",
+          "id": "change-cellar-area",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -723,9 +686,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-cooling-gains-kwh",
+            "operation": "change-cellar-area",
             "bridgeVersion": 1,
-            "variant": "ChangeCoolingGainsKwh"
+            "variant": "ChangeCellarArea"
           },
           "oracleRequirements": [
             {
@@ -735,7 +698,7 @@
           ]
         },
         {
-          "id": "change-cooling-reference-kwh",
+          "id": "change-cellar-ventilation",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -744,9 +707,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-cooling-reference-kwh",
+            "operation": "change-cellar-ventilation",
             "bridgeVersion": 1,
-            "variant": "ChangeCoolingReferenceKwh"
+            "variant": "ChangeCellarVentilation"
           },
           "oracleRequirements": [
             {
@@ -756,7 +719,7 @@
           ]
         },
         {
-          "id": "change-cooling-utilization-factor",
+          "id": "change-night-setback",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -765,9 +728,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-cooling-utilization-factor",
+            "operation": "change-night-setback",
             "bridgeVersion": 1,
-            "variant": "ChangeCoolingUtilizationFactor"
+            "variant": "ChangeNightSetback"
           },
           "oracleRequirements": [
             {
@@ -777,7 +740,7 @@
           ]
         },
         {
-          "id": "change-data-center-supply-c",
+          "id": "insert-zone",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -786,9 +749,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-data-center-supply-c",
+            "operation": "insert-zone",
             "bridgeVersion": 1,
-            "variant": "ChangeDataCenterSupplyC"
+            "variant": "InsertZone"
           },
           "oracleRequirements": [
             {
@@ -798,7 +761,7 @@
           ]
         },
         {
-          "id": "change-df-percent",
+          "id": "remove-zone",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -807,9 +770,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-df-percent",
+            "operation": "remove-zone",
             "bridgeVersion": 1,
-            "variant": "ChangeDfPercent"
+            "variant": "RemoveZone"
           },
           "oracleRequirements": [
             {
@@ -819,7 +782,7 @@
           ]
         },
         {
-          "id": "change-dhw-delivery-c",
+          "id": "change-zone-usage-type",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -828,9 +791,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-dhw-delivery-c",
+            "operation": "change-zone-usage-type",
             "bridgeVersion": 1,
-            "variant": "ChangeDhwDeliveryC"
+            "variant": "ChangeZoneUsageType"
           },
           "oracleRequirements": [
             {
@@ -840,27 +803,7 @@
           ]
         },
         {
-          "id": "change-duct-class",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-duct-class",
-            "bridgeVersion": 1,
-            "variant": "ChangeDuctClass"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-duct-leakage-m3-sm2",
+          "id": "change-zone-floor-area",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -869,9 +812,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-duct-leakage-m3-sm2",
+            "operation": "change-zone-floor-area",
             "bridgeVersion": 1,
-            "variant": "ChangeDuctLeakageM3SM2"
+            "variant": "ChangeZoneFloorArea"
           },
           "oracleRequirements": [
             {
@@ -881,7 +824,7 @@
           ]
         },
         {
-          "id": "change-duct-test-pressure-pa",
+          "id": "change-zone-occupants",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -890,9 +833,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-duct-test-pressure-pa",
+            "operation": "change-zone-occupants",
             "bridgeVersion": 1,
-            "variant": "ChangeDuctTestPressurePa"
+            "variant": "ChangeZoneOccupants"
           },
           "oracleRequirements": [
             {
@@ -902,7 +845,7 @@
           ]
         },
         {
-          "id": "change-dwelling-ventilation-m3-h",
+          "id": "change-zone-comfort-category",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -911,9 +854,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-dwelling-ventilation-m3-h",
+            "operation": "change-zone-comfort-category",
             "bridgeVersion": 1,
-            "variant": "ChangeDwellingVentilationM3H"
+            "variant": "ChangeZoneComfortCategory"
           },
           "oracleRequirements": [
             {
@@ -923,7 +866,7 @@
           ]
         },
         {
-          "id": "change-eer-actual",
+          "id": "change-zone-pollution-class",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -932,9 +875,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-eer-actual",
+            "operation": "change-zone-pollution-class",
             "bridgeVersion": 1,
-            "variant": "ChangeEerActual"
+            "variant": "ChangeZonePollutionClass"
           },
           "oracleRequirements": [
             {
@@ -944,7 +887,7 @@
           ]
         },
         {
-          "id": "change-fan-energy-reference-kwh",
+          "id": "change-zone-comfort-model",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -953,9 +896,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-fan-energy-reference-kwh",
+            "operation": "change-zone-comfort-model",
             "bridgeVersion": 1,
-            "variant": "ChangeFanEnergyReferenceKwh"
+            "variant": "ChangeZoneComfortModel"
           },
           "oracleRequirements": [
             {
@@ -965,7 +908,7 @@
           ]
         },
         {
-          "id": "change-fan-qvm3-s",
+          "id": "change-zone-t-op-winter",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -974,9 +917,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-fan-qvm3-s",
+            "operation": "change-zone-t-op-winter",
             "bridgeVersion": 1,
-            "variant": "ChangeFanQVM3S"
+            "variant": "ChangeZoneTOpWinter"
           },
           "oracleRequirements": [
             {
@@ -986,7 +929,7 @@
           ]
         },
         {
-          "id": "change-fan-t-run-h",
+          "id": "change-zone-t-op-summer",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -995,9 +938,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-fan-t-run-h",
+            "operation": "change-zone-t-op-summer",
             "bridgeVersion": 1,
-            "variant": "ChangeFanTRunH"
+            "variant": "ChangeZoneTOpSummer"
           },
           "oracleRequirements": [
             {
@@ -1007,7 +950,7 @@
           ]
         },
         {
-          "id": "change-floor-area-m2",
+          "id": "change-zone-air-speed",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1016,9 +959,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-floor-area-m2",
+            "operation": "change-zone-air-speed",
             "bridgeVersion": 1,
-            "variant": "ChangeFloorAreaM2"
+            "variant": "ChangeZoneAirSpeed"
           },
           "oracleRequirements": [
             {
@@ -1028,7 +971,7 @@
           ]
         },
         {
-          "id": "change-generation-reference-kwh",
+          "id": "change-zone-clothing",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1037,9 +980,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-generation-reference-kwh",
+            "operation": "change-zone-clothing",
             "bridgeVersion": 1,
-            "variant": "ChangeGenerationReferenceKwh"
+            "variant": "ChangeZoneClothing"
           },
           "oracleRequirements": [
             {
@@ -1049,7 +992,7 @@
           ]
         },
         {
-          "id": "change-h-st-wk",
+          "id": "change-zone-metabolic-rate",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1058,9 +1001,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-h-st-wk",
+            "operation": "change-zone-metabolic-rate",
             "bridgeVersion": 1,
-            "variant": "ChangeHStWK"
+            "variant": "ChangeZoneMetabolicRate"
           },
           "oracleRequirements": [
             {
@@ -1070,7 +1013,7 @@
           ]
         },
         {
-          "id": "change-h-tr-wk",
+          "id": "change-zone-rh",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1079,9 +1022,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-h-tr-wk",
+            "operation": "change-zone-rh",
             "bridgeVersion": 1,
-            "variant": "ChangeHTrWK"
+            "variant": "ChangeZoneRh"
           },
           "oracleRequirements": [
             {
@@ -1091,7 +1034,7 @@
           ]
         },
         {
-          "id": "change-h-ve-wk",
+          "id": "change-zone-outdoor-air",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1100,9 +1043,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-h-ve-wk",
+            "operation": "change-zone-outdoor-air",
             "bridgeVersion": 1,
-            "variant": "ChangeHVeWK"
+            "variant": "ChangeZoneOutdoorAir"
           },
           "oracleRequirements": [
             {
@@ -1112,7 +1055,7 @@
           ]
         },
         {
-          "id": "change-heat-recovery-eta",
+          "id": "change-zone-co2",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1121,9 +1064,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-heat-recovery-eta",
+            "operation": "change-zone-co2",
             "bridgeVersion": 1,
-            "variant": "ChangeHeatRecoveryEta"
+            "variant": "ChangeZoneCo2"
           },
           "oracleRequirements": [
             {
@@ -1133,7 +1076,7 @@
           ]
         },
         {
-          "id": "change-heat-recovery-eta-min",
+          "id": "change-zone-illuminance",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1142,9 +1085,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-heat-recovery-eta-min",
+            "operation": "change-zone-illuminance",
             "bridgeVersion": 1,
-            "variant": "ChangeHeatRecoveryEtaMin"
+            "variant": "ChangeZoneIlluminance"
           },
           "oracleRequirements": [
             {
@@ -1154,7 +1097,7 @@
           ]
         },
         {
-          "id": "change-hr-cp-j-kgk",
+          "id": "change-zone-noise",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1163,9 +1106,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-hr-cp-j-kgk",
+            "operation": "change-zone-noise",
             "bridgeVersion": 1,
-            "variant": "ChangeHrCpJKgk"
+            "variant": "ChangeZoneNoise"
           },
           "oracleRequirements": [
             {
@@ -1175,7 +1118,7 @@
           ]
         },
         {
-          "id": "change-hr-delta-tc",
+          "id": "change-zone-vent-system-id",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1184,9 +1127,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-hr-delta-tc",
+            "operation": "change-zone-vent-system-id",
             "bridgeVersion": 1,
-            "variant": "ChangeHrDeltaTC"
+            "variant": "ChangeZoneVentSystemId"
           },
           "oracleRequirements": [
             {
@@ -1196,7 +1139,7 @@
           ]
         },
         {
-          "id": "change-hr-m-dot-kg-s",
+          "id": "change-zone-turbulence",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1205,9 +1148,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-hr-m-dot-kg-s",
+            "operation": "change-zone-turbulence",
             "bridgeVersion": 1,
-            "variant": "ChangeHrMDotKgS"
+            "variant": "ChangeZoneTurbulence"
           },
           "oracleRequirements": [
             {
@@ -1217,7 +1160,7 @@
           ]
         },
         {
-          "id": "change-hr-savings-reference-kwh",
+          "id": "change-zone-vent-method",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1226,9 +1169,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-hr-savings-reference-kwh",
+            "operation": "change-zone-vent-method",
             "bridgeVersion": 1,
-            "variant": "ChangeHrSavingsReferenceKwh"
+            "variant": "ChangeZoneVentMethod"
           },
           "oracleRequirements": [
             {
@@ -1238,7 +1181,7 @@
           ]
         },
         {
-          "id": "change-hr-th",
+          "id": "insert-vent-system",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1247,9 +1190,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-hr-th",
+            "operation": "insert-vent-system",
             "bridgeVersion": 1,
-            "variant": "ChangeHrTH"
+            "variant": "InsertVentSystem"
           },
           "oracleRequirements": [
             {
@@ -1259,7 +1202,7 @@
           ]
         },
         {
-          "id": "change-humidification-provided-kg-h",
+          "id": "remove-vent-system",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1268,9 +1211,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-humidification-provided-kg-h",
+            "operation": "remove-vent-system",
             "bridgeVersion": 1,
-            "variant": "ChangeHumidificationProvidedKgH"
+            "variant": "RemoveVentSystem"
           },
           "oracleRequirements": [
             {
@@ -1280,7 +1223,7 @@
           ]
         },
         {
-          "id": "change-humidification-required-kg-h",
+          "id": "change-vent-system-type",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1289,9 +1232,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-humidification-required-kg-h",
+            "operation": "change-vent-system-type",
             "bridgeVersion": 1,
-            "variant": "ChangeHumidificationRequiredKgH"
+            "variant": "ChangeVentSystemType"
           },
           "oracleRequirements": [
             {
@@ -1301,27 +1244,7 @@
           ]
         },
         {
-          "id": "change-ida-class",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-ida-class",
-            "bridgeVersion": 1,
-            "variant": "ChangeIdaClass"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-infiltration-allowance-m3-h",
+          "id": "change-vent-sfp",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1330,9 +1253,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-infiltration-allowance-m3-h",
+            "operation": "change-vent-sfp",
             "bridgeVersion": 1,
-            "variant": "ChangeInfiltrationAllowanceM3H"
+            "variant": "ChangeVentSfp"
           },
           "oracleRequirements": [
             {
@@ -1342,7 +1265,7 @@
           ]
         },
         {
-          "id": "change-l-aeq-db",
+          "id": "change-vent-sfp-class",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1351,9 +1274,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-l-aeq-db",
+            "operation": "change-vent-sfp-class",
             "bridgeVersion": 1,
-            "variant": "ChangeLAeqDb"
+            "variant": "ChangeVentSfpClass"
           },
           "oracleRequirements": [
             {
@@ -1363,7 +1286,7 @@
           ]
         },
         {
-          "id": "change-n50-h-inv",
+          "id": "change-vent-heat-recovery",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1372,9 +1295,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-n50-h-inv",
+            "operation": "change-vent-heat-recovery",
             "bridgeVersion": 1,
-            "variant": "ChangeN50HInv"
+            "variant": "ChangeVentHeatRecovery"
           },
           "oracleRequirements": [
             {
@@ -1384,7 +1307,7 @@
           ]
         },
         {
-          "id": "change-night-setback-k",
+          "id": "change-vent-oda-class",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1393,9 +1316,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-night-setback-k",
+            "operation": "change-vent-oda-class",
             "bridgeVersion": 1,
-            "variant": "ChangeNightSetbackK"
+            "variant": "ChangeVentOdaClass"
           },
           "oracleRequirements": [
             {
@@ -1405,67 +1328,7 @@
           ]
         },
         {
-          "id": "change-occupancy",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-occupancy",
-            "bridgeVersion": 1,
-            "variant": "ChangeOccupancy"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-occupants",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-occupants",
-            "bridgeVersion": 1,
-            "variant": "ChangeOccupants"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-persons",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-persons",
-            "bridgeVersion": 1,
-            "variant": "ChangePersons"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-qc-kwh",
+          "id": "change-vent-filter-sup",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1474,9 +1337,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-qc-kwh",
+            "operation": "change-vent-filter-sup",
             "bridgeVersion": 1,
-            "variant": "ChangeQCKwh"
+            "variant": "ChangeVentFilterSup"
           },
           "oracleRequirements": [
             {
@@ -1486,7 +1349,7 @@
           ]
         },
         {
-          "id": "change-residential-ventilation-m3-h",
+          "id": "change-vent-inspection",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1495,9 +1358,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-residential-ventilation-m3-h",
+            "operation": "change-vent-inspection",
             "bridgeVersion": 1,
-            "variant": "ChangeResidentialVentilationM3H"
+            "variant": "ChangeVentInspection"
           },
           "oracleRequirements": [
             {
@@ -1507,7 +1370,7 @@
           ]
         },
         {
-          "id": "change-rh-percent",
+          "id": "change-vent-duct-class",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1516,9 +1379,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-rh-percent",
+            "operation": "change-vent-duct-class",
             "bridgeVersion": 1,
-            "variant": "ChangeRhPercent"
+            "variant": "ChangeVentDuctClass"
           },
           "oracleRequirements": [
             {
@@ -1528,27 +1391,7 @@
           ]
         },
         {
-          "id": "change-sfp-required-class",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-sfp-required-class",
-            "bridgeVersion": 1,
-            "variant": "ChangeSfpRequiredClass"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-sfp-wm3-s",
+          "id": "change-vent-duct-leakage",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1557,9 +1400,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-sfp-wm3-s",
+            "operation": "change-vent-duct-leakage",
             "bridgeVersion": 1,
-            "variant": "ChangeSfpWM3S"
+            "variant": "ChangeVentDuctLeakage"
           },
           "oracleRequirements": [
             {
@@ -1569,7 +1412,7 @@
           ]
         },
         {
-          "id": "change-storage-allowance-kwh",
+          "id": "change-vent-design-airflow",
           "capability": "din16798-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1578,238 +1421,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-storage-allowance-kwh",
+            "operation": "change-vent-design-airflow",
             "bridgeVersion": 1,
-            "variant": "ChangeStorageAllowanceKwh"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-storage-th",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-storage-th",
-            "bridgeVersion": 1,
-            "variant": "ChangeStorageTH"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-system-type",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-system-type",
-            "bridgeVersion": 1,
-            "variant": "ChangeSystemType"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-t-op-c",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-t-op-c",
-            "bridgeVersion": 1,
-            "variant": "ChangeTOpC"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-theta-amb-c",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-theta-amb-c",
-            "bridgeVersion": 1,
-            "variant": "ChangeThetaAmbC"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-theta-ec",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-theta-ec",
-            "bridgeVersion": 1,
-            "variant": "ChangeThetaEC"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-theta-rm-c",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-theta-rm-c",
-            "bridgeVersion": 1,
-            "variant": "ChangeThetaRmC"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-theta-set-c",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-theta-set-c",
-            "bridgeVersion": 1,
-            "variant": "ChangeThetaSetC"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-theta-st-c",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-theta-st-c",
-            "bridgeVersion": 1,
-            "variant": "ChangeThetaStC"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-ventilation-m3-h",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-ventilation-m3-h",
-            "bridgeVersion": 1,
-            "variant": "ChangeVentilationM3H"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-volume-m3",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-volume-m3",
-            "bridgeVersion": 1,
-            "variant": "ChangeVolumeM3"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din16798-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-years-since-inspection",
-          "capability": "din16798-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-years-since-inspection",
-            "bridgeVersion": 1,
-            "variant": "ChangeYearsSinceInspection"
+            "variant": "ChangeVentDesignAirflow"
           },
           "oracleRequirements": [
             {

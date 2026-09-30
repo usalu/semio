@@ -1,6 +1,8 @@
 #!/bin/zsh
-# Runs every test of binary $1 whose name matches one of the prefixes $3.. in its own process (6 in parallel); writes "ok|FAIL name" lines to $2.
+# Runs every test of binary $1 whose name matches one of the prefixes $3.. in its own process (6 in parallel) under the kernel test target's
+# RUST_MIN_STACK (32 MiB unless set); writes "ok|FAIL name" lines to $2.
 BIN="$1"; OUT="$2"; shift 2
+export RUST_MIN_STACK="${RUST_MIN_STACK:-33554432}"
 cd "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 "$BIN" --list 2>/dev/null | /usr/bin/grep ': test$' | sed 's/: test$//' | /usr/bin/grep -E "^($(IFS='|'; echo "$*"))" > "$OUT.names"
 : > "$OUT"

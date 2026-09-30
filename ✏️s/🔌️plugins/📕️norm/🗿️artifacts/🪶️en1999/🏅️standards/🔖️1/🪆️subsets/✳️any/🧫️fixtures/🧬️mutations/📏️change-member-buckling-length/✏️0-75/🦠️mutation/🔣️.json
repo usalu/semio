@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberBucklingLength",
+  "memberId": "purlin-1",
+  "axis": "z",
+  "newLength": 0.75
+}

@@ -10,7 +10,7 @@ import {
   inlineColumnLabelPosition,
   mediaEmbodiments,
   mediaParticipants,
-} from "@semio-tech/mit-bestand-praesentation-projektetage-spec";
+} from "@semio-tech/mit-bestand-praesentation-projektetage/spec";
 
 export default {
   order: 3,

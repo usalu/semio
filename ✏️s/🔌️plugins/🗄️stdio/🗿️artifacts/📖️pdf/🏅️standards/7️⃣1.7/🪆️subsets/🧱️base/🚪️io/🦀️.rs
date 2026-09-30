@@ -1,25 +1,27 @@
 //! 🚪️ IO stdio.pdf (1.7/🧱️base) — the codec entry points over the engine modules: `decode_pdf`
 //! (sniff → cross-reference → decrypt → retained graph → typed lanes), `encode_pdf` (typed lanes
-//! → COS graph, reconciled onto a retained graph when one is carried → bytes), the streaming
-//! [`DocumentStream`] a guest can drive one page per step, and the typed builders every consumer
-//! starts from ([`text_document`], [`PdfTextLayout`]). Reads PDF 1.0–2.0 leniently
-//! (`declared_version` records the header verbatim).
+//! reconciled onto the retained graph when one is carried, lowered afresh otherwise → bytes),
+//! [`carry_graph_edit`] (a direct edit of the retained graph carried into the typed lanes it
+//! moves), the streaming [`DocumentStream`] a guest can drive one page per step, and the typed
+//! builders every consumer starts from ([`text_document`], [`PdfTextLayout`]). Reads PDF 1.0–2.0
+//! leniently (`declared_version` records the header verbatim).
 //!
-//! Laws (proven in `🧪️tests`): `lift(lower(t)) == t` on the typed lanes; `decode(encode(s)) == s`
-//! after one write (a retained graph that no longer spells the typed lanes is regenerated once,
-//! after which the file is its own fixed point); every retained object the typed lanes do not
-//! own survives a write untouched, renumbered only where an id moved.
+//! Laws (proven in `🧪️tests`): `lift(lower(t)) == t` on the typed lanes; `decode(encode(s)) == s`;
+//! a write re-states only what a moved lane owns, so every other retained object, dictionary entry
+//! and trailer entry — direct COS edits included — survives it untouched; a decoded document is
+//! its own fixed point.
 
-use crate::standards::v1_7::subsets::base::modules::content::content_references;
+use crate::standards::v1_7::subsets::base::modules::content::{content_references, ContentReferences};
 use crate::standards::v1_7::subsets::base::modules::encryption::open_standard_security;
 use crate::standards::v1_7::subsets::base::modules::fonts::{standard_font, FontCodec};
 use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, PResult, PdfEngineError};
-use crate::standards::v1_7::subsets::base::modules::lift::{lift_document_with, Category};
-use crate::standards::v1_7::subsets::base::modules::lower::{lower_acro_form_standalone, lower_document, lower_document_headless, lower_page_standalone, LowerOptions, LoweredDocument};
-use crate::standards::v1_7::subsets::base::modules::writer::{serialize_document, DocumentTrailer, PdfWriter, WriteOptions};
+use crate::standards::v1_7::subsets::base::modules::lift::{lift_document, lift_document_with, Category};
+use crate::standards::v1_7::subsets::base::modules::lower::{lower_acro_form_standalone, lower_catalog_standalone, lower_document, lower_document_headless, lower_info, lower_page_standalone, LowerOptions, LoweredDocument};
+use crate::standards::v1_7::subsets::base::modules::writer::{serialize_document, DocumentTrailer, PdfWriter, WriteOptions, WRITER_TRAILER_KEYS};
 use crate::standards::v1_7::subsets::base::modules::xref::{build_xref, startxref_offset, GraphSource, ObjectSource, Resolver};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
-use std::collections::{HashMap, HashSet};
+use std::borrow::Cow;
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 pub use crate::standards::v1_7::subsets::base::modules::lexer::PdfEngineError as EngineError;
 
@@ -111,7 +113,7 @@ pub fn decode_pdf_with_password(data: &[u8], password: &str) -> PResult<PdfSnaps
     if let Some(number) = encrypt_object {
         objects.retain(|object| object.id.num != number);
     }
-    let trailer: Vec<PdfDictEntry> = xref.trailer.iter().filter(|entry| matches!(entry.key.as_str(), "Root" | "Info" | "ID")).cloned().collect();
+    let trailer: Vec<PdfDictEntry> = xref.trailer.iter().filter(|entry| !WRITER_TRAILER_KEYS.contains(&entry.key.as_str())).cloned().collect();
     if !trailer.iter().any(|entry| entry.key == "Root") {
         return Err(PdfEngineError::Malformed("no /Root in any trailer and no /Catalog object to recover one from".into()));
     }
@@ -150,17 +152,43 @@ pub fn encode_pdf(snapshot: &PdfSnapshot) -> PResult<Vec<u8>> {
     encode_pdf_with(snapshot, &EncodeOptions::default())
 }
 
-/// 🧭 A source over the retained graph that remembers every object the typed lanes reached.
-struct RecordingSource<'a> {
-    inner: GraphSource<'a>,
-    seen: HashSet<u32>,
+/// 📤️ Writes the snapshot. A snapshot carrying a retained graph is reconciled onto it
+/// ([`reconcile`]); without one — or under an export profile, whose writer choices a retained
+/// graph cannot carry — the typed lanes are lowered afresh. Either way every trailer entry the
+/// snapshot carries beyond the writer's own bookkeeping is written back.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_pdf_with(snapshot: &PdfSnapshot, options: &EncodeOptions) -> PResult<Vec<u8>> {
+    let version = if snapshot.declared_version.is_empty() { "1.7".to_string() } else { snapshot.declared_version.clone() };
+    if !version.bytes().all(|byte| byte.is_ascii_digit() || byte == b'.') {
+        return Err(PdfEngineError::Malformed("declared PDF version is not numeric".into()));
+    }
+    let version = if options.write.xref_stream && version.as_str() < "1.5" { "1.5".to_string() } else { version };
+    let mut write = options.write.clone();
+    if write.encryption.is_none() {
+        write.encryption = snapshot.encryption.clone();
+    }
+    let retained = dict_get(&snapshot.trailer, "Root").and_then(PdfObject::as_ref).is_some() && !snapshot.objects.is_empty() && options.lower == LowerOptions::default();
+    let (objects, trailer) = if retained {
+        reconcile(snapshot)?
+    } else {
+        let LoweredDocument { objects, root, info, .. } = lower_document(snapshot, 1, options.lower.clone())?;
+        (Cow::Owned(objects), DocumentTrailer { root, info, id: snapshot.document_id.clone(), extra: trailer_extra(&snapshot.trailer) })
+    };
+    Ok(serialize_document(&version, &objects, &trailer, &write))
 }
 
-impl ObjectSource for RecordingSource<'_> {
-    fn get(&mut self, reference: ObjRef) -> Option<PdfObject> {
-        self.seen.insert(reference.num);
-        self.inner.get(reference)
-    }
+/// 🧾 Trailer entries beyond the identity the writer states itself (`/Root`, `/Info`, `/ID`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn trailer_extra(trailer: &[PdfDictEntry]) -> Vec<PdfDictEntry> {
+    trailer.iter().filter(|entry| !matches!(entry.key.as_str(), "Root" | "Info" | "ID")).cloned().collect()
+}
+
+/// 🧾 The trailer a reconciled graph is written under: the graph's own `/Root`, `/Info` and extra
+/// entries, and the typed `document_id`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn retained_trailer(snapshot: &PdfSnapshot, trailer: &[PdfDictEntry]) -> PResult<DocumentTrailer> {
+    let root = dict_get(trailer, "Root").and_then(PdfObject::as_ref).ok_or_else(|| PdfEngineError::Malformed("the retained trailer names no /Root".into()))?;
+    Ok(DocumentTrailer { root, info: dict_get(trailer, "Info").and_then(PdfObject::as_ref), id: snapshot.document_id.clone(), extra: trailer_extra(trailer) })
 }
 
 /// 🔁 Rewrites references inside a retained object through `map`.
@@ -175,67 +203,809 @@ fn rewrite_refs(value: &PdfObject, map: &HashMap<u32, ObjRef>) -> PdfObject {
     }
 }
 
-/// 📤️ Writes the snapshot. A retained graph that still spells the typed lanes is written as it
-/// stands; otherwise the objects the typed lanes own are regenerated onto it and every other
-/// retained object is kept, with references to moved objects rewritten.
+/// 🔗 Every object number `value` references, skipping the entries named in `skip`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_pdf_with(snapshot: &PdfSnapshot, options: &EncodeOptions) -> PResult<Vec<u8>> {
-    let version = if snapshot.declared_version.is_empty() { "1.7".to_string() } else { snapshot.declared_version.clone() };
-    if !version.bytes().all(|byte| byte.is_ascii_digit() || byte == b'.') {
-        return Err(PdfEngineError::Malformed("declared PDF version is not numeric".into()));
+fn referenced(value: &PdfObject, skip: &[&str], out: &mut Vec<u32>) {
+    match value {
+        PdfObject::Ref(reference) => out.push(reference.num),
+        PdfObject::Array(items) => items.iter().for_each(|item| referenced(item, skip, out)),
+        PdfObject::Dict(entries) | PdfObject::Stream { dict: entries, .. } => entries.iter().filter(|entry| !skip.contains(&entry.key.as_str())).for_each(|entry| referenced(&entry.value, skip, out)),
+        _ => {}
     }
-    let version = if options.write.xref_stream && version.as_str() < "1.5" { "1.5".to_string() } else { version };
-    let mut write = options.write.clone();
-    if write.encryption.is_none() {
-        write.encryption = snapshot.encryption.clone();
+}
+
+/// 🧭 A lifting source that remembers every object the typed lanes reached.
+struct Recording<S> {
+    inner: S,
+    seen: HashSet<u32>,
+}
+
+impl<S: ObjectSource> ObjectSource for Recording<S> {
+    fn get(&mut self, reference: ObjRef) -> Option<PdfObject> {
+        self.seen.insert(reference.num);
+        self.inner.get(reference)
     }
-    let retained_root = dict_get(&snapshot.trailer, "Root").and_then(PdfObject::as_ref);
-    if let Some(root) = retained_root.filter(|_| !snapshot.objects.is_empty() && options.lower == LowerOptions::default()) {
-        let mut recording = RecordingSource { inner: GraphSource::new(&snapshot.objects), seen: HashSet::new() };
-        let lifter = lift_document_with(&snapshot.trailer, &snapshot.declared_version, &mut recording);
-        let (lifted_snapshot, lifted_ids, lifted_page_refs, lifted_annotation_refs) = (lifter.snapshot, lifter.ids, lifter.page_refs, lifter.annotation_refs);
-        let mut retained_view = lifted_snapshot;
-        retained_view.schema = snapshot.schema.clone();
-        retained_view.declared_version = snapshot.declared_version.clone();
-        retained_view.encryption = snapshot.encryption.clone();
-        retained_view.objects = snapshot.objects.clone();
-        retained_view.trailer = snapshot.trailer.clone();
-        if retained_view == *snapshot {
-            let info = dict_get(&snapshot.trailer, "Info").and_then(PdfObject::as_ref);
-            let trailer = DocumentTrailer { root, info, id: snapshot.document_id.clone(), extra: Vec::new() };
-            return Ok(serialize_document(&version, &snapshot.objects, &trailer, &write));
+}
+
+/// 🕸️ A lifting source over a graph being grafted.
+struct GraphView<'a>(&'a BTreeMap<u32, PdfIndirectObject>);
+
+impl ObjectSource for GraphView<'_> {
+    fn get(&mut self, reference: ObjRef) -> Option<PdfObject> {
+        self.0.get(&reference.num).map(|object| object.value.clone())
+    }
+}
+
+/// 🔭 What a retained graph spells: the typed lanes lifted from it and how they map back onto its
+/// objects.
+struct Reading {
+    lanes: PdfSnapshot,
+    ids: HashMap<(Category, ObjRef), String>,
+    refs: HashMap<(Category, String), ObjRef>,
+    page_refs: Vec<ObjRef>,
+    annotation_refs: HashMap<ObjRef, (u32, u32)>,
+    seen: HashSet<u32>,
+}
+
+impl Reading {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn of(source: impl ObjectSource, trailer: &[PdfDictEntry], declared_version: &str) -> Self {
+        let mut recording = Recording { inner: source, seen: HashSet::new() };
+        let (lanes, ids, page_refs, annotation_refs) = {
+            let lifter = lift_document_with(trailer, declared_version, &mut recording);
+            (lifter.snapshot, lifter.ids, lifter.page_refs, lifter.annotation_refs)
+        };
+        let refs = ids.iter().map(|((category, reference), id)| ((*category, id.clone()), *reference)).collect();
+        Self { lanes, ids, refs, page_refs, annotation_refs, seen: recording.seen }
+    }
+
+    /// 🗺️ Where every resource this reading names lives, and every page in `pages` order.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn targets(&self, pages: &[ObjRef]) -> HashMap<(Category, String), ObjRef> {
+        let mut refs = self.refs.clone();
+        refs.extend(pages.iter().enumerate().map(|(index, reference)| ((Category::Page, index.to_string()), *reference)));
+        refs
+    }
+}
+
+/// 🗂️ A catalog lane a graft re-states entry by entry (ISO 32000-1 §7.7.2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CatalogLane {
+    Outlines,
+    NamedDestinations,
+    PageLabels,
+    OutputIntents,
+    PageLayout,
+    PageMode,
+    ViewerPreferences,
+    OpenAction,
+    Language,
+    MarkInfo,
+    Metadata,
+    Extra,
+}
+
+impl CatalogLane {
+    const ALL: [Self; 12] = [Self::Outlines, Self::NamedDestinations, Self::PageLabels, Self::OutputIntents, Self::PageLayout, Self::PageMode, Self::ViewerPreferences, Self::OpenAction, Self::Language, Self::MarkInfo, Self::Metadata, Self::Extra];
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn moved(self, read: &PdfSnapshot, typed: &PdfSnapshot) -> bool {
+        match self {
+            Self::Outlines => read.outlines != typed.outlines,
+            Self::NamedDestinations => read.named_destinations != typed.named_destinations,
+            Self::PageLabels => read.page_labels != typed.page_labels,
+            Self::OutputIntents => read.output_intents != typed.output_intents,
+            Self::PageLayout => read.page_layout != typed.page_layout,
+            Self::PageMode => read.page_mode != typed.page_mode,
+            Self::ViewerPreferences => read.viewer_preferences != typed.viewer_preferences,
+            Self::OpenAction => read.open_action != typed.open_action,
+            Self::Language => read.language != typed.language,
+            Self::MarkInfo => read.mark_info != typed.mark_info,
+            Self::Metadata => read.metadata != typed.metadata,
+            Self::Extra => read.catalog_extra != typed.catalog_extra,
         }
-        let owned: HashSet<u32> = recording.seen.iter().copied().chain(std::iter::once(root.num)).chain(dict_get(&snapshot.trailer, "Info").and_then(PdfObject::as_ref).map(|r| r.num)).collect();
-        let first_number = snapshot.objects.iter().map(|object| object.id.num).max().unwrap_or(0) + 1;
-        let lowered = lower_document(snapshot, first_number, options.lower.clone())?;
-        let mut rewrite: HashMap<u32, ObjRef> = HashMap::new();
-        for ((category, old_ref), id) in &lifted_ids {
-            if let Some(new_ref) = lowered.refs.get(&(*category, id.clone())) {
-                rewrite.insert(old_ref.num, *new_ref);
+    }
+
+    /// 🔑 The catalog key the lane owns (named destinations live in the `/Names` tree, extra entries under their own keys).
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn key(self) -> &'static str {
+        match self {
+            Self::Outlines => "Outlines",
+            Self::NamedDestinations => "Dests",
+            Self::PageLabels => "PageLabels",
+            Self::OutputIntents => "OutputIntents",
+            Self::PageLayout => "PageLayout",
+            Self::PageMode => "PageMode",
+            Self::ViewerPreferences => "ViewerPreferences",
+            Self::OpenAction => "OpenAction",
+            Self::Language => "Lang",
+            Self::MarkInfo => "MarkInfo",
+            Self::Metadata => "Metadata",
+            Self::Extra => "",
+        }
+    }
+}
+
+/// 🧭 The typed lanes that differ from what a retained graph spells, grouped by how a write
+/// honors them: pages, info and the catalog lanes are grafted; the resource collections are kept
+/// alive and ordered through the page tree root when their values are the graph's own; the rest
+/// only a regeneration can express.
+#[derive(PartialEq)]
+struct Moved {
+    pages: bool,
+    info: bool,
+    resources: bool,
+    catalog: Vec<CatalogLane>,
+    regenerate: bool,
+}
+
+impl Moved {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn between(read: &PdfSnapshot, typed: &PdfSnapshot) -> Self {
+        Self {
+            pages: read.pages != typed.pages,
+            info: read.info != typed.info,
+            resources: read.fonts != typed.fonts || read.images != typed.images || read.forms != typed.forms || read.ext_g_states != typed.ext_g_states || read.shadings != typed.shadings || read.patterns != typed.patterns || read.color_spaces != typed.color_spaces || read.properties != typed.properties,
+            catalog: CatalogLane::ALL.into_iter().filter(|lane| lane.moved(read, typed)).collect(),
+            regenerate: read.declared_version != typed.declared_version || read.embedded_files != typed.embedded_files || read.acro_form != typed.acro_form || read.optional_content != typed.optional_content,
+        }
+    }
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn is_empty(&self) -> bool {
+        !self.pages && !self.info && !self.resources && self.catalog.is_empty() && !self.regenerate
+    }
+}
+
+/// 🔁 How many graft-and-read-back rounds a write spends before it regenerates: the first grafts
+/// the lanes the typed model moved, the next ones what re-stating them moved in turn (page
+/// indices a structural page edit shifts, resource discovery order). A round that grafts a set of
+/// lanes and reads back exactly that set still moved has reached the graft's fixed point: those
+/// lanes hold what no write can spell (a destination to a page index the document no longer has),
+/// and a regeneration lowers them identically, so the graft is written as it stands — unless a
+/// resource collection is among them, whose order a regeneration can still restate.
+const GRAFT_ROUNDS: usize = 3;
+
+/// 🪡 Reconciles the typed lanes onto the retained graph with incremental-writer semantics. A
+/// graph that already spells every lane is written as it stands. A moved lane is grafted: only
+/// the objects and entries it owns are re-stated, every other retained object and entry — direct
+/// COS edits and trailer entries included — survives untouched, and the grafted graph is read
+/// back until it spells the typed lanes. Only a lane no graft can express regenerates the typed
+/// objects wholesale ([`regenerate`]).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn reconcile(snapshot: &PdfSnapshot) -> PResult<(Cow<'_, [PdfIndirectObject]>, DocumentTrailer)> {
+    let original = Reading::of(GraphSource::new(&snapshot.objects), &snapshot.trailer, &snapshot.declared_version);
+    let mut moved = Moved::between(&original.lanes, snapshot);
+    if moved.is_empty() {
+        return Ok((Cow::Borrowed(snapshot.objects.as_slice()), retained_trailer(snapshot, &snapshot.trailer)?));
+    }
+    if !moved.regenerate {
+        let mut graft = Graft::new(snapshot);
+        let mut current: Option<Reading> = None;
+        for _ in 0..GRAFT_ROUNDS {
+            if !graft.round(current.as_ref().unwrap_or(&original), &original, &moved)? {
+                break;
+            }
+            let reading = graft.read();
+            let still = Moved::between(&reading.lanes, snapshot);
+            if still.is_empty() || (current.is_some() && still == moved && !still.resources) {
+                return graft.finish();
+            }
+            if still.regenerate {
+                break;
+            }
+            moved = still;
+            current = Some(reading);
+        }
+    }
+    regenerate(snapshot, &original)
+}
+
+/// ♻️ Regenerates every object the typed lanes own from the typed lanes and keeps every other
+/// retained object, references to moved objects rewritten.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn regenerate<'a>(snapshot: &'a PdfSnapshot, original: &Reading) -> PResult<(Cow<'a, [PdfIndirectObject]>, DocumentTrailer)> {
+    let retained = retained_trailer(snapshot, &snapshot.trailer)?;
+    let owned: HashSet<u32> = original.seen.iter().copied().chain(std::iter::once(retained.root.num)).chain(retained.info.map(|info| info.num)).collect();
+    let first_number = snapshot.objects.iter().map(|object| object.id.num).max().unwrap_or(0) + 1;
+    let lowered = lower_document(snapshot, first_number, LowerOptions::default())?;
+    let mut rewrite: HashMap<u32, ObjRef> = HashMap::new();
+    for ((category, old_ref), id) in &original.ids {
+        if let Some(new_ref) = lowered.refs.get(&(*category, id.clone())) {
+            rewrite.insert(old_ref.num, *new_ref);
+        }
+    }
+    for (index, old_ref) in original.page_refs.iter().enumerate() {
+        if let Some(new_ref) = lowered.refs.get(&(Category::Page, index.to_string())) {
+            rewrite.insert(old_ref.num, *new_ref);
+        }
+    }
+    for (old_ref, (page, index)) in &original.annotation_refs {
+        if let Some(new_ref) = lowered.annotation_refs.get(*page as usize).and_then(|refs| refs.get(*index as usize)) {
+            rewrite.insert(old_ref.num, *new_ref);
+        }
+    }
+    rewrite.insert(retained.root.num, lowered.root);
+    if let (Some(old), Some(new)) = (retained.info, lowered.info) {
+        rewrite.insert(old.num, new);
+    }
+    let mut objects: Vec<PdfIndirectObject> = snapshot.objects.iter().filter(|object| !owned.contains(&object.id.num)).map(|object| PdfIndirectObject { id: object.id, value: rewrite_refs(&object.value, &rewrite) }).collect();
+    objects.extend(lowered.objects);
+    objects.sort_by_key(|object| object.id.num);
+    let extra = retained.extra.iter().map(|entry| PdfDictEntry { key: entry.key.clone(), value: rewrite_refs(&entry.value, &rewrite) }).collect();
+    Ok((Cow::Owned(objects), DocumentTrailer { root: lowered.root, info: lowered.info, id: snapshot.document_id.clone(), extra }))
+}
+
+/// 📐 The page attributes a page inherits from its page tree ancestors (ISO 32000-1 §7.7.3.4).
+const INHERITED_PAGE_KEYS: [&str; 4] = ["Resources", "MediaBox", "CropBox", "Rotate"];
+
+/// 🪡 A graft in progress: the retained graph being patched and its trailer, the next free
+/// object number, and every value a patch displaced — collected at the end once nothing reaches
+/// it, so the objects a lane stopped owning leave the file while unrelated orphans stay.
+struct Graft<'a> {
+    typed: &'a PdfSnapshot,
+    graph: BTreeMap<u32, PdfIndirectObject>,
+    trailer: Vec<PdfDictEntry>,
+    next: u32,
+    displaced: Vec<PdfObject>,
+}
+
+impl<'a> Graft<'a> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn new(typed: &'a PdfSnapshot) -> Self {
+        let graph: BTreeMap<u32, PdfIndirectObject> = typed.objects.iter().map(|object| (object.id.num, object.clone())).collect();
+        let next = graph.keys().next_back().copied().unwrap_or(0) + 1;
+        Self { typed, graph, trailer: typed.trailer.clone(), next, displaced: Vec::new() }
+    }
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn read(&self) -> Reading {
+        Reading::of(GraphView(&self.graph), &self.trailer, &self.typed.declared_version)
+    }
+
+    /// 🔁 One graft round against `reading` (what the graph spells now); `original` is the
+    /// untouched graph's reading, the only source a resource may be retained from. `false` when a
+    /// moved lane is beyond what a graft can express.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn round(&mut self, reading: &Reading, original: &Reading, moved: &Moved) -> PResult<bool> {
+        let pages = match moved.pages {
+            true => match self.graft_pages(reading)? {
+                Some(pages) => pages,
+                None => return Ok(false),
+            },
+            false => reading.page_refs.clone(),
+        };
+        if moved.info {
+            self.graft_info();
+        }
+        if !moved.catalog.is_empty() {
+            self.graft_catalog(reading, &pages, &moved.catalog)?;
+        }
+        Ok(!moved.resources || self.retain_resources(original, &pages))
+    }
+
+    /// 🏁 Collects what the grafts displaced and hands back the graph and its trailer.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn finish(mut self) -> PResult<(Cow<'a, [PdfIndirectObject]>, DocumentTrailer)> {
+        self.collect_displaced();
+        let trailer = retained_trailer(self.typed, &self.trailer)?;
+        Ok((Cow::Owned(self.graph.into_values().collect()), trailer))
+    }
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn reserve(&mut self) -> ObjRef {
+        let reference = ObjRef { num: self.next, gen: 0 };
+        self.next += 1;
+        reference
+    }
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn value(&self, reference: ObjRef) -> Option<&PdfObject> {
+        self.graph.get(&reference.num).map(|object| &object.value)
+    }
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn resolve(&self, value: &PdfObject) -> Option<PdfObject> {
+        match value {
+            PdfObject::Ref(reference) => self.value(*reference).cloned(),
+            other => Some(other.clone()),
+        }
+    }
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn dict(&self, reference: ObjRef) -> Vec<PdfDictEntry> {
+        self.value(reference).and_then(PdfObject::as_dict).map(<[PdfDictEntry]>::to_vec).unwrap_or_default()
+    }
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn set_dict(&mut self, reference: ObjRef, entries: Vec<PdfDictEntry>) {
+        self.graph.insert(reference.num, PdfIndirectObject { id: reference, value: PdfObject::Dict(entries) });
+    }
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn catalog(&self) -> Option<ObjRef> {
+        dict_get(&self.trailer, "Root").and_then(PdfObject::as_ref)
+    }
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn page_tree_root(&self) -> Option<ObjRef> {
+        dict_get(&self.dict(self.catalog()?), "Pages").and_then(PdfObject::as_ref)
+    }
+
+    /// 🧬 Moves the lowered objects `value` reaches out of `scratch` into the graph under fresh
+    /// numbers (one number per scratch object across a batch, recorded in `adopted`) and returns
+    /// `value` with its references rewritten.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn adopt(&mut self, value: &PdfObject, scratch: &HashMap<u32, PdfObject>, adopted: &mut HashMap<u32, ObjRef>) -> PdfObject {
+        let mut pending = Vec::new();
+        referenced(value, &[], &mut pending);
+        let mut fresh = Vec::new();
+        while let Some(num) = pending.pop() {
+            if adopted.contains_key(&num) {
+                continue;
+            }
+            let Some(inner) = scratch.get(&num) else { continue };
+            let target = self.reserve();
+            adopted.insert(num, target);
+            referenced(inner, &[], &mut pending);
+            fresh.push(num);
+        }
+        for num in fresh {
+            let target = adopted[&num];
+            self.graph.insert(target.num, PdfIndirectObject { id: target, value: rewrite_refs(&scratch[&num], adopted) });
+        }
+        rewrite_refs(value, adopted)
+    }
+
+    /// 🔧 Re-states `key` in `entries`: `value` (adopted from `scratch`) replaces the entry,
+    /// `None` drops it; the value it displaces is collected later.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn put(&mut self, entries: &mut Vec<PdfDictEntry>, key: &str, value: Option<PdfObject>, scratch: &HashMap<u32, PdfObject>, adopted: &mut HashMap<u32, ObjRef>) {
+        let value = value.map(|value| self.adopt(&value, scratch, adopted));
+        match (entries.iter().position(|entry| entry.key == key), value) {
+            (Some(index), Some(value)) => {
+                let old = std::mem::replace(&mut entries[index].value, value);
+                self.displaced.push(old);
+            }
+            (Some(index), None) => {
+                let old = entries.remove(index).value;
+                self.displaced.push(old);
+            }
+            (None, Some(value)) => entries.push(PdfDictEntry::new(key, value)),
+            (None, None) => {}
+        }
+    }
+
+    /// 🧹 Drops every object only displaced values reached that nothing in the grafted document
+    /// reaches any more (`/Parent` back-links do not keep an object in the candidate set).
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn collect_displaced(&mut self) {
+        let mut pending = Vec::new();
+        for value in std::mem::take(&mut self.displaced) {
+            referenced(&value, &["Parent"], &mut pending);
+        }
+        let mut candidates = HashSet::new();
+        while let Some(num) = pending.pop() {
+            if candidates.insert(num) {
+                if let Some(object) = self.graph.get(&num) {
+                    referenced(&object.value, &["Parent"], &mut pending);
+                }
             }
         }
-        for (index, old_ref) in lifted_page_refs.iter().enumerate() {
-            if let Some(new_ref) = lowered.refs.get(&(Category::Page, index.to_string())) {
-                rewrite.insert(old_ref.num, *new_ref);
+        if candidates.is_empty() {
+            return;
+        }
+        let mut reachable = HashSet::new();
+        let mut pending = Vec::new();
+        self.trailer.iter().for_each(|entry| referenced(&entry.value, &[], &mut pending));
+        while let Some(num) = pending.pop() {
+            if reachable.insert(num) {
+                if let Some(object) = self.graph.get(&num) {
+                    referenced(&object.value, &[], &mut pending);
+                }
             }
         }
-        for (old_ref, (page, index)) in &lifted_annotation_refs {
-            if let Some(new_ref) = lowered.annotation_refs.get(*page as usize).and_then(|refs| refs.get(*index as usize)) {
-                rewrite.insert(old_ref.num, *new_ref);
-            }
-        }
-        rewrite.insert(root.num, lowered.root);
-        let mut objects: Vec<PdfIndirectObject> = snapshot.objects.iter().filter(|object| !owned.contains(&object.id.num)).map(|object| PdfIndirectObject { id: object.id, value: rewrite_refs(&object.value, &rewrite) }).collect();
-        objects.extend(lowered.objects);
-        objects.sort_by_key(|object| object.id.num);
-        let trailer = DocumentTrailer { root: lowered.root, info: lowered.info, id: snapshot.document_id.clone(), extra: Vec::new() };
-        return Ok(serialize_document(&version, &objects, &trailer, &write));
+        self.graph.retain(|num, _| !candidates.contains(num) || reachable.contains(num));
     }
-    let LoweredDocument { objects, root, info, .. } = lower_document(snapshot, 1, options.lower.clone())?;
-    let trailer = DocumentTrailer { root, info, id: snapshot.document_id.clone(), extra: Vec::new() };
-    Ok(serialize_document(&version, &objects, &trailer, &write))
+
+    /// 📄 Grafts the page lane. A page the graph already spells keeps its object; a page whose
+    /// fields moved is patched in place (only the moved entries re-stated); a new page is lowered
+    /// fresh; and the page tree is re-stated flat under its root only when the page sequence
+    /// itself changed. Returns the page references in typed order, `None` when a page carries
+    /// what no graft can express.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn graft_pages(&mut self, reading: &Reading) -> PResult<Option<Vec<ObjRef>>> {
+        let typed = self.typed;
+        let read = &reading.lanes.pages;
+        let Some(root) = self.page_tree_root() else { return Ok(None) };
+        let mut source: Vec<Option<usize>> = (0..typed.pages.len()).map(|index| (index < read.len() && typed.pages[index] == read[index]).then_some(index)).collect();
+        let mut used = vec![false; read.len()];
+        source.iter().flatten().for_each(|slot| used[*slot] = true);
+        for index in 0..typed.pages.len() {
+            if source[index].is_none() {
+                if let Some(slot) = (0..read.len()).find(|slot| !used[*slot] && read[*slot] == typed.pages[index]) {
+                    used[slot] = true;
+                    source[index] = Some(slot);
+                }
+            }
+        }
+        let mut patched = Vec::new();
+        for index in 0..typed.pages.len() {
+            if source[index].is_none() && index < read.len() && !used[index] {
+                used[index] = true;
+                source[index] = Some(index);
+                patched.push(index);
+            }
+        }
+        let mut pages = Vec::with_capacity(typed.pages.len());
+        let mut inserted = Vec::new();
+        for (index, slot) in source.iter().enumerate() {
+            match slot {
+                Some(slot) => pages.push(reading.page_refs[*slot]),
+                None => {
+                    inserted.push(index);
+                    pages.push(self.reserve());
+                }
+            }
+        }
+        let removed: Vec<ObjRef> = (0..read.len()).filter(|slot| !used[*slot]).map(|slot| reading.page_refs[slot]).collect();
+        let targets = reading.targets(&pages);
+        for index in patched {
+            if !self.patch_page(index, &read[index], pages[index], &targets)? {
+                return Ok(None);
+            }
+        }
+        for index in inserted {
+            if !self.insert_page(index, pages[index], root, &targets)? {
+                return Ok(None);
+            }
+        }
+        if pages != reading.page_refs {
+            self.restate_page_tree(root, &pages, &removed);
+        }
+        Ok(Some(pages))
+    }
+
+    /// ✏️ Patches the retained page at `reference` so it spells typed page `index`: the entries of
+    /// every moved field are re-stated from the page lowered afresh, every other entry (content
+    /// stream, resources, annotations, keys no field owns) stays as the graph holds it.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn patch_page(&mut self, index: usize, read: &PdfPage, reference: ObjRef, targets: &HashMap<(Category, String), ObjRef>) -> PResult<bool> {
+        let snapshot = self.typed;
+        let typed = &snapshot.pages[index];
+        let content = typed.content != read.content;
+        let annotations = typed.annotations != read.annotations;
+        if annotations && (carries_widget(typed) || carries_widget(read)) {
+            return Ok(false);
+        }
+        let mut probe = typed.clone();
+        if !content {
+            probe.content.clear();
+        }
+        if !annotations {
+            probe.annotations.clear();
+        }
+        let (objects, _) = lower_page_standalone(snapshot, &probe, index, reference, reference, self.next, LowerOptions::default(), targets, &HashMap::new())?;
+        let mut scratch: HashMap<u32, PdfObject> = objects.into_iter().map(|object| (object.id.num, object.value)).collect();
+        let lowered = scratch.remove(&reference.num).and_then(|value| value.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default();
+        let fields: [(bool, &str); 16] = [
+            (typed.media_box != read.media_box, "MediaBox"),
+            (typed.crop_box != read.crop_box, "CropBox"),
+            (typed.bleed_box != read.bleed_box, "BleedBox"),
+            (typed.trim_box != read.trim_box, "TrimBox"),
+            (typed.art_box != read.art_box, "ArtBox"),
+            (typed.rotate != read.rotate, "Rotate"),
+            (typed.user_unit != read.user_unit, "UserUnit"),
+            (content, "Contents"),
+            (annotations, "Annots"),
+            (typed.group != read.group, "Group"),
+            (typed.thumbnail != read.thumbnail, "Thumb"),
+            (typed.struct_parents != read.struct_parents, "StructParents"),
+            (typed.transition != read.transition, "Trans"),
+            (typed.duration != read.duration, "Dur"),
+            (typed.metadata != read.metadata, "Metadata"),
+            (typed.additional_actions != read.additional_actions, "AA"),
+        ];
+        let mut keys: Vec<&str> = fields.iter().filter(|(moved, _)| *moved).map(|(_, key)| *key).collect();
+        if typed.extra != read.extra {
+            keys.extend(read.extra.iter().chain(&typed.extra).map(|entry| entry.key.as_str()));
+        }
+        let mut seen = HashSet::new();
+        keys.retain(|key| seen.insert(*key));
+        let mut dict = self.dict(reference);
+        let mut adopted = HashMap::new();
+        for key in keys {
+            let value = match (key, dict_get(&lowered, key)) {
+                ("Rotate", None) => Some(PdfObject::Int(typed.rotate as i64)),
+                (_, value) => value.cloned(),
+            };
+            self.put(&mut dict, key, value, &scratch, &mut adopted);
+        }
+        if content && !self.bind_resources(&mut dict, &typed.content, targets) {
+            return Ok(false);
+        }
+        self.set_dict(reference, dict);
+        Ok(true)
+    }
+
+    /// ➕ Lowers typed page `index` fresh at the reserved `reference` under `parent`.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn insert_page(&mut self, index: usize, reference: ObjRef, parent: ObjRef, targets: &HashMap<(Category, String), ObjRef>) -> PResult<bool> {
+        let snapshot = self.typed;
+        let page = &snapshot.pages[index];
+        let references = content_references(&page.content);
+        if carries_widget(page) || resource_sections(&references).iter().any(|(_, category, ids)| ids.iter().any(|id| !targets.contains_key(&(*category, id.clone())) && self.defines(*category, id))) {
+            return Ok(false);
+        }
+        let (objects, _) = lower_page_standalone(snapshot, page, index, reference, parent, self.next, LowerOptions::default(), targets, &HashMap::new())?;
+        let mut scratch: HashMap<u32, PdfObject> = objects.into_iter().map(|object| (object.id.num, object.value)).collect();
+        let lowered = scratch.remove(&reference.num).unwrap_or(PdfObject::Dict(Vec::new()));
+        let value = self.adopt(&lowered, &scratch, &mut HashMap::new());
+        self.graph.insert(reference.num, PdfIndirectObject { id: reference, value });
+        Ok(true)
+    }
+
+    /// 🆔 Whether a typed resource collection defines `id` in `category`.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn defines(&self, category: Category, id: &str) -> bool {
+        let typed = self.typed;
+        match category {
+            Category::Font => typed.font(id).is_some(),
+            Category::XObject => typed.image(id).is_some() || typed.form(id).is_some(),
+            Category::ExtGState => typed.ext_g_state(id).is_some(),
+            Category::Shading => typed.shading(id).is_some(),
+            Category::Pattern => typed.pattern(id).is_some(),
+            Category::ColorSpace => typed.color_spaces.iter().any(|space| space.name == id),
+            Category::Properties => typed.properties.iter().any(|properties| properties.name == id),
+            _ => false,
+        }
+    }
+
+    /// 📚 Makes the page's resources bind every id its new content names: the resources it
+    /// already sees (its own or inherited) are kept whole, and an id they do not bind to the
+    /// graph's object for it is bound on a page-own copy. `false` when the content names a typed
+    /// resource the graph holds no object for.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn bind_resources(&mut self, dict: &mut Vec<PdfDictEntry>, ops: &[PdfOp], targets: &HashMap<(Category, String), ObjRef>) -> bool {
+        let effective = self.effective_resources(dict);
+        let mut resources = effective.clone();
+        for (key, category, ids) in resource_sections(&content_references(ops)) {
+            let mut section = dict_get(&resources, key).and_then(|value| self.resolve(value)).and_then(|value| value.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default();
+            let mut bound = false;
+            for id in ids {
+                match targets.get(&(category, id.clone())) {
+                    Some(target) if dict_get(&section, &id) != Some(&PdfObject::Ref(*target)) => {
+                        section.retain(|entry| entry.key != id);
+                        section.push(PdfDictEntry::new(id, PdfObject::Ref(*target)));
+                        bound = true;
+                    }
+                    None if self.defines(category, &id) && dict_get(&section, &id).is_none() => return false,
+                    _ => {}
+                }
+            }
+            if bound {
+                resources.retain(|entry| entry.key != key);
+                resources.push(PdfDictEntry::new(key, PdfObject::Dict(section)));
+            }
+        }
+        if resources != effective {
+            let own = PdfObject::Dict(resources);
+            match dict.iter_mut().find(|entry| entry.key == "Resources") {
+                Some(entry) => self.displaced.push(std::mem::replace(&mut entry.value, own)),
+                None => dict.push(PdfDictEntry::new("Resources", own)),
+            }
+        }
+        true
+    }
+
+    /// 📚 The resource dictionary a page sees: its own, else the nearest ancestor's.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn effective_resources(&self, dict: &[PdfDictEntry]) -> Vec<PdfDictEntry> {
+        self.inherited(dict, "Resources", None).and_then(|value| self.resolve(&value)).and_then(|value| value.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default()
+    }
+
+    /// 🧬 The inherited attribute `key` of a page dictionary: its own entry, else the nearest
+    /// ancestor's below `stop`.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inherited(&self, dict: &[PdfDictEntry], key: &str, stop: Option<ObjRef>) -> Option<PdfObject> {
+        if let Some(value) = dict_get(dict, key) {
+            return Some(value.clone());
+        }
+        let mut parent = dict_get(dict, "Parent").and_then(PdfObject::as_ref);
+        for _ in 0..64 {
+            let node = parent.filter(|node| Some(node.num) != stop.map(|stop| stop.num))?;
+            let entries = self.dict(node);
+            if let Some(value) = dict_get(&entries, key) {
+                return Some(value.clone());
+            }
+            parent = dict_get(&entries, "Parent").and_then(PdfObject::as_ref);
+        }
+        None
+    }
+
+    /// 🌳 Re-states the page tree flat under `root` (§7.7.3.2): every page a direct kid in typed
+    /// order, carrying the attributes it inherited from the intermediate nodes it leaves; the
+    /// intermediate nodes and the removed pages are displaced.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn restate_page_tree(&mut self, root: ObjRef, pages: &[ObjRef], removed: &[ObjRef]) {
+        for page in pages {
+            let mut dict = self.dict(*page);
+            for key in INHERITED_PAGE_KEYS {
+                if dict_get(&dict, key).is_none() {
+                    if let Some(value) = self.inherited(&dict, key, Some(root)) {
+                        dict.push(PdfDictEntry::new(key, value));
+                    }
+                }
+            }
+            dict.retain(|entry| entry.key != "Parent");
+            dict.push(PdfDictEntry::new("Parent", PdfObject::Ref(root)));
+            self.set_dict(*page, dict);
+        }
+        let mut tree = self.dict(root);
+        let kids = PdfObject::Array(pages.iter().map(|page| PdfObject::Ref(*page)).collect());
+        match tree.iter_mut().find(|entry| entry.key == "Kids") {
+            Some(entry) => self.displaced.push(std::mem::replace(&mut entry.value, kids)),
+            None => tree.push(PdfDictEntry::new("Kids", kids)),
+        }
+        tree.retain(|entry| entry.key != "Count");
+        tree.push(PdfDictEntry::new("Count", PdfObject::Int(pages.len() as i64)));
+        self.set_dict(root, tree);
+        self.displaced.extend(removed.iter().map(|page| PdfObject::Ref(*page)));
+    }
+
+    /// ℹ️ Grafts the information dictionary: re-stated in place when the graph holds one, added
+    /// when it does not, dropped from the trailer when the typed record is empty.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn graft_info(&mut self) {
+        let snapshot = self.typed;
+        let info = &snapshot.info;
+        let current = dict_get(&self.trailer, "Info").and_then(PdfObject::as_ref).filter(|reference| self.graph.contains_key(&reference.num));
+        if info.is_empty() {
+            if let Some(index) = self.trailer.iter().position(|entry| entry.key == "Info") {
+                let old = self.trailer.remove(index).value;
+                self.displaced.push(old);
+            }
+            return;
+        }
+        let reference = current.unwrap_or_else(|| self.reserve());
+        if let Some(old) = self.graph.insert(reference.num, PdfIndirectObject { id: reference, value: PdfObject::Dict(lower_info(info)) }) {
+            self.displaced.push(old.value);
+        }
+        self.trailer.retain(|entry| entry.key != "Info");
+        self.trailer.push(PdfDictEntry::new("Info", PdfObject::Ref(reference)));
+    }
+
+    /// 🗂️ Grafts the moved catalog lanes: the catalog is lowered afresh against the graph (its
+    /// destinations resolve to the graph's pages) and only the entries the moved lanes own are
+    /// re-stated in the retained catalog; named destinations re-state the `/Names` tree's `/Dests`
+    /// (superseding a PDF 1.1 catalog `/Dests`), extra entries re-state exactly the keys they carry.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn graft_catalog(&mut self, reading: &Reading, pages: &[ObjRef], lanes: &[CatalogLane]) -> PResult<()> {
+        let (Some(catalog_ref), Some(root)) = (self.catalog(), self.page_tree_root()) else { return Ok(()) };
+        let (lowered, objects) = lower_catalog_standalone(self.typed, self.next, LowerOptions::default(), &reading.targets(pages), root)?;
+        let scratch: HashMap<u32, PdfObject> = objects.into_iter().map(|object| (object.id.num, object.value)).collect();
+        let mut catalog = self.dict(catalog_ref);
+        let mut adopted = HashMap::new();
+        for lane in lanes {
+            match lane {
+                CatalogLane::NamedDestinations => {
+                    self.put(&mut catalog, "Dests", None, &scratch, &mut adopted);
+                    let dests = dict_get(&lowered, "Names").and_then(|names| names.dict_get("Dests")).cloned();
+                    self.put_named_destinations(&mut catalog, dests, &scratch, &mut adopted);
+                }
+                CatalogLane::Extra => {
+                    for entry in &reading.lanes.catalog_extra {
+                        self.put(&mut catalog, &entry.key, None, &scratch, &mut adopted);
+                    }
+                    catalog.extend(self.typed.catalog_extra.iter().cloned());
+                }
+                lane => self.put(&mut catalog, lane.key(), dict_get(&lowered, lane.key()).cloned(), &scratch, &mut adopted),
+            }
+        }
+        self.set_dict(catalog_ref, catalog);
+        Ok(())
+    }
+
+    /// 🎯 Re-states `/Names /Dests`, editing the `/Names` dictionary where the graph keeps it and
+    /// dropping it once it holds nothing.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn put_named_destinations(&mut self, catalog: &mut Vec<PdfDictEntry>, dests: Option<PdfObject>, scratch: &HashMap<u32, PdfObject>, adopted: &mut HashMap<u32, ObjRef>) {
+        let held = dict_get(catalog, "Names").cloned();
+        let mut names = held.as_ref().and_then(|value| self.resolve(value)).and_then(|value| value.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default();
+        self.put(&mut names, "Dests", dests, scratch, adopted);
+        match (held.as_ref().and_then(PdfObject::as_ref), names.is_empty()) {
+            (Some(reference), false) if self.graph.contains_key(&reference.num) => self.set_dict(reference, names),
+            (_, true) => self.put(catalog, "Names", None, scratch, adopted),
+            (_, false) => self.put(catalog, "Names", Some(PdfObject::Dict(names)), scratch, adopted),
+        }
+    }
+
+    /// 🗃️ Keeps every typed resource alive and in typed order through the page tree root's
+    /// `/Resources` (§7.7.3.4) — the only way a graft can restate a resource collection whose
+    /// values are the graph's own when a page edit changed which pages reach them, or in what
+    /// order. Pages that inherited the root's resources get them as their own first. `false` when
+    /// a typed resource is not the original graph's object.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn retain_resources(&mut self, original: &Reading, pages: &[ObjRef]) -> bool {
+        fn section<T: PartialEq>(key: &'static str, category: Category, typed: &[T], read: &[T], id: impl Fn(&T) -> &str, refs: &HashMap<(Category, String), ObjRef>) -> Option<(&'static str, Vec<PdfDictEntry>)> {
+            let entries = typed.iter().map(|item| read.contains(item).then(|| refs.get(&(category, id(item).to_string())).map(|reference| PdfDictEntry::new(id(item), PdfObject::Ref(*reference)))).flatten()).collect::<Option<Vec<_>>>()?;
+            Some((key, entries))
+        }
+        let (typed, read, refs) = (self.typed, &original.lanes, &original.refs);
+        let x_objects: Option<Vec<PdfDictEntry>> = section("XObject", Category::XObject, &typed.images, &read.images, |image| image.id.as_str(), refs).zip(section("XObject", Category::XObject, &typed.forms, &read.forms, |form| form.id.as_str(), refs)).map(|((_, images), (_, forms))| images.into_iter().chain(forms).collect());
+        let sections = [
+            section("Font", Category::Font, &typed.fonts, &read.fonts, |font| font.id.as_str(), refs),
+            x_objects.map(|entries| ("XObject", entries)),
+            section("ExtGState", Category::ExtGState, &typed.ext_g_states, &read.ext_g_states, |state| state.id.as_str(), refs),
+            section("Shading", Category::Shading, &typed.shadings, &read.shadings, |shading| shading.id.as_str(), refs),
+            section("Pattern", Category::Pattern, &typed.patterns, &read.patterns, |pattern| pattern.id.as_str(), refs),
+            section("ColorSpace", Category::ColorSpace, &typed.color_spaces, &read.color_spaces, |space| space.name.as_str(), refs),
+            section("Properties", Category::Properties, &typed.properties, &read.properties, |properties| properties.name.as_str(), refs),
+        ];
+        let Some(sections) = sections.into_iter().collect::<Option<Vec<_>>>() else { return false };
+        let Some(root) = self.page_tree_root() else { return false };
+        let resources = PdfObject::Dict(sections.into_iter().filter(|(_, entries)| !entries.is_empty()).map(|(key, entries)| PdfDictEntry::new(key, PdfObject::Dict(entries))).collect());
+        let mut tree = self.dict(root);
+        let inherited = dict_get(&tree, "Resources").cloned().unwrap_or(PdfObject::Dict(Vec::new()));
+        for page in pages {
+            let mut dict = self.dict(*page);
+            if self.inherited(&dict, "Resources", Some(root)).is_none() {
+                dict.push(PdfDictEntry::new("Resources", inherited.clone()));
+                self.set_dict(*page, dict);
+            }
+        }
+        tree.retain(|entry| entry.key != "Resources");
+        tree.push(PdfDictEntry::new("Resources", resources));
+        self.set_dict(root, tree);
+        true
+    }
+}
+
+/// 📚 A content stream's resource names by resource dictionary section (§7.8.3).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn resource_sections(references: &ContentReferences) -> [(&'static str, Category, Vec<String>); 7] {
+    [
+        ("Font", Category::Font, references.fonts.clone()),
+        ("XObject", Category::XObject, references.x_objects.clone()),
+        ("ExtGState", Category::ExtGState, references.ext_g_states.clone()),
+        ("Shading", Category::Shading, references.shadings.clone()),
+        ("Pattern", Category::Pattern, references.patterns.clone()),
+        ("ColorSpace", Category::ColorSpace, references.color_spaces.clone()),
+        ("Properties", Category::Properties, references.properties.clone()),
+    ]
+}
+
+/// 🧷 Whether a page carries an interactive-form widget, whose field back-links only a whole
+/// interactive-form write can re-state.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn carries_widget(page: &PdfPage) -> bool {
+    page.annotations.iter().any(|annotation| matches!(annotation.kind, PdfAnnotationKind::Widget { .. }))
 }
 //#endregion 🔖️Encode
+
+//#region 🔖️GraphEdit
+/// 🪢 Carries a retained-graph edit into the typed lanes: `next` is `base` with its COS graph
+/// (`objects`, `trailer`) edited, and every lane whose reading the edit moved takes the edited
+/// graph's reading while every other lane keeps what `base` holds — so the next write never
+/// undoes a direct graph edit with a stale typed lane, and a typed edit pending in another lane
+/// survives it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn carry_graph_edit(base: &PdfSnapshot, next: &mut PdfSnapshot) {
+    if base.objects == next.objects && base.trailer == next.trailer {
+        return;
+    }
+    let before = lift_document(&base.trailer, &base.declared_version, &mut GraphSource::new(&base.objects));
+    let after = lift_document(&next.trailer, &base.declared_version, &mut GraphSource::new(&next.objects));
+    macro_rules! carry {
+        ($($lane:ident),* $(,)?) => {
+            $(if before.$lane != after.$lane {
+                next.$lane = after.$lane;
+            })*
+        };
+    }
+    carry!(declared_version, pages, fonts, images, forms, ext_g_states, shadings, patterns, color_spaces, properties, outlines, named_destinations, page_labels, embedded_files, output_intents, acro_form, optional_content, page_layout, page_mode, viewer_preferences, open_action, language, mark_info, metadata, document_id, info, catalog_extra);
+}
+//#endregion 🔖️GraphEdit
 
 //#region 🔖️Streaming
 /// 🌊 A page-at-a-time document writer for guests with per-step budgets: the document-level
@@ -475,7 +1245,7 @@ pub fn embedded_true_type_font(id: &str, program: &[u8], base_font: &str, text: 
         }
         None => font.unicode_map.keys().filter_map(|code| char::from_u32(*code)).collect(),
     };
-    let mut widths: std::collections::BTreeMap<u32, f64> = std::collections::BTreeMap::new();
+    let mut widths: BTreeMap<u32, f64> = BTreeMap::new();
     let mut mappings = Vec::new();
     for character in characters {
         if let Some(gid) = font.glyph_for_char(character) {

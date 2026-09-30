@@ -43,7 +43,4 @@ condition {
 id=spec-file label="Spec Sheet" kind=file accept=".pdf,.dwg"
 condition {
 }
-] ]
-responses=[]
-structure=child_id=building-component-structure target="building-component-structure!s.stdio.semio@v1/value"
-results=child_id=building-component-results target="building-component-results!s.stdio.semio@v1/table"
+] ] responses=[ ] structure=child_id=building-component-structure target="building-component-structure!s.stdio.semio@v1/value" results=child_id=building-component-results target="building-component-results!s.stdio.semio@v1/table"

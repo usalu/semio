@@ -1,6 +1,6 @@
 // #region 🧭️Canvas2dGumballOverlay
 /** 🧭️ Screen-space 2D transform gumball driven by the plugin `meta:gumball` layer. */
-import { useCallback, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { SPATIAL_AXIS_COLOR_REFS } from "@semio-tech/ui-styling";
 import { type CanvasCamera, screenToWorldLogical, worldToScreenLogical } from "./🟦️.tsx";
 
@@ -143,6 +143,31 @@ export function canvas2dGumballTransformStep(
   return { dispatch: { action: total.action, args: { ...total.args, sx, sy, sz } }, total };
 }
 
+/** 🛠️ The tool-transaction phase a gumball dispatch carries: `stream` ticks accumulate in the app's ONE open transaction,
+ * `commit` publishes it as one edit, `abort` drops it with zero trace (`reason` is a tool-machine abort reason). */
+export type Canvas2dGumballPhase = { readonly phase: "stream" } | { readonly phase: "commit" } | { readonly phase: "abort"; readonly reason: "blur" | "captureLost" };
+
+/** 🎚️ The verb one handle drags with. */
+export function canvas2dGumballVerb(kind: GumballHandleKind): "translateSelection" | "rotateSelection" | "scaleSelection" {
+  if (kind === "moveX" || kind === "moveY") return "translateSelection";
+  return kind === "rotate" ? "rotateSelection" : "scaleSelection";
+}
+
+/** 🛑️ The pose delta that moves nothing for a handle — a commit whose tail moved nothing carries it. */
+export function canvas2dGumballIdentity(kind: GumballHandleKind, selectionIds: readonly string[]): Canvas2dGumballTransformPayload {
+  const base = { ids: [...selectionIds] };
+  const action = canvas2dGumballVerb(kind);
+  if (action === "translateSelection") return { action, args: { ...base, dx: 0, dy: 0, dz: 0 } };
+  if (action === "rotateSelection") return { action, args: { ...base, ax: 0, ay: 0, az: 1, angle: 0 } };
+  return { action, args: { ...base, sx: 1, sy: 1, sz: 1 } };
+}
+
+/** 🧾️ `payload` stamped with its tool-transaction `phase`; an abort carries only the ids beside its phase. */
+export function canvas2dGumballPhased(payload: Canvas2dGumballTransformPayload, phase: Canvas2dGumballPhase): Canvas2dGumballTransformPayload {
+  if (phase.phase === "abort") return { action: payload.action, args: { ids: payload.args.ids, phase: "abort", reason: phase.reason } };
+  return { action: payload.action, args: { ...payload.args, phase: phase.phase } };
+}
+
 type Canvas2dGumballOverlayProps = {
   readonly layersJson: string | undefined;
   readonly activeUtility: string | undefined;
@@ -156,6 +181,10 @@ export function Canvas2dGumballOverlay({ layersJson, activeUtility, camera, view
   const meta = useMemo(() => parseCanvas2dGumballMeta(layersJson), [layersJson]);
   const dragRef = useRef<DragState | null>(null);
   const totalRef = useRef<Canvas2dGumballTransformPayload | null>(null);
+  /** 🕹️ The ids the gesture grabbed, pinned at pointer-down. */
+  const idsRef = useRef<readonly string[]>([]);
+  /** 🛠️ A stream tick went out, so the app holds this gesture's open tool transaction. */
+  const streamedRef = useRef(false);
   const [preview, setPreview] = useState<DragState | null>(null);
 
   const visible = activeUtility === "transform" && meta != null && viewportWidth > 0 && viewportHeight > 0;
@@ -169,10 +198,12 @@ export function Canvas2dGumballOverlay({ layersJson, activeUtility, camera, view
     (screenX: number, screenY: number) => {
       const drag = dragRef.current;
       if (!drag || !meta) return;
-      const step = canvas2dGumballTransformStep(drag.kind, drag, screenX, screenY, camera, viewportWidth, viewportHeight, meta.selectionIds, totalRef.current, meta.space ?? "fem2d");
+      const step = canvas2dGumballTransformStep(drag.kind, drag, screenX, screenY, camera, viewportWidth, viewportHeight, idsRef.current, totalRef.current, meta.space ?? "fem2d");
       if (!step) return;
       totalRef.current = step.total;
-      onDispatch(step.dispatch.action, step.dispatch.args);
+      streamedRef.current = true;
+      const phased = canvas2dGumballPhased(step.dispatch, { phase: "stream" });
+      onDispatch(phased.action, phased.args);
     },
     [camera, meta, onDispatch, viewportHeight, viewportWidth],
   );
@@ -180,7 +211,33 @@ export function Canvas2dGumballOverlay({ layersJson, activeUtility, camera, view
   const endDrag = useCallback(() => {
     dragRef.current = null;
     totalRef.current = null;
+    streamedRef.current = false;
     setPreview(null);
+  }, []);
+
+  /** 🧯️ Host abort of the gesture in flight: the app drops its open transaction with zero trace. */
+  const abortDrag = useCallback(
+    (reason: "blur" | "captureLost") => {
+      const drag = dragRef.current;
+      if (drag && streamedRef.current) {
+        const phased = canvas2dGumballPhased(canvas2dGumballIdentity(drag.kind, idsRef.current), { phase: "abort", reason });
+        onDispatch(phased.action, phased.args);
+      }
+      endDrag();
+    },
+    [endDrag, onDispatch],
+  );
+  const abortDragRef = useRef(abortDrag);
+  abortDragRef.current = abortDrag;
+  useEffect(() => {
+    const onBlur = () => {
+      if (dragRef.current) abortDragRef.current("blur");
+    };
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("blur", onBlur);
+      if (dragRef.current) abortDragRef.current("captureLost");
+    };
   }, []);
 
   const localPoint = useCallback((event: ReactPointerEvent<Element>) => {
@@ -197,7 +254,9 @@ export function Canvas2dGumballOverlay({ layersJson, activeUtility, camera, view
       event.stopPropagation();
       (event.currentTarget as SVGElement).setPointerCapture(event.pointerId);
       dragRef.current = { kind, startScreen: localPoint(event), startModelPivot: meta.pivotModel };
+      idsRef.current = [...meta.selectionIds];
       totalRef.current = null;
+      streamedRef.current = false;
       setPreview(dragRef.current);
     },
     [localPoint, meta, pivotScreen],
@@ -214,14 +273,33 @@ export function Canvas2dGumballOverlay({ layersJson, activeUtility, camera, view
     [applyDragAt, localPoint],
   );
 
+  /** 💾️ Release: the remaining tail (or the identity when nothing is left) commits the gesture's ONE transaction; a
+   * release after no stream tick dispatches nothing. */
   const onPointerUp = useCallback(
+    (event: ReactPointerEvent<SVGSVGElement>) => {
+      const drag = dragRef.current;
+      if (!drag || !meta) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const point = localPoint(event);
+      const tail = canvas2dGumballTransformStep(drag.kind, drag, point.x, point.y, camera, viewportWidth, viewportHeight, idsRef.current, totalRef.current, meta.space ?? "fem2d");
+      if (streamedRef.current || tail) {
+        const phased = canvas2dGumballPhased(tail?.dispatch ?? canvas2dGumballIdentity(drag.kind, idsRef.current), { phase: "commit" });
+        onDispatch(phased.action, phased.args);
+      }
+      endDrag();
+    },
+    [camera, endDrag, localPoint, meta, onDispatch, viewportHeight, viewportWidth],
+  );
+
+  const onPointerCancel = useCallback(
     (event: ReactPointerEvent<SVGSVGElement>) => {
       if (!dragRef.current) return;
       event.preventDefault();
       event.stopPropagation();
-      endDrag();
+      abortDrag("captureLost");
     },
-    [endDrag],
+    [abortDrag],
   );
 
   if (!visible || !meta || !pivotScreen) return null;
@@ -230,7 +308,7 @@ export function Canvas2dGumballOverlay({ layersJson, activeUtility, camera, view
   const cy = pivotScreen.y;
 
   return (
-    <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
+    <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerCancel} onLostPointerCapture={onPointerCancel}>
       {config.rotate ? (
         <circle
           className="pointer-events-auto cursor-grab"

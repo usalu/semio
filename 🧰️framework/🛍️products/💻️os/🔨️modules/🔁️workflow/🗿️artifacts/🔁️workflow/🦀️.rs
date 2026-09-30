@@ -932,7 +932,7 @@ pub async fn patch_workflow_parameter(parameter: &WorkflowParameter, patch: &dsl
 /// to an empty/unchanged diff don't apply here): it's `reconcile_workflow_snapshot`'s post-merge
 /// integrity pass, called only to decide whether a stale binding gets corrective-dropped, and the
 /// drop always happens regardless of this message's level. The domain code
-/// (`workflow/parameter-binding-invalid`) is intentionally outside the frozen 7 `mutation.*` codes —
+/// (`workflow/parameter-binding-invalid`) is intentionally outside the frozen nine `mutation.*` codes —
 /// those govern `diff`-leaf outcomes only, not this reconcile-pass diagnostic (see
 /// `🏪️store/🔄️sync/🦀️.rs`'s `ArtifactEvent::Conflict(MutationMessage)` for the identical
 /// precedent).

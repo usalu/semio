@@ -1,0 +1,6 @@
+{
+  "ChangeZoneNoise": {
+    "zoneId": "zone-office",
+    "newNoiseDb": 30.0
+  }
+}

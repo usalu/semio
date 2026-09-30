@@ -1,0 +1,6 @@
+{
+  "mutation": "updateLighting",
+  "newLighting": {
+    "controlFactor": 0.88
+  }
+}

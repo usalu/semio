@@ -1,0 +1,40 @@
+{
+  "mutation": "replaceXmlNode",
+  "address": {
+    "partPath": "word/document.xml",
+    "nodePath": [
+      0,
+      0,
+      0
+    ],
+    "expectedName": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r",
+    "revision": "52f479bec4094a56"
+  },
+  "node": {
+    "kind": "element",
+    "name": "w:r",
+    "attrs": [],
+    "children": [
+      {
+        "kind": "element",
+        "name": "w:t",
+        "attrs": [
+          {
+            "name": "xml:space",
+            "value": "preserve"
+          }
+        ],
+        "children": [
+          {
+            "kind": "text",
+            "text": "first"
+          }
+        ]
+      },
+      {
+        "kind": "comment",
+        "text": "replacement"
+      }
+    ]
+  }
+}

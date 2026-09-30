@@ -3,7 +3,7 @@
 //! 🎯️ Pointer batches retain every sample. Lasso routes consume one sample per retained turn;
 //! hover, shape and draft cursor projections consume the newest position.
 
-use crate::editor::drawing::commands::canvas_pointer_down::{canvas_point_to_world, drawing_gesture, DrawingSession, DRAWING_MARQUEE_THRESHOLD_PX};
+use crate::editor::drawing::commands::canvas_pointer_down::{canvas_point_to_world, DrawingSession};
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::DrawingMutation;
 use crate::DrawingSnapshot;
@@ -43,15 +43,12 @@ impl CanvasPointerMove {
     }
 }
 
-pub fn handle(payload: &CanvasPointerMove, doc: &ArtifactView<'_, DrawingSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
-    let document = doc.snapshot;
+/// ↔️ One pointer batch drives the canvas tool to its newest sample with the live transform modifiers.
+pub fn handle(payload: &CanvasPointerMove, _doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let [x, y] = payload.last_sample();
     let (world_x, world_y) = canvas_point_to_world(&session.window_config.viewport, x, y, payload.width, payload.height);
-    let world = [world_x, world_y];
-    if session.gesture.matches("idle") {
+    if session.tool.at_rest() {
         return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("drawing.gesture.retained-route"), "idle hover requires the retained Drawing tree-query owner"));
     }
-    let marquee_threshold_world = DRAWING_MARQUEE_THRESHOLD_PX / session.window_config.viewport.zoom.max(1e-6);
-    let emit = session.step_gesture(drawing_gesture::Event::PointerMove { world, marquee_threshold_world }, document, cfg.snapshot);
-    Ok(emit)
+    session.sample([world_x, world_y], payload.shift, payload.alt)
 }

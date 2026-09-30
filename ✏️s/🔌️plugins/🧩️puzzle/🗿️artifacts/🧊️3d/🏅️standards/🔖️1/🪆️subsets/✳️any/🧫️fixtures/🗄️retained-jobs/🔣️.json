@@ -6,8 +6,6 @@
   "toolIds": [
     "openAddObjectDialog",
     "worldPointerDown",
-    "transformBegin",
-    "transformEnd",
     "setActiveExample",
     "setFillCount",
     "addTargetVolume",
@@ -118,8 +116,6 @@
     "setVoxelDims",
     "targetBrushSuggestions",
     "toggleSun",
-    "transformBegin",
-    "transformEnd",
     "translateSelection",
     "worldPointerDown",
     "worldRelocate"
@@ -135,25 +131,19 @@
   },
   "semanticCursors": {
     "translateSelection": [
-      "objectSelectionId",
-      "volumeSelectionId",
-      "objectScan",
-      "volumeScan",
-      "mutation"
+      "gestureRead",
+      "toolCommit",
+      "closeOwner"
     ],
     "rotateSelection": [
-      "objectSelectionId",
-      "volumeSelectionId",
-      "objectScan",
-      "volumeScan",
-      "mutation"
+      "gestureRead",
+      "toolCommit",
+      "closeOwner"
     ],
     "scaleSelection": [
-      "objectSelectionId",
-      "volumeSelectionId",
-      "objectScan",
-      "volumeScan",
-      "mutation"
+      "gestureRead",
+      "toolCommit",
+      "closeOwner"
     ],
     "focusSelection": [
       "objectSelectionId",
@@ -176,13 +166,8 @@
       "closeOwner"
     ],
     "worldRelocate": [
-      "objectScan",
-      "moveMutation",
-      "existingAttractionScan",
-      "candidateObject",
-      "candidateVortex",
-      "distanceMeasure",
-      "attractionPublish",
+      "gestureRead",
+      "toolCommit",
       "closeOwner"
     ],
     "createAttraction": [
@@ -275,16 +260,6 @@
       "boundedFieldDecode",
       "exactTypedMutation",
       "publish",
-      "closeOwner"
-    ],
-    "transformBegin": [
-      "boundedGestureBoundary",
-      "publishEmpty",
-      "closeOwner"
-    ],
-    "transformEnd": [
-      "boundedGestureBoundary",
-      "publishEmpty",
       "closeOwner"
     ],
     "engagementRepeatLast": [
@@ -387,10 +362,8 @@
       "closeOwner"
     ],
     "relocateTargetVolume": [
-      "volumeScan",
-      "originMutation",
-      "orientationMutation",
-      "scaleMutation",
+      "gestureRead",
+      "toolCommit",
       "closeOwner"
     ],
     "setCamera": [
@@ -522,29 +495,24 @@
   "hostileSourceMutations": [
     {
       "id": "translateOldReducer",
-      "replace": "Puzzle3dScaleWork::new(tool_id)",
+      "replace": "Puzzle3dTransformWork::new(tool_id, request.authoring_seed.clone())",
       "with": "BoundedFirstStepCommandWork",
       "expected": "rejected"
     },
     {
       "id": "rotateOldReducer",
-      "replace": "Puzzle3dScaleWork::new(tool_id)",
+      "replace": "Puzzle3dTransformWork::new(tool_id, request.authoring_seed.clone())",
       "with": "BoundedFirstStepCommandWork",
       "expected": "rejected"
     },
     {
       "id": "selectionCursorRemoved",
-      "remove": "Puzzle3dScaleStage::ObjectSelection",
+      "remove": "Puzzle3dTransformStage::Read",
       "expected": "rejected"
     },
     {
-      "id": "objectCursorRemoved",
-      "remove": "Puzzle3dScaleStage::Objects",
-      "expected": "rejected"
-    },
-    {
-      "id": "volumeCursorRemoved",
-      "remove": "Puzzle3dScaleStage::Volumes",
+      "id": "toolCommitBoundaryRemoved",
+      "remove": "Puzzle3dTransformStage::Commit",
       "expected": "rejected"
     },
     {
@@ -600,24 +568,8 @@
       "expected": "rejected"
     },
     {
-      "id": "worldRelocateOldReducer",
-      "replace": "Puzzle3dWorldRelocateWork::default()",
-      "with": "BoundedFirstStepCommandWork",
-      "expected": "rejected"
-    },
-    {
-      "id": "worldRelocateExistingScanRemoved",
-      "remove": "Puzzle3dWorldRelocateStage::ExistingAttractions",
-      "expected": "rejected"
-    },
-    {
-      "id": "worldRelocateVortexCursorRemoved",
-      "remove": "Puzzle3dWorldRelocateStage::CandidateVortex",
-      "expected": "rejected"
-    },
-    {
-      "id": "worldRelocatePublishBoundaryRemoved",
-      "remove": "Puzzle3dWorldRelocateStage::PublishAttraction",
+      "id": "transformToolBypassed",
+      "remove": "puzzle3d_transform_tool_commit",
       "expected": "rejected"
     },
     {
@@ -742,12 +694,6 @@
     {
       "id": "scalarConfigOverlapMutationRemoved",
       "remove": "Puzzle3dConfigMutation::SetContactTolerance",
-      "expected": "rejected"
-    },
-    {
-      "id": "transformLifecycleOldReducer",
-      "replace": "NoopPuzzleCommandWork::new(tool_id)",
-      "with": "BoundedFirstStepCommandWork",
       "expected": "rejected"
     },
     {
@@ -1288,7 +1234,7 @@
         "vortexId": "vortex-ü"
       },
       "expectedOrder": [
-        "moveObject:objekt-ä:[1,2,3]",
+        "dragSelection:objekt-ä",
         "connectVortices:objekt-ß:vortex-ü:objekt-ä"
       ],
       "control": "pollEachProgressAckClose",
@@ -1296,28 +1242,11 @@
       "fingerprint": "0:0:0:0:0:0"
     },
     {
-      "id": "worldRelocateVortexMax",
-      "toolId": "worldRelocate",
-      "vorticesPerObject": 64,
-      "expected": "admitted"
-    },
-    {
-      "id": "worldRelocateVortexMaxPlusOne",
-      "toolId": "worldRelocate",
-      "vorticesPerObject": 65,
-      "expected": "faultUnchanged"
-    },
-    {
       "id": "worldRelocateCancelEveryBoundary",
       "toolId": "worldRelocate",
       "boundaries": [
-        "objectScan",
-        "moveMutation",
-        "existingAttractionScan",
-        "candidateObject",
-        "candidateVortex",
-        "distanceMeasure",
-        "attractionPublish",
+        "gestureRead",
+        "toolCommit",
         "closeOwner"
       ],
       "control": "freshCancelAtEachBoundaryThenClose",
@@ -1328,13 +1257,8 @@
       "id": "worldRelocateFaultEveryBoundary",
       "toolId": "worldRelocate",
       "boundaries": [
-        "objectScan",
-        "moveMutation",
-        "existingAttractionScan",
-        "candidateObject",
-        "candidateVortex",
-        "distanceMeasure",
-        "attractionPublish",
+        "gestureRead",
+        "toolCommit",
         "closeOwner"
       ],
       "control": "freshFaultAtEachBoundaryThenClose",
@@ -2059,37 +1983,6 @@
       "expectedMutation": "SetContactTolerance:1",
       "control": "pollProgressAckClose",
       "expected": "terminalEmpty",
-      "fingerprint": "0:0:0:0:0:0"
-    },
-    {
-      "id": "transformBeginBounded",
-      "toolId": "transformBegin",
-      "expectedMutations": [],
-      "control": "pollAckClose",
-      "expected": "terminalEmpty",
-      "fingerprint": "0:0:0:0:0:0"
-    },
-    {
-      "id": "transformEndBounded",
-      "toolId": "transformEnd",
-      "expectedMutations": [],
-      "control": "pollAckClose",
-      "expected": "terminalEmpty",
-      "fingerprint": "0:0:0:0:0:0"
-    },
-    {
-      "id": "transformLifecycleCancelFault",
-      "toolIds": [
-        "transformBegin",
-        "transformEnd"
-      ],
-      "boundaries": [
-        "boundedGestureBoundary",
-        "publishEmpty",
-        "closeOwner"
-      ],
-      "control": "freshCancelAndFreshFaultAtEachBoundaryThenClose",
-      "expected": "terminalEmptyExactHandback",
       "fingerprint": "0:0:0:0:0:0"
     },
     {

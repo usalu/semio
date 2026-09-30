@@ -519,7 +519,7 @@ fn validate_rows_diff(properties: &[PlyProperty], rows: &[PlyRow], diff: &PlyRow
         if property_positions.insert(property.name(), index).is_some() {
             let mut target = prefix.to_vec();
             target.extend(["properties".to_string(), property.name().to_string()]);
-            return Err(target_error("duplicate-base-target", "property names must be unique", target));
+            return Err(target_error("mutation.apply.duplicate-base-target", "property names must be unique", target));
         }
     }
     let mut removed = BTreeSet::new();
@@ -527,7 +527,7 @@ fn validate_rows_diff(properties: &[PlyProperty], rows: &[PlyRow], diff: &PlyRow
         let mut target = prefix.to_vec();
         target.extend(["rows".to_string(), index.to_string()]);
         if index >= rows.len() || !removed.insert(index) {
-            return Err(target_error("invalid-remove-index", "row removal target must exist exactly once", target));
+            return Err(target_error("mutation.apply.invalid-remove-index", "row removal target must exist exactly once", target));
         }
     }
     let mut modified = BTreeSet::new();
@@ -535,7 +535,7 @@ fn validate_rows_diff(properties: &[PlyProperty], rows: &[PlyRow], diff: &PlyRow
         let mut row_target = prefix.to_vec();
         row_target.extend(["rows".to_string(), entry.index.to_string()]);
         if entry.index >= rows.len() || removed.contains(&entry.index) || !modified.insert(entry.index) {
-            return Err(target_error("invalid-modify-index", "row modification target must exist exactly once and remain present", row_target));
+            return Err(target_error("mutation.apply.invalid-modify-index", "row modification target must exist exactly once and remain present", row_target));
         }
         let mut fields = BTreeSet::new();
         for field in &entry.diff.fields {
@@ -554,7 +554,7 @@ fn validate_rows_diff(properties: &[PlyProperty], rows: &[PlyRow], diff: &PlyRow
         let mut target = prefix.to_vec();
         target.extend(["rows".to_string(), index.to_string()]);
         if index > length || previous == Some(index) {
-            return Err(target_error("invalid-add-index", "row addition target must be unique and within the evolving sequence", target));
+            return Err(target_error("mutation.apply.invalid-add-index", "row addition target must be unique and within the evolving sequence", target));
         }
         previous = Some(index);
     }
@@ -566,20 +566,20 @@ fn validate_elements_diff(base: &[PlyElement], diff: &PlyElementsDiff) -> Mutati
     let mut base_by_name = BTreeMap::new();
     for element in base {
         if base_by_name.insert(element.name.as_str(), element).is_some() {
-            return Err(target_error("duplicate-base-target", "base element names must be unique", vec!["elements".to_string(), element.name.clone()]));
+            return Err(target_error("mutation.apply.duplicate-base-target", "base element names must be unique", vec!["elements".to_string(), element.name.clone()]));
         }
     }
     let mut removed = BTreeSet::new();
     for name in &diff.removed {
         if !base_by_name.contains_key(name.as_str()) || !removed.insert(name.as_str()) {
-            return Err(target_error("invalid-remove-target", "element removal target must exist exactly once", vec!["elements".to_string(), name.clone()]));
+            return Err(target_error("mutation.apply.invalid-remove-target", "element removal target must exist exactly once", vec!["elements".to_string(), name.clone()]));
         }
     }
     let mut modified = BTreeSet::new();
     for entry in &diff.modified {
         let base_element = base_by_name.get(entry.name.as_str()).copied();
         if base_element.is_none() || removed.contains(entry.name.as_str()) || !modified.insert(entry.name.as_str()) {
-            return Err(target_error("invalid-modify-target", "element modification target must exist exactly once and remain present", vec!["elements".to_string(), entry.name.clone()]));
+            return Err(target_error("mutation.apply.invalid-modify-target", "element modification target must exist exactly once and remain present", vec!["elements".to_string(), entry.name.clone()]));
         }
         if let (Some(rows), Some(element)) = (&entry.diff.rows, base_element) {
             let properties = entry.diff.properties.as_deref().unwrap_or(&element.properties);
@@ -592,7 +592,7 @@ fn validate_elements_diff(base: &[PlyElement], diff: &PlyElementsDiff) -> Mutati
     let mut previous = None;
     for (length, entry) in (base.len() - removed.len()..).zip(additions) {
         if base_by_name.contains_key(entry.element.name.as_str()) || !added_names.insert(entry.element.name.as_str()) || entry.index > length || previous == Some(entry.index) {
-            return Err(target_error("invalid-add-target", "element name and position must be unique and valid", vec!["elements".to_string(), entry.element.name.clone()]));
+            return Err(target_error("mutation.apply.invalid-add-target", "element name and position must be unique and valid", vec!["elements".to_string(), entry.element.name.clone()]));
         }
         previous = Some(entry.index);
     }

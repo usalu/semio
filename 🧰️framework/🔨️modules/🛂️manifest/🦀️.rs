@@ -2389,6 +2389,11 @@ pub fn history_action_definitions() -> Vec<ActionDefinition> {
     actions
 }
 
+/// 🌿️ Moves the artifact head onto an existing alternative: `alternativeId`.
+pub const SWITCH_ALTERNATIVE_ACTION_ID: &str = "switchAlternative";
+/// 🪪️ `switchAlternative`'s alternative id argument.
+pub const SWITCH_ALTERNATIVE_ARG_ALTERNATIVE_ID: &str = "alternativeId";
+
 /// 🕹️ The seven history-lane verbs: they move the applied stack or the head of the artifact.
 fn history_lane_action_definitions() -> Vec<ActionDefinition> {
     vec![
@@ -2404,9 +2409,15 @@ fn history_lane_action_definitions() -> Vec<ActionDefinition> {
         ActionDefinition::resumable_framework("createAlternative", LocalizedLabel::native("Create Alternative", "Alternative erstellen"), ActionKind::History, "git-branch")
             .describe(LocalizedLabel::native("Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.", "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."))
             .use_when(["try a variant", "branch this design"]),
-        ActionDefinition::resumable_framework("switchAlternative", LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History, "git-branch")
-            .describe(LocalizedLabel::native("Moves the artifact head onto another existing alternative branch.", "Setzt den Kopf des Artefakts auf einen anderen vorhandenen Alternativzweig."))
-            .use_when(["switch to the other variant"]),
+        ActionDefinition::resumable_framework(SWITCH_ALTERNATIVE_ACTION_ID, LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History, "git-branch")
+            .describe(LocalizedLabel::native(
+                "Moves the artifact head onto another existing alternative: the artifact shows that alternative's history, including the history edits kept as that alternative, and leaves those of the alternative it left.",
+                "Setzt den Kopf des Artefakts auf eine andere vorhandene Alternative: Das Artefakt zeigt deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und lässt die der verlassenen Alternative weg.",
+            ))
+            .use_when(["switch to the other variant", "go back to the original history", "compare the edited history with the original"])
+            .with_args([ActionArgDef::text(SWITCH_ALTERNATIVE_ARG_ALTERNATIVE_ID, LocalizedLabel::native("Alternative", "Alternative"))
+                .describe(LocalizedLabel::native("Id of an existing alternative of this artifact, as the history lists it.", "Kennung einer vorhandenen Alternative dieses Artefakts, wie der Verlauf sie auflistet."))
+                .required()]),
         ActionDefinition::resumable_framework("checkoutCheckpoint", LocalizedLabel::native("Checkout Checkpoint", "Checkpoint auschecken"), ActionKind::History, "git-branch")
             .describe(LocalizedLabel::native("Restores the artifact to a previously committed checkpoint by id.", "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."))
             .use_when(["go back to that checkpoint"]),
@@ -2618,6 +2629,45 @@ pub fn set_history_command_filter_action_definition() -> ActionDefinition {
 /// spawn, …) into the session command log without any document mutation — mirrors
 /// `SET_HISTORY_COMMAND_FILTER_ACTION_ID`'s auto-injected-constant pattern.
 pub const NOTE_SHELL_COMMAND_ACTION_ID: &str = "noteShellCommand";
+
+//#region 🔖️HostEvent
+/// 📨️ The host-forwarded window fact `hostEvent{windowId, kind}`: the runtime answers it with the app's own typed
+/// host-event command for that window (`ArtifactApp::host_event`), so an open gesture there ends without a trace.
+pub const HOST_EVENT_ACTION_ID: &str = "hostEvent";
+/// 🪟️ `hostEvent`'s window instance argument.
+pub const HOST_EVENT_ARG_WINDOW_ID: &str = "windowId";
+/// 🏷️ `hostEvent`'s event kind argument: [`HOST_EVENT_KIND_BLUR`], [`HOST_EVENT_KIND_CAPTURE_LOST`] or [`HOST_EVENT_KIND_RETIRING`].
+pub const HOST_EVENT_ARG_KIND: &str = "kind";
+/// 🌫️ The window lost keyboard focus.
+pub const HOST_EVENT_KIND_BLUR: &str = "blur";
+/// 🖐️ The window lost the pointer capture of a gesture (the release never reached it).
+pub const HOST_EVENT_KIND_CAPTURE_LOST: &str = "captureLost";
+/// 🚪️ The window is about to close.
+pub const HOST_EVENT_KIND_RETIRING: &str = "retiring";
+
+/// 📨️ The framework-injected `hostEvent` input verb (never in the palette, never an agent verb, never a history row):
+/// both hosts forward a window's blur and pointer-capture loss through it, and may announce its closing.
+pub fn host_event_action_definition() -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(HOST_EVENT_ACTION_ID, LocalizedLabel::native("Window Event", "Fensterereignis"), ActionKind::Interaction, "hand") }
+        .describe(LocalizedLabel::native(
+            "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+            "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet.",
+        ))
+        .with_args([
+            ActionArgDef::text(HOST_EVENT_ARG_WINDOW_ID, LocalizedLabel::native("Window", "Fenster")).required(),
+            ActionArgDef::select(
+                HOST_EVENT_ARG_KIND,
+                LocalizedLabel::native("Event", "Ereignis"),
+                vec![
+                    ActionArgOption::new(HOST_EVENT_KIND_BLUR, LocalizedLabel::native("Window lost focus", "Fenster hat den Fokus verloren")),
+                    ActionArgOption::new(HOST_EVENT_KIND_CAPTURE_LOST, LocalizedLabel::native("Pointer capture lost", "Zeigererfassung verloren")),
+                    ActionArgOption::new(HOST_EVENT_KIND_RETIRING, LocalizedLabel::native("Window closing", "Fenster wird geschlossen")),
+                ],
+            )
+            .required(),
+        ])
+}
+//#endregion 🔖️HostEvent
 
 /// 🗒️ The framework-injected `noteShellCommand` Shell action (never in the palette): records a
 /// shell-kind effect that already happened into the session command log, for effects dispatched

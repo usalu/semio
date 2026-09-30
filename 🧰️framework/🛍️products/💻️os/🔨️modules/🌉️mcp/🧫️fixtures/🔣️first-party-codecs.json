@@ -10,11 +10,11 @@
   },
   "guestFault": {
     "wire": {
-      "code": "mutation.fixture-rejected",
+      "code": "app.command.fixture-rejected",
       "message": "fixture rejection"
     },
     "expected": {
-      "code": "mutation.fixture-rejected",
+      "code": "app.command.fixture-rejected",
       "message": "fixture rejection"
     }
   },

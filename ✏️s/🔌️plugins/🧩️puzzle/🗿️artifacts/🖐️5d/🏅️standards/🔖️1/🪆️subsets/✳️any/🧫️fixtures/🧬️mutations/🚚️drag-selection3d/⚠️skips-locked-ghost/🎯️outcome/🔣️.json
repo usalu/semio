@@ -1,0 +1,20 @@
+{
+  "messages": [
+    {
+      "code": "mutation.partial",
+      "level": "warn",
+      "target": [
+        "part-ghost"
+      ]
+    },
+    {
+      "code": "mutation.partial",
+      "level": "warn",
+      "target": [
+        "part-c",
+        "volume-2"
+      ]
+    }
+  ],
+  "status": "applied"
+}

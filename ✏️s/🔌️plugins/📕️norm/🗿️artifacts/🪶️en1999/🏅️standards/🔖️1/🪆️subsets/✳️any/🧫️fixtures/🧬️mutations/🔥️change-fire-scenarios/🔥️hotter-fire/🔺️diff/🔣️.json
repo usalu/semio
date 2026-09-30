@@ -1,0 +1,19 @@
+{
+  "artifact": null,
+  "annex": null,
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "connections": null,
+  "fireScenarios": [
+    {
+      "id": "fire-1",
+      "memberId": "purlin-1",
+      "thetaA": 250.0,
+      "durationS": 600.0
+    }
+  ],
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": null
+}

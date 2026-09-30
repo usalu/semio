@@ -2252,6 +2252,7 @@ import {
   isWorldTransformGumballMode,
   worldGumballConfigForProjection,
   gumballTransformDeltaBetweenPoses,
+  gumballIdentityDelta,
   world3dGumballSelectionArgsV1,
   world3dRelocateDragTargetV1,
   world3dRelocateDispatchArgsV1,
@@ -4410,7 +4411,7 @@ describe("framework plugin runtime", () => {
       id: "conflict-remote-1",
       kind: { kind: "quarantined", envelopes: [] },
       status: "open",
-      messages: [{ level: "error", code: "mutation.targetMissing", message: "peer deleted the renamed node" }],
+      messages: [{ level: "error", code: "mutation.target-missing", message: "peer deleted the renamed node" }],
       actors: ["peer-actor"],
       timestamp: { actor: 7, physical_ms: 1000, logical: 1 },
     };
@@ -10181,6 +10182,14 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(worldGumballConfigForProjection("scale", { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "left" } }).plane).toBe("yz");
     expect(worldGumballConfigForProjection("move", { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } }).plane).toBeUndefined();
     expect(worldGumballConfigForProjection("transform", undefined).plane).toBeUndefined();
+  });
+
+  it("gumballIdentityDelta names the handle's verb with a pose delta that moves nothing (a live commit's empty tail, an abort's verb)", () => {
+    const base = { mode: "object", ids: ["n1"] };
+    expect(gumballIdentityDelta("move", base)).toEqual({ action: "translateSelection", args: { ...base, dx: 0, dy: 0, dz: 0 } });
+    expect(gumballIdentityDelta("transform", base, "rotateY")).toEqual({ action: "rotateSelection", args: { ...base, ax: 0, ay: 0, az: 1, angle: 0 } });
+    expect(gumballIdentityDelta("scale", base)).toEqual({ action: "scaleSelection", args: { ...base, sx: 1, sy: 1, sz: 1 } });
+    expect(gumballTransformDeltaBetweenPoses("move", { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, base)).toBeNull();
   });
 
   it("gumballTransformDeltaBetweenPoses emits incremental translate/rotate/scale args", () => {

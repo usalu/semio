@@ -1,0 +1,35 @@
+{
+  "gestures": {
+    "model-left": {
+      "states": [
+        "streaming"
+      ],
+      "verb": "translateSelection",
+      "authoringSeed": "seed",
+      "baseRevision": "0000000000000000000000000000000000000000000000000000000000000000",
+      "transaction": {
+        "id": "tx-00112233445566ff",
+        "tool": "s.fem.fem2d@1/*#editor#translateSelection"
+      },
+      "entries": [
+        {
+          "key": "selection:0",
+          "mutation": {
+            "mutation": "moveSelection",
+            "nodeIds": [
+              "n1"
+            ],
+            "regionIds": [],
+            "pivotX": 0.0,
+            "pivotY": 0.0,
+            "dx": 0.5,
+            "dy": 0.0,
+            "angle": 0.0,
+            "sx": 1.0,
+            "sy": 1.0
+          }
+        }
+      ]
+    }
+  }
+}

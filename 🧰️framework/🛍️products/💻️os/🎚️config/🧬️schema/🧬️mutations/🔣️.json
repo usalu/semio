@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/config/mutations.json",
-  "title": "OpeningConfigMutation | UiPreferencesConfigMutation | MergePolicyConfigMutation | IdentityConfigMutation | LocalCatalogConfigMutation",
+  "title": "OpeningConfigMutation | UiPreferencesConfigMutation | MergePolicyConfigMutation | IdentityConfigMutation | LocalCatalogConfigMutation | LocalFoldersConfigMutation",
   "oneOf": [
     {
       "$ref": "#/$defs/OpeningConfigMutation"
@@ -17,6 +17,9 @@
     },
     {
       "$ref": "#/$defs/LocalCatalogConfigMutation"
+    },
+    {
+      "$ref": "#/$defs/LocalFoldersConfigMutation"
     }
   ],
   "$defs": {
@@ -93,6 +96,17 @@
         },
         {
           "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/retire-local-document/schema.json"
+        }
+      ]
+    },
+    "LocalFoldersConfigMutation": {
+      "title": "LocalFoldersConfigMutation",
+      "oneOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/attach-local-folder/schema.json"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/detach-local-folder/schema.json"
         }
       ]
     }

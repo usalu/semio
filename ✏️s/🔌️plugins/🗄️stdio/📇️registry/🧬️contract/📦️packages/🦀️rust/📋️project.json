@@ -39,6 +39,15 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-architecture",
+        "forwardAllArgs": true
+      }
     }
   }
 }

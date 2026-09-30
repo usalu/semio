@@ -1,0 +1,16 @@
+{
+  "mutation": "insertTableRow",
+  "address": {
+    "partPath": "word/document.xml",
+    "nodePath": [
+      0,
+      1
+    ],
+    "expectedName": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tbl",
+    "revision": "8234b298aa30cb58"
+  },
+  "index": 1,
+  "cells": [
+    "new cell"
+  ]
+}

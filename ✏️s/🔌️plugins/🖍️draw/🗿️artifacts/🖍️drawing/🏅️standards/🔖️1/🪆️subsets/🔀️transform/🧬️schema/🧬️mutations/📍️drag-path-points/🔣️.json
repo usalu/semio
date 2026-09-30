@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📍️drag-path-points",
+  "semanticKind": "drag-path-points",
+  "displayName": "Drag Path Points",
+  "emoji": "📍️",
+  "aggregateVariant": "DragPathPoints",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "drag-path-points",
+  "binaryTag": 21,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

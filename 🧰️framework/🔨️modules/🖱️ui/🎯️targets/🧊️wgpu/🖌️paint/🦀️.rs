@@ -931,7 +931,7 @@ fn retained_tree_node_step(
             let color = foreground_on_fill(theme, theme.text_element, selected, on_hover_fill);
             let color = if item.dimmed.unwrap_or(false) || item.presence.state == UiState::Disabled { color.with_alpha(color.a * 0.5) } else { color };
             let trailing = if driver_drag == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
-            let value_width = if item.control.is_some() || item.inline_toolbar.is_some() { metrics.control_width + metrics.gap * 2.0 } else { 0.0 };
+            let value_width = if item.control.is_some() || item.content_lines.is_some() || item.inline_toolbar.is_some() { metrics.control_width + metrics.gap * 2.0 } else { 0.0 };
             let label_width = (bounds.x + bounds.w - trailing - label_x - value_width).max(0.0);
             let label_x = if inline.is_rtl() { bounds.x + value_width + trailing } else { label_x };
             match retained_tree_text_step(item.label.as_str(), Rect::new(label_x, row.y, label_width, row.h), font_size, color, inline, atlas, draw, cursor) {
@@ -944,16 +944,24 @@ fn retained_tree_node_step(
         }
         5 => {
             let Some(item) = retained_tree_item_at(tree, cursor, reversed) else { return RetainedNodePaintStep::Fault };
-            let Some(description) = item.description.as_deref() else {
-                cursor.advance(6);
-                return RetainedNodePaintStep::Pending;
+            let noted;
+            let description = match (item.description.as_deref(), retained.presence_note(&item.id)) {
+                (Some(description), Some(note)) => {
+                    noted = format!("{description} · {note}");
+                    noted.as_str()
+                }
+                (Some(line), None) | (None, Some(line)) => line,
+                (None, None) => {
+                    cursor.advance(6);
+                    return RetainedNodePaintStep::Pending;
+                }
             };
             let Some((row, _)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
             let indent = bounds.x + (cursor.depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
             let offset = item.label.as_str().len().min(RETAINED_NODE_COLLECTION_ITEMS) as f32 * theme.font_size_body * 0.5;
             let description_x = indent + TREE_ICON_SIZE + theme.gap_standard + offset;
             let trailing = if driver_drag == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
-            let value_width = if item.control.is_some() || item.inline_toolbar.is_some() { metrics.control_width + metrics.gap * 2.0 } else { 0.0 };
+            let value_width = if item.control.is_some() || item.content_lines.is_some() || item.inline_toolbar.is_some() { metrics.control_width + metrics.gap * 2.0 } else { 0.0 };
             let description_width = (bounds.x + bounds.w - trailing - value_width - description_x).max(1.0);
             let emphasized = item.presence.selected || item.presence.state == UiState::Previewed || item.presence.hover;
             let description_ink = foreground_on_fill(theme, theme.text_muted, item.presence.selected, emphasized && !item.presence.selected);
@@ -1796,6 +1804,7 @@ pub(crate) fn paint_node_step_with_driver(
                     retained_presence_step(draw, bounds, theme, presence)
                 }
             }
+            UiNode::Group(_) if crate::wgpu::mounted_layout::owning_tree_spec(tree, id).is_some() => retained_presence_step(draw, bounds, theme, presence),
             UiNode::Group(group) => {
                 if cursor.phase == 0 {
                     let result = retained_fixed_output(draw, |draw| {

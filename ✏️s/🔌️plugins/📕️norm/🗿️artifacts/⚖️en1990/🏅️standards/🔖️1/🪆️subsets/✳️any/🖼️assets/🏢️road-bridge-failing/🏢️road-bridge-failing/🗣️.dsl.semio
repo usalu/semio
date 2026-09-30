@@ -10,7 +10,7 @@ variables [id:TEXT category:TEXT qk:NUM] {
 }
 accidentals [id:TEXT ad:NUM] {
 }
-seismics [id:TEXT a-ek:NUM importance-class:TEXT] {
+seismics [id:TEXT a-ek:NUM importance-class:ENUM] {
 }
 members [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {
   deck-D1 "Main deck D1" "Hauptfahrbahn D1" 200000 200000 180000 150000 0 40 0.12 500 2 3

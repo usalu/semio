@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceMaterial`.
 //!
 //! Guards, in the order they run: `mutation.target-missing` (Error) on the selected id,
-//! `mutation.id-mismatch` (Fatal) when the replacement renames it, the SAME elasticity bounds
+//! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME elasticity bounds
 //! `create-material` runs (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceMaterial;
 use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dMaterialsDelta, Fem2dMaterialsPatchEntry};

@@ -303,44 +303,34 @@
           "items": {
             "$ref": "#/$defs/RasterAdjustmentParameter"
           },
-          "anyOf": [
-            {
-              "items": [
-                {
-                  "properties": {
-                    "parameter": {
-                      "const": "brightness"
-                    }
-                  }
-                },
-                {
-                  "properties": {
-                    "parameter": {
-                      "const": "contrast"
-                    }
-                  }
-                }
-              ]
-            },
-            {
-              "items": [
-                {
-                  "properties": {
-                    "parameter": {
-                      "const": "contrast"
-                    }
-                  }
-                },
-                {
+          "not": {
+            "anyOf": [
+              {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "object",
                   "properties": {
                     "parameter": {
                       "const": "brightness"
                     }
                   }
                 }
-              ]
-            }
-          ]
+              },
+              {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "parameter": {
+                      "const": "contrast"
+                    }
+                  }
+                }
+              }
+            ]
+          }
         },
         "locked": {
           "type": [

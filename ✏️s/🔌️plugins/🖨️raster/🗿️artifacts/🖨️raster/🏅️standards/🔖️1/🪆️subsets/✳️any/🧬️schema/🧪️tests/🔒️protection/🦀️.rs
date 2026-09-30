@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::snapshot;
 use store::{ArtifactDsl,ArtifactPack};
 #[test]
 fn protection_vectors_and_document_round_trips() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=empty_raster_snapshot();document.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
     for row in fixture["cases"].as_array().unwrap() {let expected:LayerProtection=dsl::json::from_json_str(&row["expected"].to_string()).unwrap();assert_eq!(layer_protection(&document.layers,row["id"].as_str().unwrap()),Some(expected));}
     assert_eq!(layer_protection(&document.layers,"missing"),None);
@@ -18,7 +18,7 @@ fn protection_vectors_and_document_round_trips() {
 #[test]
 fn protection_mutations_preserve_inverse_and_refuse_stale_guards() {
     use protocol::Mutation;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     for row in fixture["changes"].as_array().unwrap() {
         let mut base=empty_raster_snapshot();base.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
         let operation=crate::RasterMutation::ChangeLayerLocked(crate::mutations::change_layer_locked::ChangeLayerLocked {layer_id:row["id"].as_str().unwrap().into(),expected:row["expected"].as_bool().unwrap(),locked:row["locked"].as_bool().unwrap()});

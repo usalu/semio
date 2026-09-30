@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gis:document-http/approve-output",
+  "$ref": "#/$defs/GisMapInferencePortApprovalReceipt",
+  "$defs": {
+    "GisMapInferencePortApprovalReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "jobId",
+        "mutationId",
+        "commandHash",
+        "proposalHash",
+        "applied",
+        "undo"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.inference-approval-receipt/v1"
+        },
+        "jobId": {
+          "$ref": "#/$defs/GisMapInferencePortHex32"
+        },
+        "mutationId": {
+          "$ref": "#/$defs/GisMapInferencePortHex32"
+        },
+        "commandHash": {
+          "$ref": "#/$defs/GisMapInferencePortHex64"
+        },
+        "proposalHash": {
+          "$ref": "#/$defs/GisMapInferencePortHex64"
+        },
+        "applied": {
+          "type": "boolean"
+        },
+        "undo": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "targetId",
+            "expectedCurrent"
+          ],
+          "properties": {
+            "targetId": {
+              "$ref": "#/$defs/GisMapInferencePortHex32"
+            },
+            "expectedCurrent": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "documentId",
+                "headEditOrdinal",
+                "headEditId",
+                "lastCommitSeq",
+                "chainSha256"
+              ],
+              "properties": {
+                "documentId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "headEditOrdinal": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "headEditId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "lastCommitSeq": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "chainSha256": {
+                  "$ref": "#/$defs/GisMapInferencePortHex64"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "GisMapInferencePortHex64": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "GisMapInferencePortHex32": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    }
+  }
+}

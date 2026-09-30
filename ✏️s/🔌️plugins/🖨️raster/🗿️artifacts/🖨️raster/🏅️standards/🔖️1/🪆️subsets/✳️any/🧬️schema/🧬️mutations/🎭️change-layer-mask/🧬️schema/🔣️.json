@@ -2,6 +2,22 @@
   "$schema":"http://json-schema.org/draft-07/schema#",
   "$id":"https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-mask/schema.json",
   "title":"Change Layer Mask",
+  "x-semio-invariant": [
+    {
+      "id": "invertible-transform",
+      "description": {
+        "en": "Every affine placement the payload carries is invertible: its linear part has a non-zero determinant (a·d − b·c ≠ 0).",
+        "de": "Jede affine Platzierung der Nutzlast ist invertierbar: Ihr linearer Anteil hat eine von null verschiedene Determinante (a·d − b·c ≠ 0)."
+      }
+    },
+    {
+      "id": "bounded-mask-area",
+      "description": {
+        "en": "A mask covers at most 16,777,216 pixels: width × height ≤ 16,777,216.",
+        "de": "Eine Maske umfasst höchstens 16.777.216 Pixel: Breite × Höhe ≤ 16.777.216."
+      }
+    }
+  ],
   "type":"object",
   "additionalProperties":false,
   "required":["mutation","layerId","expected","mask"],

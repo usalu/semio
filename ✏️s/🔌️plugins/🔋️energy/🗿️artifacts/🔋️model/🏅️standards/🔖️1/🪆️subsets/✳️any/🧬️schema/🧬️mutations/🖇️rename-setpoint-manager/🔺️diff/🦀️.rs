@@ -10,10 +10,10 @@ pub fn diff(payload: &super::RenameSetpointManager, base: &EnergyModelSnapshot) 
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Setpoint manager {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if payload.new_name.trim().is_empty() {
-        return protocol::MutationOutcome::error("mutation.invariant", "A setpoint manager name must not be blank.".to_string(), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "A setpoint manager name must not be blank.".to_string(), [payload.id.0.to_string()]);
     }
     if base.model.setpoint_managers.iter().any(|item| item.id != payload.id && item.name == payload.new_name) {
-        return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Another setpoint manager is already named {:?}.", payload.new_name), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Another setpoint manager is already named {:?}.", payload.new_name), [payload.id.0.to_string()]);
     }
     if existing.name == payload.new_name {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Setpoint manager {} already has that name.", payload.id.0));

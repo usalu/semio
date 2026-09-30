@@ -5786,11 +5786,11 @@ function normalizeMutationCasePairs(
           entries.get(source.scenarioRoot)?.violations.push(violation("mutation-fixture-invalid", fixtureRoot, fixtureProblem));
           continue;
         }
+        consumed.add(vectorKey);
         if (Buffer.byteLength(implementationRoot, "utf8") + implementationContract.pathBudgetReserve.bytes > taxonomy.schema.collisionPolicy.maxPathBytes || Buffer.byteLength(fixtureRoot, "utf8") + fixtureContract.pathBudgetReserve.bytes > taxonomy.schema.collisionPolicy.maxPathBytes) {
           entries.get(source.scenarioRoot)?.violations.push(violation("mutation-pair-path-budget", source.scenarioRoot, `Canonical mutation pair plus reserved descendant suffix exceeds ${taxonomy.schema.collisionPolicy.maxPathBytes} bytes`));
           continue;
         }
-        consumed.add(vectorKey);
         const root = entries.get(source.scenarioRoot)!;
         root.violations = root.violations.filter((row) => row.code !== "directory-kind-unresolved");
         const initialRoot = root.normalizedPath;

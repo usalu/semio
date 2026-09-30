@@ -1,0 +1,12 @@
+{
+  "status": "applied",
+  "messages": [
+    {
+      "level": "warn",
+      "code": "mutation.partial",
+      "target": [
+        "n99"
+      ]
+    }
+  ]
+}

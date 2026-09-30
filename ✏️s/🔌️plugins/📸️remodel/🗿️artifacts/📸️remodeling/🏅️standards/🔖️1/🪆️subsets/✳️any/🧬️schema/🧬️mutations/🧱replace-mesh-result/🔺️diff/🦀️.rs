@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ReplaceMeshResult` — `results.mesh` is always present (defaults to a
 //! placeholder box), so there is no target-missing case; a durable content handle must name complete
-//! mesh content (`mutation.incomplete-mesh`); identical resubmission ⇒ Warning.
+//! mesh content (`mutation.target-mismatch`); identical resubmission ⇒ Warning.
 use crate::diff::RemodelingDiff;
 use crate::RemodelingSnapshot;
 
@@ -8,7 +8,7 @@ use crate::RemodelingSnapshot;
 pub fn diff(payload: &super::ReplaceMeshResult, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
     if let Some((content_id, chunk_count)) = crate::remodeling_mesh_content_handle_parts(&payload.mesh.mesh) {
         if !crate::remodeling_content_is_complete(&base.durable_artifacts, content_id, crate::RemodelingContentKind::Mesh, chunk_count) {
-            return protocol::MutationOutcome::error("mutation.incomplete-mesh", "The mesh names durable content that is not complete.", [payload.mesh.mesh.child_id.clone()]);
+            return protocol::MutationOutcome::error("mutation.target-mismatch", "The mesh names durable content that is not complete.", [payload.mesh.mesh.child_id.clone()]);
         }
     }
     let mesh = (*payload.mesh).clone();

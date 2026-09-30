@@ -1,0 +1,4 @@
+{
+  "mutation": "changeConsequenceClass",
+  "newConsequenceClass": 3
+}

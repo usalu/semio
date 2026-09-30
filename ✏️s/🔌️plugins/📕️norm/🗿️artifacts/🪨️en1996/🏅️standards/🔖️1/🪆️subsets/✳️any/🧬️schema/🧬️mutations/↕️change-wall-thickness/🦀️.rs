@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeWallThickn
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/↕️applies-change-wall-thickness/🦀️.rs"]
+#[path = "🧪️tests/↕️thickens-first-wall/🦀️.rs"]
 mod named_test;

@@ -1,0 +1,4 @@
+{
+  "mutation": "changeBuildingCategory",
+  "newBuildingCategory": "NonResidential"
+}

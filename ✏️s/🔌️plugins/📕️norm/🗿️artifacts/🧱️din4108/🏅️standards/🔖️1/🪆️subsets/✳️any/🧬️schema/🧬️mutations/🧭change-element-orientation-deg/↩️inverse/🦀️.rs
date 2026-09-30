@@ -1,8 +1,8 @@
-//! Inverse for `change-element-orientation-deg`.
+//! ↩️ `change-element-orientation-deg` inverse — restores the element's `orientation_deg`, computed from BASE state; a missing target yields no step.
 
 use super::ChangeElementOrientationDeg;
 use crate::{Din4108Mutation, Din4108Snapshot};
 
-pub fn inverse(_payload: &ChangeElementOrientationDeg, _base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
-    Vec::new()
+pub fn inverse(payload: &ChangeElementOrientationDeg, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+    base.elements.iter().find(|element| element.id == payload.element_id).map(|element| vec![Din4108Mutation::ChangeElementOrientationDeg(ChangeElementOrientationDeg { element_id: payload.element_id.clone(), new_orientation_deg: element.orientation_deg })]).unwrap_or_default()
 }

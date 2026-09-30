@@ -207,6 +207,25 @@ export class DocumentAttachmentLaneV1 {
   }
 }
 
+/** 🗃️ What restoring one read-back document archive drives: its load into the owning program (through the document's
+ * attachment lane, answering whether the program now holds it), the program's history re-read and a full refresh of every
+ * surface the program renders. */
+export interface DocumentArchiveRestorePortsV1<Archive> {
+  readonly load: (archive: Archive) => Promise<boolean>;
+  readonly history: () => Promise<void>;
+  readonly refresh: () => Promise<void>;
+}
+
+/** 🗃️ Hydrates one restored archive exactly like a fresh load (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING follow-up
+ * 3): once the program holds it — and only then, a superseded or stale restore hydrates nothing — its history is re-read, so
+ * the rows, edits and supersessions are the archive's, and every surface is refreshed, so no window keeps painting the
+ * document the archive replaced. Answers whether the archive became the program's current document. */
+export async function restoreDocumentArchiveV1<Archive>(archive: Archive, current: () => boolean, ports: DocumentArchiveRestorePortsV1<Archive>): Promise<boolean> {
+  if (!(await ports.load(archive)) || !current()) return false;
+  await Promise.all([ports.history(), ports.refresh()]);
+  return current();
+}
+
 /** 🧊️ Retains one active and one latest cold pair; superseded work cannot publish a binding. */
 export class LatestDocumentReplacementV1<Value> {
   #desired: object | null = null;

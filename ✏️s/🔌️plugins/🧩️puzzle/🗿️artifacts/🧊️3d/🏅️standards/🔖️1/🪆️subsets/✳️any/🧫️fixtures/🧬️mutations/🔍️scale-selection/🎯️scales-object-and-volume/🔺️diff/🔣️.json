@@ -1,0 +1,91 @@
+{
+  "artifact": null,
+  "attractions": null,
+  "domain": null,
+  "meta": null,
+  "objects": {
+    "added": [],
+    "patched": [
+      {
+        "id": "object-a",
+        "patch": {
+          "replacement": {
+            "anchor": "fixed",
+            "hidden": false,
+            "id": "object-a",
+            "label": "Alpha",
+            "locked": false,
+            "meshUrl": "mesh://alpha",
+            "objectKind": "object-kind-a",
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              3.0,
+              3.0,
+              3.0
+            ],
+            "vortices": [
+              {
+                "hidden": false,
+                "id": "vortex-1",
+                "locked": false,
+                "position": [
+                  1.0,
+                  0.0,
+                  0.0
+                ],
+                "vortexKind": "vortex-kind-a"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "removed": [],
+    "reordered": null
+  },
+  "references": null,
+  "schema": null,
+  "targetVolumes": {
+    "added": [],
+    "patched": [
+      {
+        "id": "volume-1",
+        "patch": {
+          "replacement": {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              6.0,
+              6.0,
+              6.0
+            ]
+          }
+        }
+      }
+    ],
+    "removed": [],
+    "reordered": null
+  }
+}

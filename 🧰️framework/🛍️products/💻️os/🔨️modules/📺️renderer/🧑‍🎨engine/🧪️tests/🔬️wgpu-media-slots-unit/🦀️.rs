@@ -21,7 +21,7 @@ fn tree(props: serde_json::Value, vector: &serde_json::Value) -> UiTree {
     let parent = vector.get("parentRect");
     let generation = vector.get("documentGeneration").and_then(serde_json::Value::as_u64).unwrap_or(3);
     let mut document = UiDocumentTree::new(UiDocumentLeaseHeader { generation, surface: SurfaceId::try_from("media.video.viewer").unwrap(), revision: UiRevision(7), root: UiNodeId(if parent.is_some() { 0 } else { 1 }), layout_epoch: 1, node_count: if parent.is_some() { 2 } else { 1 } }).unwrap();
-    let record = serde_json::from_value(serde_json::json!({ "id":1, "key":"media-slot", "component": { "type":"extension", "extension":"framework.media.transport@1", "props":props }, "layout": { "kind":"leaf", "width":"fill", "height":"hug" }, "style":{}, "activity":"idle", "accessibility":{}, "children":[] })).unwrap();
+    let record = serde_json::from_value(serde_json::json!({ "id":1, "key":vector.get("nodeKey").and_then(serde_json::Value::as_str).unwrap_or("media-slot"), "component": { "type":"extension", "extension":"framework.media.transport@1", "props":props }, "layout": { "kind":"leaf", "width":"fill", "height":"hug" }, "style":{}, "activity":"idle", "accessibility":{}, "children":[] })).unwrap();
     document.try_upsert_record(record).unwrap();
     if parent.is_some() {
         let record = serde_json::from_value(serde_json::json!({ "id":0, "key":"viewport", "component": { "type":"container", "role":"plain" }, "layout": { "kind":"stack", "axis":"vertical", "gap":"none", "padding":{"all":"none"}, "align":"stretch", "justify":"start", "grow":true, "wrap":false }, "style":{}, "activity":"idle", "accessibility":{}, "children":[1] })).unwrap();
@@ -84,8 +84,8 @@ fn media_slot_fixture_composes_body_clip_and_exact_owner() {
         assert!(collect_tree_slots(&tree, "media.video.viewer", body, &owner(), &mut slots));
         assert_eq!(slots.len(), vector["expectedCount"].as_u64().unwrap() as usize, "{}", vector["name"]);
         if let Some(slot) = slots.first() {
-            assert_eq!(serde_json::from_slice::<serde_json::Value>(&serde_json::to_vec(&slot.rect).unwrap()).unwrap(), vector["expectedRect"]);
-            assert_eq!(serde_json::from_slice::<serde_json::Value>(&serde_json::to_vec(&slot.clip).unwrap()).unwrap(), vector["expectedClip"]);
+            assert_eq!(slot.rect, serde_json::from_value::<PresentedMediaRect>(vector["expectedRect"].clone()).unwrap());
+            assert_eq!(slot.clip, serde_json::from_value::<PresentedMediaRect>(vector["expectedClip"].clone()).unwrap());
             assert_eq!(slot.occluded, vector["expectedOccluded"].as_bool().unwrap());
             assert_eq!(slot.node_id, "1");
             assert_eq!(slot.node_key, "media-slot");
@@ -116,7 +116,9 @@ fn media_slot_descriptor_byte_budget_refuses_oversized_publication() {
     for label in props["labels"].as_object_mut().unwrap().values_mut() {
         *label = serde_json::Value::String("x".repeat(budget["labelBytes"].as_u64().unwrap() as usize));
     }
-    let tree = tree(props, &fixture["cases"][0]);
+    let mut vector = fixture["cases"][0].clone();
+    vector["nodeKey"] = serde_json::Value::String("x".repeat(budget["nodeKeyBytes"].as_u64().unwrap() as usize));
+    let tree = tree(props, &vector);
     let mut slots = Vec::new();
     let body = Rect::new(0.0, 0.0, 500.0, 500.0);
     for _ in 0..budget["expectedAcceptedSlots"].as_u64().unwrap() {

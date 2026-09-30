@@ -186,7 +186,7 @@ impl MutationDiff<SemioSnapshot> for SemioDiff {
                 d1.absorb(d2);
                 Kit(d1)
             }
-            _ => Rejected(MutationApplyError::new("mutation.absorb.kind-mismatch", "Semio subset diffs of different kinds cannot be composed").at(["subset"])),
+            _ => Rejected(MutationApplyError::new("mutation.apply.kind-mismatch", "Semio subset diffs of different kinds cannot be composed").at(["subset"])),
         };
         *self = combined;
     }
@@ -251,7 +251,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
             (SemioDiff::Graph(d), S::Graph(b)) => SemioDiff::Graph(<SemioGraphDiff as DiffAlgebra<SemioGraphSnapshot>>::inverse(d, b)),
             (SemioDiff::Object(d), S::Object(b)) => SemioDiff::Object(<SemioObjectDiff as DiffAlgebra<SemioObjectSnapshot>>::inverse(d, b)),
             (SemioDiff::Kit(d), S::Kit(b)) => SemioDiff::Kit(<SemioKitDiff as DiffAlgebra<SemioKitSnapshot>>::inverse(d, b)),
-            _ => SemioDiff::Rejected(MutationApplyError::new("mutation.inverse.kind-mismatch", "Semio subset diff kind does not match the base snapshot kind").at(["subset"])),
+            _ => SemioDiff::Rejected(MutationApplyError::new("mutation.apply.kind-mismatch", "Semio subset diff kind does not match the base snapshot kind").at(["subset"])),
         }
     }
 

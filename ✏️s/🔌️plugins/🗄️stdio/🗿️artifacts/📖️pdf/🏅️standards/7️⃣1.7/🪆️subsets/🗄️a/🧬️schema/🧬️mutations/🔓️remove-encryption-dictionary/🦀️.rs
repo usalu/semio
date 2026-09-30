@@ -3,7 +3,6 @@
 use super::insert_encryption_dictionary::InsertEncryptionDictionary;
 use super::PdfAMutation;
 use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
-use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -23,7 +22,7 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveEncryptionDictionary {
         if let Some(id) = support::encryption_dictionary_with(&next, self.version, self.revision) {
             support::remove_object(&mut next, id);
         }
-        MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
+        MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfAMutation> {

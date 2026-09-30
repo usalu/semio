@@ -1,0 +1,69 @@
+{
+  "SetSnapshot": {
+    "snapshot": {
+      "schema": "stdio.docx",
+      "opc": {
+        "parts": [],
+        "contentTypes": {
+          "defaults": [
+            [
+              "rels",
+              "application/vnd.openxmlformats-package.relationships+xml"
+            ],
+            [
+              "xml",
+              "application/xml"
+            ]
+          ],
+          "overrides": [
+            [
+              "/word/document.xml",
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+            ]
+          ]
+        },
+        "relationships": {
+          "": [
+            {
+              "id": "rId1",
+              "relType": "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument",
+              "target": "word/document.xml",
+              "targetMode": "internal"
+            }
+          ]
+        },
+        "comment": ""
+      },
+      "xmlParts": [
+        {
+          "path": "word/document.xml",
+          "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
+          "document": {
+            "root": {
+              "kind": "element",
+              "name": "w:document",
+              "attrs": [
+                {
+                  "name": "xmlns:w",
+                  "value": "http://purl.oclc.org/ooxml/wordprocessingml/main"
+                },
+                {
+                  "name": "conformance",
+                  "value": "strict"
+                }
+              ],
+              "children": [
+                {
+                  "kind": "element",
+                  "name": "w:body",
+                  "attrs": [],
+                  "children": []
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

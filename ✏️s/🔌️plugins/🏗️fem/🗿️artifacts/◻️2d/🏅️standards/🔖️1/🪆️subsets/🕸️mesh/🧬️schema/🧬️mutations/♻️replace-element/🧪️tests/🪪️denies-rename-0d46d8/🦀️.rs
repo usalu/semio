@@ -13,7 +13,7 @@
 //! the payload below was accepted (see `📓️w13-fem2d-semantics.md` for the per-kind rule table).
 //!
 //! 🪪️ A `replace-` selects by `id` and carries a record that has its own `id`; letting them differ
-//! is a silent RENAME that orphans every referrer. It is now `mutation.id-mismatch`, FATAL — renaming
+//! is a silent RENAME that orphans every referrer. It is now `mutation.target-mismatch`, an Error — renaming
 //! a member is `delete-` plus `create-` plus re-pointing the loads, never a whole-value swap.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
@@ -54,8 +54,8 @@ fn the_refusal_is_the_declared_diagnostic() {
     assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem2dDiff::default(), "replace-element/denies-rename-0d46d8: a rejecting replace-element must carry the empty diff, never a half-built delta");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "exactly one diagnostic is expected, got {messages:?}");
-    assert_eq!(messages[0].code.0, "mutation.id-mismatch", "replace-element/denies-rename-0d46d8: the refusal is reported as mutation.id-mismatch");
-    assert_eq!(messages[0].level, protocol::Severity::Fatal, "a replacement that renames its target is an identity breach — Fatal, and no merge policy may absorb it");
+    assert_eq!(messages[0].code.0, "mutation.target-mismatch", "replace-element/denies-rename-0d46d8: the refusal is reported as mutation.target-mismatch");
+    assert_eq!(messages[0].level, protocol::Severity::Error, "a replacement that renames its target contradicts the target it selects — the state-dependent Error");
     assert_eq!(messages[0].target, vec!["b2".to_string(), "b3".to_string()], "the diagnostic addresses the target first, then every referrer");
     let semantics = <Fem2dMutation as protocol::SemanticMutation<Fem2dSnapshot>>::semantics(&mutation());
     assert_eq!(semantics.kind, "replace-element", "the fixture must be bound to replace-element's own descriptor");

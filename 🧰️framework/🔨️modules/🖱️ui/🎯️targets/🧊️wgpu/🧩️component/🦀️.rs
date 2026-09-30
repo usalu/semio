@@ -2492,6 +2492,12 @@ pub mod ui {
         #[serde(skip_serializing_if = "Option::is_none")]
         #[value(skip_serializing_if = "Option::is_none")]
         pub control: Option<UiControlNode>,
+        /// 🧱️ The lines this row's content fills in its value column when that content is more than one inline
+        /// `control` — a recipe group (colour, vector, reference list), text, progress or several nodes — stacked one
+        /// line per leaf and label (`reconcile::tree_content_lines`); the content's own document nodes paint there.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub content_lines: Option<u16>,
         /// 🎛️ The explicitly related horizontal Toolbar and its real Button nodes.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
@@ -2540,6 +2546,7 @@ pub mod ui {
                 drag_data: None,
                 items: None,
                 control: None,
+                content_lines: None,
                 inline_toolbar: None,
                 detail: None,
                 dimmed: None,
@@ -2832,6 +2839,7 @@ pub mod ui {
                         drag_data: None,
                         items: None,
                         control: None,
+                        content_lines: None,
                         inline_toolbar: None,
                         detail: None,
                         dimmed: None,
@@ -2865,6 +2873,7 @@ pub mod ui {
                 drag_data: None,
                 items: None,
                 control: None,
+                content_lines: None,
                 inline_toolbar: None,
                 detail: None,
                 dimmed: None,
@@ -2887,6 +2896,7 @@ pub mod ui {
                     drag_data: None,
                     items: None,
                     control: ui_node_to_control(&field.child),
+                    content_lines: None,
                     inline_toolbar: None,
                     detail: None,
                     dimmed: None,
@@ -2908,6 +2918,7 @@ pub mod ui {
                 drag_data: None,
                 items: None,
                 control: Some(UiControlNode::Button(button.clone())),
+                content_lines: None,
                 inline_toolbar: None,
                 detail: None,
                 dimmed: None,
@@ -2936,6 +2947,7 @@ pub mod ui {
                     drag_data: None,
                     items: Some(items),
                     control: None,
+                    content_lines: None,
                     inline_toolbar: None,
                     detail: None,
                     dimmed: None,
@@ -2962,6 +2974,7 @@ pub mod ui {
                 drag_data: None,
                 items: None,
                 control: None,
+                content_lines: None,
                 inline_toolbar: None,
                 detail: None,
                 dimmed: None,
@@ -2982,6 +2995,7 @@ pub mod ui {
                 drag_data: None,
                 items: None,
                 control: None,
+                content_lines: None,
                 inline_toolbar: None,
                 detail: None,
                 dimmed: None,
@@ -3006,6 +3020,7 @@ pub mod ui {
             drag_data: None,
             items: None,
             control: Some(control),
+            content_lines: None,
             inline_toolbar: None,
             detail: None,
             dimmed: None,

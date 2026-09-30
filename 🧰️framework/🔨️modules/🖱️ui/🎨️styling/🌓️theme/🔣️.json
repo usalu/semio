@@ -318,7 +318,6 @@
       "lineWidthDefault": 2
     },
     "chrome": {
-      "uiSpacingCompactPx": 3.2,
       "navbarHeightUiSpacing": 9,
       "footerHeightUiSpacing": 9,
       "controlHeightUiSpacing": 7,
@@ -359,7 +358,8 @@
       "layoutPanelMaxUiSpacing": 150,
       "layoutEngagementMaxUiSpacing": 140,
       "controlTreeRowMinUiSpacing": 6.25,
-      "windowMeasureRowMinUiSpacing": 5.625
+      "windowMeasureRowMinUiSpacing": 5.625,
+      "rootRemPx": 16
     }
   },
   "presence": {

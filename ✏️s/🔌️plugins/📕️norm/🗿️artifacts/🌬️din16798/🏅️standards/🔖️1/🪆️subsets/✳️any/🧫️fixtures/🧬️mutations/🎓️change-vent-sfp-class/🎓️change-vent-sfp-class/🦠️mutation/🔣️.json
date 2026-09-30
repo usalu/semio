@@ -1,0 +1,6 @@
+{
+  "ChangeVentSfpClass": {
+    "ventId": "vent-central",
+    "newSfpRequiredClass": 2
+  }
+}

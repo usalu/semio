@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/simulation/site/weather/schema.json",
+  "$defs": {
+    "WeatherRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "dry_bulb_c",
+        "dew_point_c",
+        "relative_humidity",
+        "atmospheric_pressure_pa",
+        "wind_speed_m_s",
+        "wind_direction_deg",
+        "direct_normal_irradiance_w_m2",
+        "diffuse_horizontal_irradiance_w_m2",
+        "horizontal_infrared_w_m2",
+        "precipitation_mm",
+        "snow_depth_mm"
+      ],
+      "properties": {
+        "year": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "month": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "day": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "hour": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "minute": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "dry_bulb_c": {
+          "type": "number"
+        },
+        "dew_point_c": {
+          "type": "number"
+        },
+        "relative_humidity": {
+          "type": "number"
+        },
+        "atmospheric_pressure_pa": {
+          "type": "number"
+        },
+        "wind_speed_m_s": {
+          "type": "number"
+        },
+        "wind_direction_deg": {
+          "type": "number"
+        },
+        "direct_normal_irradiance_w_m2": {
+          "type": "number"
+        },
+        "diffuse_horizontal_irradiance_w_m2": {
+          "type": "number"
+        },
+        "horizontal_infrared_w_m2": {
+          "type": "number"
+        },
+        "precipitation_mm": {
+          "type": "number"
+        },
+        "snow_depth_mm": {
+          "type": "number"
+        }
+      }
+    },
+    "WeatherData": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "location",
+        "latitude_deg",
+        "longitude_deg",
+        "elevation_m",
+        "time_zone_hours",
+        "records"
+      ],
+      "properties": {
+        "location": {
+          "type": "string"
+        },
+        "latitude_deg": {
+          "type": "number"
+        },
+        "longitude_deg": {
+          "type": "number"
+        },
+        "elevation_m": {
+          "type": "number"
+        },
+        "time_zone_hours": {
+          "type": "number"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WeatherRecord"
+          }
+        }
+      }
+    }
+  },
+  "$ref": "#/$defs/WeatherData"
+}

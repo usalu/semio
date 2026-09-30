@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** 🧭️ `@semio-tech/cad-js` — CAD domain module facet. See `cad/AGENTS.md`. */
+/** 🌐️ Shared spatial model vocabulary and operations. */
 import { ephemeralBox, ephemeralMap, ephemeralWeakMap } from "@semio-tech/framework";
 import type { ArcPlaneFrame, EdgeCurve, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, Vec3 } from "@semio-tech/s-3d-js";
 import { emptyMeshTransfer, kernelGeometry, solidRef } from "@semio-tech/s-3d-js";
@@ -272,6 +272,29 @@ export interface ActionResult<TData = unknown> {
   readonly patch?: ActionContextPatch;
 }
 
+/** 🎬️ A specific owner's command using only general spatial contracts. */
+export type SpatialKernelCommand = (kernel: SpatialKernel, params: Readonly<Record<string, unknown>>) => Promise<{ readonly diff: ModelDiff }>;
+
+const spatialKernelCommands = ephemeralMap<string, Map<symbol, SpatialKernelCommand>>("s.spatial-kernel.spatial.commands");
+
+/** 🔌️ Registers one independent command; removing it restores the preceding contribution. */
+export function registerSpatialKernelCommand(id: string, command: SpatialKernelCommand): () => void {
+  if (id.length === 0) throw new Error("Spatial command id is empty");
+  const contributions = spatialKernelCommands.get(id) ?? new Map<symbol, SpatialKernelCommand>();
+  const owner = Symbol();
+  contributions.set(owner, command);
+  spatialKernelCommands.set(id, contributions);
+  return () => {
+    if (contributions.delete(owner) && contributions.size === 0) spatialKernelCommands.delete(id);
+  };
+}
+
+/** 🧭️ Resolves the most recently registered contribution for a command. */
+export function spatialKernelCommandFor(id: string): SpatialKernelCommand | null {
+  const contributions = spatialKernelCommands.get(id);
+  return contributions ? [...contributions.values()].at(-1) ?? null : null;
+}
+
 /** 🔌️ Precise BREP kernel: preview math + construction, tessellation, derived views. */
 export interface SpatialKernel extends SpatialPreviewKernel {
   readonly id: string;
@@ -320,22 +343,8 @@ export interface KernelQueryContext {
 // #endregion 📦️🗺️spatial
 
 // #region 🧪️Tests
-
-const __spatialCoreTestRuntime = import.meta.vitest ? await import("../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts") : null;
-const __spatialCoreTestKernel = import.meta.vitest ? await import("../🧮️preview/🟦️.ts") : null;
-
-/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-core-model-commit-mesh/🟦️.ts`. */
-export type SpatialTestDependencies = {
-  readonly Model: typeof Model;
-  readonly __spatialCoreTestKernel: typeof __spatialCoreTestKernel;
-  readonly __spatialCoreTestRuntime: typeof __spatialCoreTestRuntime;
-  readonly appendCommittedMeshFaceToModel: typeof appendCommittedMeshFaceToModel;
-  readonly applyModelDiff: typeof applyModelDiff;
-  readonly solidRef: typeof solidRef;
-};
-
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-core-model-commit-mesh/🟦️.ts");
-  await registerTests1(import.meta.vitest, { Model, __spatialCoreTestKernel, __spatialCoreTestRuntime, appendCommittedMeshFaceToModel, applyModelDiff, solidRef }, { url: import.meta.url });
+  await registerTests1(import.meta.vitest);
 }
 // #endregion 🧪️Tests

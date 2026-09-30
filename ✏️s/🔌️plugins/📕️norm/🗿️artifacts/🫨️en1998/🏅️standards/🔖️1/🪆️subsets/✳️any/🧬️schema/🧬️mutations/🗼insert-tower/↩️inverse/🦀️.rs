@@ -1,7 +1,8 @@
 //! Inverse for `insert-tower`.
 use super::InsertTower;
 use crate::{En1998Mutation, En1998Snapshot};
+use crate::standards::v1::subsets::any::schema::mutations::remove_tower;
 
-pub fn inverse(_payload: &InsertTower, _base: &En1998Snapshot) -> Vec<En1998Mutation> {
-    Vec::new()
+pub fn inverse(payload: &InsertTower, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+    vec![En1998Mutation::RemoveTower(remove_tower::RemoveTower { index: payload.index.min(base.towers.len()) })]
 }

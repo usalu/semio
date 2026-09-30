@@ -5,7 +5,7 @@ fn invalid_collection_targets_are_rejected_before_mutation() {
     let base = ObjSnapshot::default();
     let diff = ObjDiff { vertices: Some(ObjVerticesDiff { removed: vec![0], ..Default::default() }), ..Default::default() };
     let error = diff.apply(&base).expect_err("missing vertex target must be rejected");
-    assert_eq!(error.code, "invalid-remove-index");
+    assert_eq!(error.code, "mutation.apply.invalid-remove-index");
     assert_eq!(error.target, vec!["vertices", "0"]);
     assert_eq!(base, ObjSnapshot::default());
 }

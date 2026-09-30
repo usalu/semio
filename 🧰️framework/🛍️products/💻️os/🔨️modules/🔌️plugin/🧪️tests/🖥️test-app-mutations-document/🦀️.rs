@@ -130,7 +130,7 @@ impl protocol::MutationDiff<TestSnapshot> for TestDiff {
     fn apply(&self, snapshot: &TestSnapshot) -> protocol::MutationApplyResult<TestSnapshot> {
         let slot = match &self.slot {
             None => snapshot.slot.clone(),
-            Some(rows) => rows.iter().map(|uri| test_child_handle(uri)).collect::<Result<Vec<_>, String>>().map_err(|error| protocol::MutationApplyError::new("test-snapshot.declared-child-uri", error))?,
+            Some(rows) => rows.iter().map(|uri| test_child_handle(uri)).collect::<Result<Vec<_>, String>>().map_err(|error| protocol::MutationApplyError::new("mutation.apply.declared-child-uri", error))?,
         };
         Ok(TestSnapshot { count: self.count.unwrap_or(snapshot.count), label: self.label.clone().unwrap_or_else(|| snapshot.label.clone()), slot })
     }

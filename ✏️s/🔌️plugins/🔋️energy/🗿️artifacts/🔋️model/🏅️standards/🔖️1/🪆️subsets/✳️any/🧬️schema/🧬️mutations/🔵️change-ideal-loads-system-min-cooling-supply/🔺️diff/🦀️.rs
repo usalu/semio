@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeIdealLoadsSystemMinCoolingSupplyAirTemp, base
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Ideal loads system {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_min_cooling_supply_air_temp_c.is_finite() || !(-100.0..=200.0).contains(&payload.new_min_cooling_supply_air_temp_c) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("A cooling supply air temperature must lie between -100.0 and 200.0, got {}.", payload.new_min_cooling_supply_air_temp_c), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("A cooling supply air temperature must lie between -100.0 and 200.0, got {}.", payload.new_min_cooling_supply_air_temp_c), [payload.id.0.to_string()]);
     }
     if existing.min_cooling_supply_air_temp_c == payload.new_min_cooling_supply_air_temp_c {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Ideal loads system {} already has that minimum cooling supply air temperature.", payload.id.0));

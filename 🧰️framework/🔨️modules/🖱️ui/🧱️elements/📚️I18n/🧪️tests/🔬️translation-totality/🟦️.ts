@@ -5,6 +5,26 @@ import { getValueByPointer } from "fast-json-patch";
 import { createShellI18nInstance, disposeShellI18nInstance, resolveUiLabel, uiChromeTranslationBundles } from "../../../../🎯️targets/⚛️react/🌐️i18n/🟦️.ts";
 import fixture from "../../🧫️fixtures/🌐️translation-totality/🔣️.json";
 import schema from "../../../../🌐️i18n/🧬️schema/🔣️.json";
+import outcomeCodes from "../../../../../📡️replication/🎮️mutation/🧫️fixtures/🧫️outcome-code/🔣️.json";
+
+test("every frozen outcome code has distinct en and de labels", () => {
+  const keys = [...outcomeCodes.codes.map((row) => row.code.slice("mutation.".length).replace(/-([a-z0-9])/g, (_, letter: string) => letter.toUpperCase())), "apply"];
+  for (const locale of ["en", "de"] as const) {
+    const instance = createShellI18nInstance(locale);
+    try {
+      for (const key of keys) {
+        for (const tier of ["normal", "beginner"] as const) {
+          const label = String(instance.t(`ui.mutation.code.${key}.label.${tier}`));
+          expect(label, `${locale}:${key}:${tier}`).not.toBe(`ui.mutation.code.${key}.label.${tier}`);
+          expect(label.trim().length, `${locale}:${key}:${tier}`).toBeGreaterThan(0);
+        }
+      }
+    } finally {
+      disposeShellI18nInstance(instance);
+    }
+  }
+  for (const key of keys) expect(resolveUiLabel(getValueByPointer(uiChromeTranslationBundles, `/de/translation/ui/mutation/code/${key}`), "normal"), key).not.toBe(resolveUiLabel(getValueByPointer(uiChromeTranslationBundles, `/en/translation/ui/mutation/code/${key}`), "normal"));
+});
 
 test("canonical labels are total for both explicit shell locales", () => {
   const validate = new Ajv({ strict: true }).addKeyword("x-semio-formats").compile(schema);

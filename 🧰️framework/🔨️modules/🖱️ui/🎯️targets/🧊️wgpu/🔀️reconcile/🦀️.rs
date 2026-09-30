@@ -702,28 +702,25 @@ fn tree_item(document: &UiDocumentTree, record: &UiNodeRecord, surface: &str, co
             drag_data: None,
             items: None,
             control: None,
+            content_lines: None,
             inline_toolbar: None,
             detail: None,
             dimmed: None,
             menu: menu_ref(record),
         };
     };
-    let mut items: Vec<UiTreeItemNode> = Vec::new();
-    let mut control: Option<UiControlNode> = None;
     let inline_toolbar = tree_item_inline_toolbar(document, props, controller);
     let detail = tree_item_detail(document, props, surface, controller);
-    if depth < UI_DOCUMENT_RECONCILE_DEPTH {
-        for child_id in record.children.iter() {
-            if props.inline_toolbar == Some(*child_id) || props.detail == Some(*child_id) {
-                continue;
-            }
-            let Some(child) = document.record(*child_id) else { continue };
-            match tree_item_control(child, controller) {
-                Some(node) if control.is_none() => control = Some(node),
-                _ => items.push(tree_item(document, child, surface, controller, depth + 1)),
-            }
+    let (items, control, content_lines) = if depth < UI_DOCUMENT_RECONCILE_DEPTH {
+        let items: Vec<UiTreeItemNode> = record.children.iter().filter_map(|child| document.record(*child)).filter(|child| matches!(child.component, ui_contract::Component::TreeItem(_))).map(|child| tree_item(document, child, surface, controller, depth + 1)).collect();
+        let content: Vec<&UiNodeRecord> = tree_row_content(document, record).collect();
+        match content.as_slice() {
+            [only] if is_tree_inline_control(&only.component) => (items, tree_item_control(only, controller), None),
+            _ => (items, None, tree_row_content_lines(document, record).map(|lines| u16::try_from(lines).unwrap_or(u16::MAX))),
         }
-    }
+    } else {
+        (Vec::new(), None, None)
+    };
     UiTreeItemNode {
         window: tree_window(props.window.as_ref()),
         granularity: props.granularity.as_ref().map(|value| value.as_str().to_string()),
@@ -739,6 +736,7 @@ fn tree_item(document: &UiDocumentTree, record: &UiNodeRecord, surface: &str, co
         drag_data: drag_data(props.drag_data.as_ref()),
         items: if items.is_empty() { None } else { Some(items) },
         control,
+        content_lines,
         inline_toolbar,
         detail,
         dimmed: props.dimmed,
@@ -791,6 +789,68 @@ fn tree_toolbar(document: &UiDocumentTree, toolbar: ui_contract::UiNodeId, contr
         menu: menu_ref(record),
         children,
     })
+}
+
+/// 🧺️ A tree item's content: every child record that is not a nested row, its inline toolbar or its detail, in order.
+pub(crate) fn tree_row_content<'a>(document: &'a UiDocumentTree, record: &'a UiNodeRecord) -> impl Iterator<Item = &'a UiNodeRecord> + 'a {
+    let (toolbar, detail) = match &record.component {
+        ui_contract::Component::TreeItem(props) => (props.inline_toolbar, props.detail),
+        _ => (None, None),
+    };
+    record
+        .children
+        .iter()
+        .filter(move |child| Some(**child) != toolbar && Some(**child) != detail)
+        .filter_map(|child| document.record(*child))
+        .filter(|child| !matches!(child.component, ui_contract::Component::TreeItem(_)) && record_presence(child).visible())
+}
+
+/// 🧮️ The lines a tree item's content fills in its value column: `None` when it has no content or exactly one of the
+/// nine inline controls (its `control`), else every content child's [`tree_content_lines`] stacked — so every leaf of a
+/// recipe is a line of its own that a pointer, the keyboard and a reader reach.
+pub(crate) fn tree_row_content_lines(document: &UiDocumentTree, record: &UiNodeRecord) -> Option<u32> {
+    let content: Vec<&UiNodeRecord> = tree_row_content(document, record).collect();
+    match content.as_slice() {
+        [] => None,
+        [only] if is_tree_inline_control(&only.component) => None,
+        content => Some(content.iter().map(|child| tree_content_lines(document, child, 0)).sum()),
+    }
+}
+
+/// 📏️ The lines one tree-row content record fills: a container its label lines ([`tree_content_label_lines`]) and its
+/// visible children stacked, a nested row none (it is a row of its own), and every other node — a control, a button,
+/// text, progress — one line.
+pub(crate) fn tree_content_lines(document: &UiDocumentTree, record: &UiNodeRecord, depth: usize) -> u32 {
+    if !record_presence(record).visible() || depth >= UI_DOCUMENT_RECONCILE_DEPTH {
+        return 0;
+    }
+    let children = || record.children.iter().filter_map(|child| document.record(*child)).map(|child| tree_content_lines(document, child, depth + 1)).sum::<u32>();
+    match &record.component {
+        ui_contract::Component::TreeItem(_) => 0,
+        ui_contract::Component::Container(props) => {
+            let (above, below) = tree_content_label_lines(props);
+            above + below + children()
+        }
+        _ => 1,
+    }
+}
+
+/// 🪧️ The label lines a content container paints above and below its children, one line each: a Field's label and
+/// description above and its error below, a labelled Section's title above; every other container none.
+pub(crate) fn tree_content_label_lines(props: &ui_contract::ContainerProps) -> (u32, u32) {
+    match props.role {
+        ui_contract::ContainerRole::Field => (1 + u32::from(props.description.is_some()), u32::from(props.error.is_some())),
+        ui_contract::ContainerRole::Section => (u32::from(props.label.is_some()), 0),
+        _ => (0, 0),
+    }
+}
+
+/// 🕹️ Whether `component` is one of the nine controls a tree row embeds inline as its `control`.
+fn is_tree_inline_control(component: &ui_contract::Component) -> bool {
+    matches!(
+        component,
+        ui_contract::Component::Input(_) | ui_contract::Component::Select(_) | ui_contract::Component::Toggle(_) | ui_contract::Component::Button(_) | ui_contract::Component::KeyValueList(_) | ui_contract::Component::Slider(_) | ui_contract::Component::NumberStepper(_) | ui_contract::Component::Ring(_) | ui_contract::Component::IconSelect(_)
+    )
 }
 
 /// 🎛️ The control a tree row embeds, when its child record is one of the nine control components.

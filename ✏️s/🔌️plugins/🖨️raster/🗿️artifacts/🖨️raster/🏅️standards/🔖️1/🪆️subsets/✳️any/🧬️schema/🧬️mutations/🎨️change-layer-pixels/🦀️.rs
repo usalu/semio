@@ -15,9 +15,9 @@ pub struct ChangeLayerPixels {
 
 pub fn validate(payload: &ChangeLayerPixels, base: &RasterSnapshot) -> Result<(), &'static str> {
     let Some(RasterLayerNode::Pixel { image_key, .. }) = find_layer(&base.layers, &payload.layer_id) else { return Err("mutation.target-missing"); };
-    if image_key != &payload.expected_image_key { return Err("mutation.image-conflict"); }
+    if image_key != &payload.expected_image_key { return Err("mutation.target-mismatch"); }
     if let Some(key) = &payload.content.image_key {
-        if !base.assets.contains_key(key) { return Err("mutation.asset-missing"); }
+        if !base.assets.contains_key(key) { return Err("mutation.target-missing"); }
     }
     if payload.content.width.is_some_and(|n| n == 0 || n > 16384) || payload.content.height.is_some_and(|n| n == 0 || n > 16384) { return Err("mutation.invariant"); }
     if let Some(value) = &payload.transform {
@@ -30,7 +30,7 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerPixel
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "layer-pixels", kind: "change-layer-pixels", record: "ChangedLayerPixels" };
 
     fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
-        if let Err(code) = validate(self, base) { return protocol::MutationOutcome::error(code, "Pixel content cannot be applied to this image revision.", [self.layer_id.clone()]); }
+        if let Err(code) = validate(self, base) { return protocol::MutationOutcome::refuse(code, "Pixel content cannot be applied to this image revision.", [self.layer_id.clone()]); }
         protocol::MutationOutcome::new(diff_patch_layer(&self.layer_id, RasterLayerPatch { pixel_content: Some(self.content.clone()), transform: self.transform.clone(), ..Default::default() }))
     }
 

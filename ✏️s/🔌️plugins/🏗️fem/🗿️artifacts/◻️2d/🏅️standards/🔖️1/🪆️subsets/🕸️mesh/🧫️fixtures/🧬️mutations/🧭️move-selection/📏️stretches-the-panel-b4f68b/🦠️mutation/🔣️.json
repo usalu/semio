@@ -1,0 +1,17 @@
+{
+  "mutation": "moveSelection",
+  "nodeIds": [
+    "n7",
+    "n99"
+  ],
+  "regionIds": [
+    "panel_spare"
+  ],
+  "pivotX": 6.0,
+  "pivotY": 3.5,
+  "dx": 0.0,
+  "dy": 0.0,
+  "angle": 0.0,
+  "sx": 2.0,
+  "sy": 1.0
+}

@@ -1,6 +1,7 @@
 #!/bin/zsh
 # 🧹 Disk guard: every 5 min; below 130 GiB free prune idle incremental sessions (> 60 min); below 80 GiB prune nx cache entries older than 12 h and build units only when
-# cargo holds no lock on them (`.lock` taken exclusively, non-blocking), their newest file is older than 3 h (semio-* packages only), and a newer unit of the same package exists.
+# cargo holds no lock on them (`.lock` taken exclusively, non-blocking), their newest file is older than 3 h (1 h below 40 GiB; semio-* packages only), and a newer unit of the same package exists.
+# Below 40 GiB idle incremental sessions older than 20 min go too.
 root="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/build"
 log="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🗑️generated/coord/disk-guard.txt"
 mkdir -p "${log:h}"
@@ -9,13 +10,13 @@ while true; do
   before=$(free_gib)
   if [ "$before" -lt 130 ]; then
     find "$root" -type d -name incremental -prune 2>/dev/null | while read -r inc; do
-      find "$inc" -mindepth 2 -maxdepth 2 -type d -mmin +60 -exec rm -rf {} + 2>/dev/null
+      find "$inc" -mindepth 2 -maxdepth 2 -type d -mmin +$([ "$(free_gib)" -lt 40 ] && echo 20 || echo 60) -exec rm -rf {} + 2>/dev/null
     done
     if [ "$(free_gib)" -lt 80 ]; then
-      python3 - "$root" >> "$log" 2>&1 <<'PY'
+      python3 - "$root" "$([ "$(free_gib)" -lt 40 ] && echo 1 || echo 3)" >> "$log" 2>&1 <<'PY'
 import fcntl, os, shutil, sys, time
 root = sys.argv[1]
-bound = time.time() - 3 * 3600
+bound = time.time() - int(sys.argv[2]) * 3600
 def newest(path):
     m = os.stat(path).st_mtime
     for base, dirs, files in os.walk(path):

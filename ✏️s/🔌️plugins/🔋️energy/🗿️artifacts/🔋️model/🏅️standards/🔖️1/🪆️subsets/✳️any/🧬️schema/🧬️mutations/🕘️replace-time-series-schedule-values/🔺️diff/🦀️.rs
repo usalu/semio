@@ -10,10 +10,10 @@ pub fn diff(payload: &super::ReplaceTimeSeriesScheduleValues, base: &EnergyModel
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Time series schedule {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if payload.new_values.is_empty() {
-        return protocol::MutationOutcome::error("mutation.invariant", "A time series schedule carries at least one value.", [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "A time series schedule carries at least one value.", [payload.id.0.to_string()]);
     }
     if payload.new_values.iter().any(|value| !value.is_finite()) {
-        return protocol::MutationOutcome::error("mutation.invariant", "Every time series value must be finite.", [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "Every time series value must be finite.", [payload.id.0.to_string()]);
     }
     if existing.values == payload.new_values {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Time series schedule {} already carries this values: {:?}.", payload.id.0, payload.new_values));

@@ -1,0 +1,9 @@
+{
+  "index": 6,
+  "item": {
+    "actionId": "Q-office",
+    "influence": 0.5,
+    "memberId": "beam-B1"
+  },
+  "mutation": "insertEffect"
+}

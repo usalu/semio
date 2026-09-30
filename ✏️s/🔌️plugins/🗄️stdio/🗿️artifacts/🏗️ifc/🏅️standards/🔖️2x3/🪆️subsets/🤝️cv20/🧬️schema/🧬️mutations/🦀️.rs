@@ -114,12 +114,12 @@ pub fn apply_ifc2x3_cv20_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 
 fn rejected(message: String) -> protocol::MutationOutcome<Ifc2x3Diff> {
-    protocol::MutationOutcome::error("stdio.ifc.2x3.cv20.mutation-rejected", message, Vec::<String>::new())
+    protocol::MutationOutcome::error("mutation.target-mismatch", message, Vec::<String>::new())
 }
 
 fn edit(base: &Ifc2x3Snapshot, mutation: &Ifc2x3Cv20Mutation) -> Result<Ifc2x3Snapshot, String> {

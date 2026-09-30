@@ -6,7 +6,7 @@ rust-version.workspace = true
 description = "Procedural generation2d artifact"
 
 [package.metadata.semio]
-role = "s-module"
+role = "artifact"
 
 [lints]
 workspace = true

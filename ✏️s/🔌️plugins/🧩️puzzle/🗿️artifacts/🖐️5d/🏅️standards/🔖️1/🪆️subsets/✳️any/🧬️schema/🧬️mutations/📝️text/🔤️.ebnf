@@ -33,7 +33,11 @@ line = create part
      | change description
      | connect kind compatibility
      | disconnect kind compatibility
-     | replace kind catalogs ;
+     | replace kind catalogs
+     | drag selection 2d
+     | drag selection 3d
+     | rotate selection 3d
+     | scale selection 3d ;
 create part = 'create-part', space, part block, space, index opt ;
 delete part = 'delete-part', space, id ;
 move part2d = 'move-part2d', space, id, space, number, space, number ;
@@ -62,6 +66,10 @@ change description = 'change-description', space, text ;
 connect kind compatibility = 'connect-kind-compatibility', space, id, space, id, space, boolean, space, boolean, space, specificity ;
 disconnect kind compatibility = 'disconnect-kind-compatibility', space, id, space, id ;
 replace kind catalogs = 'replace-kind-catalogs', space, catalogs block opt ;
+drag selection 2d = 'drag-selection2d', space, id list, space, number, space, number ;
+drag selection 3d = 'drag-selection3d', space, id list, space, number, space, number, space, number ;
+rotate selection 3d = 'rotate-selection3d', space, id list, space, number, space, number, space, number, space, number ;
+scale selection 3d = 'scale-selection3d', space, id list, space, number, space, number, space, number ;
 part block = '{', newline, octet, { octet }, '}' ;
 grip block = '{', newline, octet, { octet }, '}' ;
 catalogs block opt = ( '{', newline, octet, { octet }, '}' )
@@ -87,6 +95,7 @@ number opt = number
      | 'none' ;
 boolean opt = boolean
      | 'none' ;
+id list = '[', { id }, ']' ;
 id = octet, { octet } ;
 number = octet, { octet } ;
 text = octet, { octet } ;

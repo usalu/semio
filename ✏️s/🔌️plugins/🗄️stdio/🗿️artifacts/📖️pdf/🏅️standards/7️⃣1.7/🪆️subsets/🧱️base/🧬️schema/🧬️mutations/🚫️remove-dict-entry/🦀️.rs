@@ -22,7 +22,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveDictEntry {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "dict-entry", kind: "remove-dict-entry", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_remove_dict_entry(base, self.id, &self.path, &self.key))
+        MutationOutcome::new(diff::diff_graph_edit(base, diff::diff_remove_dict_entry(base, self.id, &self.path, &self.key)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {

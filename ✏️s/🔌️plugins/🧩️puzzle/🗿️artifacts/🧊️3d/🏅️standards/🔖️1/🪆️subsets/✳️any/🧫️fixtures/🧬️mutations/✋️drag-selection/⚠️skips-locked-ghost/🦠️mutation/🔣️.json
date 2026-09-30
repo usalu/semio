@@ -1,0 +1,14 @@
+{
+  "mutation": "dragSelection",
+  "offset": [
+    1.0,
+    1.0,
+    0.0
+  ],
+  "targets": [
+    "object-b",
+    "object-c",
+    "volume-2",
+    "object-ghost"
+  ]
+}

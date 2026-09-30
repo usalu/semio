@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
-import { encodeClientFrame, encodePresencePeer, type MutationEnvelope, type ServerFrame, type WireFrontierSummary, type WireMutationEnvelope } from "@semio-tech/framework-replication";
-import type { ArtifactActorConfig } from "../../../../../🟦️.ts";
+import { HISTORY_TRANSITION_DIFF_SCHEMA, encodeClientFrame, encodePresencePeer, type MutationEnvelope, type ServerFrame, type WireFrontierSummary, type WireMutationEnvelope } from "@semio-tech/framework-replication";
+import { decodeBackboneMessage, type ArtifactActorConfig } from "../../../../../🟦️.ts";
 import type { ArtifactState, BackboneWorkerTestDependencies } from "../../../👷️worker/🟦️.ts";
 
 type Vitest = NonNullable<ImportMeta["vitest"]>;
@@ -85,6 +85,20 @@ function wireEnvelope(documentId: string, mutationId: string, n: number): WireMu
     inverse: { schema: "demo/v1", payload: [0] },
     timestamp: { actor: 1, physical_ms: 1, logical: 1 },
     transaction: null,
+  };
+}
+
+/** 🔀️ A locally authored history transition as the relay holds it: only its schema tells it from an operation. */
+function transitionEnvelope(documentId: string, mutationId: string): MutationEnvelope {
+  return {
+    id: mutationId,
+    actor: "local-actor",
+    document: documentId,
+    schemaVersion: HISTORY_TRANSITION_DIFF_SCHEMA,
+    deps: ["ghost"],
+    payloadHash: "parity",
+    diff: { schemaId: HISTORY_TRANSITION_DIFF_SCHEMA, payload: {} },
+    inverse: { targetOperation: mutationId, inverseDiff: { schemaId: HISTORY_TRANSITION_DIFF_SCHEMA, payload: {} }, baseVersion: 0, dependencies: [], undoPolicy: "exactBaseOnly" },
   };
 }
 
@@ -216,12 +230,17 @@ export async function registerBackboneParityTests(vitest: Vitest, dependencies: 
       const priorSink = dependencies.testSeams.workerPostTestSink;
       const posted: unknown[] = [];
       const observedEvents: string[] = [];
+      const retracted: string[] = [];
       let lastOutcome: string | undefined;
       dependencies.testSeams.workerPostTestSink = (message) => {
         posted.push(message);
         if (message && typeof message === "object" && "kind" in message && message.kind === "event" && "event" in message) {
           const event = (message as { event: { kind: string; outcome?: { kind?: string } | string } }).event;
           observedEvents.push(event.kind);
+          if (event.kind === "documentBackbone") {
+            const decoded = decodeBackboneMessage(Uint8Array.from((event as unknown as { message: ArrayLike<number> }).message));
+            if (decoded.kind === "retract") retracted.push(...decoded.mutationIds);
+          }
           if (event.kind === "commandOutcome" && event.outcome) {
             lastOutcome = typeof event.outcome === "string" ? event.outcome : event.outcome.kind;
           }
@@ -243,6 +262,9 @@ export async function registerBackboneParityTests(vitest: Vitest, dependencies: 
             switch (dispatch.kind) {
               case "queueMutation":
                 dependencies.queueOutbox(state, [domainEnvelope(scenario.documentId, String(dispatch.mutationId), Number(dispatch.n ?? 0))]);
+                break;
+              case "queueTransition":
+                dependencies.queueOutbox(state, [transitionEnvelope(scenario.documentId, String(dispatch.mutationId))]);
                 break;
               case "installSocketActor":
                 state.pendingSocketActorId = String(dispatch.actor);
@@ -303,6 +325,7 @@ export async function registerBackboneParityTests(vitest: Vitest, dependencies: 
             if (Array.isArray(expect.ingestedMutationIds)) {
               for (const id of expect.ingestedMutationIds) vitest.expect(state.ingestedMutationIds.has(String(id))).toBe(true);
             }
+            if (Array.isArray(expect.retractedMutationIds)) vitest.expect(retracted).toEqual(expect.retractedMutationIds);
             if (typeof expect.commandOutcome === "string") vitest.expect(lastOutcome).toBe(expect.commandOutcome);
           }
         }

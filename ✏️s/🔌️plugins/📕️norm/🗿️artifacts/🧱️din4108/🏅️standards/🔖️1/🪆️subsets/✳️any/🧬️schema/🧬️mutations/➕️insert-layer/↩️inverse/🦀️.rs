@@ -1,10 +1,9 @@
-//! ↩️ `insert-layer` inverse via snapshot restore of list fields.
+//! ↩️ `insert-layer` inverse — removes the inserted layer at its landing position, computed from BASE state; a missing target yields no step.
 
 use super::InsertLayer;
+use crate::mutations::remove_layer::RemoveLayer;
 use crate::{Din4108Mutation, Din4108Snapshot};
 
-pub fn inverse(_payload: &InsertLayer, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
-    // Whole-list restore is expressed by re-inserting base lists through set-like rebuilds in from_snapshot.
-    let _ = base;
-    Vec::new()
+pub fn inverse(payload: &InsertLayer, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+    base.elements.iter().find(|element| element.id == payload.element_id).map(|element| vec![Din4108Mutation::RemoveLayer(RemoveLayer { element_id: payload.element_id.clone(), index: payload.index.min(element.layers.len()) })]).unwrap_or_default()
 }

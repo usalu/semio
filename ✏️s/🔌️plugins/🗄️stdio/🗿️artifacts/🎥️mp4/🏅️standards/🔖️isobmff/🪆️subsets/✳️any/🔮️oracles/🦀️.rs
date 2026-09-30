@@ -36,6 +36,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
         "insert-sample" => reference::mutate_insert_sample(input, &params),
         "remove-sample" => reference::mutate_remove_sample(input, &params),
         "set-sample-sync" => reference::mutate_set_sample_sync(input, &params),
+        "patch-snapshot" => reference::mutate_patch_snapshot(input, &params),
         "" => Err("mutation spec carries no `kind`".to_string()),
         kind => Err(format!("mutation kind {:?} has no oracle implementation ({} input byte(s))", kind, input.len())),
     }
@@ -355,6 +356,56 @@ mod reference {
         write_movie(&movie)
     }
 
+    /// 🧭️ One `SnapshotPatch` edit as `(path segments, operation, edit object)`.
+    fn patch_edits(params: &Json) -> Vec<(Vec<String>, String, Json)> {
+        params
+            .get("patch")
+            .map(|patch| patch.array("edits"))
+            .unwrap_or_default()
+            .into_iter()
+            .map(|edit| {
+                let path = edit.array("path").iter().map(|segment| if let Json::String(text) = segment { text.clone() } else { String::new() }).collect();
+                let operation = edit.get("edit").cloned().unwrap_or(Json::Null);
+                (path, operation.str("operation"), operation)
+            })
+            .collect()
+    }
+
+    /// 🔢️ A path segment addressing an array element.
+    fn segment_index(segment: &str) -> Result<usize, String> {
+        segment.parse::<usize>().map_err(|_| format!("mp4: patch-snapshot index {segment:?} is not a number"))
+    }
+
+    /// 🩹️ `PatchSnapshot` — every `SnapshotPatch` edit, in order, interpreted independently over `DecodedMovie`:
+    /// `set` of one sample's `sync` flag or of a track's `width`/`height`. A path `mp4` 0.14's model has no member
+    /// for is refused, never skipped.
+    pub fn mutate_patch_snapshot(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
+        let mut movie = read_movie(input)?;
+        for (path, operation, edit) in patch_edits(params) {
+            match (path.iter().map(String::as_str).collect::<Vec<_>>().as_slice(), operation.as_str()) {
+                (["tracks", track, "samples", sample, "sync"], "set") => {
+                    let (track, sample) = (segment_index(track)?, segment_index(sample)?);
+                    let target = movie.tracks.get_mut(track).and_then(|decoded| decoded.samples.get_mut(sample)).ok_or_else(|| format!("mp4: patch-snapshot sample {track}/{sample} out of range"))?;
+                    target.is_sync = match edit.get("value") {
+                        Some(Json::Bool(sync)) => *sync,
+                        other => return Err(format!("mp4: patch-snapshot sync value {other:?} is not a boolean")),
+                    };
+                }
+                (["tracks", track, field @ ("width" | "height")], "set") => {
+                    let track = segment_index(track)?;
+                    let target = movie.tracks.get_mut(track).ok_or_else(|| format!("mp4: patch-snapshot track {track} out of range"))?;
+                    let value = number(&edit, "value", -1.0);
+                    if !(0.0..=u16::MAX as f64).contains(&value) {
+                        return Err(format!("mp4: patch-snapshot {field} value {value} does not fit a tkhd dimension"));
+                    }
+                    if *field == "width" { target.width = value as u16 } else { target.height = value as u16 }
+                }
+                (other, operation) => return Err(format!("mp4: patch-snapshot {operation} at {other:?} has no oracle implementation")),
+            }
+        }
+        write_movie(&movie)
+    }
+
     /// 🔁️ `SetSnapshot` — a real whole-document replace: `ftyp`, the movie timescale and every track all come
     /// from the wire `snapshot`, and nothing of the input survives.
     pub fn mutate_set_snapshot(_input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
@@ -422,6 +473,27 @@ mod reference {
                 if let (Some(source), Some(target)) = (original.tracks.get(index), movie.tracks.get_mut(index)) {
                     target.sps = source.sps.clone();
                     target.pps = source.pps.clone();
+                }
+            }
+            "patch-snapshot" => {
+                for (path, _, _) in patch_edits(params) {
+                    match path.iter().map(String::as_str).collect::<Vec<_>>().as_slice() {
+                        ["tracks", track, "samples", sample, "sync"] => {
+                            let (track, sample) = (segment_index(track)?, segment_index(sample)?);
+                            let restored = original.tracks.get(track).and_then(|decoded| decoded.samples.get(sample)).map(|decoded| decoded.is_sync);
+                            if let (Some(sync), Some(target)) = (restored, movie.tracks.get_mut(track).and_then(|decoded| decoded.samples.get_mut(sample))) {
+                                target.is_sync = sync;
+                            }
+                        }
+                        ["tracks", track, "width" | "height"] => {
+                            let track = segment_index(track)?;
+                            if let (Some(source), Some(target)) = (original.tracks.get(track), movie.tracks.get_mut(track)) {
+                                target.width = source.width;
+                                target.height = source.height;
+                            }
+                        }
+                        other => return Err(format!("mp4: patch-snapshot edit {other:?} has no oracle inverse")),
+                    }
                 }
             }
             "set-sample-sync" => {

@@ -443,7 +443,7 @@ mod mounted_laws {
         let lifecycle_fixture = include_str!("../../../../🧫️fixtures/🧷️p8yz-a-retained-mounted-laws.json");
         let owner_fixture = include_str!("../../../../🧫️fixtures/👑️p8yz-a-owner-catalog-laws.json");
 
-        assert!(owner_source.contains("mutation.clear-widget-layout.2d-only"));
+        assert!(owner_source.contains("mutations.clear-widget-layout.2d-only"));
         assert!(owner_source.contains("GENERATION2D_RETAINED_SCHEMA_DISCRIMINATOR"));
         let mounted_snapshot = snapshot_source.split_once("//#region 🔖️MountedCanonicalPackSession").expect("P2 mounted snapshot region").1;
         for forbidden in ["OwnedSchemaHexAuthority", "decode_pack", "decode_document", "RecordValue"] {

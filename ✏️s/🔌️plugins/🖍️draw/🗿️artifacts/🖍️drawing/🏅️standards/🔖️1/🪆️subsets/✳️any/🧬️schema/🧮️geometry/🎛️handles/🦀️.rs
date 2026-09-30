@@ -15,16 +15,33 @@ pub fn hit_handle(bounds: [f64;4],point: [f64;2],zoom: f64) -> Option<usize> {
     best
 }
 
-pub fn handle_matrix(handle: usize,bounds: [f64;4],start: [f64;2],end: [f64;2],constrained: bool,centered: bool) -> Option<[f64;6]> {
+/// 🧭️ What one handle drag does, in the parameters of the leaf it yields: the rotation handle turns about the bounds'
+/// centre, a resize handle scales about the anchor opposite it (or the centre when `centered`).
+#[derive(Clone,Copy,Debug,PartialEq)]
+pub enum HandleMotion {
+    Rotate { pivot: [f64;2], angle: f64 },
+    Scale { pivot: [f64;2], scale: [f64;2] },
+}
+
+impl HandleMotion {
+    /// 🧮️ The world-space affine matrix of the motion.
+    pub fn matrix(self) -> [f64;6] {
+        match self {
+            Self::Rotate { pivot:[x,y],angle }=>crate::mutations::drawing_rotation_matrix(x,y,angle),
+            Self::Scale { pivot:[x,y],scale:[scale_x,scale_y] }=>crate::mutations::drawing_scaling_matrix(x,y,scale_x,scale_y),
+        }
+    }
+}
+
+pub fn handle_motion(handle: usize,bounds: [f64;4],start: [f64;2],end: [f64;2],constrained: bool,centered: bool) -> Option<HandleMotion> {
     if !bounds.iter().chain(start.iter()).chain(end.iter()).all(|value|value.is_finite()) || handle>8 {return None;}
     let [x,y,w,h]=bounds;
-    let matrix=if handle==8 {
+    let motion=if handle==8 {
         let (cx,cy)=(x+w*0.5,y+h*0.5);
         let angle=(end[1]-cy).atan2(end[0]-cx)-(start[1]-cy).atan2(start[0]-cx);
         let mut angle=angle.sin().atan2(angle.cos());
         if constrained {let step=std::f64::consts::PI/12.0;angle=(angle/step).round()*step;}
-        let (s,c)=angle.sin_cos();
-        [c,s,-s,c,cx-c*cx+s*cy,cy-s*cx-c*cy]
+        HandleMotion::Rotate { pivot:[cx,cy],angle }
     } else {
         let [u,v]=ANCHORS[handle];
         let (ax,ay)=(x+if centered {0.5*w} else {(1.0-u)*w},y+if centered {0.5*h} else {(1.0-v)*h});
@@ -32,9 +49,13 @@ pub fn handle_matrix(handle: usize,bounds: [f64;4],start: [f64;2],end: [f64;2],c
         let mut sx=if u==0.5||w==0.0 {1.0} else {1.0+factor*(end[0]-start[0])/((2.0*u-1.0)*w)};
         let mut sy=if v==0.5||h==0.0 {1.0} else {1.0+factor*(end[1]-start[1])/((2.0*v-1.0)*h)};
         if constrained {let ratio=if (sx-1.0).abs()>=(sy-1.0).abs(){sx}else{sy};sx=ratio;sy=ratio;}
-        [sx,0.0,0.0,sy,ax*(1.0-sx),ay*(1.0-sy)]
+        HandleMotion::Scale { pivot:[ax,ay],scale:[sx,sy] }
     };
-    matrix.iter().all(|value|value.is_finite()).then_some(matrix)
+    motion.matrix().iter().all(|value|value.is_finite()).then_some(motion)
+}
+
+pub fn handle_matrix(handle: usize,bounds: [f64;4],start: [f64;2],end: [f64;2],constrained: bool,centered: bool) -> Option<[f64;6]> {
+    handle_motion(handle,bounds,start,end,constrained,centered).map(HandleMotion::matrix)
 }
 
 #[cfg(test)]

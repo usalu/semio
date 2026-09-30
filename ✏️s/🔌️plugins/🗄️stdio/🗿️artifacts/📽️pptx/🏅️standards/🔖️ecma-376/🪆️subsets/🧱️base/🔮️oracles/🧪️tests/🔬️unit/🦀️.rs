@@ -17,7 +17,7 @@ fn spec(kind: &str, params: &Json) -> Json {
 /// ⚖️ The two laws `🧱️mutate-pptx-ecma-376`'s adapter asserts in role, proven here against the real
 /// deck without the runner: every declared kind moves the ordered slide/shape projection, and
 /// every declared kind's own computed inverse lands back on the untouched deck's projection.
-/// Nothing is exempt from either — every one of the nine kinds is defined on the slide list or
+/// Nothing is exempt from either — every one of the eight kinds is defined on the slide list or
 /// on a shape inside it, which is precisely what the projection reports.
 #[test]
 fn every_declared_kind_is_observable_and_its_inverse_restores_the_presentation() {
@@ -29,9 +29,7 @@ fn every_declared_kind_is_observable_and_its_inverse_restores_the_presentation()
         let forward = spec(kind, params);
         let mutated = oracle_apply_mutation(FIXTURE, &forward).unwrap_or_else(|error| panic!("{kind}: {error}"));
         let moved = project_pptx_mutation(&mutated).unwrap_or_else(|error| panic!("{kind}: projecting the result failed: {error}"));
-        if kind != "no-mutation" {
-            assert_ne!(moved, base, "{kind} left the compared projection untouched, so its scenario would pass whether or not the mutation ran");
-        }
+        assert_ne!(moved, base, "{kind} left the compared projection untouched, so its scenario would pass whether or not the mutation ran");
         let restored = oracle_apply_mutation_inverse(FIXTURE, &forward).unwrap_or_else(|error| panic!("{kind}: inverse: {error}"));
         assert_eq!(project_pptx_mutation(&restored).unwrap(), base, "{kind}: applying the mutation and then its own inverse must restore the deck's projection");
     }

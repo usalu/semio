@@ -25,12 +25,17 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
   (`shared://🔲️replace-pixels-applied/⬅️before.tiff`) with the raster of that recipe's own after-image.
 
   On the @id-identity-round-trip scenario the "re-encoded bytes must differ from the input" half of
-  the law binds the SUBJECT only, and deliberately does not bind the oracle: the committed fixture
-  is itself the output of the oracle's own independent IFD-chain writer (see above), so that writer
-  reproducing it byte-for-byte is canonical determinism, not a byte pass-through. The oracle side
-  therefore asserts the two halves that ARE checkable of it — the semantic projection survives the
-  decode/re-encode, and the writer reproduces its own committed output exactly, which any
-  reader/writer asymmetry would break.
+  the law binds NEITHER side, and the exact-bytes law binds BOTH. The committed fixture is the output
+  of the oracle's own independent IFD-chain writer (see above) in the canonical baseline layout —
+  header, strips, IFD chain — and this repository's `encode_tiff` emits that same layout from a
+  snapshot that carries every tag typed and each IFD's strip bytes as its own raster, so both writers
+  reproducing it byte for byte is canonical determinism, not a byte pass-through. Both sides therefore
+  assert the two halves that ARE checkable — the semantic projection survives the decode/re-encode,
+  and the writer reproduces the committed bytes exactly, which a dropped tag, a reordered IFD or a
+  miscounted strip would all break. The mutate rows, every one of which moves the bytes, are what
+  prove a real parse happened. The mutate and inverse laws are stated against the document as an
+  unchanged reference round trip leaves it: on the scan that is the scan itself, and on the small
+  raster document, which another writer authored, it is that document in the reference's normal form.
 
   ✅ CLOSED, AT THE CAUSE — `mutate-insert-ifd` (the ratios before and after are recorded in the
   ticket, not here).
@@ -68,7 +73,7 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
       | replace-tag | {"ifdIndex":0,"tag":315,"kind":"ascii","values":{"kind":"ascii","value":"Derived for ticket 26/08/23/END-TO-END-TESTING-REFACTOR"}} |
       | remove-tag | {"ifdIndex":0,"tag":282} |
 
-  @id-mutate-raster
+  @id-mutate
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to a small document
@@ -101,7 +106,7 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
       | replace-tag | {"ifdIndex":0,"tag":315,"kind":"ascii","values":{"kind":"ascii","value":"Derived for ticket 26/08/23/END-TO-END-TESTING-REFACTOR"}} |
       | remove-tag | {"ifdIndex":0,"tag":282} |
 
-  @id-inverse-raster
+  @id-inverse
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores a small document

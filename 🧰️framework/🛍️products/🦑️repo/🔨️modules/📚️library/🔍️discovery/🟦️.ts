@@ -1240,7 +1240,8 @@ export interface Taxonomy {
   };
   readonly cargoDependencyDirections: {
     readonly roles: readonly string[];
-    readonly rules: Readonly<Record<string, { readonly fromRoles: readonly string[]; readonly toRoles: readonly string[] }>>;
+    readonly ownerRoles: readonly { readonly path: string; readonly roles: readonly string[] }[];
+    readonly rules: Readonly<Record<string, { readonly fromRoles: readonly string[]; readonly toRoles: readonly string[]; readonly fromOwnerPaths?: readonly string[]; readonly toOwnerSegments?: readonly string[] }>>;
   };
   readonly areaLayers: Readonly<Record<string, "framework" | "implementation" | "repo-wide">>;
   readonly packageMaturityStates: readonly PackageMaturity[];
@@ -4329,8 +4330,8 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       if ([...requiredKeys].sort().join("\0") !== expectedRequired.join("\0") || [...alternativeKeys].sort().join("\0") !== expectedAlternatives.join("\0") || contract.realizedNodeCount !== 12) problems.push("semanticDescendantContracts.mutation-fixture-bundle-v1 must encode the exact 12-node data bundle and exclusive diff alternatives.");
     }
     if (id === "draw-editor-command-bundle-v1") {
-      const expectedRequired = ["directory:", "file:🦀️.rs", "directory:🔄️fsm", "file:🔄️fsm/🦀️.rs", "directory:🔄️fsm/📦️packages", "directory:🔄️fsm/📦️packages/🦀️rust", "file:🔄️fsm/📦️packages/🦀️rust/Cargo.toml", "file:🔄️fsm/📦️packages/🦀️rust/📋️project.json", "file:🔄️fsm/📦️packages/🦀️rust/📜️script.ts", "directory:🔄️fsm/✨️macros", "file:🔄️fsm/✨️macros/🦀️.rs", "directory:🔄️fsm/✨️macros/📦️packages", "directory:🔄️fsm/✨️macros/📦️packages/🦀️rust", "file:🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml", "file:🔄️fsm/✨️macros/📦️packages/🦀️rust/📋️project.json", "file:🔄️fsm/✨️macros/📦️packages/🦀️rust/📜️script.ts"].sort();
-      if ([...requiredKeys].sort().join("\0") !== expectedRequired.join("\0") || alternativeKeys.length !== 0 || contract.realizedNodeCount !== 16 || contract.pathBudgetReserve.bytes !== 72) problems.push("semanticDescendantContracts.draw-editor-command-bundle-v1 must encode the exact 16-node declaration-only package bundle and 72-byte reserve.");
+      const expectedRequired = ["directory:", "file:🦀️.rs"].sort();
+      if ([...requiredKeys].sort().join("\0") !== expectedRequired.join("\0") || alternativeKeys.length !== 0 || contract.realizedNodeCount !== 2 || contract.pathBudgetReserve.bytes !== 11) problems.push("semanticDescendantContracts.draw-editor-command-bundle-v1 must encode the exact two-node Rust command declaration and 11-byte reserve.");
     }
   }
 
@@ -5033,11 +5034,25 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   }
   if (record(taxonomy.cargoDependencyDirections, "cargoDependencyDirections") && record(taxonomy.cargoDependencyDirections.rules, "cargoDependencyDirections.rules")) {
     const roles = taxonomy.cargoDependencyDirections.roles;
+    const ownerRoles = taxonomy.cargoDependencyDirections.ownerRoles;
     if (!Array.isArray(roles) || !roles.length || roles.some((role) => typeof role !== "string" || !role) || new Set(roles).size !== roles.length) problems.push("cargoDependencyDirections requires distinct declared semantic roles.");
     else for (const [name, rule] of Object.entries(taxonomy.cargoDependencyDirections.rules)) {
       if (!name || !record(rule, `cargoDependencyDirections.rules.${name}`)) continue;
       for (const selected of [rule.fromRoles, rule.toRoles]) if (!Array.isArray(selected) || !selected.length || selected.some((role) => !roles.includes(role))) problems.push(`cargoDependencyDirections.rules.${name} references an unknown semantic role.`);
+      if (rule.fromOwnerPaths !== undefined) {
+        if (!Array.isArray(rule.fromOwnerPaths) || !rule.fromOwnerPaths.length || new Set(rule.fromOwnerPaths).size !== rule.fromOwnerPaths.length) problems.push(`cargoDependencyDirections.rules.${name} requires distinct source owner patterns.`);
+        else for (const path of rule.fromOwnerPaths) {
+          if (typeof path !== "string" || !path) problems.push(`cargoDependencyDirections.rules.${name} requires readable source owner patterns.`);
+          try { new RegExp(path, "u"); } catch { problems.push(`cargoDependencyDirections.rules.${name} has an invalid source owner pattern.`); }
+        }
+      }
     }
+    if (!Array.isArray(ownerRoles) || !ownerRoles.length || new Set(ownerRoles.map((rule) => rule.path)).size !== ownerRoles.length) problems.push("cargoDependencyDirections requires distinct physical owner role classifications.");
+    else for (const rule of ownerRoles) {
+      if (typeof rule.path !== "string" || !rule.path || !Array.isArray(rule.roles) || !rule.roles.length || new Set(rule.roles).size !== rule.roles.length || rule.roles.some((role: string) => !roles?.includes(role))) problems.push("cargoDependencyDirections owner classifications require readable paths and known distinct roles.");
+      try { new RegExp(rule.path, "u"); } catch { problems.push(`cargoDependencyDirections owner classification has an invalid path pattern: ${JSON.stringify(rule.path)}.`); }
+    }
+    if (JSON.stringify(taxonomy.roles) !== JSON.stringify(roles)) problems.push("Package discovery and Cargo direction must use the same semantic role vocabulary.");
   }
   if (record(taxonomy.areaLayers, "areaLayers")) for (const [area, layer] of Object.entries(taxonomy.areaLayers)) {
     if (area === "compose" || area.startsWith("compose/") || area === "temp/compose" || area.startsWith("temp/compose/")) problems.push("Opaque compose prefixes must not appear in areaLayers.");
@@ -6351,11 +6366,26 @@ function rustStringValue(token: RustToken | undefined): string | null {
     const hashes = text.slice(text.startsWith("br") ? 2 : 1, quote).length;
     return text.slice(quote + 1, text.length - hashes - 1);
   }
-  try {
-    return JSON.parse(text) as string;
-  } catch {
-    return text.length >= 2 ? text.slice(1, -1) : null;
+  if (!text.startsWith('"') || !text.endsWith('"')) return null;
+  const body = text.slice(1, -1), simple: Readonly<Record<string, string>> = { n: "\n", r: "\r", t: "\t", "0": "\0", "\\": "\\", '"': '"', "'": "'" };
+  let value = "";
+  for (let index = 0; index < body.length; index++) {
+    if (body[index] !== "\\") { value += body[index]; continue; }
+    const next = body[++index];
+    if (next === undefined) return null;
+    if (next in simple) { value += simple[next]; continue; }
+    if (next === "x" && /^[0-9a-f]{2}$/iu.test(body.slice(index + 1, index + 3))) { value += String.fromCharCode(parseInt(body.slice(index + 1, index + 3), 16)); index += 2; continue; }
+    if (next === "u" && body[index + 1] === "{") {
+      const close = body.indexOf("}", index + 2), hex = body.slice(index + 2, close).replaceAll("_", "");
+      if (close < 0 || !/^[0-9a-f]{1,6}$/iu.test(hex)) return null;
+      const point = parseInt(hex, 16);
+      if (point > 0x10ffff || (point >= 0xd800 && point <= 0xdfff)) return null;
+      value += String.fromCodePoint(point); index = close; continue;
+    }
+    if (next === "\n" || (next === "\r" && body[index + 1] === "\n")) { while (/\s/u.test(body[index + 1] ?? "")) index++; continue; }
+    return null;
   }
+  return value;
 }
 
 /** 🧱️ Tokenizes Rust while discarding nested comments and keeping strings/chars/raw strings atomic.
@@ -6479,7 +6509,7 @@ export function rustTokenPairs(tokens: readonly RustToken[]): ReadonlyMap<number
   const closeFor: Readonly<Record<string, string>> = { "(": ")", "[": "]", "{": "}" };
   for (let index = 0; index < tokens.length; index += 1) {
     const text = tokens[index]!.text;
-    if (closeFor[text]) stack.push({ index, token: text });
+    if (Object.hasOwn(closeFor, text)) stack.push({ index, token: text });
     else if (text === ")" || text === "]" || text === "}") {
       const open = stack.at(-1);
       if (open && closeFor[open.token] === text) {
@@ -6490,6 +6520,99 @@ export function rustTokenPairs(tokens: readonly RustToken[]): ReadonlyMap<number
     }
   }
   return pairs;
+}
+
+export type RustCompileReference = Readonly<{ kind: "include" | "include_str" | "include_bytes" | "path"; path: string; line: number; base?: "manifest" | "generated"; modulePath?: readonly string[]; directory?: true }>;
+
+/** 🧷️ Discovers authored compile inputs in all configurations and macro templates; unsupported expressions fail closed. */
+export function inspectRustCompileReferences(source: string): readonly RustCompileReference[] {
+  const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), references: RustCompileReference[] = [];
+  type Input = Readonly<{ path: string; base?: "manifest" | "generated"; directory?: true }>;
+  const literal = (start: number, end: number, bindings: ReadonlyMap<string, Input> = new Map()): Input | null => {
+    if (end === start + 2 && tokens[start]?.text === "$" && tokens[start + 1]?.kind === "identifier") return bindings.get(tokens[start + 1]!.text) ?? null;
+    if (end === start + 1 && tokens[start]?.kind === "string") { const path = rustStringValue(tokens[start]); return path === null ? null : { path }; }
+    if (tokens[start + 1]?.text !== "!" || pairs.get(start + 2) !== end - 1) return null;
+    if (tokens[start]?.text === "env" && end === start + 5) {
+      const name = rustStringValue(tokens[start + 3]);
+      return name === "CARGO_MANIFEST_DIR" ? { path: "", base: "manifest" } : name === "OUT_DIR" ? { path: "", base: "generated" } : null;
+    }
+    if (tokens[start]?.text !== "concat") return null;
+    const parts = rustTokenSegments(tokens, pairs, start + 3, end - 1, ",").map(([a, b]) => literal(a, b, bindings));
+    if (!parts.length || parts.some((part, index) => part === null || index > 0 && part.base)) return null;
+    const values = parts as Input[];
+    return { path: values.map((part) => part.path).join(""), ...(values[0]!.base ? { base: values[0]!.base } : {}) };
+  };
+  const templates: { name: string; start: number; end: number; bindings: ReadonlyMap<string, Input>[]; supported: boolean }[] = [];
+  for (let index = 0; index < tokens.length; index++) {
+    if (tokens[index]?.text !== "macro_rules" || tokens[index + 1]?.text !== "!") continue;
+    const name = tokens[index + 2]?.text, body = index + 3, close = pairs.get(body), matcher = body + 1, matcherClose = pairs.get(matcher);
+    if (!name || close === undefined) continue;
+    const transcriber = (matcherClose ?? body) + 2, transcriberClose = pairs.get(transcriber);
+    const parameters = matcherClose === undefined ? [] : rustTokenSegments(tokens, pairs, matcher + 1, matcherClose, ",");
+    const simple = matcherClose !== undefined && tokens[matcherClose + 1]?.text === "=>" && transcriberClose !== undefined && (transcriberClose + 1 === close || transcriberClose + 2 === close && tokens[transcriberClose + 1]?.text === ";") && parameters.every(([a, b]) => b === a + 4 && tokens[a]?.text === "$" && tokens[a + 1]?.kind === "identifier" && tokens[a + 2]?.text === ":" && ["literal", "expr", "tt"].includes(tokens[a + 3]?.text ?? ""));
+    const template = { name, start: body, end: close, bindings: [] as ReadonlyMap<string, Input>[], supported: simple };
+    const scopeEnd = [...pairs].filter(([a, b]) => a < index && b > close && tokens[a]?.text === "{").sort((left, right) => right[0] - left[0])[0]?.[1] ?? tokens.length;
+    if (simple) for (let invocation = close + 1; invocation < scopeEnd; invocation++) {
+      if (tokens[invocation]?.text !== name || tokens[invocation + 1]?.text !== "!") continue;
+      if (tokens[invocation - 1]?.text === "::" || tokens[invocation - 1]?.text === "macro_rules") { template.supported = false; continue; }
+      const invocationClose = pairs.get(invocation + 2);
+      if (invocationClose === undefined) { template.supported = false; continue; }
+      const args = rustTokenSegments(tokens, pairs, invocation + 3, invocationClose, ",");
+      if (args.length !== parameters.length) { template.supported = false; continue; }
+      const bound = new Map<string, Input>();
+      for (let at = 0; at < parameters.length; at++) {
+        const [a] = parameters[at]!, [x, y] = args[at]!, value = literal(x, y);
+        if (!value || tokens[a + 3]?.text === "literal" && (y !== x + 1 || tokens[x]?.kind !== "string")) { template.supported = false; continue; }
+        bound.set(tokens[a + 1]!.text, value);
+      }
+      if (bound.size === parameters.length) template.bindings.push(bound);
+    }
+    templates.push(template);
+  }
+  for (const template of templates) if (templates.filter((candidate) => candidate.name === template.name).length > 1) template.supported = false;
+  const add = (kind: RustCompileReference["kind"], input: Input | null, offset: number, modulePath: readonly string[] = []): void => {
+    const line = source.slice(0, offset).split("\n").length;
+    if (!input || !input.path && !input.directory || input.base && !input.path.startsWith("/") || input.base === "generated" && input.path.split(/[\\/]/u).includes("..")) throw new Error(`Unsupported Rust compile expression at line ${line}: ${kind}`);
+    references.push({ kind, ...input, line, ...(modulePath.length ? { modulePath } : {}) });
+  };
+  const visit = (start: number, end: number, modulePath: readonly string[]): void => {
+    for (let index = start; index < end; index++) {
+      const attributes = rustAttributes(tokens, pairs, index, end), visibility = rustVisibility(tokens, pairs, attributes.next), token = tokens[visibility.next];
+      if (token?.text === "mod" && tokens[visibility.next + 1]?.kind === "identifier") {
+        const boundary = rustFindTopLevel(tokens, pairs, visibility.next + 2, end, new Set([";", "{"]));
+        if (boundary >= 0) {
+          const paths = rustPathAttributes(tokens, pairs, attributes);
+          if (tokens[boundary]?.text === "{") {
+            const close = pairs.get(boundary);
+            if (close === undefined) throw new Error("Unsupported Rust compile module body");
+            if (attributes.ranges.some(([start, end]) => tokens[start]?.text === "cfg_attr" && rustPathAttributes(tokens, pairs, { ranges: [[start, end]], next: attributes.next }).length)) throw new Error("Unsupported Rust compile conditional inline module mount");
+            for (const path of paths) add("path", path.path === null ? null : { path: path.path, directory: true }, path.offset, modulePath);
+            visit(boundary + 1, close, [...modulePath, tokens[visibility.next + 1]!.text]);
+            index = close;
+          } else {
+            for (const path of paths) add("path", path.path === null ? null : { path: path.path }, path.offset, modulePath);
+            index = boundary;
+          }
+          continue;
+        }
+      }
+      if (attributes.next > index) { index = attributes.next - 1; continue; }
+      const current = tokens[index]!;
+      if (["include", "include_str", "include_bytes"].includes(current.text) && tokens[index + 1]?.text === "!") {
+        const close = pairs.get(index + 2);
+        if (close === undefined) throw new Error("Unsupported Rust compile delimiter");
+        const end = tokens[close - 1]?.text === "," ? close - 1 : close, input = literal(index + 3, end), template = templates.find((template) => index > template.start && index < template.end);
+        const inputs = input ? [input] : template?.supported && template.bindings.length ? template.bindings.map((bindings) => literal(index + 3, end, bindings)) : [null];
+        for (const value of inputs) add(current.text as RustCompileReference["kind"], value, current.start, modulePath);
+        index = close;
+        continue;
+      }
+      const close = pairs.get(index);
+      if (close !== undefined && close > index) { visit(index + 1, close, modulePath); index = close; }
+    }
+  };
+  visit(0, tokens.length, []);
+  return references;
 }
 
 /** 📝️ Renders one token range in a deterministic compact Rust spelling. */
@@ -7556,13 +7679,26 @@ function rustVisibility(tokens: readonly RustToken[], pairs: ReadonlyMap<number,
   return { value: `pub(${rustTokenText(tokens, start + 2, close)})`, next: close + 1 };
 }
 
-/** 📍️ Extracts a decoded `#[path = "..."]` target from parsed item attributes. */
-function rustPathAttribute(tokens: readonly RustToken[], attributes: RustAttributes): string | null {
-  for (const [start, end] of attributes.ranges) {
-    if (tokens[start]?.text !== "path") continue;
-    for (let index = start + 1; index < end; index += 1) if (tokens[index]!.text === "=") return rustStringValue(tokens[index + 1]);
-  }
-  return null;
+/** 🧭️ Extracts only direct or cfg_attr module path metadata, retaining every authored configuration. */
+function rustPathAttributes(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, attributes: RustAttributes): readonly Readonly<{ path: string | null; offset: number }>[] {
+  const paths: { path: string | null; offset: number }[] = [];
+  const visit = (start: number, end: number): void => {
+    if (tokens[start]?.text === "path") {
+      paths.push({ path: end === start + 3 && tokens[start + 1]?.text === "=" ? rustStringValue(tokens[start + 2]) : null, offset: tokens[start]!.start });
+      return;
+    }
+    if (tokens[start]?.text !== "cfg_attr" || tokens[start + 1]?.text !== "(") return;
+    const close = pairs.get(start + 1);
+    if (close === undefined || close + 1 !== end) return;
+    for (const [a, b] of rustTokenSegments(tokens, pairs, start + 2, close, ",").slice(1)) visit(a, b);
+  };
+  for (const [start, end] of attributes.ranges) visit(start, end);
+  return paths;
+}
+
+/** 📍️ Reads a single decoded module mount from actual Rust path metadata. */
+function rustPathAttribute(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, attributes: RustAttributes): string | null {
+  return rustPathAttributes(tokens, pairs, attributes)[0]?.path ?? null;
 }
 
 /** 🧪️ Identifies a test-only module from tokenized `cfg(...test...)` attributes. */
@@ -7823,7 +7959,7 @@ class RustStructureParser {
     const name = this.tokens[keyword + 1]?.text ?? "";
     const boundary = rustFindTopLevel(this.tokens, this.pairs, keyword + 2, end, new Set([";", "{"]));
     const inline = boundary >= 0 && this.tokens[boundary]!.text === "{";
-    const fact: RustModuleFact = { name, visibility: visibility.value, inline, pathTarget: rustPathAttribute(this.tokens, attributes), cfgTest: rustCfgTest(this.tokens, attributes) };
+    const fact: RustModuleFact = { name, visibility: visibility.value, inline, pathTarget: rustPathAttribute(this.tokens, this.pairs, attributes), cfgTest: rustCfgTest(this.tokens, attributes) };
     this.modules.push(fact);
     if (!inline) return boundary < 0 ? end : boundary + 1;
     const close = this.pairs.get(boundary);
@@ -8305,7 +8441,7 @@ export interface RustModuleGraph {
 }
 
 /** 🦀️ Builds only file-membership-proven module edges; conventional roots never confer manifest authority. */
-export function inspectRustModuleGraph(files: readonly string[], readSource: (path: string) => string | undefined, options: Readonly<{ conventionalRoots?: boolean; strictManifests?: boolean; checkCancellation?: () => void }> = {}): RustModuleGraph {
+export function inspectRustModuleGraph(files: readonly string[], readSource: (path: string) => string | undefined, options: Readonly<{ conventionalRoots?: boolean; strictManifests?: boolean; checkCancellation?: () => void; compileReferences?: ReadonlyMap<string, readonly RustCompileReference[]> }> = {}): RustModuleGraph {
   const compare = (left: string, right: string): number => Buffer.from(left).compare(Buffer.from(right));
   const sourceFiles = new Set(files.filter((path) => path.endsWith(".rs"))), factsBySource = new Map<string, ReturnType<typeof inspectRustModuleGraphFacts>>();
   const targets = new Map<string, string>(), contexts = new Map<string, RustModuleContext[]>(), namedCrates = new Map<string, string[]>(), dependencies = new Map<string, readonly string[]>(), invalidManifests = new Set<string>();
@@ -8343,11 +8479,20 @@ export function inspectRustModuleGraph(files: readonly string[], readSource: (pa
         const matching = candidates.filter((candidate) => !candidate.startsWith("../") && sourceFiles.has(candidate)), target = matching.length === 1 ? matching[0] : undefined;
         if (!target) continue;
         if (!module.inline && context.sourceChain.includes(target)) { if (root.manifestPath) invalidManifests.add(root.manifestPath); continue; }
-        const moduleBase = module.inline ? posix.normalize(posix.join(context.moduleBase, module.pathTarget ?? module.name)) : module.pathTarget === null && target.endsWith(`/${module.name}.rs`) ? posix.join(posix.dirname(target), module.name) : posix.dirname(target);
+        const moduleBase = module.inline ? posix.normalize(posix.join(base, module.pathTarget ?? module.name)) : module.pathTarget === null && posix.basename(target) === `${module.name}.rs` ? posix.join(posix.dirname(target), module.name) : posix.dirname(target);
         const child: RustModuleContext = { crateRoot, manifestPath: root.manifestPath, modulePath: [...context.modulePath, module.name], sourceScope: module.inline ? module.modulePath : [], moduleBase, sourceChain: module.inline ? context.sourceChain : [...context.sourceChain, target] };
         const key = `${crateRoot}\0${child.modulePath.join("::")}`, prior = targets.get(key);
         if (prior && prior !== target) continue;
         targets.set(key, target);
+        if (addContext(target, child)) pending.push({ sourcePath: target, context: child });
+      }
+      for (const reference of options.compileReferences?.get(sourcePath) ?? []) {
+        if (reference.kind !== "include" || reference.base === "generated" || (reference.modulePath ?? []).join("::") !== context.sourceScope.join("::")) continue;
+        if (reference.base === "manifest" && !context.manifestPath) continue;
+        const base = reference.base === "manifest" ? posix.dirname(context.manifestPath!) : posix.dirname(sourcePath);
+        const target = posix.normalize(posix.join(base, reference.base ? reference.path.slice(1) : reference.path));
+        if (target.startsWith("../") || !sourceFiles.has(target) || context.sourceChain.includes(target)) continue;
+        const child: RustModuleContext = { ...context, sourceScope: [], moduleBase: posix.dirname(target), sourceChain: [...context.sourceChain, target] };
         if (addContext(target, child)) pending.push({ sourcePath: target, context: child });
       }
     }
@@ -8402,7 +8547,7 @@ export function inspectRustModuleGraphFacts(source: string): { readonly modules:
       if (!name || name.kind !== "identifier" || boundary < 0) return;
       const inline = tokens[boundary]!.text === "{";
       const childPath = [...modulePath, name.text];
-      modules.push({ name: name.text, modulePath: childPath, visibility: visibility.value, inline, pathTarget: rustPathAttribute(tokens, attributes), ...(conditional ? { conditional: true as const } : {}) });
+      modules.push({ name: name.text, modulePath: childPath, visibility: visibility.value, inline, pathTarget: rustPathAttribute(tokens, pairs, attributes), ...(conditional ? { conditional: true as const } : {}) });
       if (!inline) {
         index = boundary + 1;
         continue;
@@ -9593,7 +9738,7 @@ export function inspectTypeScriptDeclarationFacts(source: string, language: "ts"
 
 //#region 🧭️Discovery
 /** 🎭️ Package "kind" declared by the ecosystem's role marker — see `readSemioMarker` and `taxonomy.roles`. */
-export type PackageRole = "plugin" | "framework" | "product" | "hub" | "s-module" | "extension" | "tool";
+export type PackageRole = "plugin" | "framework" | "product" | "hub" | "s-module" | "extension" | "tool" | "library" | "artifact" | "test";
 
 /** 🌐️ Ecosystem a discovered package's manifest belongs to (`taxonomy.langs`). */
 export type PackageLang = "🦀️rust" | "🟦️typescript" | "🟨️javascript" | "🐹️go" | "🐍️python" | "🔷️dotnet";

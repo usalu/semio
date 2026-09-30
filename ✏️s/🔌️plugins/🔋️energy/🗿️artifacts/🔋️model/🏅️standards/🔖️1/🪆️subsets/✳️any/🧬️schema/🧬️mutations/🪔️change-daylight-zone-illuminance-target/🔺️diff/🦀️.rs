@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeDaylightZoneIlluminanceTarget, base: &EnergyM
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Daylight zone {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_illuminance_target_lux.is_finite() || payload.new_illuminance_target_lux <= 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("An illuminance target must be a positive finite number, got {}.", payload.new_illuminance_target_lux), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("An illuminance target must be a positive finite number, got {}.", payload.new_illuminance_target_lux), [payload.id.0.to_string()]);
     }
     if existing.illuminance_target_lux == payload.new_illuminance_target_lux {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Daylight zone {} already has that illuminance target.", payload.id.0));

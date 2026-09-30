@@ -480,6 +480,14 @@ class NativeGuestJourneyCheckScript extends BundleScript {
   }
 }
 
+/** 🪟️ Exercises trusted physical Dock input and neutral public layout outcomes in both renderer hosts. */
+class BrowserDockAcceptanceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { runDockBrowserAcceptanceCli } = await import("../../../../🧱️elements/🛰️Dock/🧪️tests/🌐️browser-acceptance/📜️script.ts");
+    await runDockBrowserAcceptanceCli(segments);
+  }
+}
+
 /** 🎬️ Verifies real media app reservations through the accepted browser renderer and frame Worker. */
 class BrowserMediaAppAcceptanceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -606,6 +614,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("hub-collaboration-acceptance", HubCollaborationAcceptanceScript)
   .register("native-guest-journey-check", NativeGuestJourneyCheckScript)
   .register("browser-media-acceptance", BrowserMediaAppAcceptanceScript)
+  .register("browser-dock-acceptance", BrowserDockAcceptanceScript)
   .register("test-browser", BrowserTestScript)
   .register("test-browser-worker", BrowserWorkerTestScript)
   .register("test-preview-generated", PreviewGeneratedTestScript)

@@ -159,7 +159,7 @@
           ]
         }
       },
-      "error": "duplicate-response"
+      "error": "mutation.duplicate-id"
     },
     {
       "name": "retract response",
@@ -197,7 +197,7 @@
         "mutation": "discardResponse",
         "id": "missing"
       },
-      "error": "missing-response"
+      "error": "mutation.target-missing"
     }
   ]
 }

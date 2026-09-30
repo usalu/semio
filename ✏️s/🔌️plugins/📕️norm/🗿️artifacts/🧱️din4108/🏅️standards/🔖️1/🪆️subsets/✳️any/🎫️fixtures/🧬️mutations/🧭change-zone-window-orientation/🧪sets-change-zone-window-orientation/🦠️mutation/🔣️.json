@@ -1,7 +1,0 @@
-{
-  "ChangeZoneWindowOrientation": {
-    "zoneId": "zone-living",
-    "windowId": "win-south",
-    "newOrientation": "N"
-  }
-}

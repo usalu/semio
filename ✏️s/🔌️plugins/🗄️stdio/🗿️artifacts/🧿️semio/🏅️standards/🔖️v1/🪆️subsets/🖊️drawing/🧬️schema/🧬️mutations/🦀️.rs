@@ -148,10 +148,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioDrawingMutation> {
         SemioDrawingMutation::GroupNodes(group_nodes::GroupNodes { parent: root_path.clone(), indices: vec![0], transform: SemioTransform::identity() }),
         SemioDrawingMutation::UngroupNode(ungroup_node::UngroupNode { at: leaf_path.clone() }),
         SemioDrawingMutation::FlattenNode(flatten_node::FlattenNode { at: root_path.clone() }),
-        // 🩹 `original` is a genuine no-op restore (identical to the fixture's own node at this
-        // path, which has no nested groups) -- `flatten(original) == original` here, so the
-        // `unflatten` <-> `flatten` inverse pair's own law holds against `every_demo_variant_
-        // round_trips`'s shared fixture without requiring a paired-only test harness.
         SemioDrawingMutation::UnflattenNode(unflatten_node::UnflattenNode {
             at: NodePath { layer: 0, path: vec![2] },
             original: DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Text { value: "nested".into(), at: SemioPoint2 { x: 2.0, y: 2.0 }, style: None }] },

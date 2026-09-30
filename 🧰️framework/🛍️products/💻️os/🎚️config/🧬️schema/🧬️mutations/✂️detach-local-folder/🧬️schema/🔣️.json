@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/config/mutation/detach-local-folder/schema.json",
+  "title": "DetachLocalFolder",
+  "description": "Forgets, on this device, the local folder one document is attached to. The folder and the archive in it stay where they are.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "documentId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "detachLocalFolder"
+    },
+    "documentId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Document ID",
+          "de": "Dokument-ID"
+        },
+        "group": "identity",
+        "order": 10
+      }
+    }
+  }
+}

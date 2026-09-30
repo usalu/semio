@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeAirLoopSupplyNode, base: &EnergyModelSnapshot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Air loop {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if payload.new_supply_node_id == 0 {
-        return protocol::MutationOutcome::error("mutation.invariant", "A supply node id must be at least one.".to_string(), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "A supply node id must be at least one.".to_string(), [payload.id.0.to_string()]);
     }
     if existing.supply_node_id == payload.new_supply_node_id {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Air loop {} already has that supply node.", payload.id.0));

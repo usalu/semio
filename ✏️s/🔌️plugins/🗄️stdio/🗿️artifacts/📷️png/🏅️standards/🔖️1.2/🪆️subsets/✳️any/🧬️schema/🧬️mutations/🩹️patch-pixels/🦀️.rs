@@ -46,7 +46,7 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for PatchPixelsMutation {
     fn diff(&self, base: &PngSnapshot) -> protocol::MutationOutcome<PngDiff> {
         match apply(&base.pixels, self) {
             Ok(pixels) => protocol::MutationOutcome::new(crate::schema::mutations::replace_pixels::contribute(base, pixels)),
-            Err(message) => protocol::MutationOutcome::error("stdio.png.patch-pixels.invalid-range", message, ["pixels".into(), self.index.to_string()]),
+            Err(message) => protocol::MutationOutcome::error("mutation.target-mismatch", message, ["pixels".into(), self.index.to_string()]),
         }
     }
     fn inverse(&self, base: &PngSnapshot) -> Vec<PngMutation> {

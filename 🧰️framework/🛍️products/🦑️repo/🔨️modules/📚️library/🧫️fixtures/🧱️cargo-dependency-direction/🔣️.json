@@ -37,6 +37,13 @@
         "toRoles": [
           "plugin",
           "extension"
+        ],
+        "fromOwnerPaths": [
+          "^implementation/module$"
+        ],
+        "toOwnerSegments": [
+          "🔌️plugins",
+          "🧩️extensions"
         ]
       },
       "cargo-plugins-no-extensions": {
@@ -45,9 +52,98 @@
         ],
         "toRoles": [
           "extension"
+        ],
+        "fromOwnerPaths": [
+          "^implementation/plugin(?:$|/(?!🗿️artifacts/|🧩️extensions/))"
+        ],
+        "toOwnerSegments": [
+          "🧩️extensions"
+        ]
+      },
+      "cargo-plugins-no-artifacts": {
+        "fromRoles": [
+          "plugin"
+        ],
+        "toRoles": [
+          "artifact"
+        ],
+        "toOwnerSegments": [
+          "🗿️artifacts"
+        ],
+        "fromOwnerPaths": [
+          "^implementation/plugin(?:$|/(?!🗿️artifacts/|🧩️extensions/))"
         ]
       }
-    }
+    },
+    "ownerRoles": [
+      {
+        "path": "(?:^|/)🗿️artifacts/",
+        "roles": [
+          "artifact"
+        ]
+      },
+      {
+        "path": "^implementation/(?:plugin/)?artifact$",
+        "roles": [
+          "artifact"
+        ]
+      },
+      {
+        "path": "^implementation/plugin$",
+        "roles": [
+          "plugin"
+        ]
+      },
+      {
+        "path": "^implementation/extension$",
+        "roles": [
+          "extension"
+        ]
+      },
+      {
+        "path": "^implementation/module$",
+        "roles": [
+          "s-module"
+        ]
+      },
+      {
+        "path": "^implementation/artifact$",
+        "roles": [
+          "artifact"
+        ]
+      },
+      {
+        "path": "^implementation/(?:.+/)?🧩️extensions/[^/]+$",
+        "roles": [
+          "extension"
+        ]
+      },
+      {
+        "path": "^implementation/",
+        "roles": [
+          "library",
+          "test",
+          "s-module"
+        ]
+      },
+      {
+        "path": "^framework/",
+        "roles": [
+          "framework",
+          "product",
+          "library",
+          "tool",
+          "test",
+          "artifact"
+        ]
+      },
+      {
+        "path": "^hub/",
+        "roles": [
+          "hub"
+        ]
+      }
+    ]
   },
   "cases": [
     {
@@ -622,6 +718,495 @@
         }
       ],
       "problems": []
+    },
+    {
+      "id": "plugin-to-artifact-normal",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "artifact_alias",
+              "owner": "implementation/plugin/artifact",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin/artifact",
+          "role": "artifact",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-plugins-no-artifacts",
+          "from": "implementation/plugin",
+          "to": "implementation/plugin/artifact",
+          "alias": "artifact_alias",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "plugin-to-artifact-conditional-development",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "artifact_alias",
+              "owner": "implementation/plugin/artifact",
+              "kind": "dev",
+              "optional": false,
+              "platform": "cfg(unix)"
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin/artifact",
+          "role": "artifact",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-plugins-no-artifacts",
+          "from": "implementation/plugin",
+          "to": "implementation/plugin/artifact",
+          "alias": "artifact_alias",
+          "kind": "dev",
+          "optional": false,
+          "platform": "cfg(unix)"
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "plugin-to-artifact-conditional-optional",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "artifact_alias",
+              "owner": "implementation/plugin/artifact",
+              "kind": "normal",
+              "optional": true,
+              "platform": "cfg(unix)"
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin/artifact",
+          "role": "artifact",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-plugins-no-artifacts",
+          "from": "implementation/plugin",
+          "to": "implementation/plugin/artifact",
+          "alias": "artifact_alias",
+          "kind": "normal",
+          "optional": true,
+          "platform": "cfg(unix)"
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "plugin-to-artifact-owner-mislabeled-module",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "artifact_alias",
+              "owner": "implementation/plugin/🗿️artifacts/artifact",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin/🗿️artifacts/artifact",
+          "role": "s-module",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-plugins-no-artifacts",
+          "from": "implementation/plugin",
+          "to": "implementation/plugin/🗿️artifacts/artifact",
+          "alias": "artifact_alias",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": [
+        {
+          "code": "owner-role-mismatch",
+          "owner": "implementation/plugin/🗿️artifacts/artifact"
+        }
+      ]
+    },
+    {
+      "id": "plugin-to-artifact-owner-mislabeled-library",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "artifact_alias",
+              "owner": "implementation/plugin/🗿️artifacts/artifact",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin/🗿️artifacts/artifact",
+          "role": "library",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-plugins-no-artifacts",
+          "from": "implementation/plugin",
+          "to": "implementation/plugin/🗿️artifacts/artifact",
+          "alias": "artifact_alias",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": [
+        {
+          "code": "owner-role-mismatch",
+          "owner": "implementation/plugin/🗿️artifacts/artifact"
+        }
+      ]
+    },
+    {
+      "id": "plugin-to-artifact-segment-decoy",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "artifact_alias",
+              "owner": "implementation/plugin/🗿️artifacts-copy/library",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin/🗿️artifacts-copy/library",
+          "role": "library",
+          "dependencies": []
+        }
+      ],
+      "violations": [],
+      "problems": []
+    },
+    {
+      "id": "shared-metadata-plugin-role-bypass",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "implementation/plugin",
+          "role": "library",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "implementation/artifact",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/artifact",
+          "role": "artifact",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-plugins-no-artifacts",
+          "from": "implementation/plugin",
+          "to": "implementation/artifact",
+          "alias": "neutral_target",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": [
+        {
+          "code": "owner-role-mismatch",
+          "owner": "implementation/plugin"
+        }
+      ]
+    },
+    {
+      "id": "shared-metadata-module-role-bypass",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "implementation/module",
+          "role": "library",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "implementation/plugin",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-modules-no-plugins",
+          "from": "implementation/module",
+          "to": "implementation/plugin",
+          "alias": "neutral_target",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": [
+        {
+          "code": "owner-role-mismatch",
+          "owner": "implementation/module"
+        }
+      ]
+    },
+    {
+      "id": "shared-metadata-extension-role-bypass",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "implementation/extension",
+              "kind": "build",
+              "optional": true,
+              "platform": "cfg(windows)"
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/extension",
+          "role": "library",
+          "dependencies": []
+        }
+      ],
+      "violations": [],
+      "problems": [
+        {
+          "code": "owner-role-mismatch",
+          "owner": "implementation/extension"
+        }
+      ]
+    },
+    {
+      "id": "specific-segment-decoy",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "implementation/plugin-tools",
+          "role": "library",
+          "dependencies": []
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/extensions-data",
+          "role": "library",
+          "dependencies": []
+        }
+      ],
+      "violations": [],
+      "problems": []
+    },
+    {
+      "id": "declared-area-unclassified-role",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "hub",
+          "role": "hub",
+          "dependencies": []
+        },
+        {
+          "name": "neutral_target",
+          "owner": "framework/plain",
+          "role": "library",
+          "dependencies": []
+        }
+      ],
+      "violations": [],
+      "problems": [
+        {
+          "code": "unclassified-role-owner",
+          "owner": "hub"
+        }
+      ]
+    },
+    {
+      "id": "generic-plugin-service-keeps-physical-boundary",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "implementation/plugin/service",
+          "role": "library",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "implementation/plugin/artifact",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin/artifact",
+          "role": "artifact",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-plugins-no-artifacts",
+          "from": "implementation/plugin/service",
+          "to": "implementation/plugin/artifact",
+          "alias": "neutral_target",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": []
+    },
+    {
+      "id": "physical-extension-target-keeps-boundary",
+      "packages": [
+        {
+          "name": "neutral_source",
+          "owner": "implementation/plugin",
+          "role": "plugin",
+          "dependencies": [
+            {
+              "name": "neutral_target",
+              "alias": "neutral_target",
+              "owner": "implementation/plugin/🧩️extensions/target",
+              "kind": "normal",
+              "optional": false,
+              "platform": null
+            }
+          ]
+        },
+        {
+          "name": "neutral_target",
+          "owner": "implementation/plugin/🧩️extensions/target",
+          "role": "library",
+          "dependencies": []
+        }
+      ],
+      "violations": [
+        {
+          "rule": "cargo-plugins-no-extensions",
+          "from": "implementation/plugin",
+          "to": "implementation/plugin/🧩️extensions/target",
+          "alias": "neutral_target",
+          "kind": "normal",
+          "optional": false,
+          "platform": null
+        }
+      ],
+      "problems": [
+        {
+          "code": "owner-role-mismatch",
+          "owner": "implementation/plugin/🧩️extensions/target"
+        }
+      ]
+    },
+    {
+      "id": "physical-extension-cannot-declare-plugin",
+      "packages": [
+        {
+          "name": "neutral_extension",
+          "owner": "implementation/extension",
+          "role": "plugin",
+          "dependencies": []
+        }
+      ],
+      "violations": [],
+      "problems": [
+        {
+          "code": "owner-role-mismatch",
+          "owner": "implementation/extension"
+        }
+      ]
     }
   ],
   "corruptions": [
@@ -635,5 +1220,12 @@
     "wrong-role",
     "duplicate-package",
     "unclassified-owner"
+  ],
+  "policyCorruptions": [
+    "missing-owner-roles",
+    "invalid-owner-pattern",
+    "unknown-owner-role",
+    "duplicate-owner-rule",
+    "empty-owner-pattern"
   ]
 }

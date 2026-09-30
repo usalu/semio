@@ -26,6 +26,8 @@ impl En1999Diff {
             if let Some(value) = &self.connections { next.connections = value.clone(); }
             if let Some(value) = &self.fire_scenarios { next.fire_scenarios = value.clone(); }
             if let Some(value) = &self.fatigue_details { next.fatigue_details = value.clone(); }
+            if let Some(value) = &self.cold_formed { next.cold_formed = value.clone(); }
+            if let Some(value) = &self.shells { next.shells = value.clone(); }
             next
         })
     }
@@ -45,6 +47,8 @@ impl MutationDiff<En1999Snapshot> for En1999Diff {
             if let Some(value) = &self.connections { next.connections = value.clone(); }
             if let Some(value) = &self.fire_scenarios { next.fire_scenarios = value.clone(); }
             if let Some(value) = &self.fatigue_details { next.fatigue_details = value.clone(); }
+            if let Some(value) = &self.cold_formed { next.cold_formed = value.clone(); }
+            if let Some(value) = &self.shells { next.shells = value.clone(); }
             next
         })
     }
@@ -67,6 +71,8 @@ impl MutationDiff<En1999Snapshot> for En1999Diff {
         take!(connections);
         take!(fire_scenarios);
         take!(fatigue_details);
+        take!(cold_formed);
+        take!(shells);
     }
 }
 //#endregion 🔖️Apply

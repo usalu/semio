@@ -31,7 +31,9 @@
     "tailwindcss": "^4.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@csstools/css-calc": "2.1.4",
+    "ajv": "8.20.0"
   },
   "author": {
     "name": "Ueli Saluz",

@@ -3,7 +3,6 @@
 use super::remove_embedded_file::RemoveEmbeddedFile;
 use super::PdfAMutation;
 use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
-use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -20,7 +19,7 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for InsertEmbeddedFile {
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         let mut next = base.clone();
         support::insert_file_spec(&mut next, &self.file_name);
-        MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
+        MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
     fn inverse(&self, _base: &PdfSnapshot) -> Vec<PdfAMutation> {

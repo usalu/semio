@@ -9,7 +9,8 @@
 
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{cad_pane_from_view, cad_pane_objects, create_object_mutations, delete_object_mutations, duplicate_object_mutations, ids_or_selection, make_object_for_typology, patch_objects_mutations};
+use crate::editor::cad::modes::edit::tools::transform::{cad_transform_tool_emit, CadToolEntry, CadTransformRecord};
+use crate::editor::cad::{axis3_index, cad_pane_from_view, cad_pane_objects, create_object_mutations, delete_object_mutations, duplicate_object_mutations, ids_or_selection, make_object_for_typology, patch_objects_mutations};
 use crate::op::CadMutation;
 use crate::{CadPaneId, CadSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -19,6 +20,15 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// host supplied one, otherwise the shape pane (the layout's first quadrant).
 fn target_pane(ctx: &CadDispatchCtx) -> CadPaneId {
     ctx.view_state.as_ref().and_then(|view| cad_pane_from_view(view).ok()).unwrap_or(CadPaneId::Shape)
+}
+
+/// 🧭️ An inspector origin DELTA (`origin.x` … with `delta`, no absolute `value`) is a drag of the addressed objects along
+/// that axis — the transform tool's parametric `drag-selection`, never an absolute placement; `None` for every other edit.
+fn origin_delta_emit(doc: &ArtifactView<'_, CadSnapshot>, verb: &str, ids: Vec<String>, field: &str, value: Option<&String>, delta: Option<f64>) -> Option<Emit<CadMutation, CadConfigMutation>> {
+    let (None, Some(delta), Some(axis)) = (value, delta, axis3_index(field, "origin")) else { return None };
+    let mut offset = [0.0; 3];
+    offset[axis] = delta;
+    Some(cad_transform_tool_emit(doc, verb, vec![CadToolEntry::Transform(CadTransformRecord::drag(ids, offset))]))
 }
 
 //#region 🔖️AddObject
@@ -58,6 +68,9 @@ pub mod patch_object {
         if payload.object_id.is_empty() {
             return Ok(Emit::default());
         }
+        if let Some(emit) = origin_delta_emit(doc, "patchObject", vec![payload.object_id.clone()], &payload.field, payload.value.as_ref(), payload.delta) {
+            return Ok(emit);
+        }
         let value = payload.value.as_deref().map(|value| command_value_json(&payload.field, value));
         let delta = payload.delta.map(protocol::DslValue::float);
         Ok(Emit::mutations(patch_objects_mutations(doc.snapshot, std::slice::from_ref(&payload.object_id), &payload.field, value.as_ref(), delta.as_ref())))
@@ -83,6 +96,9 @@ pub mod patch_selection {
         let ids = ids_or_selection(&payload.object_ids, &ctx.interaction.ids);
         if ids.is_empty() {
             return Ok(Emit::default());
+        }
+        if let Some(emit) = origin_delta_emit(doc, "patchSelection", ids.clone(), &payload.field, payload.value.as_ref(), payload.delta) {
+            return Ok(emit);
         }
         let value = payload.value.as_deref().map(|value| command_value_json(&payload.field, value));
         let delta = payload.delta.map(protocol::DslValue::float);

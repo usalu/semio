@@ -1,0 +1,12 @@
+{
+  "InsertOpening": {
+    "wallIndex": 0,
+    "index": 0,
+    "opening": {
+      "id": "win-2",
+      "widthM": 1.0,
+      "heightM": 1.25,
+      "sillHeightM": 0.9
+    }
+  }
+}

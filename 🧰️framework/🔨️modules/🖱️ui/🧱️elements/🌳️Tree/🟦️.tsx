@@ -1640,19 +1640,19 @@ interface TreeRootProps {
   onSectionsReorder?: (orderedIds: readonly string[]) => void;
 }
 
-/** ↕️ Merges a remembered section-id order with the latest section list — keeps prior relative order for surviving ids, appends newly appeared sections in source order. */
+/** ↕️ Merges a remembered section-id order with the latest section list — keeps prior relative order for surviving ids and
+ * inserts a newly appeared section where the source puts it: right after the nearest earlier source section already
+ * placed, else first. Appending it instead sank a section a program leads with (the history-edit band and draft editor)
+ * below every section the tree already showed. */
 export function mergeTreeSectionOrder(previousIds: readonly string[], sections: readonly TreeDataSection[]): TreeDataSection[] {
   const byId = new Map(sections.map((section) => [section.id, section]));
-  const ordered: TreeDataSection[] = [];
-  for (const id of previousIds) {
-    const section = byId.get(id);
-    if (!section) continue;
-    ordered.push(section);
-    byId.delete(id);
-  }
-  for (const section of sections) {
-    if (byId.has(section.id)) ordered.push(section);
-  }
+  const ordered: TreeDataSection[] = previousIds.flatMap((id) => byId.get(id) ?? []);
+  const remembered = new Set(ordered.map((section) => section.id));
+  sections.forEach((section, index) => {
+    if (remembered.has(section.id)) return;
+    const anchor = sections.slice(0, index).findLast((earlier) => ordered.includes(earlier));
+    ordered.splice(anchor === undefined ? 0 : ordered.indexOf(anchor) + 1, 0, section);
+  });
   return ordered;
 }
 

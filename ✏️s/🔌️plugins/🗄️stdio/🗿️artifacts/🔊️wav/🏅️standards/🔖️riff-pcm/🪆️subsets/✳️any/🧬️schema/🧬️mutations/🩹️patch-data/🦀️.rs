@@ -67,7 +67,7 @@ fn apply(data: &WavData, patch: &PatchData) -> Result<WavData, String> {
 pub(crate) fn diff(payload: &PatchData, base: &WavSnapshot) -> protocol::MutationOutcome<WavDiff> {
     match apply(&base.data, payload) {
         Ok(data) => protocol::MutationOutcome::new(diff_set_data(data)),
-        Err(message) => protocol::MutationOutcome::error("stdio.wav.patch-data.invalid-range", message, ["data".into(), "value".into(), payload.index.to_string()]),
+        Err(message) => protocol::MutationOutcome::error("mutation.target-mismatch", message, ["data".into(), "value".into(), payload.index.to_string()]),
     }
 }
 

@@ -3,7 +3,6 @@
 use super::insert_javascript_action::InsertJavascriptAction;
 use super::PdfVtMutation;
 use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
-use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -22,7 +21,7 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveJavascriptAction {
         if let Some(id) = support::action_with(&next, "JavaScript", "JS", &self.script) {
             support::remove_object(&mut next, id);
         }
-        MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
+        MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfVtMutation> {

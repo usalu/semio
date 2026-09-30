@@ -481,7 +481,7 @@ fn shooting_bounded_reduce(
     snapshot: &ShootingSnapshot,
     config: &ShootingConfig,
     history: &semio_framework_plugin::HistoryView,
-    _interaction: &protocol::InteractionState,
+    interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<ShootingPlayApp>>>,
     operation: &AppOperationContext,
@@ -489,7 +489,8 @@ fn shooting_bounded_reduce(
     if !SHOOTING_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("shooting.retained.route"), "the bounded Shooting reducer rejects resumable routes"));
     }
-    let mut ctx = ShootingDispatchCtx::default();
+    let mut ctx = ShootingDispatchCtx { selected_asset_ids: interaction.selection.get(SHOOTING_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default() };
+    eprintln!("[DEBUG] shooting retained reduce {} selection {:?}", command.command_id(), interaction.selection);
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None }, &mut ctx)
 }
 
@@ -806,6 +807,19 @@ impl ArtifactEditor for ShootingPlayApp {
         command.command_id()
     }
 
+    /// 🕹️ The flat `assets` domain: every asset of the document at `asset` granularity, in document order — without
+    /// it the framework's revalidation drops every pick, and an id-less gumball gesture finds no selection to move.
+    fn interaction_topology(doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> semio_framework_plugin::InteractionTopology {
+        let ordered = doc.snapshot.assets.iter().map(|asset| semio_framework_plugin::TopologyNode { id: asset.id.clone(), granularity: "asset".into(), parent: None }).collect();
+        semio_framework_plugin::InteractionTopology { domains: std::collections::BTreeMap::from([(SHOOTING_INTERACTION_DOMAIN.into(), semio_framework_plugin::DomainTopology { ordered })]) }
+    }
+
+    /// 🏷️ A document op's own localized label, so a gumball transaction's history row reads its leaf — "Drag 2
+    /// assets" / "2 Assets ziehen" — instead of the op's text line.
+    fn mutation_label(op: &ShootingMutation) -> Option<LocalizedLabel> {
+        Some(protocol::SemanticMutation::<ShootingSnapshot>::label(op))
+    }
+
     fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
         args_bridge::command_from_action(action, args)
     }
@@ -1086,9 +1100,9 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("addAsset", LocalizedLabel::native("Adds a new placeholder asset of the given format to the scene.", "Fügt der Szene ein neues Platzhalterobjekt des angegebenen Formats hinzu."))
             .action_describe("importAsset", LocalizedLabel::native("Imports a GLB model (data-URL payload, optional name) as a new asset in the scene.", "Importiert ein GLB-Modell (Data-URL-Inhalt, optionaler Name) als neues Objekt in die Szene."))
             .action_describe("resetFixture", LocalizedLabel::native("Resets the whole shooting document to the default scene; every shot, asset and saved camera is discarded.", "Setzt das gesamte Shooting-Dokument auf die Standardszene zurück; alle Aufnahmen, Objekte und gespeicherten Kameras werden verworfen."))
-            .action_describe("translateSelection", LocalizedLabel::native("Moves the given assets by dx, dy and dz; consecutive drags merge into one undo step.", "Verschiebt die angegebenen Objekte um dx, dy und dz; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."))
-            .action_describe("rotateSelection", LocalizedLabel::native("Rotates the given assets by an angle around the axis ax, ay, az; consecutive drags merge into one undo step.", "Dreht die angegebenen Objekte um einen Winkel um die Achse ax, ay, az; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."))
-            .action_describe("scaleSelection", LocalizedLabel::native("Scales the given assets by sx, sy and sz; consecutive drags merge into one undo step.", "Skaliert die angegebenen Objekte um sx, sy und sz; aufeinanderfolgende Züge werden zu einem Rückgängig-Schritt zusammengefasst."))
+            .action_describe("translateSelection", LocalizedLabel::native("Moves the given assets by dx, dy and dz; one gumball drag is one history step whose offset stays editable.", "Verschiebt die angegebenen Objekte um dx, dy und dz; ein Gumball-Zug ist ein Verlaufsschritt, dessen Versatz bearbeitbar bleibt."))
+            .action_describe("rotateSelection", LocalizedLabel::native("Rotates the given assets by an angle around the axis ax, ay, az; one gumball drag is one history step whose rotation stays editable.", "Dreht die angegebenen Objekte um einen Winkel um die Achse ax, ay, az; ein Gumball-Zug ist ein Verlaufsschritt, dessen Drehung bearbeitbar bleibt."))
+            .action_describe("scaleSelection", LocalizedLabel::native("Scales the given assets by sx, sy and sz; one gumball drag is one history step whose factors stay editable.", "Skaliert die angegebenen Objekte um sx, sy und sz; ein Gumball-Zug ist ein Verlaufsschritt, dessen Faktoren bearbeitbar bleiben."))
             .action_describe("setShotSelection", LocalizedLabel::native("Selects the given shots in the gallery and document tree; only the editor's view state changes.", "Wählt die angegebenen Aufnahmen in Galerie und Dokumentbaum aus; nur der Ansichtszustand des Editors ändert sich."))
             .action_describe("setCameraDraftLabel", LocalizedLabel::native("Sets the label the next Save Camera stores the viewport camera under; the document is not changed.", "Legt die Bezeichnung fest, unter der das nächste Kamera speichern die Ansichtskamera ablegt; das Dokument ändert sich nicht."))
             .action_describe("setCenterModel", LocalizedLabel::native("Sets whether the viewport keeps the model centred; only the view changes.", "Legt fest, ob die Ansicht das Modell zentriert hält; nur die Ansicht ändert sich."))

@@ -19,10 +19,11 @@ use serde_json::Value;
 /// 🧮️ Semantic puzzle-3d document mutation vocabulary: id-keyed object/target-volume/reference
 /// create-delete plus per-field edits, vortex membership, a vortex-to-vortex attraction connect/
 /// disconnect relationship, and document-level edits (domain change, kind-compatibility connect/
-/// disconnect, kind-catalog replace). There is deliberately no camera mutation: camera pose is
-/// session-only app runtime state (`ActionKind::View`), never a document operation. There is
-/// deliberately no whole-document mutation: import/reset/example-load goes through
-/// `store::ArtifactStore::reset` (non-history), never through this enum.
+/// disconnect, kind-catalog replace), and the three parametric selection transforms (`drag-`,
+/// `rotate-`, `scale-selection`) that record a gesture's own inputs. There is deliberately no camera
+/// mutation: camera pose is session-only app runtime state (`ActionKind::View`), never a document
+/// operation. There is deliberately no whole-document mutation: import/reset/example-load goes
+/// through `store::ArtifactStore::reset` (non-history), never through this enum.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslEnum, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -64,6 +65,9 @@ pub enum Puzzle3dMutation {
     ConnectKindCompatibility(ConnectKindCompatibility),
     DisconnectKindCompatibility(DisconnectKindCompatibility),
     ReplaceKindCatalogs(ReplaceKindCatalogs),
+    DragSelection(DragSelection),
+    RotateSelection(RotateSelection),
+    ScaleSelection(ScaleSelection),
 }
 
 //#region 🏷️Kinds
@@ -107,6 +111,9 @@ pub const KINDS: &[&str] = &[
     "connect-kind-compatibility",
     "disconnect-kind-compatibility",
     "replace-kind-catalogs",
+    "drag-selection",
+    "rotate-selection",
+    "scale-selection",
 ];
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
@@ -132,6 +139,7 @@ pub use super::delete_reference::mutation::{delete_reference, DeleteReference};
 pub use super::delete_target_volume::mutation::{delete_target_volume, DeleteTargetVolume};
 pub use super::disconnect_kind_compatibility::mutation::{disconnect_kind_compatibility, DisconnectKindCompatibility};
 pub use super::disconnect_vortices::mutation::{disconnect_vortices, DisconnectVortices};
+pub use super::drag_selection::mutation::{drag_selection, DragSelection};
 pub use super::edit_object_label::mutation::{edit_object_label, EditObjectLabel};
 pub use super::move_object::mutation::{move_object, MoveObject};
 pub use super::move_reference::mutation::{move_reference, MoveReference};
@@ -143,9 +151,167 @@ pub use super::replace_object_vortex::mutation::{replace_object_vortex, ReplaceO
 pub use super::replace_reference_source::mutation::{replace_reference_source, ReplaceReferenceSource};
 pub use super::resize_reference::mutation::{resize_reference, ResizeReference};
 pub use super::rotate_object::mutation::{rotate_object, RotateObject};
+pub use super::rotate_selection::mutation::{rotate_selection, RotateSelection};
 pub use super::rotate_target_volume::mutation::{rotate_target_volume, RotateTargetVolume};
 pub use super::scale_object::mutation::{scale_object, ScaleObject};
+pub use super::scale_selection::mutation::{scale_selection, ScaleSelection};
 pub use super::scale_target_volume::mutation::{scale_target_volume, ScaleTargetVolume};
+
+//#region 🔖️SelectionTransform
+/// 🧭️ Shared diff of the three parametric selection leaves (`drag-`, `rotate-`, `scale-selection`).
+/// `targets` is classified by document membership against `base`: an object id goes through `object`,
+/// a target-volume id through `volume`, each record transformed IN PLACE about its own origin. An empty
+/// or repeated target set is the Fatal `mutation.invariant` the payload schema's `minItems`/`uniqueItems`
+/// forbid. Absent ids and locked records are skipped with one `mutation.partial` warning per reason (in
+/// that order, ids in payload order); nothing left is `mutation.target-missing`; an `identity`
+/// transform, or survivors that do not move, is `mutation.no-op`. Every moved record is patched whole
+/// from the base, in document order, so the leaf replays on any base.
+pub fn puzzle3d_selection_diff(
+    base: &Puzzle3dSnapshot,
+    targets: &[String],
+    identity: bool,
+    object: impl Fn(&crate::Puzzle3dObject) -> crate::Puzzle3dObject,
+    volume: impl Fn(&crate::Puzzle3dTargetVolume) -> crate::Puzzle3dTargetVolume,
+) -> protocol::MutationOutcome<Puzzle3dDiff> {
+    use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dObjectPatch, Puzzle3dObjectPatchEntry, Puzzle3dObjectsDelta, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumePatchEntry, Puzzle3dTargetVolumesDelta};
+    if let Err(reason) = puzzle3d_targets_invariant(targets) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
+    }
+    let (mut missing, mut locked, mut survivors) = (Vec::<String>::new(), Vec::<String>::new(), std::collections::BTreeSet::<&str>::new());
+    for id in targets {
+        match (base.objects.iter().find(|entry| &entry.id == id).map(|entry| entry.locked), base.target_volumes.iter().find(|entry| &entry.id == id).map(|entry| entry.locked)) {
+            (Some(false), _) | (None, Some(false)) => {
+                survivors.insert(id.as_str());
+            }
+            (Some(true), _) | (None, Some(true)) => locked.push(id.clone()),
+            (None, None) => missing.push(id.clone()),
+        }
+    }
+    if survivors.is_empty() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is an unlocked object or target volume", targets.len()), targets.to_vec());
+    }
+    let partial: Vec<protocol::MutationMessage> = [(missing, "not in this scene"), (locked, "locked")]
+        .into_iter()
+        .filter(|(ids, _)| !ids.is_empty())
+        .map(|(ids, reason)| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", ids.len(), targets.len(), ids.join(", "))).at(ids))
+        .collect();
+    let objects: Vec<Puzzle3dObjectPatchEntry> = if identity {
+        Vec::new()
+    } else {
+        base.objects.iter().filter(|entry| survivors.contains(entry.id.as_str())).filter_map(|entry| Some(object(entry)).filter(|next| next != entry).map(|next| Puzzle3dObjectPatchEntry { id: entry.id.clone(), patch: Puzzle3dObjectPatch { replacement: Some(next) } })).collect()
+    };
+    let volumes: Vec<Puzzle3dTargetVolumePatchEntry> = if identity {
+        Vec::new()
+    } else {
+        base.target_volumes.iter().filter(|entry| survivors.contains(entry.id.as_str())).filter_map(|entry| Some(volume(entry)).filter(|next| next != entry).map(|next| Puzzle3dTargetVolumePatchEntry { id: entry.id.clone(), patch: Puzzle3dTargetVolumePatch { replacement: Some(next) } })).collect()
+    };
+    if objects.is_empty() && volumes.is_empty() {
+        return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(targets.to_vec())]));
+    }
+    protocol::MutationOutcome::new(Puzzle3dDiff {
+        objects: (!objects.is_empty()).then(|| Puzzle3dObjectsDelta { patched: objects, ..Default::default() }),
+        target_volumes: (!volumes.is_empty()).then(|| Puzzle3dTargetVolumesDelta { patched: volumes, ..Default::default() }),
+        ..Default::default()
+    })
+    .absorb_messages(partial)
+}
+
+/// ↩️ Exact base-derived inverse of a selection transform: the absolute setters restoring every pose
+/// field its forward `outcome` changes — origin, orientation, scale — so an undo never accumulates the
+/// float error a negated offset, angle or factor would.
+pub fn puzzle3d_selection_inverse(base: &Puzzle3dSnapshot, outcome: protocol::MutationOutcome<Puzzle3dDiff>) -> Vec<Puzzle3dMutation> {
+    let (diff, _) = outcome.into_parts();
+    let mut steps = Vec::new();
+    for entry in diff.objects.iter().flat_map(|delta| &delta.patched) {
+        let (Some(before), Some(after)) = (base.objects.iter().find(|object| object.id == entry.id), entry.patch.replacement.as_ref()) else { continue };
+        if before.origin != after.origin {
+            steps.push(move_object(before.id.clone(), before.origin));
+        }
+        if before.orientation != after.orientation {
+            steps.push(rotate_object(before.id.clone(), before.orientation));
+        }
+        if before.scale != after.scale {
+            steps.push(scale_object(before.id.clone(), before.scale));
+        }
+    }
+    for entry in diff.target_volumes.iter().flat_map(|delta| &delta.patched) {
+        let (Some(before), Some(after)) = (base.target_volumes.iter().find(|volume| volume.id == entry.id), entry.patch.replacement.as_ref()) else { continue };
+        if before.origin != after.origin {
+            steps.push(move_target_volume(before.id.clone(), before.origin));
+        }
+        if before.orientation != after.orientation {
+            steps.push(rotate_target_volume(before.id.clone(), before.orientation));
+        }
+        if before.scale != after.scale {
+            steps.push(scale_target_volume(before.id.clone(), before.scale));
+        }
+    }
+    steps
+}
+
+/// 🗃️ A selection target set names at least one id and no id twice.
+pub fn puzzle3d_targets_invariant(targets: &[String]) -> Result<(), String> {
+    if targets.is_empty() {
+        return Err("targets must name at least one id".to_string());
+    }
+    match targets.iter().enumerate().find(|(at, id)| targets[..*at].contains(id)) {
+        Some((_, id)) => Err(format!("targets must not repeat {id:?}")),
+        None => Ok(()),
+    }
+}
+
+/// 🔢️ A selection label's number as `(en, de)`: at most two decimals, trailing zeros and a negative zero
+/// dropped, a decimal point in English and a decimal comma in German.
+pub fn puzzle3d_selection_number(value: f64) -> (String, String) {
+    let rounded = (value * 100.0).round() / 100.0;
+    let text = format!("{:.2}", if rounded == 0.0 { 0.0 } else { rounded });
+    let en = text.trim_end_matches('0').trim_end_matches('.').to_string();
+    let de = en.replace('.', ",");
+    (en, de)
+}
+
+/// 📐️ A selection label's triple as `(en, de)`: `(1, 0, -2.5)` in English, `(1; 0; -2,5)` in German.
+pub fn puzzle3d_selection_triple(values: [f64; 3]) -> (String, String) {
+    let parts = values.map(puzzle3d_selection_number);
+    (format!("({}, {}, {})", parts[0].0, parts[1].0, parts[2].0), format!("({}; {}; {})", parts[0].1, parts[1].1, parts[2].1))
+}
+
+/// 🔠️ A selection label's counted noun, `(en, de)`: "1 item" / "1 Element", "3 items" / "3 Elemente".
+pub fn puzzle3d_selection_items(count: usize) -> (String, String) {
+    match count {
+        1 => ("1 item".to_string(), "1 Element".to_string()),
+        count => (format!("{count} items"), format!("{count} Elemente")),
+    }
+}
+
+/// ✖️ The Hamilton product `a · b` of two `[x, y, z, w]` quaternions — `a` applied after `b`.
+pub fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
+    [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]]
+}
+
+/// 🧭️ The `[x, y, z, w]` quaternion turning `angle` radians about the axis `(ax, ay, az)`; the identity
+/// for an axis shorter than `1e-8`.
+pub fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
+    let len = (ax * ax + ay * ay + az * az).sqrt();
+    if len < 1e-8 {
+        return [0.0, 0.0, 0.0, 1.0];
+    }
+    let half = angle * 0.5;
+    let s = half.sin();
+    [ax / len * s, ay / len * s, az / len * s, half.cos()]
+}
+
+/// 📏️ A pose scale multiplied per axis by `factors`, always as a per-axis triple: a uniform scalar
+/// broadcasts first and an absent scale reads as `[1, 1, 1]`.
+pub fn puzzle3d_scaled(scale: Option<crate::Puzzle3dScale>, factors: [f64; 3]) -> crate::Puzzle3dScale {
+    let current = match scale {
+        Some(crate::Puzzle3dScale::Uniform(value)) => [value; 3],
+        Some(crate::Puzzle3dScale::Vec3(value)) => value,
+        None => [1.0; 3],
+    };
+    crate::Puzzle3dScale::Vec3([current[0] * factors[0], current[1] * factors[1], current[2] * factors[2]])
+}
+//#endregion 🔖️SelectionTransform
 
 //#region 🔖️SnapshotDelta
 /// 🔀️ Diffs two typed snapshots into a minimal semantic mutation set — the single source of truth
@@ -462,6 +628,11 @@ impl Puzzle3dPlaySnapshot {
     /// 🧬️ Exposes the immutable typed authority without materializing the legacy JSON projection.
     pub fn typed(&self) -> &Puzzle3dSnapshot {
         self.typed.as_ref()
+    }
+
+    /// 🧬️ Shares the immutable typed authority — what a tool request holds without copying the document.
+    pub fn typed_arc(&self) -> std::sync::Arc<Puzzle3dSnapshot> {
+        std::sync::Arc::clone(&self.typed)
     }
 }
 

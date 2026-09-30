@@ -12,7 +12,7 @@ import { useInitialExampleReadiness } from "../🐚️Shell/🎬️initial-examp
 // #region 🔌️Adapters
 import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellDialogSessionIsCurrentV1, shellEffectOwnerIsCurrentV1, type ShellDialogOriginV1, type ShellDialogV1 } from "./🗨️dialog-origin/🟦️.ts";
 import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.tsx";
-import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, browserDocumentMountIsCurrentV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, parkDocumentOpeningReplacementV1, runDocumentOpeningAttemptV1, settleDocumentOpeningReplacementV1, type DocumentOpeningReceiptV1 } from "./🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
+import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, browserDocumentMountIsCurrentV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, parkDocumentOpeningReplacementV1, restoreDocumentArchiveV1, runDocumentOpeningAttemptV1, settleDocumentOpeningReplacementV1, type DocumentOpeningReceiptV1 } from "./🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { createArtifactCreationCatalogMountV1, runArtifactCreationReadyOpeningV1, type ArtifactCreationCatalogMountV1 } from "./🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
 import { isTerminalDocumentCheckInPhaseV1, type DocumentCheckInStatusV1 } from "../../../../📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts";
 import { directorySessionAuthorityIsCurrentV1, startDirectorySessionRefreshV1, type DirectorySessionRefreshV1 } from "../../../../📇️directory/🪪️session-refresh/🟦️.ts";
@@ -42,6 +42,8 @@ import React, {
 } from "react";
 import { renderIconRequest } from "../🖼️IconRenderHost/🚚️request/🟦️.ts";
 import {
+  HOST_EVENT_ACTION_ID,
+  type HostEventKind,
   type ActionDescriptor,
   type ActionInvocation,
   type AppDefinition,
@@ -596,7 +598,7 @@ import {
   browserActorPanelKeysV1,
   browserActorSectionValuesV1,
   withoutUiRefreshSectionsV1,
-  hubCommandRejectionNoticeV1,
+  commandRejectionNoticeV1,
   EMPTY_SHELL_HISTORY_PROJECTION_V1,
   manifestLabelTextV1,
   operationProgressPartsV1,
@@ -677,7 +679,6 @@ import {
   surfaceRoleChipText,
   surfaceRoleGroupText,
   appModeGroupText,
-  syncDocumentId,
   syncPillText,
   syncShellLabelLocale,
   synthesizeLocalizedLabel,
@@ -950,16 +951,17 @@ export function scheduleShellTransientNoticeDismissV1(dismiss: () => void): Retu
 }
 
 /** ⚖️ `Fault.code` for a rejected local dispatch (contract freeze §C8/§C9) — never invented locally,
- * mirrors the Rust guest's `Fault("mutation.rejected")`. */
-const MUTATION_REJECTED_FAULT_CODE = "mutation.rejected";
+ * mirrors the Rust guest's `Fault("app.command.rejected")`. */
+const COMMAND_REJECTED_FAULT_CODE = "app.command.rejected";
 
 /** 🎫️ Minimum spacing between two claims of a development session from `/_semio/dev/local-session`: a lapsed or refused
  * local session is re-claimed from the local hub owner's broker at most this often, so a hub that keeps refusing can
  * never drive a claim loop. */
 const LOCAL_SESSION_RECLAIM_INTERVAL_MS = 30_000;
 
-/** ⚖️ Maps one of the frozen seven `mutation.*` codes (contract freeze §C2 — no per-plugin codes,
- * ever) onto its `ui.mutation.code.*` label key, and the event log's own `history.foreign-transition` refusal (kernel-db
+/** ⚖️ Maps one of the frozen nine `mutation.*` codes (contract freeze §C2, extended 2026-09-30 by the two state-dependent
+ * Error codes `mutation.target-referenced` and `mutation.target-mismatch` — no per-plugin codes, ever) onto its
+ * `ui.mutation.code.*` label key, and the event log's own `history.foreign-transition` refusal (kernel-db
  * `FOREIGN_HISTORY_TRANSITION_CODE`) onto `ui.mutation.history.foreignTransition`, every history-edit refusal onto its
  * {@link HISTORY_REFUSAL_LABEL_KEYS} key; an unrecognized code falls back to the
  * generic rejected-title key rather than fabricating a key the schema doesn't have. */
@@ -967,6 +969,10 @@ function mutationCodeLabelKey(code: string): UiTranslationKey {
   switch (code) {
     case "mutation.target-missing":
       return "ui.mutation.code.targetMissing";
+    case "mutation.target-referenced":
+      return "ui.mutation.code.targetReferenced";
+    case "mutation.target-mismatch":
+      return "ui.mutation.code.targetMismatch";
     case "mutation.no-op":
       return "ui.mutation.code.noOp";
     case "mutation.partial":
@@ -982,6 +988,7 @@ function mutationCodeLabelKey(code: string): UiTranslationKey {
     case "history.foreign-transition":
       return "ui.mutation.history.foreignTransition";
     default: {
+      if (code.startsWith("mutation.apply.")) return "ui.mutation.code.apply";
       const refusal = historyRefusalCodeV1(code);
       return refusal === null ? "ui.mutation.rejected.title" : HISTORY_REFUSAL_LABEL_KEYS[refusal];
     }
@@ -1104,6 +1111,28 @@ function windowActionInvocation(
     arguments: {
       ...(typeof action.args === "object" && action.args != null ? (action.args as Record<string, unknown>) : {}),
       windowId: windowInstanceId,
+    },
+  };
+}
+
+/** ✋️ Pointers whose capture a pane saw released by their own `pointerup`, by window: the implicit release that
+ * follows is no lost capture. */
+const RELEASED_POINTERS_BY_WINDOW = new Map<string, Set<number>>();
+
+/** 📨️ Forwards a window pane's focus loss and its lost pointer capture to the program as `hostEvent{windowId, kind}`, so
+ * an open gesture there ends without a trace: focus moving within the pane is no blur, and the implicit capture release
+ * after the pane's own `pointerup` is no loss — a `pointercancel` or a capture taken away is. */
+export function windowHostEventHandlersV1(controllerId: string, windowId: string, onAction: (action: ActionDescriptor) => unknown): Pick<React.ComponentPropsWithoutRef<"div">, "onBlur" | "onPointerUpCapture" | "onPointerCancelCapture" | "onLostPointerCapture"> {
+  const forward = (kind: HostEventKind) => void onAction({ controllerId, action: HOST_EVENT_ACTION_ID, args: { windowId, kind } });
+  const released = (): Set<number> => RELEASED_POINTERS_BY_WINDOW.get(windowId) ?? RELEASED_POINTERS_BY_WINDOW.set(windowId, new Set()).get(windowId)!;
+  return {
+    onBlur: (event) => {
+      if (!(event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget))) forward("blur");
+    },
+    onPointerUpCapture: (event) => void released().add(event.pointerId),
+    onPointerCancelCapture: (event) => void released().delete(event.pointerId),
+    onLostPointerCapture: (event) => {
+      if (!released().delete(event.pointerId)) forward("captureLost");
     },
   };
 }
@@ -2401,12 +2430,12 @@ function FrameworkOsShellInner({
   /** 🧾️ Re-reads ONE program's full history and replaces that program's projection with it. The
    * handle is resolved from the OWNER's plugin, never from the session's: a spawned editor's
    * instance id addressed through the host plugin's handle is a different instance (or none). */
-  const refreshHistorySnapshot = useCallback((owner: { readonly pluginId: string; readonly instanceId: number }) => {
+  const refreshHistorySnapshot = useCallback((owner: { readonly pluginId: string; readonly instanceId: number }): Promise<void> => {
     const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === owner.pluginId)?.handle;
-    if (!plugin?.readHistory) return;
+    if (!plugin?.readHistory) return Promise.resolve();
     const key = programHistoryKeyV1(owner);
     const orderAtRequest = historyOrderByProgramRef.current.get(key) ?? 0;
-    void plugin.readHistory(owner.instanceId).then((snapshot) => {
+    return plugin.readHistory(owner.instanceId).then((snapshot) => {
       if ((historyOrderByProgramRef.current.get(key) ?? 0) > orderAtRequest) {
         return;
       }
@@ -3177,7 +3206,7 @@ function FrameworkOsShellInner({
   const receiveDocumentBackbone = useCallback((runtimeKey: string, entry: OpenDocumentSession, message: Uint8Array) => {
     if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
     try {
-      if (!(message instanceof Uint8Array) || message.length === 0 || message.length > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES || decodeBackboneMessage(message).kind !== "mutations") throw new Error("document-backbone.invalid-message");
+      if (!(message instanceof Uint8Array) || message.length === 0 || message.length > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES || !["mutations", "retract"].includes(decodeBackboneMessage(message).kind)) throw new Error("document-backbone.invalid-message");
       if (entry.port === null) {
         if (entry.pending.length >= DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumMessages || message.length > DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - entry.pendingBytes) {
           return;
@@ -3285,6 +3314,20 @@ function FrameworkOsShellInner({
   /** 🎭️ The owner of a pass a PROGRAM runs on its own — its operation progress and completions, its deferred effects:
    * the primary session presents it, the program is its source ({@link shellEffectOwnerIsCurrentV1}). */
   const captureProgramEffectOwner = useCallback((program: ActiveSession) => captureEffectOwner(program, captureDialogOrigin(shellStateRef.current.pluginRuntime.session)), [captureDialogOrigin, captureEffectOwner]);
+  /** 🗃️ Restores one archive into a program and hydrates it like a fresh load ({@link restoreDocumentArchiveV1}): the folder
+   * read-back of a re-attached document and a tutorial's restore both re-read the program's history and refresh every
+   * surface it renders, through the live session when the program is the primary one. */
+  const restoreDocumentArchive = useCallback((plugin: PluginWasmHandle, program: ActiveSession, archive: DocumentArchivePack, current: () => boolean): Promise<boolean> => {
+    const live = (): ActiveSession => {
+      const primary = sessionRef.current;
+      return primary !== null && primary.pluginId === program.pluginId && primary.instanceId === program.instanceId ? primary : program;
+    };
+    return restoreDocumentArchiveV1(archive, current, {
+      load: (value) => loadDocumentArchive(plugin, program.instanceId, value, current),
+      history: () => refreshHistorySnapshot(program),
+      refresh: () => applyHostEffectsRef.current([], live(), { kind: "full" }, captureProgramEffectOwner(live())),
+    });
+  }, [captureProgramEffectOwner, loadDocumentArchive, refreshHistorySnapshot]);
   const closeOwnedDialog = useCallback((openingId: number): boolean => {
     if (liveDialogRef.current?.openingId !== openingId) return false;
     liveDialogRef.current = null;
@@ -3878,7 +3921,7 @@ function FrameworkOsShellInner({
         void (async () => {
           try {
             const archive = decodeDocumentArchiveBytes(archiveBytes);
-            if (!await loadDocumentArchive(entry.plugin, entry.session.instanceId, archive, () => openDocumentSessionsRef.current.get(runtimeKey) === entry)) return;
+            if (!await restoreDocumentArchive(entry.plugin, entry.session, archive, () => openDocumentSessionsRef.current.get(runtimeKey) === entry)) return;
             if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
             const discarded = rebootstrapDiscardedSessionsRef.current.get(runtimeKey);
             if (discarded) {
@@ -3905,11 +3948,12 @@ function FrameworkOsShellInner({
           }
         })();
       } else if (event.kind === "commandOutcome") {
-        // 🌐️ A hub `Ack` that refused or transformed this human's batch: the worker already discarded the refused edit
-        // (rollback, or a rebootstrap of the document's actor), so the human is TOLD, in their language, and why.
+        // 🌐️ A refused or transformed batch — refused by the hub, or by the document's actor before it left this device: the
+        // worker already discarded the refused edit (rollback, or a rebootstrap of the document's actor), so the human is TOLD,
+        // in their language, and why.
         if (event.outcome.kind === "rejected") {
-          const notice = hubCommandRejectionNoticeV1(event.outcome.messages);
-          console.warn("[os-shell] hub refused a command batch", message.documentId, event.outcome.reason);
+          const notice = commandRejectionNoticeV1(event.outcome);
+          console.warn("[os-shell] a command batch was refused", message.documentId, event.outcome.code, event.outcome.reason, event.outcome.detail ?? {});
           showTransientNoticeRef.current(notice.text, notice.kind, notice.code);
         }
         else if (event.outcome.kind === "transformed") showTransientNoticeRef.current(shellLabel("ui.conflict.hubTransformed"), "info", "sync.command.transformed");
@@ -3938,7 +3982,7 @@ function FrameworkOsShellInner({
     worker.addEventListener("messageerror", failBrowserActorActions);
     backboneWorkerRef.current = worker;
     return worker;
-  }, [cancelSpaceArtifactCreationsForRuntime, captureDialogOrigin, collectSpaceDirectoryEvents, failDocumentBackbone, hubEnv, loadDocumentArchive, receiveDocumentBackbone, retireBrowserActorUi]);
+  }, [cancelSpaceArtifactCreationsForRuntime, captureDialogOrigin, collectSpaceDirectoryEvents, failDocumentBackbone, hubEnv, receiveDocumentBackbone, restoreDocumentArchive, retireBrowserActorUi]);
 
   //#region 🗂️LocalCatalog
   useEffect(() => {
@@ -6837,7 +6881,7 @@ function FrameworkOsShellInner({
           if (payload.pack && payload.spr && pluginEntry?.handle.loadAppDocumentPack) {
             const packBytes = coerceWireBytes(payload.pack);
             const sprBytes = coerceWireBytes(payload.spr);
-            await loadDocumentPair(pluginEntry.handle, baseSession.instanceId, packBytes, sprBytes, () => isCurrentEffectOwner(effectOwner));
+            if (await loadDocumentPair(pluginEntry.handle, baseSession.instanceId, packBytes, sprBytes, () => isCurrentEffectOwner(effectOwner))) await refreshHistorySnapshot(baseSession);
           } else {
             // 🚧️ `Effect::LoadDocument` is pack+spr bytes only now (no JSON-text fallback exists on the
             // wire anymore — see this variant's own doc comment on `@semio-tech/framework`'s `Effect`
@@ -7239,7 +7283,7 @@ function FrameworkOsShellInner({
         await refreshUi(nextSession, refreshScope, undefined, leftoverReplaceRefreshBodiesV1(), hostEffectsRewriteGuestRenderInputsV1(effects) || nextViewState !== baseSession.viewState);
       }
     },
-    [captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateShellUri, refreshSpawnedUi, refreshUi, requestInferenceProposal, resolvedTargetViewState, session, writeUtilityRegister, writeToolRegister, spacePrograms, hostMode],
+    [captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, refreshHistorySnapshot, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateShellUri, refreshSpawnedUi, refreshUi, requestInferenceProposal, resolvedTargetViewState, session, writeUtilityRegister, writeToolRegister, spacePrograms, hostMode],
   );
   // 🔁️ What the ui-refresh lane applies for a pass that asked for effects of its own, outside that pass.
   applyHostEffectsRef.current = applyHostEffects;
@@ -7766,11 +7810,20 @@ function FrameworkOsShellInner({
    * states the document's schema and `documentOpenPlanAuthority` refuses an open that differs (the gis map answered
    * `document open: authority mismatch` against the breadcrumb `"semio.gis.2d"`). The breadcrumb stays the fallback
    * for an app that declares no artifact io. */
+  /** 🔗️ Attaches the focused program's document to a folder, a file or a hub. The document is addressed by the program's
+   * own document identity — the id its store stamps on every envelope it publishes — so the actor admits the program's
+   * edits as its own document's instead of refusing each batch as another document's (`local.backbone-scope-mismatch`,
+   * e2e R2-4); a program without a document has nothing to attach. */
   const openSyncTarget = useCallback(
     async (target: SyncAttachTargetV1) => {
       const targetSession = resolveSyncTargetSession();
       if (!targetSession) return;
-      const documentId = (target.kind === "remote" ? target.documentId : null) ?? syncDocumentId(targetSession, panel, hostMode);
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
+      const documentId = (target.kind === "remote" ? target.documentId : null) ?? (plugin ? (await plugin.readAppDocumentIdentity(targetSession.instanceId)).parent_document_id : null);
+      if (!documentId) {
+        showTransientNoticeRef.current(shellLabel("ui.sync.documentUnidentified"), "warning", "sync.attach.document-unidentified");
+        return;
+      }
       const requestedSurfaceId = targetSession.app.dialect ? canonicalSurfaceId(targetSession.app.dialect, targetSession.app.role) : undefined;
       const bindings: PersistenceBinding[] =
         target.kind === "remote"
@@ -7779,7 +7832,7 @@ function FrameworkOsShellInner({
       const appArtifactSchema = (targetSession.app as unknown as { readonly io?: { readonly artifactSchema?: string } }).io?.artifactSchema;
       await openDocument({ documentId, schema: appArtifactSchema && appArtifactSchema.length > 0 ? appArtifactSchema : targetSession.app.breadcrumb.join(".") }, bindings);
     },
-    [openDocument, panel, resolveSyncTargetSession, hostMode],
+    [loadedPlugins, openDocument, resolveSyncTargetSession],
   );
 
   const detachSyncBackbone = useCallback(() => {
@@ -8515,6 +8568,7 @@ function FrameworkOsShellInner({
       instanceId: retained.identity.instanceId,
       surfaceRevision: store.getRevisionSnapshot(),
     }, surfaceKey, intent).then((result) => {
+      for (const patch of result.historyPatches) if (current()) applyHistoryPatch(decodePackWire(Uint8Array.from(patch), "$.historyPatch") as HistoryPatch, false, { pluginId: entry.session.pluginId, instanceId: entry.session.instanceId });
       return publishBrowserActorHostEffectsV1(result.hostEffects, current, (effect) => {
         if ("requestInferenceProposal" in effect) return requestInferenceProposal(entry.session, current);
         else window.open(effect.openExternalUrl.url, "_blank", "noopener,noreferrer");
@@ -8523,7 +8577,7 @@ function FrameworkOsShellInner({
       if (browserActorUiByRuntimeKeyRef.current.get(runtimeKey)?.actions !== captured.actions) return;
       showTransientNotice(shellLabel("ui.common.renderError"), "error");
     });
-  }, [requestInferenceProposal]);
+  }, [applyHistoryPatch, requestInferenceProposal]);
 
   //#region 🎥️TutorialOrchestration
   /** ⏱️ Real-time throttle for the director's UI/document/event application (~10Hz) — camera stays
@@ -8842,8 +8896,7 @@ function FrameworkOsShellInner({
           drain: () => tutorialDrivenRef.current.drain(),
           restore: async (snapshot) => {
             if (!isCurrentEffectOwner(owner)) return;
-            await loadDocumentArchive(plugin, session.instanceId, snapshot, () => isCurrentEffectOwner(owner));
-            if (isCurrentEffectOwner(owner)) await refreshUi(session, { kind: "full" });
+            await restoreDocumentArchive(plugin, session, snapshot, () => isCurrentEffectOwner(owner));
           },
         });
         tutorialRunRef.current = run;
@@ -8851,7 +8904,7 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_TUTORIAL", value: tutorialId });
       })().catch((error) => undefined);
     },
-    [activeTutorials, session, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, loadDocumentArchive, tutorialClock, refreshUi],
+    [activeTutorials, session, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, restoreDocumentArchive, tutorialClock],
   );
   const stopTutorial = useCallback(() => {
     tutorialTransitionEpochRef.current += 1;
@@ -9769,11 +9822,11 @@ function FrameworkOsShellInner({
   /** 🧯️ `true` for a `SemioFaultError` carrying `"viewer.read-only"` — the one host-raised fault this
    * lease knows to render as a notice instead of letting it crash into `ShellFaultBoundary`. */
   const isViewerReadOnlyFault = useCallback((error: unknown): boolean => error instanceof SemioFaultError && error.fault.code === SURFACE_FAULT_CODES.ViewerReadOnly, []);
-  /** ⚖️ `true` for a `SemioFaultError` carrying `"mutation.rejected"` — one LOCAL dispatch's
+  /** ⚖️ `true` for a `SemioFaultError` carrying `"app.command.rejected"` — one LOCAL dispatch's
    * `store.dispatch` was rejected by this authority's `MergePolicy` (contract freeze `26/08/16/
    * MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C8/§C9: `Fault.code ==
-   * "mutation.rejected"`, `Fault.severity` mirrors the rejected `DispatchReport.worst`). */
-  const isMutationRejectedFault = useCallback((error: unknown): boolean => error instanceof SemioFaultError && error.fault.code === MUTATION_REJECTED_FAULT_CODE, []);
+   * "app.command.rejected"`, `Fault.severity` mirrors the rejected `DispatchReport.worst`). */
+  const isMutationRejectedFault = useCallback((error: unknown): boolean => error instanceof SemioFaultError && error.fault.code === COMMAND_REJECTED_FAULT_CODE, []);
   /** ⚖️ One toast per gesture for a rejected local dispatch — worst level already IS `fault.severity`
    * (that field mirrors `DispatchReport.worst`), body = the first cause's localized `ui.mutation.
    * code.*` label + its English prose, falling back to `ui.mutation.rejected.body` when the fault
@@ -9783,7 +9836,7 @@ function FrameworkOsShellInner({
       const cause = fault.causes?.[0];
       const codeLabel = cause?.code ? shellLabel(mutationCodeLabelKey(cause.code)) : shellLabel("ui.mutation.rejected.title");
       const body = cause ? `${codeLabel} — ${cause.message}` : shellLabel("ui.mutation.rejected.body");
-      showTransientNotice(`${shellLabel("ui.mutation.rejected.title")}: ${body}`, fault.severity, MUTATION_REJECTED_FAULT_CODE);
+      showTransientNotice(`${shellLabel("ui.mutation.rejected.title")}: ${body}`, fault.severity, COMMAND_REJECTED_FAULT_CODE);
     },
     [showTransientNotice],
   );
@@ -10878,7 +10931,9 @@ function FrameworkOsShellInner({
    * (auto check-ins pass `"auto"`), `authors` rides along for when the framework threads it (today it
    * doesn't — `history_command` hardcodes `authors: Vec::new()`, see `📓️w3-a-report.md`'s
    * sharedFileRequest). `checkpointDispatchedRef` lets the effect below tell "a checkpoint we asked
-   * for landed" apart from "the session just mounted with a pre-existing checkpoint". */
+   * for landed" apart from "the session just mounted with a pre-existing checkpoint". While the focused program's history
+   * is being edited the guest freezes it (`timeTravel.frozen`), so no check-in fires: an automatic one waits for the next
+   * idle window after the session closes, an explicit one is told why (e2e R2-6). */
   const checkpointDispatchedRef = useRef(false);
   /** 📌️ Hub Check Ins this shell asked for, by request id, and the latest status per document — the
    * worker names the acknowledged head and drives the hub job; the shell only shows and cancels it. */
@@ -10910,11 +10965,18 @@ function FrameworkOsShellInner({
   const dispatchCheckpoint = useCallback(
     (message: string) => {
       if (!session) return;
+      if (focusedHistoryV1().timeTravel !== null) {
+        if (message !== "auto") {
+          const notice = historyRefusalNoticeV1("timeTravel.frozen");
+          showTransientNoticeRef.current(notice.text, notice.kind, notice.code);
+        }
+        return;
+      }
       checkpointDispatchedRef.current = true;
       const authors = identityRef.current ? [{ id: identityRef.current.userId, name: identityRef.current.displayName }] : [];
       onAction({ controllerId: session.app.controllerId, action: "commitCheckpoint", args: { message, authors } });
     },
-    [session, onAction],
+    [focusedHistoryV1, session, onAction],
   );
 
   // 📌️ §C5 item 6 continued — `TouchArtifact` fires once per checkpoint THIS shell asked for,
@@ -10965,10 +11027,11 @@ function FrameworkOsShellInner({
     return historyStore.subscribe(observe);
   }, [historyStore, focusedHistoryV1]);
 
-  // 📌️ §C5 item 4 — checkpoint on close: fires from the cleanup of an effect keyed on
-  // `[session, currentDocumentId]`, so it runs the instant either changes (switching document/app —
+  // 📌️ §C5 item 4 — checkpoint on close: fires from the cleanup of an effect keyed on the program's
+  // identity and `currentDocumentId`, so it runs the instant either changes (switching document/app —
   // this shell keeps exactly one session mounted, so "switch away" IS "close" here) as well as on true
-  // unmount. Best-effort (fire-and-forget, not gated on the success-detection effect above — by the
+  // unmount — never on a new session object of the same program (every view-state rewrite mints one, and the
+  // New-alternative submit fired a close check-in into the frozen history, e2e R2-6). Best-effort (fire-and-forget, not gated on the success-detection effect above — by the
   // time the response arrives `historyProjection` may already belong to the NEW session).
   useEffect(() => {
     if (!isEditorSession || !currentDocumentId) return;
@@ -10981,7 +11044,7 @@ function FrameworkOsShellInner({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, currentDocumentId]);
+  }, [session?.pluginId, session?.instanceId, currentDocumentId]);
 
   // 📌️ §C5 item 3 — explicit check-in: the history body's `#s-checkin` dispatches `framework.checkin` `submit`, which
   // `onAction` answers through this ref (the same fallback message the wgpu shell uses).
@@ -11873,7 +11936,7 @@ function FrameworkOsShellInner({
       };
       const dispatchVerb = async (action: string, args: Record<string, unknown>): Promise<ShellAppFrameV1 | null> => {
         const outcome = await onActionRef.current({ controllerId: live.app.controllerId, action, args, provenance: { origin: "agent", windowId: activeWindowIdRef.current ?? null, causedBy: null } });
-        if (outcome.kind === "refused") return shellAppFault(outcome.reason === "viewer-read-only" ? "viewer.read-only" : outcome.reason === "mutation-rejected" ? "mutation.rejected" : "channel.not-wired", `the shell refused \`${action}\`: ${outcome.reason}${outcome.detail ? ` (${outcome.detail})` : ""}`);
+        if (outcome.kind === "refused") return shellAppFault(outcome.reason === "viewer-read-only" ? "viewer.read-only" : outcome.reason === "mutation-rejected" ? "app.command.rejected" : "channel.not-wired", `the shell refused \`${action}\`: ${outcome.reason}${outcome.detail ? ` (${outcome.detail})` : ""}`);
         return null;
       };
       switch (request.command.kind) {
@@ -11889,7 +11952,7 @@ function FrameworkOsShellInner({
         }
         case "transactionPrepare": {
           const lane = request.command.ops.document[0];
-          if (!lane) return [shellAppFault("mutation.rejected", "the shell route prepares only its own deferred plan; this transaction carries no document-lane ops")];
+          if (!lane) return [shellAppFault("app.command.rejected", "the shell route prepares only its own deferred plan; this transaction carries no document-lane ops")];
           deferred.set(request.command.txnId, new TextDecoder().decode(lane));
           return [{ kind: "transactionPrepared", txnId: request.command.txnId }];
         }
@@ -11904,9 +11967,9 @@ function FrameworkOsShellInner({
           try {
             parsed = JSON.parse(plan) as { readonly deferredAction?: string; readonly args?: Record<string, unknown> };
           } catch {
-            return [shellAppFault("mutation.rejected", "the prepared plan is not this shell route's own")];
+            return [shellAppFault("app.command.rejected", "the prepared plan is not this shell route's own")];
           }
-          if (!parsed.deferredAction) return [shellAppFault("mutation.rejected", "the prepared plan names no action")];
+          if (!parsed.deferredAction) return [shellAppFault("app.command.rejected", "the prepared plan names no action")];
           const refusal = await dispatchVerb(parsed.deferredAction, parsed.args ?? {});
           if (refusal) return [refusal];
           const after = await readHistory();
@@ -12404,7 +12467,7 @@ function FrameworkOsShellInner({
           status: spawnedWindowActivityByWindowId[windowId],
           skeleton: <WindowBodySkeleton />,
           children: (
-            <ChromeAwareWindowScrollSurface id={childElementId("framework.window", windowId)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(spawnedApp, windowId)}>
+            <ChromeAwareWindowScrollSurface id={childElementId("framework.window", windowId)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(spawnedApp, windowId)} {...windowHostEventHandlersV1(spawnedApp.controllerId, windowId, onActionStable)}>
               <World3dWindowViewStoreContext.Provider key={`${spawned.pluginId}:${spawned.appId}:${spawned.instanceId}`} value={spawnedWorld3dViews}>
                 <WindowInstanceIdContext.Provider value={windowId}>
                   <ShellFaultBoundary boundaryId={`window-${windowId}`} fallbackLabel={shellLabel("ui.common.renderError")}>
@@ -12441,7 +12504,7 @@ function FrameworkOsShellInner({
         status: browserActorStore?.getState().root === null ? windowUiByWindowId[kind.id]?.activity : browserActorStore?.getState().nodes.get(browserActorStore.getState().root!)?.activity ?? windowUiByWindowId[kind.id]?.activity,
         skeleton: <WindowBodySkeleton />,
         children: (
-          <ChromeAwareWindowScrollSurface id={childElementId("framework.window", kind.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(session.app, kind.id)}>
+          <ChromeAwareWindowScrollSurface id={childElementId("framework.window", kind.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(session.app, kind.id)} {...windowHostEventHandlersV1(session.app.controllerId, kind.id, onActionStable)}>
             <World3dWindowViewStoreContext.Provider key={primaryWorld3dOwner} value={world3dWindowViews}>
               <WindowInstanceIdContext.Provider value={kind.id}>
                 <ShellFaultBoundary boundaryId={`window-${kind.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
@@ -12491,6 +12554,7 @@ function FrameworkOsShellInner({
               data-element-alias={childElementId("framework.window", kind.id)}
               className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
               style={cursorFor(session.app, instance.id)}
+              {...windowHostEventHandlersV1(session.app.controllerId, instance.id, onActionStable)}
             >
               <World3dWindowViewStoreContext.Provider key={primaryWorld3dOwner} value={world3dWindowViews}>
                 <WindowInstanceIdContext.Provider value={instance.id}>

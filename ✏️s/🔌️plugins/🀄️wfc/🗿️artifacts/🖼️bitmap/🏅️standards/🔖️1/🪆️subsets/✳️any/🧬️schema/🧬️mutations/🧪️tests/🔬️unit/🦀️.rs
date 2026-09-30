@@ -70,11 +70,11 @@ fn an_unknown_op_line_is_refused() {
 }
 
 #[test]
-fn applying_a_fatal_mutation_leaves_the_document_untouched() {
+fn applying_a_refused_mutation_leaves_the_document_untouched() {
     let base = scene();
     let mut snapshot = base.clone();
     let outcome = <BitmapMutation as Mutation<BitmapSnapshot>>::diff(&unpin_pixel(9, 9), &base);
-    assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.missing-target"));
-    apply_bitmap_mutation(&mut snapshot, &unpin_pixel(9, 9)).expect("an empty fatal diff still applies as a no-op");
+    assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.target-missing"));
+    apply_bitmap_mutation(&mut snapshot, &unpin_pixel(9, 9)).expect("an empty refused diff still applies as a no-op");
     assert_eq!(snapshot, base);
 }

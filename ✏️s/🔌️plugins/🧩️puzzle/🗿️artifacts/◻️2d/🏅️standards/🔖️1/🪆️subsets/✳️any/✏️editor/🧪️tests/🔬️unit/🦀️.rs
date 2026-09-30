@@ -180,6 +180,7 @@ pub(crate) mod context {
                 | "selectAll"
                 | "setSelectionMode"
                 | "setInteractionGranularity"
+                | "hostEvent"
         ) {
             let dsl_args = args.map(dsl::DslValue::from);
             let result = block_on(app.handle_action(action, dsl_args.as_ref(), &action_meta)).and_then(|admitted| block_on(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)));
@@ -428,6 +429,30 @@ async fn a_newer_example_load_replaces_the_previous_document() {
     assert!(!fixture_edges(&fixture_of(&app)).is_empty());
     assert_ne!(fixture_nodes(&fixture_of(&app)).len(), forest_nodes, "the second load must replace, not append to, the first example");
     close_app(&mut app);
+}
+
+/// 🤫️ An example load publishes no no-op mutation: reloading the example the document already holds leaves its kind
+/// catalogs and manifest id alone instead of re-stating them, so history never shows a "No change" warning row.
+#[test]
+fn an_example_reload_publishes_no_no_op_mutation() {
+    use protocol::Mutation as _;
+    let command = Puzzle2dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None);
+    let empty = Puzzle2dPlaySnapshot::new(json!({ "schema": "puzzle.2d.fixture", "nodes": [], "edges": [] }));
+    let first = puzzle2d_active_example_emit(&command, &empty, &Puzzle2dConfig::default()).expect("first load");
+    let mut state = empty.typed().clone();
+    for mutation in &first.artifact_mutations {
+        crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation(&mut state, mutation).expect("the first load applies");
+    }
+    assert!(first.artifact_mutations.iter().any(|mutation| matches!(mutation, Puzzle2dMutation::ReplaceKindCatalogs(_))) || state.meta.kind_catalogs.is_none(), "a first load states the example's catalogs");
+    let loaded = Puzzle2dPlaySnapshot::new(Value::from(dsl::ToValue::to_value(&state)));
+    let reload = puzzle2d_active_example_emit(&command, &loaded, &Puzzle2dConfig::default()).expect("reload");
+    assert!(!reload.artifact_mutations.iter().any(|mutation| matches!(mutation, Puzzle2dMutation::ReplaceKindCatalogs(_) | Puzzle2dMutation::ChangeManifestId(_))), "a reload re-states nothing the document already holds");
+    let mut running = loaded.typed().clone();
+    for mutation in &reload.artifact_mutations {
+        let outcome = mutation.diff(&running);
+        assert!(!outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"), "{mutation:?} is a no-op: {:?}", outcome.messages());
+        crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation(&mut running, mutation).expect("the reload applies");
+    }
 }
 
 /// 📦️ `Puzzle2dPlaySnapshot`'s pack encoding round-trips through the same `(RecordSpec,

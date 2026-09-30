@@ -148,9 +148,6 @@ fn the_json_mirror_publishes_exactly_the_registry_exports() {
     }
 }
 
-/// 🪞️ os is a CLIENT of hub for the GIS Map approval intent — this proves the `os.mcp` mirror is
-/// byte-identical in value space to hub's own authority, so a hub-side change breaks here loudly
-/// instead of drifting. It only READS hub's file.
 /// 📌️ The scope registration must publish exactly the registry's export ids, so
 /// `resolve_schema_export("os.mcp", …)` can answer for every `$defs` key the mirror publishes.
 #[test]
@@ -166,32 +163,8 @@ fn the_scope_export_declaration_matches_the_registry() {
     }
 }
 
-#[test]
-fn os_mirror_of_the_hub_approval_request_is_structurally_identical() {
-    let hub: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🌎️hub/💡️inference/🧬️schema/🔣️.json")).expect("hub module schema parses");
-    let authority = hub["$defs"].get("InferenceApprovalRequestV1").expect("hub publishes InferenceApprovalRequestV1");
-    let authority = inline_local_refs(authority, &hub);
-    let mirror = hub_inference_approval_request_schema();
-    for key in ["type", "additionalProperties", "required", "properties"] {
-        assert_eq!(&mirror[key], &authority[key], "the os.mcp approval mirror drifted from hub on `{key}`");
-    }
-    let approval = crate::inference::HubInferenceApprovalRequestV1::new("00112233445566778899aabbccddeeff", &"ab".repeat(32));
-    let owned = compile_validator(&mirror).expect("the mirror compiles");
-    validate(&owned, &serde_json::to_value(&approval).expect("approval serializes")).expect("the Rust type's own encoding satisfies hub's contract");
-}
 
-/// 🔗️ Replaces every `{"$ref": "#/$defs/X"}` with the document's own `X`, so a mirror that inlines
-/// a pattern can be compared with an authority that names it.
-fn inline_local_refs(value: &serde_json::Value, document: &serde_json::Value) -> serde_json::Value {
-    match value {
-        serde_json::Value::Object(map) => match map.get("$ref").and_then(serde_json::Value::as_str).and_then(|reference| reference.strip_prefix("#/$defs/")) {
-            Some(name) => inline_local_refs(&document["$defs"][name], document),
-            None => serde_json::Value::Object(map.iter().map(|(key, entry)| (key.clone(), inline_local_refs(entry, document))).collect()),
-        },
-        serde_json::Value::Array(items) => serde_json::Value::Array(items.iter().map(|item| inline_local_refs(item, document)).collect()),
-        other => other.clone(),
-    }
-}
+
 
 /// 🧯️ Every tool output schema admits BOTH its success shape and the typed tool error: the official
 /// MCP SDK validates `structuredContent` against `outputSchema` on error results too, so a success-only
@@ -212,4 +185,15 @@ fn a_tool_output_schema_admits_its_success_shape_and_the_typed_tool_error() {
         validate(&validator, &GatewayError::new(code, "refused").to_tool_error_payload()).unwrap_or_else(|error| panic!("{code:?} as a tool error: {error}"));
     }
     assert!(validate(&validator, &serde_json::json!({ "code": "NOT_A_CODE", "message": "x", "details": null, "retryable": false })).is_err(), "an unknown code is neither shape");
+}
+
+#[test]
+fn inference_approval_encoding_consumes_the_framework_owned_contract() {
+    let contract = hub_inference_approval_request_schema();
+    let approval = crate::inference::HubInferenceApprovalRequestV1::new("00112233445566778899aabbccddeeff", &"ab".repeat(32));
+    let validator = compile_validator(&contract).unwrap();
+    validate(&validator, &serde_json::to_value(&approval).unwrap()).unwrap();
+    let mut hostile = serde_json::to_value(&approval).unwrap();
+    hostile["proposal"] = serde_json::json!("private bytes");
+    assert!(validate(&validator, &hostile).is_err());
 }

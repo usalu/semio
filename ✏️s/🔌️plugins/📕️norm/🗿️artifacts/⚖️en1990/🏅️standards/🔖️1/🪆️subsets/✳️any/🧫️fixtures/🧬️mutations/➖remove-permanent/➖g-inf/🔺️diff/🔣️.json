@@ -1,0 +1,28 @@
+{
+  "accidentals": null,
+  "altitudeM": null,
+  "annex": null,
+  "betaComputed": null,
+  "bridgeSls": null,
+  "consequenceClass": null,
+  "designWorkingLifeCategory": null,
+  "designWorkingLifeYears": null,
+  "effects": null,
+  "inspectionLevel": null,
+  "kFiDeclared": null,
+  "members": null,
+  "permanents": [
+    {
+      "gk": 80000.0,
+      "id": "G-sup",
+      "kind": "g_sup"
+    }
+  ],
+  "projectId": null,
+  "referencePeriodYears": null,
+  "reliabilityClass": null,
+  "seismics": null,
+  "structureKind": null,
+  "supervisionLevel": null,
+  "variables": null
+}

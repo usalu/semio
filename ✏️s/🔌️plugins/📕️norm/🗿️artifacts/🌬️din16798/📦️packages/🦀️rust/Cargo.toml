@@ -6,7 +6,7 @@ rust-version.workspace = true
 description = "Norm din16798 artifact"
 
 [package.metadata.semio]
-role = "s-module"
+role = "artifact"
 
 [lints]
 workspace = true

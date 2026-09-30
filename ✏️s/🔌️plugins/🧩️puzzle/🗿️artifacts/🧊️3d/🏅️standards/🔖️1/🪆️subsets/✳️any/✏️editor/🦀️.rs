@@ -708,10 +708,6 @@ fn puzzle3d_action_artifact_intent(action: &str) -> bool {
             | "addObjectKind"
             | "deleteSelection"
             | "duplicateSelection"
-            | "translateSelection"
-            | "rotateSelection"
-            | "scaleSelection"
-            | "worldRelocate"
             | "setSelectionFlag"
             | "setSelectionHidden"
             | "setSelectionLocked"
@@ -730,19 +726,7 @@ fn puzzle3d_action_artifact_intent(action: &str) -> bool {
 }
 
 //#region 🔖️Quaternions
-pub fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
-    [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]]
-}
-
-pub fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
-    let len = (ax * ax + ay * ay + az * az).sqrt();
-    if len < 1e-8 {
-        return [0.0, 0.0, 0.0, 1.0];
-    }
-    let half = angle * 0.5;
-    let s = half.sin();
-    [ax / len * s, ay / len * s, az / len * s, half.cos()]
-}
+pub use crate::standards::v1::subsets::any::schema::mutations::{quat_from_axis_angle, quat_mul};
 
 pub fn quat_rotate_vector(quat: [f64; 4], vector: [f64; 3]) -> [f64; 3] {
     let [x, y, z, w] = quat;
@@ -758,17 +742,6 @@ pub fn quat_rotate_vector(quat: [f64; 4], vector: [f64; 3]) -> [f64; 3] {
 //#endregion 🔖️Quaternions
 
 //#region 🔖️FixtureQueries
-fn scale_value_mul(scale: &Option<dsl::DslValue>, sx: f64, sy: f64, sz: f64) -> dsl::DslValue {
-    let triple = |x: f64, y: f64, z: f64| dsl::DslValue::Array(vec![dsl::DslValue::float(x), dsl::DslValue::float(y), dsl::DslValue::float(z)]);
-    match scale.as_ref().and_then(dsl::DslValue::as_array) {
-        Some(values) if values.len() >= 3 => triple(values[0].as_f64().unwrap_or(1.0) * sx, values[1].as_f64().unwrap_or(1.0) * sy, values[2].as_f64().unwrap_or(1.0) * sz),
-        _ => match scale.as_ref().and_then(dsl::DslValue::as_f64) {
-            Some(factor) => triple(factor * sx, factor * sy, factor * sz),
-            None => triple(sx, sy, sz),
-        },
-    }
-}
-
 /// 🗂️ One document catalog's `objectKind id → meshUrl` rows, indexed in a single pass over the
 /// untyped catalog array. Resolving one object's mesh straight out of that array is a linear scan, so
 /// a caller that resolves a whole document pays O(objects × kinds) — a measured 7.4 ms of every
@@ -1197,49 +1170,6 @@ impl Puzzle3dInteractionSnapshot {
 //#endregion 🔖️InteractionSnapshot
 
 //#region 🔖️FixtureEdits
-/// 🧲️ Applies one absolute gumball translate (total delta from drag-start) onto a fixture snapshot.
-pub fn puzzle3d_apply_translate(fixture: &mut Puzzle3dFixture, object_ids: &[String], volume_ids: &[String], dx: f64, dy: f64, dz: f64) {
-    for object in &mut fixture.objects {
-        if object_ids.contains(&object.id) && !object.locked {
-            object.origin[0] += dx;
-            object.origin[1] += dy;
-            object.origin[2] += dz;
-        }
-    }
-    for volume in fixture.target_volumes.iter_mut().filter(|volume| volume_ids.contains(&volume.id) && !volume.locked) {
-        volume.origin[0] += dx;
-        volume.origin[1] += dy;
-        volume.origin[2] += dz;
-    }
-}
-
-/// 🧲️ Applies one absolute gumball rotate (total axis-angle from drag-start) onto a fixture snapshot.
-pub fn puzzle3d_apply_rotate(fixture: &mut Puzzle3dFixture, object_ids: &[String], volume_ids: &[String], ax: f64, ay: f64, az: f64, angle: f64) {
-    let delta = quat_from_axis_angle(ax, ay, az, angle);
-    for object in &mut fixture.objects {
-        if object_ids.contains(&object.id) {
-            let current = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-            object.orientation = Some(quat_mul(delta, current));
-        }
-    }
-    for volume in fixture.target_volumes.iter_mut().filter(|volume| volume_ids.contains(&volume.id) && !volume.locked) {
-        let current = volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-        volume.orientation = Some(quat_mul(delta, current));
-    }
-}
-
-/// 🧲️ Applies one absolute gumball scale (total factors from drag-start) onto a fixture snapshot.
-pub fn puzzle3d_apply_scale(fixture: &mut Puzzle3dFixture, object_ids: &[String], volume_ids: &[String], sx: f64, sy: f64, sz: f64) {
-    for object in &mut fixture.objects {
-        if object_ids.contains(&object.id) {
-            object.scale = Some(scale_value_mul(&object.scale, sx, sy, sz));
-        }
-    }
-    for volume in fixture.target_volumes.iter_mut().filter(|volume| volume_ids.contains(&volume.id) && !volume.locked) {
-        volume.scale = Some(scale_value_mul(&volume.scale, sx, sy, sz));
-    }
-}
-
 /// 🙈️ Applies `hidden`/`locked` to the given ids of one entity kind — `"vortex"` ids are full ids (`objectId:vortexId`).
 pub fn apply_puzzle3d_selection_flag(fixture: &mut Puzzle3dFixture, entity: &str, ids: &[String], flag: &str, value: bool) {
     if ids.is_empty() {
@@ -1324,6 +1254,21 @@ fn puzzle3d_axis_index(field: &str, base: &str) -> Option<usize> {
         "w" => Some(3),
         _ => None,
     }
+}
+
+/// 🧲️ The world offset an inspector stepper nudge states — `patchInspector{entity: object|targetVolume,
+/// field: origin.x|y|z, delta}` without an absolute `value` — the one inspector edit that is a gesture, so it
+/// commits the transform tool's `drag-selection` instead of an absolute origin. `None` for every other edit.
+pub(crate) fn puzzle3d_inspector_origin_nudge(args: Option<&Value>) -> Option<[f64; 3]> {
+    let args = args?;
+    if !matches!(args.get("entity").and_then(Value::as_str), Some("object" | "targetVolume")) || args.get("value").is_some_and(|value| !value.is_null()) {
+        return None;
+    }
+    let axis = puzzle3d_axis_index(args.get("field").and_then(Value::as_str)?, "origin").filter(|axis| *axis < 3)?;
+    let delta = args.get("delta").and_then(Value::as_f64).filter(|delta| delta.is_finite())?;
+    let mut offset = [0.0; 3];
+    offset[axis] = delta;
+    Some(offset)
 }
 
 /// 🔎️ Generic inspector edit dispatcher — `entity`/`field` select the target, `ids` scope it (full ids for vortices, `objectId:vortexId`).
@@ -2055,30 +2000,6 @@ pub fn puzzle3d_rederive_all_attractions(fixture: &mut Puzzle3dFixture) {
     }
 }
 
-/// ✋️ After a direct move/rotate on selected objects, rederives the 6 params of every moved object's
-/// incoming attraction (per the `incoming` map from a prior `resolve_puzzle3d_attractions` call) from
-/// its NEW pose, so the follow-up resolve reproduces that pose exactly instead of snapping the object
-/// back to its old one.
-pub fn puzzle3d_rederive_moved_attractions(fixture: &mut Puzzle3dFixture, moved_ids: &[String], incoming: &HashMap<String, usize>) {
-    for object_id in moved_ids {
-        let Some(&attraction_index) = incoming.get(object_id) else { continue };
-        let Some(attraction) = fixture.attractions.get(attraction_index).cloned() else { continue };
-        let (Some((attracting_id, p_a, d_a)), Some((_, p_b, d_b))) = (puzzle3d_local_vortex_geom(fixture, &attraction.attracting), puzzle3d_local_vortex_geom(fixture, &attraction.attracted)) else { continue };
-        let Some(t_a_q_a) = fixture.objects.iter().find(|object| object.id == attracting_id).map(|object| (object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]))) else { continue };
-        let Some(t_b_q_b) = fixture.objects.iter().find(|object| &object.id == object_id).map(|object| (object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]))) else { continue };
-        let (t_a, q_a) = t_a_q_a;
-        let (t_b, q_b) = t_b_q_b;
-        let (gap, shift, rise, rotation, turn, tilt) = derive_attraction_params(t_a, q_a, p_a, d_a, p_b, d_b, t_b, q_b);
-        if let Some(attraction) = fixture.attractions.get_mut(attraction_index) {
-            attraction.gap = gap;
-            attraction.shift = shift;
-            attraction.rise = rise;
-            attraction.rotation = rotation;
-            attraction.turn = turn;
-            attraction.tilt = tilt;
-        }
-    }
-}
 //#endregion 🔖️AttractionResolve
 
 //#region 🔖️Distribution
@@ -2608,8 +2529,6 @@ macro_rules! puzzle3d_command_variants {
 
 puzzle3d_command_variants! {
     OpenAddObjectDialog = "openAddObjectDialog",
-    TransformBegin = "transformBegin",
-    TransformEnd = "transformEnd",
     TranslateSelection = "translateSelection",
     RotateSelection = "rotateSelection",
     ScaleSelection = "scaleSelection",
@@ -2680,8 +2599,6 @@ puzzle3d_command_variants! {
 impl protocol::OpBinary for Puzzle3dCommand {
     const TOOL_JOB_IDS: &'static [&'static str] = &[
         "openAddObjectDialog",
-        "transformBegin",
-        "transformEnd",
         "translateSelection",
         "rotateSelection",
         "scaleSelection",
@@ -2801,6 +2718,15 @@ pub struct Puzzle3dActionCtx<'a> {
     pub interaction_writes: &'a mut Vec<InteractionWrite>,
     /// 🛑️ Set by an arm that must skip the whole epilogue (window save, delta, config snapshot).
     pub abort: bool,
+    /// 🧬️ The typed document this action reads as its base — what the transform tool yields against.
+    pub base: &'a std::sync::Arc<Puzzle3dSnapshot>,
+    /// 🌱️ The admission's authoring seed every tool transaction this action commits is minted from; empty for
+    /// a view without command authority, which then publishes the yielded mutations plainly.
+    pub authoring_seed: &'a str,
+    /// 🛠️ The mutations a committed tool transaction yielded — published after the scene delta.
+    pub artifact_mutations: &'a mut Vec<Puzzle3dMutation>,
+    /// 🛠️ The tool transaction this action committed — stamped on every op it publishes.
+    pub transaction: &'a mut Option<protocol::TransactionRef>,
 }
 
 impl<'a> Puzzle3dActionCtx<'a> {
@@ -2889,6 +2815,36 @@ impl<'a> Puzzle3dActionCtx<'a> {
         self.notice(|labels| labels.selection_locked.as_str());
         self.abort = true;
         true
+    }
+
+    /// 🧲️ One gumball pose delta (`translateSelection`/`rotateSelection`/`scaleSelection`) as ONE tool
+    /// transaction over the gesture's own object ids (else the selected objects) and the selected target volumes.
+    pub fn commit_gumball(&mut self, verb: &str, args: Option<&Value>) {
+        let targets = [mesh_selection_ids(args, &self.selected_object_ids()), self.selected_target_volume_ids()].concat();
+        if let Some(record) = utilities::transform::Puzzle3dSelectionRecord::from_gumball(verb, args, targets) {
+            self.commit_selection(verb, vec![record]);
+        }
+    }
+
+    /// 🛠️ Commits `records` through the transform tool machine as ONE tool transaction of this action — the
+    /// parametric selection leaves plus the attractions their drops land, yielded as `verb`. Nothing named is
+    /// the `nothing_selected` refusal; a request whose every target is locked is the `selection_locked` one;
+    /// a request with a movable target is yielded whole, and its leaf reports the locked rest as
+    /// `mutation.partial`. A motionless request leaves zero trace.
+    pub fn commit_selection(&mut self, verb: &str, records: Vec<utilities::transform::Puzzle3dSelectionRecord>) {
+        if records.iter().all(|record| record.targets.is_empty()) {
+            self.refuse_without_selection(&[]);
+            return;
+        }
+        if records.iter().any(|record| record.refused_as_locked(self.base)) && !records.iter().any(|record| record.applies_to(self.base)) {
+            self.refuse_when_locked();
+            return;
+        }
+        let request = utilities::transform::TransformToolRequest { base: std::sync::Arc::clone(self.base), records };
+        if let Some((transaction, mutations)) = utilities::transform::puzzle3d_transform_tool_commit(verb, self.authoring_seed, utilities::transform::puzzle3d_transform_tool_clock(), request) {
+            *self.transaction = (!self.authoring_seed.is_empty()).then_some(transaction);
+            self.artifact_mutations.extend(mutations);
+        }
     }
 
     pub fn notice(&mut self, message: impl Fn(&Puzzle3dLabels) -> &'static str) {
@@ -3090,11 +3046,9 @@ fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dCon
 // `Puzzle3dConfig`. Each action rehydrates the engine from the projection, mutates a transient
 // [`Puzzle3dScene`], then emits the granular operation delta.
 //
-// 🧲️ Gumball drags carry NO app-side session: `World3dHost` tracks the drag host-locally and
-// dispatches exactly ONE absolute start→end delta (`translateSelection`/`rotateSelection`/
-// `scaleSelection`) on drag end, which commits straight to the document like any other mutation.
-// `transformBegin`/`transformEnd` are host-only brackets around that single tick — declared so the
-// host may dispatch them, deliberately completing empty.
+// 🧲️ Gumball drags carry NO app-side session: both hosts paint the drag locally and dispatch exactly
+// ONE start→end pose delta (`translateSelection`/`rotateSelection`/`scaleSelection`) on release, which the
+// transform tool turns into ONE `ToolTransaction` of relative, parametric selection leaves.
 //#region 🎟️SessionRegistry
 /// 🎟️ Document instances that may hold a live cache slot at once. Sized for real desktop use — a dozen
 /// open documents across split panes, with headroom — and deliberately unrelated to
@@ -3415,6 +3369,7 @@ impl Puzzle3dPlayApp {
     /// non-retained dispatch adapter) use, and is literally the three steps in a row.
     fn handle_action_impl(
         &self,
+        authoring_seed: &str,
         command: &Puzzle3dCommand,
         window_id: Option<&str>,
         snapshot: &Puzzle3dPlaySnapshot,
@@ -3435,7 +3390,7 @@ impl Puzzle3dPlayApp {
                 break;
             }
         }
-        prologue.dispatch_step(self, None, command, window_id, config, view_state, interaction)
+        prologue.dispatch_step(self, None, authoring_seed, command, window_id, config, view_state, interaction)
     }
 }
 
@@ -3473,6 +3428,7 @@ enum Puzzle3dPrologueSyncStage {
 pub(crate) struct Puzzle3dActionPrologue {
     scene: Option<Puzzle3dScene>,
     before: Option<Value>,
+    base: Option<std::sync::Arc<Puzzle3dSnapshot>>,
     sync_stage: Puzzle3dPrologueSyncStage,
     built: Option<crate::standards::v1::subsets::any::schema::SceneConfig>,
     tool_run: Option<semio_framework_plugin::ToolRunView>,
@@ -3485,6 +3441,7 @@ impl Puzzle3dActionPrologue {
     pub(crate) fn scene_step(&mut self, action: &str, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) {
         let active_utility = puzzle3d_scene_active_utility(config, view_state, window_id);
         self.before = puzzle3d_action_artifact_intent(action).then(|| puzzle3d_projection_value(snapshot.value()));
+        self.base = Some(snapshot.typed_arc());
         self.scene = Some(scene_from_snapshot(snapshot.typed(), config.clone(), &active_utility));
     }
 
@@ -3526,11 +3483,15 @@ impl Puzzle3dActionPrologue {
     }
 
     /// 🎬️ Half three: the action arm itself plus the whole `Emit` assembly — the only half that reads
-    /// `args`, mutates the scene and diffs the document.
+    /// `args`, mutates the scene and diffs the document. A selection transform never touches the scene: its
+    /// arm commits the transform tool's ONE transaction, whose yielded parametric mutations ride this emit
+    /// stamped with the transaction ref minted from `authoring_seed`.
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn dispatch_step(
         &mut self,
         app: &Puzzle3dPlayApp,
         instance_owner: Option<&ArtifactInstanceOperationOwnerHandle>,
+        authoring_seed: &str,
         command: &Puzzle3dCommand,
         window_id: Option<&str>,
         config: &Puzzle3dRuntime,
@@ -3544,7 +3505,7 @@ impl Puzzle3dActionPrologue {
             return (Emit::default(), EphemeralEmit::default());
         }
         let before = self.before.take();
-        let Some(mut scene) = self.scene.take() else {
+        let (Some(mut scene), Some(base)) = (self.scene.take(), self.base.take()) else {
             return (Emit::default(), EphemeralEmit::default());
         };
         let shared_before = window_ownership::shared(config);
@@ -3555,7 +3516,26 @@ impl Puzzle3dActionPrologue {
         let mut ui_scope = puzzle3d_scope(puzzle3d_command_scope_class(action));
         let mut effects = Vec::new();
         let mut interaction_writes = Vec::new();
-        let mut ctx = Puzzle3dActionCtx { app, instance_owner, tool_run: self.tool_run.as_ref(), scene: &mut scene, window_id: &wid, config, view_state, interaction, ui_scope: &mut ui_scope, effects: &mut effects, interaction_writes: &mut interaction_writes, abort: false };
+        let mut artifact_mutations = Vec::new();
+        let mut transaction = None;
+        let mut ctx = Puzzle3dActionCtx {
+            app,
+            instance_owner,
+            tool_run: self.tool_run.as_ref(),
+            scene: &mut scene,
+            window_id: &wid,
+            config,
+            view_state,
+            interaction,
+            ui_scope: &mut ui_scope,
+            effects: &mut effects,
+            interaction_writes: &mut interaction_writes,
+            abort: false,
+            base: &base,
+            authoring_seed,
+            artifact_mutations: &mut artifact_mutations,
+            transaction: &mut transaction,
+        };
         dispatch_puzzle3d_action(&mut ctx, action, args);
         let aborted = ctx.abort;
         if aborted {
@@ -3567,18 +3547,14 @@ impl Puzzle3dActionPrologue {
             return (Emit { effects, ui_scope: UiDirtyScope::None, ..Default::default() }, EphemeralEmit::default());
         }
         let next_active_utility = scene.active_utility.clone();
-        let operations = if let Some(before) = before.as_ref() {
+        let mut operations = if let Some(before) = before.as_ref() {
             puzzle3d_operations_from_host_snapshot_change(before, &scene.fixture)
         } else {
             debug_assert!(!puzzle3d_action_artifact_intent(action));
             Vec::new()
         };
-        let coalesce_key = match action {
-            "translateSelection" => Some("gumball-translate".to_string()),
-            "rotateSelection" => Some("gumball-rotate".to_string()),
-            "scaleSelection" => Some("gumball-scale".to_string()),
-            _ => None,
-        };
+        operations.append(&mut artifact_mutations);
+        let transaction = transaction.filter(|_| !operations.is_empty());
         // 🧰️🛠️ Programmatic utility/tool switches push the host session. `setActiveTool` itself never
         // re-emits. Entering fill emits `SetActiveTool { fill }` only. Leaving fill is exclusively a
         // host `setActiveTool ""` — an empty tool effect here bounce-disarms a just-armed fill (Escape
@@ -3603,7 +3579,7 @@ impl Puzzle3dActionPrologue {
         let window_config_mutations = if window_after != window_before { vec![window_ownership::addressed_config_for(&wid, window_after)] } else { Vec::new() };
         let transient_after = window_ownership::transient(&scene.runtime, view_state);
         let window_transient = if transient_after != transient_before { vec![window_ownership::addressed_transient_for(&wid, transient_after)] } else { Vec::new() };
-        (Emit { artifact_mutations: operations, config_mutations, window_config_mutations, coalesce_key, effects, ui_scope, interaction_writes, ..Default::default() }, EphemeralEmit { window_transient, ..Default::default() })
+        (Emit { artifact_mutations: operations, config_mutations, window_config_mutations, transaction, effects, ui_scope, interaction_writes, ..Default::default() }, EphemeralEmit { window_transient, ..Default::default() })
     }
 
     /// 🔄️ Re-materializes the carried scene's view-local halves against the configuration of the turn
@@ -3617,11 +3593,11 @@ impl Puzzle3dActionPrologue {
 
     /// 🧹️ One retained owner per bounded grant, for a staged work's own close cursor.
     pub(crate) fn close_one(&mut self) -> bool {
-        self.scene.take().is_some() || self.before.take().is_some() || self.built.take().is_some()
+        self.scene.take().is_some() || self.before.take().is_some() || self.base.take().is_some() || self.built.take().is_some()
     }
 
     pub(crate) fn is_empty(&self) -> bool {
-        self.scene.is_none() && self.before.is_none() && self.built.is_none()
+        self.scene.is_none() && self.before.is_none() && self.base.is_none() && self.built.is_none()
     }
 
     /// ⏱️ Turns one staged run of this prologue may take: one for the scene, one per mesh identity the
@@ -3631,10 +3607,9 @@ impl Puzzle3dActionPrologue {
     pub(crate) const WORK_ITEMS: usize = crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS + 5;
 }
 
-/// 🗨️ The three actions with no document interaction at all, hence no scene/before/after scaffolding:
-/// `openAddObjectDialog` opens the declared dialog over a glass veil, and the host-only gumball
-/// brackets are pure `World3dHost` state (it owns the live drag and dispatches ONE absolute delta on
-/// drag end), so there is nothing for the app to open or close.
+/// 🗨️ The two actions with no document interaction at all, hence no scene/before/after scaffolding:
+/// `openAddObjectDialog` opens the declared dialog over a glass veil and `openImportFixture` asks the host
+/// for a file.
 fn puzzle3d_shell_only_emit(action: &str) -> Option<Puzzle3dActionEmission> {
     match action {
         "openAddObjectDialog" => Some((Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(120), dialog_id: "addObject".into(), args: None }), EphemeralEmit::default())),
@@ -3652,7 +3627,6 @@ fn puzzle3d_shell_only_emit(action: &str) -> Option<Puzzle3dActionEmission> {
             },
             EphemeralEmit::default(),
         )),
-        "transformBegin" | "transformEnd" => Some((Emit::default(), EphemeralEmit::default())),
         _ => None,
     }
 }
@@ -3765,8 +3739,6 @@ fn puzzle3d_notice_emit(view_state: Option<&semio_framework_plugin::ViewModel>, 
 pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
     "openAddObjectDialog",
     "worldPointerDown",
-    "transformBegin",
-    "transformEnd",
     "setActiveExample",
     "setFillCount",
     "addTargetVolume",
@@ -3832,7 +3804,7 @@ pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
 const PUZZLE3D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.3d.tool-command.v1";
 
 fn puzzle3d_retained_extent(command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
-    if matches!(command.action_id(), "addTargetVolume" | "openAddObjectDialog" | "worldPointerDown" | "transformBegin" | "transformEnd") {
+    if matches!(command.action_id(), "addTargetVolume" | "openAddObjectDialog" | "worldPointerDown") {
         return Some(1);
     }
     let selection = interaction.selection.get(PUZZLE3D_INTERACTION_DOMAIN).map_or(0, |selection| selection.ids.len());
@@ -3876,7 +3848,7 @@ fn puzzle3d_retained_reduce(
     }
     let snapshot_interaction = Puzzle3dInteractionSnapshot::from_state(interaction, hover);
     let window_id = puzzle3d_addressed_window_id(view_state, None, command.window_id(), &runtime.window_ids);
-    Ok(with_puzzle3d_app_for(None, &runtime, |app| app.handle_action_impl(command, Some(window_id), snapshot, &runtime, view_state, &snapshot_interaction).0))
+    Ok(with_puzzle3d_app_for(None, &runtime, |app| app.handle_action_impl("", command, Some(window_id), snapshot, &runtime, view_state, &snapshot_interaction).0))
 }
 
 /// 🧾️ The shared action prologue's three halves as this work's own stages.
@@ -4015,7 +3987,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             Puzzle3dWindowCommandStage::Dispatch => {
                 let snapshot_interaction = Puzzle3dInteractionSnapshot::from_state(interaction, hover);
                 let instance_owner = self.instance_owner.as_ref();
-                let (emit, ephemeral) = with_puzzle3d_app_for(self.session.clone(), &runtime, |app| self.prologue.dispatch_step(app, instance_owner, command, Some(window_id), &runtime, Some(view), &snapshot_interaction));
+                let (emit, ephemeral) = with_puzzle3d_app_for(self.session.clone(), &runtime, |app| self.prologue.dispatch_step(app, instance_owner, "", command, Some(window_id), &runtime, Some(view), &snapshot_interaction));
                 self.ephemeral = Some(ephemeral);
                 self.stage = Puzzle3dWindowCommandStage::Complete;
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(emit))
@@ -4525,113 +4497,98 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Puzzle3dScaleStage {
-    ObjectSelection,
-    VolumeSelection,
-    Objects,
-    Volumes,
+enum Puzzle3dTransformStage {
+    Read,
+    Commit,
     Complete,
     Closing,
 }
 
-struct Puzzle3dScaleWork {
+/// 🛠️ The ONE retained work of every selection transform — a gumball translate/rotate/scale, a target-volume
+/// gumball relocate, a Relocate-utility drop, an inspector origin nudge. `Read` states the gesture as ONE
+/// [`utilities::transform::Puzzle3dSelectionRecord`] (the gesture's own ids, else the live selection), and
+/// `Commit` runs it through the transform tool: one `ToolTransaction` whose parametric leaves publish as ONE
+/// edit stamped with the ref minted from the admission's `authoring_seed`. A gesture that moves nothing leaves
+/// zero trace; nothing addressed, or everything addressed locked, is one localized refusal.
+struct Puzzle3dTransformWork {
     tool_id: &'static str,
-    stage: Puzzle3dScaleStage,
-    selection_cursor: usize,
-    object_cursor: usize,
-    volume_cursor: usize,
-    objects: HashSet<String>,
-    volumes: HashSet<String>,
-    mutations: Vec<Puzzle3dMutation>,
-    /// 🗣️ The host's declared locale×terminology axes, bound by `build_tool_job` exactly like every
-    /// other retained work — this work resolves its own refusal notice and has no `Puzzle3dActionCtx`
-    /// to borrow one from.
+    authoring_seed: String,
+    stage: Puzzle3dTransformStage,
+    record: Option<utilities::transform::Puzzle3dSelectionRecord>,
+    refusal: Option<fn(&Puzzle3dLabels) -> &'static str>,
     view_state: Option<semio_framework_plugin::ViewModel>,
+    window_config: Option<semio_framework_plugin::WindowConfigSnapshot>,
 }
 
-impl Default for Puzzle3dScaleWork {
-    fn default() -> Self {
-        Self::new("scaleSelection")
+impl Puzzle3dTransformWork {
+    fn new(tool_id: &'static str, authoring_seed: String) -> Self {
+        Self { tool_id, authoring_seed, stage: Puzzle3dTransformStage::Read, record: None, refusal: None, view_state: None, window_config: None }
     }
-}
 
-impl Puzzle3dScaleWork {
-    fn new(tool_id: &'static str) -> Self {
-        Self {
-            tool_id,
-            stage: Puzzle3dScaleStage::ObjectSelection,
-            selection_cursor: 0,
-            object_cursor: 0,
-            volume_cursor: 0,
-            objects: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
-            volumes: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
-            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
-            view_state: None,
+    /// 🕹️ The ids a selection-scoped verb addresses: the command's own `ids`, else the live selection at
+    /// `granularity`.
+    fn addressed(command: &Puzzle3dCommand, interaction: &protocol::InteractionState, granularity: &str) -> Vec<String> {
+        let explicit: Vec<String> = command.args().and_then(|args| args.get("ids")).and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str).map(str::to_string).collect();
+        if !explicit.is_empty() {
+            return explicit;
         }
-    }
-    fn explicit_ids(command: &Puzzle3dCommand) -> Option<&Vec<Value>> {
-        command.args().and_then(|args| args.get("ids")).and_then(Value::as_array).filter(|ids| !ids.is_empty())
+        Self::selected(interaction, granularity)
     }
 
-    fn selection<'a>(interaction: &'a protocol::InteractionState, granularity: &str) -> Option<&'a protocol::DomainSelection> {
-        interaction.selection.get(PUZZLE3D_INTERACTION_DOMAIN).filter(|selection| selection.granularity == granularity)
+    fn selected(interaction: &protocol::InteractionState, granularity: &str) -> Vec<String> {
+        interaction.selection.get(PUZZLE3D_INTERACTION_DOMAIN).filter(|selection| selection.granularity == granularity).map_or_else(Vec::new, |selection| selection.ids.clone())
     }
 
-    fn scale(command: &Puzzle3dCommand) -> [f64; 3] {
-        let axis = |key: &str| command.args().and_then(|args| args.get(key)).and_then(Value::as_f64).unwrap_or(1.0);
-        [axis("sx"), axis("sy"), axis("sz")]
-    }
-
-    fn scaled(scale: Option<crate::Puzzle3dScale>, factors: [f64; 3]) -> crate::Puzzle3dScale {
-        let current = match scale {
-            Some(crate::Puzzle3dScale::Uniform(value)) => [value; 3],
-            Some(crate::Puzzle3dScale::Vec3(value)) => value,
-            None => [1.0; 3],
-        };
-        crate::Puzzle3dScale::Vec3([current[0] * factors[0], current[1] * factors[1], current[2] * factors[2]])
-    }
-
-    fn translated(origin: [f64; 3], command: &Puzzle3dCommand) -> [f64; 3] {
-        let axis = |key: &str| command.args().and_then(|args| args.get(key)).and_then(Value::as_f64).unwrap_or_default();
-        [origin[0] + axis("dx"), origin[1] + axis("dy"), origin[2] + axis("dz")]
-    }
-
-    fn rotated(orientation: Option<[f64; 4]>, command: &Puzzle3dCommand) -> [f64; 4] {
-        let axis = |key: &str| command.args().and_then(|args| args.get(key)).and_then(Value::as_f64).unwrap_or_default();
-        let delta = quat_from_axis_angle(axis("ax"), axis("ay"), axis("az"), axis("angle"));
-        quat_mul(delta, orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]))
-    }
-
-    fn object_mutation(&self, object: &crate::Puzzle3dObject, command: &Puzzle3dCommand) -> Puzzle3dMutation {
+    /// 🎬️ The gesture this command states on `document`, or the refusal it answers with instead.
+    fn read(&self, command: &Puzzle3dCommand, document: &Puzzle3dSnapshot, interaction: &protocol::InteractionState) -> Result<Option<utilities::transform::Puzzle3dSelectionRecord>, fn(&Puzzle3dLabels) -> &'static str> {
+        let args = command.args();
         match self.tool_id {
-            "translateSelection" => crate::standards::v1::subsets::any::schema::mutations::move_object(object.id.clone(), Self::translated(object.origin, command)),
-            "rotateSelection" => crate::standards::v1::subsets::any::schema::mutations::rotate_object(object.id.clone(), Some(Self::rotated(object.orientation, command))),
-            _ => crate::standards::v1::subsets::any::schema::mutations::scale_object(object.id.clone(), Some(Self::scaled(object.scale, Self::scale(command)))),
+            "translateSelection" | "rotateSelection" | "scaleSelection" => {
+                let targets = [Self::addressed(command, interaction, PUZZLE3D_GRANULARITY_OBJECT), Self::selected(interaction, PUZZLE3D_GRANULARITY_TARGET_VOLUME)].concat();
+                Ok(utilities::transform::Puzzle3dSelectionRecord::from_gumball(self.tool_id, args, targets))
+            }
+            "relocateTargetVolume" => Ok(utilities::transform::Puzzle3dSelectionRecord::from_pose_delta(args)),
+            "worldRelocate" => {
+                let object_id = args.and_then(|args| args.get("objectId")).and_then(Value::as_str).unwrap_or("");
+                let Some(position) = args.and_then(|args| args.get("position")).and_then(value_as_vec3) else { return Ok(None) };
+                if document.objects.iter().any(|object| object.id == object_id && (object.locked || object.hidden)) {
+                    return Err(|labels| labels.selection_locked.as_str());
+                }
+                let radius = window_ownership::config_from_snapshot(self.window_config.as_ref()).proximity_radius;
+                Ok(utilities::transform::puzzle3d_relocate_record(document, object_id, position, radius))
+            }
+            _ => {
+                let Some(offset) = puzzle3d_inspector_origin_nudge(args) else { return Ok(None) };
+                let granularity = if args.and_then(|args| args.get("entity")).and_then(Value::as_str) == Some("targetVolume") { PUZZLE3D_GRANULARITY_TARGET_VOLUME } else { PUZZLE3D_GRANULARITY_OBJECT };
+                Ok(Some(utilities::transform::Puzzle3dSelectionRecord::new(Self::addressed(command, interaction, granularity), utilities::transform::Puzzle3dSelectionMotion::Drag { offset })))
+            }
         }
     }
 
-    fn volume_mutation(&self, volume: &crate::Puzzle3dTargetVolume, command: &Puzzle3dCommand) -> Puzzle3dMutation {
-        match self.tool_id {
-            "translateSelection" => crate::standards::v1::subsets::any::schema::mutations::move_target_volume(volume.id.clone(), Self::translated(volume.origin, command)),
-            "rotateSelection" => crate::standards::v1::subsets::any::schema::mutations::rotate_target_volume(volume.id.clone(), Some(Self::rotated(volume.orientation, command))),
-            _ => crate::standards::v1::subsets::any::schema::mutations::scale_target_volume(volume.id.clone(), Some(Self::scaled(volume.scale, Self::scale(command)))),
+    /// 🏁️ The ONE terminal emit: the committed transaction, a refusal, or nothing at all.
+    fn commit(&mut self, snapshot: &Puzzle3dPlaySnapshot) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation> {
+        self.stage = Puzzle3dTransformStage::Complete;
+        if let Some(refusal) = self.refusal.take() {
+            return puzzle3d_notice_emit(self.view_state.as_ref(), refusal);
         }
-    }
-
-    fn coalesce_key(&self) -> &'static str {
-        match self.tool_id {
-            "translateSelection" => "gumball-translate",
-            "rotateSelection" => "gumball-rotate",
-            _ => "gumball-scale",
+        let Some(record) = self.record.take() else { return Emit { ui_scope: UiDirtyScope::None, ..Default::default() } };
+        let base = snapshot.typed_arc();
+        let known = record.targets.iter().any(|id| base.objects.iter().any(|object| &object.id == id) || base.target_volumes.iter().any(|volume| &volume.id == id));
+        if !known {
+            return puzzle3d_notice_emit(self.view_state.as_ref(), |labels| labels.nothing_selected.as_str());
         }
-    }
-
-    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
-        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+        if record.refused_as_locked(&base) {
+            return puzzle3d_notice_emit(self.view_state.as_ref(), |labels| labels.selection_locked.as_str());
+        }
+        let request = utilities::transform::TransformToolRequest { base, records: vec![record] };
+        match utilities::transform::puzzle3d_transform_tool_commit(self.tool_id, &self.authoring_seed, utilities::transform::puzzle3d_transform_tool_clock(), request) {
+            Some((transaction, mutations)) => Emit { artifact_mutations: mutations, transaction: (!self.authoring_seed.is_empty()).then_some(transaction), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class(self.tool_id)), ..Default::default() },
+            None => Emit { ui_scope: UiDirtyScope::None, ..Default::default() },
+        }
     }
 }
 
-impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dScaleWork {
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dTransformWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -4640,14 +4597,13 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         self.view_state = view_state;
     }
 
-    fn extent(&self, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
-        let object_selection = Self::explicit_ids(command).map_or_else(|| Self::selection(interaction, PUZZLE3D_GRANULARITY_OBJECT).map_or(0, |selection| selection.ids.len()), Vec::len);
-        let volume_selection = Self::selection(interaction, PUZZLE3D_GRANULARITY_TARGET_VOLUME).map_or(0, |selection| selection.ids.len());
-        // 🧮️ Four terminating steps beside the four cursor walks — one to close each of `ObjectSelection`,
-        // `VolumeSelection`, `Objects` and `Volumes`. The extent is the preflight pacing counter, so an
-        // under-declared one is not a truncation, only a lie about how long this work is.
-        let items = object_selection.checked_add(volume_selection)?.checked_add(snapshot.typed().objects.len())?.checked_add(snapshot.typed().target_volumes.len())?.checked_add(4)?;
-        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    fn bind_window_owners(&mut self, config: Option<semio_framework_plugin::WindowConfigSnapshot>, _transient: Option<semio_framework_plugin::WindowTransientSnapshot>) {
+        self.window_config = config;
+    }
+
+    fn extent(&self, command: &Puzzle3dCommand, _snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+        let addressed = Self::addressed(command, interaction, PUZZLE3D_GRANULARITY_OBJECT).len().checked_add(Self::selected(interaction, PUZZLE3D_GRANULARITY_TARGET_VOLUME).len())?;
+        (addressed <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS).then_some(2)
     }
 
     fn step(
@@ -4659,120 +4615,36 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
         match self.stage {
-            Puzzle3dScaleStage::ObjectSelection => {
-                let id = if let Some(ids) = Self::explicit_ids(command) {
-                    ids.get(self.selection_cursor).and_then(Value::as_str)
-                } else {
-                    Self::selection(interaction, PUZZLE3D_GRANULARITY_OBJECT).and_then(|selection| selection.ids.get(self.selection_cursor)).map(String::as_str)
-                };
-                if let Some(id) = id {
-                    if self.objects.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
-                        return Err(Fault::from("puzzle3d-scale-object-selection-capacity"));
-                    }
-                    self.objects.insert(id.to_string());
-                    self.selection_cursor += 1;
-                    return Ok(Self::progress("puzzle3d-scale-object-selection", "Reading selected object", "Ausgewähltes Objekt wird gelesen"));
+            Puzzle3dTransformStage::Read => {
+                match self.read(command, snapshot.typed(), interaction) {
+                    Ok(record) => self.record = record,
+                    Err(refusal) => self.refusal = Some(refusal),
                 }
-                self.selection_cursor = 0;
-                self.stage = Puzzle3dScaleStage::VolumeSelection;
-                Ok(Self::progress("puzzle3d-scale-volume-selection", "Reading selected volume", "Ausgewähltes Volumen wird gelesen"))
+                self.stage = Puzzle3dTransformStage::Commit;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Progress { stage: "puzzle3d-transform-read", en: "Reading the gesture", de: "Geste wird gelesen" })
             }
-            Puzzle3dScaleStage::VolumeSelection => {
-                let id = Self::selection(interaction, PUZZLE3D_GRANULARITY_TARGET_VOLUME).and_then(|selection| selection.ids.get(self.selection_cursor));
-                if let Some(id) = id {
-                    if self.volumes.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
-                        return Err(Fault::from("puzzle3d-scale-volume-selection-capacity"));
-                    }
-                    self.volumes.insert(id.clone());
-                    self.selection_cursor += 1;
-                    return Ok(Self::progress("puzzle3d-scale-volume-selection", "Reading selected volume", "Ausgewähltes Volumen wird gelesen"));
-                }
-                // 🧲️ Both selection cursors are exhausted, so this is the exact set the gesture will act
-                // on. Acting on NOTHING is a refusal, and a refusal is visible: one localized notice, no
-                // mutation, no coalesce key (a refusal must never join the gesture's latest-wins group)
-                // and nothing repainted. Measured 2026-09-09 21:05 in the browser as a dead "Translate
-                // Selection" row; the `refuse_without_selection` guard the `🎮️commands/*` arms carry
-                // never runs for these three verbs, because `build_tool_job` routes them here instead of
-                // through `dispatch_step`.
-                if self.objects.is_empty() && self.volumes.is_empty() {
-                    self.stage = Puzzle3dScaleStage::Complete;
-                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle3d_notice_emit(self.view_state.as_ref(), |labels| labels.nothing_selected.as_str())));
-                }
-                self.stage = Puzzle3dScaleStage::Objects;
-                Ok(Self::progress("puzzle3d-scale-object", "Scaling selected object", "Ausgewähltes Objekt wird skaliert"))
-            }
-            Puzzle3dScaleStage::Objects => {
-                let Some(object) = snapshot.typed().objects.get(self.object_cursor) else {
-                    self.stage = Puzzle3dScaleStage::Volumes;
-                    return Ok(Self::progress("puzzle3d-scale-volume", "Scaling selected volume", "Ausgewähltes Volumen wird skaliert"));
-                };
-                self.object_cursor += 1;
-                if self.objects.contains(&object.id) && !object.locked {
-                    self.mutations.push(self.object_mutation(object, command));
-                }
-                Ok(Self::progress("puzzle3d-scale-object", "Scaling selected object", "Ausgewähltes Objekt wird skaliert"))
-            }
-            Puzzle3dScaleStage::Volumes => {
-                let Some(volume) = snapshot.typed().target_volumes.get(self.volume_cursor) else {
-                    self.stage = Puzzle3dScaleStage::Complete;
-                    let mutations = std::mem::take(&mut self.mutations);
-                    if mutations.is_empty() && (!self.objects.is_empty() || !self.volumes.is_empty()) {
-                        // 🔒️ "Produced no mutation" is not the same claim as "the selection is locked". A
-                        // gumball delta carrying stale leftover ids — ids no document entity answers to —
-                        // took this branch and told the user their selection was locked when nothing was.
-                        // Ask the `locked` flags themselves, and say `nothing_selected` otherwise; a
-                        // refusal that names the wrong cause is worse than none.
-                        let locked = snapshot.typed().objects.iter().any(|object| self.objects.contains(&object.id) && object.locked)
-                            || snapshot.typed().target_volumes.iter().any(|volume| self.volumes.contains(&volume.id) && volume.locked);
-                        let label: fn(&Puzzle3dLabels) -> &'static str = if locked { |labels| labels.selection_locked.as_str() } else { |labels| labels.nothing_selected.as_str() };
-                        return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle3d_notice_emit(self.view_state.as_ref(), label)));
-                    }
-                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: mutations, coalesce_key: Some(self.coalesce_key().to_string()), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class(self.tool_id)), ..Default::default() }));
-                };
-                self.volume_cursor += 1;
-                if self.volumes.contains(&volume.id) && !volume.locked {
-                    self.mutations.push(self.volume_mutation(volume, command));
-                }
-                Ok(Self::progress("puzzle3d-scale-volume", "Scaling selected volume", "Ausgewähltes Volumen wird skaliert"))
-            }
-            Puzzle3dScaleStage::Complete => Err(Fault::from("puzzle3d-scale-complete-repolled")),
-            Puzzle3dScaleStage::Closing => Err(Fault::from("puzzle3d-scale-closing")),
+            Puzzle3dTransformStage::Commit => Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(self.commit(snapshot))),
+            Puzzle3dTransformStage::Complete => Err(Fault::from("puzzle3d-transform-complete-repolled")),
+            Puzzle3dTransformStage::Closing => Err(Fault::from("puzzle3d-transform-closing")),
         }
     }
 
     fn begin_close(&mut self) {
-        self.stage = Puzzle3dScaleStage::Closing;
+        self.stage = Puzzle3dTransformStage::Closing;
     }
 
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
         if maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        if self.view_state.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if self.mutations.pop().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        let object = {
-            let mut objects = self.objects.extract_if(|_| true);
-            objects.next()
-        };
-        if object.is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        let volume = {
-            let mut volumes = self.volumes.extract_if(|_| true);
-            volumes.next()
-        };
-        if volume.is_some() {
+        if self.record.take().is_some() || self.refusal.take().is_some() || self.view_state.take().is_some() || self.window_config.take().is_some() {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         semio_framework_job::InteractiveJobCloseStep::Complete
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle3dScaleStage::Closing && self.view_state.is_none() && self.mutations.is_empty() && self.objects.is_empty() && self.volumes.is_empty()
+        self.stage == Puzzle3dTransformStage::Closing && self.record.is_none() && self.refusal.is_none() && self.view_state.is_none() && self.window_config.is_none()
     }
 }
 
@@ -5198,261 +5070,6 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
 }
 
 const PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT: usize = 64;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Puzzle3dWorldRelocateStage {
-    Object,
-    ExistingAttractions,
-    CandidateObject,
-    CandidateVortex,
-    PublishAttraction,
-    Complete,
-    Closing,
-}
-
-struct Puzzle3dWorldRelocateSource {
-    object_id: String,
-    vortex_id: String,
-    local_position: [f64; 3],
-    local_direction: [f64; 3],
-    world_position: [f64; 3],
-    object_position: [f64; 3],
-    object_orientation: [f64; 4],
-}
-
-struct Puzzle3dWorldRelocateCandidate {
-    vortex_id: String,
-    local_position: [f64; 3],
-    local_direction: [f64; 3],
-    object_position: [f64; 3],
-    object_orientation: [f64; 4],
-}
-
-struct Puzzle3dWorldRelocateWork {
-    stage: Puzzle3dWorldRelocateStage,
-    object_cursor: usize,
-    vortex_cursor: usize,
-    attraction_cursor: usize,
-    source: Option<Puzzle3dWorldRelocateSource>,
-    candidate: Option<Puzzle3dWorldRelocateCandidate>,
-    existing: HashSet<String>,
-    mutations: Vec<Puzzle3dMutation>,
-    window_config: Option<semio_framework_plugin::WindowConfigSnapshot>,
-    view_state: Option<semio_framework_plugin::ViewModel>,
-}
-
-impl Default for Puzzle3dWorldRelocateWork {
-    fn default() -> Self {
-        Self {
-            stage: Puzzle3dWorldRelocateStage::Object,
-            object_cursor: 0,
-            vortex_cursor: 0,
-            attraction_cursor: 0,
-            source: None,
-            candidate: None,
-            existing: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
-            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
-            window_config: None,
-            view_state: None,
-        }
-    }
-}
-
-impl Puzzle3dWorldRelocateWork {
-    fn position(command: &Puzzle3dCommand) -> Option<[f64; 3]> {
-        command.args().and_then(|args| args.get("position")).and_then(value_as_vec3)
-    }
-
-    fn edge(first: &str, second: &str) -> String {
-        if first <= second {
-            format!("{first}\0{second}")
-        } else {
-            format!("{second}\0{first}")
-        }
-    }
-
-    fn world_position(origin: [f64; 3], orientation: [f64; 4], local: [f64; 3]) -> [f64; 3] {
-        let rotated = quat_rotate_vector(orientation, local);
-        [origin[0] + rotated[0], origin[1] + rotated[1], origin[2] + rotated[2]]
-    }
-
-    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
-        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
-    }
-
-    fn complete(&mut self) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
-        self.stage = Puzzle3dWorldRelocateStage::Complete;
-        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("worldRelocate")), ..Default::default() })
-    }
-}
-
-impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dWorldRelocateWork {
-    fn tool_id(&self) -> &'static str {
-        "worldRelocate"
-    }
-
-    fn bind_window_owners(&mut self, config: Option<semio_framework_plugin::WindowConfigSnapshot>, _transient: Option<semio_framework_plugin::WindowTransientSnapshot>) {
-        self.window_config = config;
-    }
-
-    fn bind_view_state(&mut self, view_state: Option<semio_framework_plugin::ViewModel>) {
-        self.view_state = view_state;
-    }
-
-    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        let document = snapshot.typed();
-        let mut object_vortices = 0usize;
-        for object in &document.objects {
-            object_vortices = object_vortices.checked_add(object.vortices.len())?;
-        }
-        let object_stage = document.objects.len().checked_add(1)?;
-        let existing_attraction_stage = document.attractions.len().checked_add(1)?;
-        let candidate_dispatch_stage = document.objects.len().checked_add(1)?;
-        let candidate_scan_stage = object_vortices.checked_mul(2)?.checked_add(document.objects.len())?;
-        let items = object_stage.checked_add(existing_attraction_stage)?.checked_add(candidate_dispatch_stage)?.checked_add(candidate_scan_stage)?;
-        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
-    }
-
-    fn step(
-        &mut self,
-        command: &Puzzle3dCommand,
-        snapshot: &Puzzle3dPlaySnapshot,
-        _config: &Puzzle3dConfig,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
-        match self.stage {
-            Puzzle3dWorldRelocateStage::Object => {
-                let requested = command.args().and_then(|args| args.get("objectId")).and_then(Value::as_str).unwrap_or("");
-                let Some(position) = Self::position(command) else { return Ok(self.complete()) };
-                let Some(object) = snapshot.typed().objects.get(self.object_cursor) else { return Ok(self.complete()) };
-                self.object_cursor += 1;
-                // 🔒️ A locked/hidden grab must ANSWER, exactly like `translateSelection`'s own refusal:
-                // dropping out silently left the host's relocate ghost snapping back with nothing said.
-                if object.id == requested && (object.locked || object.hidden) {
-                    self.stage = Puzzle3dWorldRelocateStage::Complete;
-                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle3d_notice_emit(self.view_state.as_ref(), |labels| labels.selection_locked.as_str())));
-                }
-                if object.id == requested && !object.locked && !object.hidden {
-                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::move_object(object.id.clone(), position));
-                    if let Some(vortex) = object.vortices.first() {
-                        let orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-                        self.source = Some(Puzzle3dWorldRelocateSource {
-                            object_id: object.id.clone(),
-                            vortex_id: puzzle3d_vortex_full_id(&object.id, &vortex.id),
-                            local_position: vortex.position,
-                            local_direction: vortex.direction.unwrap_or([0.0, 0.0, -1.0]),
-                            world_position: Self::world_position(position, orientation, vortex.position),
-                            object_position: position,
-                            object_orientation: orientation,
-                        });
-                    }
-                    self.attraction_cursor = 0;
-                    self.stage = Puzzle3dWorldRelocateStage::ExistingAttractions;
-                }
-                Ok(Self::progress("puzzle3d-world-relocate-object", "Finding moved object", "Verschobenes Objekt wird gesucht"))
-            }
-            Puzzle3dWorldRelocateStage::ExistingAttractions => {
-                let Some(attraction) = snapshot.typed().attractions.get(self.attraction_cursor) else {
-                    self.object_cursor = 0;
-                    self.stage = Puzzle3dWorldRelocateStage::CandidateObject;
-                    return Ok(Self::progress("puzzle3d-world-relocate-candidate-object", "Finding nearby object", "Nahes Objekt wird gesucht"));
-                };
-                if self.existing.len() >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
-                    return Err(Fault::from("puzzle3d-world-relocate-attraction-capacity"));
-                }
-                self.existing.insert(Self::edge(&attraction.attracting, &attraction.attracted));
-                self.attraction_cursor += 1;
-                Ok(Self::progress("puzzle3d-world-relocate-existing-attraction", "Reading existing attraction", "Bestehende Anziehung wird gelesen"))
-            }
-            Puzzle3dWorldRelocateStage::CandidateObject => {
-                let Some(source) = self.source.as_ref() else { return Ok(self.complete()) };
-                let Some(object) = snapshot.typed().objects.get(self.object_cursor) else { return Ok(self.complete()) };
-                if object.vortices.len() > PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT {
-                    return Err(Fault::from("puzzle3d-world-relocate-vortex-capacity"));
-                }
-                self.vortex_cursor = 0;
-                if object.id == source.object_id {
-                    self.object_cursor += 1;
-                } else {
-                    self.stage = Puzzle3dWorldRelocateStage::CandidateVortex;
-                }
-                Ok(Self::progress("puzzle3d-world-relocate-candidate-object", "Scanning nearby object", "Nahes Objekt wird geprüft"))
-            }
-            Puzzle3dWorldRelocateStage::CandidateVortex => {
-                let source = self.source.as_ref().ok_or_else(|| Fault::from("puzzle3d-world-relocate-source-owner"))?;
-                let object = snapshot.typed().objects.get(self.object_cursor).ok_or_else(|| Fault::from("puzzle3d-world-relocate-object-cursor"))?;
-                let Some(vortex) = object.vortices.get(self.vortex_cursor) else {
-                    self.object_cursor += 1;
-                    self.stage = Puzzle3dWorldRelocateStage::CandidateObject;
-                    return Ok(Self::progress("puzzle3d-world-relocate-candidate-object", "Advancing nearby object", "Nächstes nahes Objekt wird geprüft"));
-                };
-                self.vortex_cursor += 1;
-                let vortex_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
-                let edge = Self::edge(&source.vortex_id, &vortex_id);
-                if vortex_id == source.vortex_id || self.existing.contains(&edge) {
-                    return Ok(Self::progress("puzzle3d-world-relocate-candidate-vortex", "Skipping connected vortex", "Verbundener Vortex wird übersprungen"));
-                }
-                let orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-                let world = Self::world_position(object.origin, orientation, vortex.position);
-                let delta = [source.world_position[0] - world[0], source.world_position[1] - world[1], source.world_position[2] - world[2]];
-                let distance = (delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]).sqrt();
-                let proximity_radius = window_ownership::config_from_snapshot(self.window_config.as_ref()).proximity_radius;
-                if distance <= proximity_radius {
-                    self.candidate = Some(Puzzle3dWorldRelocateCandidate { vortex_id, local_position: vortex.position, local_direction: vortex.direction.unwrap_or([0.0, 0.0, -1.0]), object_position: object.origin, object_orientation: orientation });
-                    self.stage = Puzzle3dWorldRelocateStage::PublishAttraction;
-                }
-                Ok(Self::progress("puzzle3d-world-relocate-candidate-vortex", "Measuring nearby vortex", "Naher Vortex wird gemessen"))
-            }
-            Puzzle3dWorldRelocateStage::PublishAttraction => {
-                let source = self.source.as_ref().ok_or_else(|| Fault::from("puzzle3d-world-relocate-source-owner"))?;
-                let candidate = self.candidate.take().ok_or_else(|| Fault::from("puzzle3d-world-relocate-candidate-owner"))?;
-                let (gap, shift, rise, rotation, turn, tilt) = derive_attraction_params(
-                    candidate.object_position,
-                    candidate.object_orientation,
-                    candidate.local_position,
-                    candidate.local_direction,
-                    source.local_position,
-                    source.local_direction,
-                    source.object_position,
-                    source.object_orientation,
-                );
-                let id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
-                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_vortices(id, candidate.vortex_id.clone(), source.vortex_id.clone(), gap, shift, rise, rotation, turn, tilt, 0.0, 0.0));
-                self.existing.insert(Self::edge(&source.vortex_id, &candidate.vortex_id));
-                self.stage = Puzzle3dWorldRelocateStage::CandidateVortex;
-                Ok(Self::progress("puzzle3d-world-relocate-publish-attraction", "Connecting nearby vortex", "Naher Vortex wird verbunden"))
-            }
-            Puzzle3dWorldRelocateStage::Complete => Err(Fault::from("puzzle3d-world-relocate-complete-repolled")),
-            Puzzle3dWorldRelocateStage::Closing => Err(Fault::from("puzzle3d-world-relocate-closing")),
-        }
-    }
-
-    fn begin_close(&mut self) {
-        self.stage = Puzzle3dWorldRelocateStage::Closing;
-    }
-
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        if self.mutations.pop().is_some() || self.candidate.take().is_some() || self.source.take().is_some() || self.window_config.take().is_some() || self.view_state.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        let edge = {
-            let mut existing = self.existing.extract_if(|_| true);
-            existing.next()
-        };
-        if edge.is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle3dWorldRelocateStage::Closing && self.source.is_none() && self.candidate.is_none() && self.existing.is_empty() && self.mutations.is_empty() && self.window_config.is_none() && self.view_state.is_none()
-    }
-}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Puzzle3dCreateAttractionStage {
@@ -6420,117 +6037,6 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Puzzle3dRelocateVolumeStage {
-    Search,
-    Origin,
-    Orientation,
-    Scale,
-    Complete,
-    Closing,
-}
-
-struct Puzzle3dRelocateVolumeWork {
-    stage: Puzzle3dRelocateVolumeStage,
-    cursor: usize,
-    volume_id: Option<String>,
-    mutations: Vec<Puzzle3dMutation>,
-}
-
-impl Default for Puzzle3dRelocateVolumeWork {
-    fn default() -> Self {
-        Self { stage: Puzzle3dRelocateVolumeStage::Search, cursor: 0, volume_id: None, mutations: Vec::with_capacity(3) }
-    }
-}
-
-impl Puzzle3dRelocateVolumeWork {
-    fn complete(&mut self) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
-        self.stage = Puzzle3dRelocateVolumeStage::Complete;
-        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("relocateTargetVolume")), ..Default::default() })
-    }
-
-    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
-        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
-    }
-}
-
-impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dRelocateVolumeWork {
-    fn tool_id(&self) -> &'static str {
-        "relocateTargetVolume"
-    }
-
-    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        let items = snapshot.typed().target_volumes.len().checked_add(4)?;
-        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
-    }
-
-    fn step(
-        &mut self,
-        command: &Puzzle3dCommand,
-        snapshot: &Puzzle3dPlaySnapshot,
-        _config: &Puzzle3dConfig,
-        _interaction: &protocol::InteractionState,
-        _hover: &semio_framework_plugin::app::InteractionHoverState,
-    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
-        let requested_id = command.args().and_then(|args| args.get("volumeId")).and_then(Value::as_str).unwrap_or("");
-        let after = command.args().and_then(|args| args.get("after"));
-        match self.stage {
-            Puzzle3dRelocateVolumeStage::Search => {
-                let Some(volume) = snapshot.typed().target_volumes.get(self.cursor) else { return Ok(self.complete()) };
-                self.cursor += 1;
-                if volume.id == requested_id && !volume.locked && after.is_some() {
-                    self.volume_id = Some(volume.id.clone());
-                    self.stage = Puzzle3dRelocateVolumeStage::Origin;
-                }
-                Ok(Self::progress("puzzle3d-relocate-volume-search", "Finding target volume", "Zielvolumen wird gesucht"))
-            }
-            Puzzle3dRelocateVolumeStage::Origin => {
-                if let Some(origin) = after.and_then(|after| after.get("position")).and_then(value_as_vec3) {
-                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::move_target_volume(self.volume_id.clone().ok_or_else(|| Fault::from("puzzle3d-relocate-volume-owner-lost"))?, origin));
-                }
-                self.stage = Puzzle3dRelocateVolumeStage::Orientation;
-                Ok(Self::progress("puzzle3d-relocate-volume-orientation", "Preparing volume rotation", "Volumendrehung wird vorbereitet"))
-            }
-            Puzzle3dRelocateVolumeStage::Orientation => {
-                if let Some(values) = after.and_then(|after| after.get("quaternion")).and_then(Value::as_array).filter(|values| values.len() >= 4) {
-                    let orientation =
-                        [values.first().and_then(Value::as_f64).unwrap_or(0.0), values.get(1).and_then(Value::as_f64).unwrap_or(0.0), values.get(2).and_then(Value::as_f64).unwrap_or(0.0), values.get(3).and_then(Value::as_f64).unwrap_or(1.0)];
-                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::rotate_target_volume(self.volume_id.clone().ok_or_else(|| Fault::from("puzzle3d-relocate-volume-owner-lost"))?, Some(orientation)));
-                }
-                self.stage = Puzzle3dRelocateVolumeStage::Scale;
-                Ok(Self::progress("puzzle3d-relocate-volume-scale", "Preparing volume scale", "Volumenskalierung wird vorbereitet"))
-            }
-            Puzzle3dRelocateVolumeStage::Scale => {
-                if let Some(values) = after.and_then(|after| after.get("scale")).and_then(Value::as_array).filter(|values| values.len() >= 3) {
-                    let scale = crate::Puzzle3dScale::Vec3([values.first().and_then(Value::as_f64).unwrap_or(1.0), values.get(1).and_then(Value::as_f64).unwrap_or(1.0), values.get(2).and_then(Value::as_f64).unwrap_or(1.0)]);
-                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::scale_target_volume(self.volume_id.clone().ok_or_else(|| Fault::from("puzzle3d-relocate-volume-owner-lost"))?, Some(scale)));
-                }
-                Ok(self.complete())
-            }
-            Puzzle3dRelocateVolumeStage::Complete => Err(Fault::from("puzzle3d-relocate-volume-complete-repolled")),
-            Puzzle3dRelocateVolumeStage::Closing => Err(Fault::from("puzzle3d-relocate-volume-closing")),
-        }
-    }
-
-    fn begin_close(&mut self) {
-        self.stage = Puzzle3dRelocateVolumeStage::Closing;
-    }
-
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        if self.mutations.pop().is_some() || self.volume_id.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle3dRelocateVolumeStage::Closing && self.mutations.is_empty() && self.volume_id.is_none()
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Puzzle3dAcceptSuggestionStage {
     Target,
     Candidate,
@@ -7097,7 +6603,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let window_id = puzzle3d_addressed_window_id(Some(view), None, command.window_id(), &runtime.window_ids);
                 let session = self.session();
                 let instance_owner = self.instance_owner.as_ref();
-                let (emit, ephemeral) = with_puzzle3d_app_for(session, &runtime, |app| self.prologue.dispatch_step(app, instance_owner, command, Some(window_id), &runtime, Some(view), &snapshot_interaction));
+                let (emit, ephemeral) = with_puzzle3d_app_for(session, &runtime, |app| self.prologue.dispatch_step(app, instance_owner, "", command, Some(window_id), &runtime, Some(view), &snapshot_interaction));
                 self.ephemeral = Some(ephemeral);
                 self.stage = Puzzle3dPrecomputeCommandStage::Complete;
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(emit))
@@ -7211,8 +6717,6 @@ impl ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
         ArtifactToolPublicationContract { tool_id: "openAddObjectDialog", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: "transformBegin", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: "transformEnd", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setFillCount", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "addTargetVolume", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -7660,7 +7164,7 @@ impl Puzzle3dRetainedCommandProofs {
         factory_type: Puzzle3dRetainedCommandJobFactory,
         contract: semio_framework::ToolExecutionContract::resumable(PUZZLE3D_IMPORT_RAW_BYTES, PUZZLE3D_IMPORT_DECODED_ITEMS, 1, crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES, crate::retained_command::PUZZLE_COMMAND_STEP_MICROS, 1, 1),
         tools: [
-            "openAddObjectDialog", "worldPointerDown", "transformBegin", "transformEnd", "setActiveExample", "setFillCount",
+            "openAddObjectDialog", "worldPointerDown", "setActiveExample", "setFillCount",
             "addTargetVolume",
             "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "exportFixture", "importFixture", "openImportFixture", "patchInspector", "rotateSelection", "scaleSelection", "setSelectionFlag", "setSelectionHidden", "setSelectionLocked", "setTargetVolumeFlag", "translateSelection", "worldRelocate", "relocateTargetVolume",
             "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementRepeatLast", "engagementSubmit", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "registerBrushMesh", "selectSameKindSelection", "setBrushPlacementContactTolerance", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "targetBrushSuggestions", "toggleSun",
@@ -7940,9 +7444,9 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         }
         let tool_id = request.command.action_id();
         let mut work: Box<dyn crate::retained_command::PuzzleCommandWork<EditorApp<Self>>> = match tool_id {
-            "translateSelection" | "rotateSelection" | "scaleSelection" => Box::new(Puzzle3dScaleWork::new(tool_id)),
+            "translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(Puzzle3dTransformWork::new(tool_id, request.authoring_seed.clone())),
+            "patchInspector" if puzzle3d_inspector_origin_nudge(request.command.args()).is_some() => Box::new(Puzzle3dTransformWork::new(tool_id, request.authoring_seed.clone())),
             "patchInspector" => Box::new(Puzzle3dPatchInspectorWork::default()),
-            "worldRelocate" => Box::new(Puzzle3dWorldRelocateWork::default()),
             "createAttraction" => Box::new(Puzzle3dCreateAttractionWork::default()),
             "setActiveExample" => Box::new(Puzzle3dSetActiveExampleWork::default()),
             "addBrushObject" => Box::new(Puzzle3dAddBrushObjectWork::default()),
@@ -7954,7 +7458,6 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             "acceptSuggestion" => Box::new(Puzzle3dAcceptSuggestionWork::default()),
             "cycleBrushCandidate" | "cycleBrushCandidateBack" | "registerBrushMesh" | "setFillCount" => Box::new(Puzzle3dPrecomputeCommandWork::new(tool_id)),
             "focusSelection" => Box::new(Puzzle3dFocusSelectionWork::default()),
-            "relocateTargetVolume" => Box::new(Puzzle3dRelocateVolumeWork::default()),
             "setCamera"
             | "setProjection"
             | "setProjectionParam"
@@ -7986,7 +7489,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             "openImportFixture" => Box::new(Puzzle3dWindowCommandWork::new(tool_id)),
             "importFixture" => Box::new(Puzzle3dWindowCommandWork::new(tool_id)),
             "addTargetVolume" => Box::new(Puzzle3dWindowCommandWork::new(tool_id)),
-            "worldPointerDown" | "transformBegin" | "transformEnd" => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),
+            "worldPointerDown" => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),
             _ => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent)),
         };
         work.bind_view_state(request.context.view_state.clone());
@@ -8084,7 +7587,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         let window = window_ownership::config_from_view(cfg);
         let runtime = window_ownership::runtime(cfg.snapshot, &window, &window_ownership::Puzzle3dWindowTransient::default(), view_state);
         let window_id = puzzle3d_addressed_window_id(view_state, None, command.window_id(), &runtime.window_ids);
-        Ok(with_puzzle3d_app_for(puzzle3d_view_session_key(doc), &runtime, |app| app.handle_action_impl(command, Some(window_id), doc.snapshot, &runtime, view_state, &interaction).0))
+        let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
+        Ok(with_puzzle3d_app_for(puzzle3d_view_session_key(doc), &runtime, |app| app.handle_action_impl(authoring_seed, command, Some(window_id), doc.snapshot, &runtime, view_state, &interaction).0))
     }
 
     /// 🕹️ `vortex` domain topology (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
@@ -8580,8 +8084,6 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_audience("engagementAbort", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(ActionDefinition::new("engagementControlSelect", LocalizedLabel::native("Engagement Control Select", "Eingabesteuerung auswählen"), ActionKind::View, "hand"))
             .view_action("setTransformGumballFlag", LocalizedLabel::native("Set Transform Gumball Flag", "Transformieren-Griff festlegen"))
-            .action_with(ActionDefinition::new("transformBegin", LocalizedLabel::native("Transform Begin", "Transformieren beginnen"), ActionKind::View, "move"))
-            .view_action("transformEnd", LocalizedLabel::native("Transform End", "Transformieren beenden"))
             .view_action("setVoxelDims", LocalizedLabel::native("Set Voxel Dims", "Voxel-Abmessungen festlegen"))
             .mutation("relocateTargetVolume", LocalizedLabel::native("Relocate Target Volume", "Zielvolumen verlagern"))
             .view_action("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"))
@@ -8754,8 +8256,6 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setVoxelDims", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("targetBrushSuggestions", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("toggleSun", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("transformBegin", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("transformEnd", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("translateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("worldPointerDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("worldRelocate", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -8817,8 +8317,6 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_audience("engagementControlSelect", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("targetBrushSuggestions", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("registerBrushMesh", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("transformBegin", semio_framework_plugin::CapabilityAudience::Input)
-            .action_audience("transformEnd", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("setTransformGumballFlag", semio_framework_plugin::CapabilityAudience::Chrome)
             .action_destructive("importFixture")
             .build_definition()

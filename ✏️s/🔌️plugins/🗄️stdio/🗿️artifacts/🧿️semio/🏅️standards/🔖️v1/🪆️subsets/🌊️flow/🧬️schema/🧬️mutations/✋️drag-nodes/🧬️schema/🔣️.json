@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/flow/mutation/drag-nodes/schema.json",
+  "title": "DragNodes",
+  "description": "The `drag-nodes` mutation record — internally tagged `\"mutation\": \"dragNodes\"`: a set of flow nodes moved by one relative canvas offset.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targets",
+    "dx",
+    "dy"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "dragNodes",
+      "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Nodes",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Nodes to drag; ones the flow lacks are skipped.",
+          "de": "Zu ziehende Knoten; im Fluss fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "graph",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "dx": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset X",
+          "de": "Versatz X"
+        },
+        "description": {
+          "en": "Horizontal canvas offset every node moves by.",
+          "de": "Horizontaler Leinwandversatz, um den jeder Knoten verschoben wird."
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "offset",
+        "order": 20
+      }
+    },
+    "dy": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset Y",
+          "de": "Versatz Y"
+        },
+        "description": {
+          "en": "Vertical canvas offset every node moves by.",
+          "de": "Vertikaler Leinwandversatz, um den jeder Knoten verschoben wird."
+        },
+        "step": 1,
+        "precision": 2,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "offset",
+        "order": 30
+      }
+    }
+  }
+}

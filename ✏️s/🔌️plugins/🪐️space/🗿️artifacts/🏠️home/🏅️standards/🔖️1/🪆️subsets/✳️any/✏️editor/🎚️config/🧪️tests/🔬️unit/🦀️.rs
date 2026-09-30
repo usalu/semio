@@ -87,10 +87,10 @@ fn local_studio_tombstones_are_exact_point_invertible_events() {
 fn local_studio_tombstones_refuse_inadmissible_ids_and_the_ceiling() {
     use store::ArtifactStoreOneItemPreparationFactory as _;
     let full = HomeConfig { retired_local_studio_ids: (0..HOME_RETIRED_LOCAL_STUDIOS_MAXIMUM).map(|index| format!("studio-{index:04}")).collect(), ..HomeConfig::default() };
-    for (mutation, base) in [(HomeConfigMutation::RetireLocalStudio { space_id: "studio-over".into() }, &full), (HomeConfigMutation::RetireLocalStudio { space_id: "bad\u{7}id".into() }, &HomeConfig::default())] {
+    for (mutation, base, code) in [(HomeConfigMutation::RetireLocalStudio { space_id: "studio-over".into() }, &full, "mutation.target-mismatch"), (HomeConfigMutation::RetireLocalStudio { space_id: "bad\u{7}id".into() }, &HomeConfig::default(), "mutation.invariant")] {
         let outcome = mutation.diff(base);
         assert_eq!(outcome.diff(), base);
-        assert!(outcome.messages().iter().any(|message| format!("{message:?}").contains("s.home.local-studio-tombstone-refused")));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == code), "{code}");
     }
     let factory = HomeConfigPreparationFactory;
     assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio { space_id: "studio-a".into() }, None, store::HistoryLane::Document).is_ok());

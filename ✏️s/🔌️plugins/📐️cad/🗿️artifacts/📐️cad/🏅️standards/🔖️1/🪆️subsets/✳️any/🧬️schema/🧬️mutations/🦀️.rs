@@ -156,6 +156,117 @@ pub(crate) fn cad_object_spec_of(object: &crate::standards::v1::subsets::any::io
 }
 //#endregion 🔖️ObjectRecords
 
+//#region 🔖️SelectionTransform
+/// 🔢️ A selection label's number `(en, de)`: two decimals at most, trailing zeros dropped, the German decimal comma.
+pub fn cad_selection_number(value: f64) -> (String, String) {
+    let rounded = (value * 100.0).round() / 100.0;
+    let text = format!("{:.2}", if rounded == 0.0 { 0.0 } else { rounded });
+    let en = text.trim_end_matches('0').trim_end_matches('.').to_string();
+    let de = en.replace('.', ",");
+    (en, de)
+}
+
+/// 📐️ A selection label's vector `(en, de)`: "(1, 0, 2.5)" and "(1; 0; 2,5)".
+pub fn cad_selection_vector(values: [f64; 3]) -> (String, String) {
+    let [x, y, z] = values.map(cad_selection_number);
+    (format!("({}, {}, {})", x.0, y.0, z.0), format!("({}; {}; {})", x.1, y.1, z.1))
+}
+
+/// 🔠️ A selection label's counted noun `(en, de)`: "1 object" / "1 Objekt", "3 objects" / "3 Objekte".
+pub fn cad_selection_items(count: usize) -> (String, String) {
+    match count {
+        1 => ("1 object".to_string(), "1 Objekt".to_string()),
+        count => (format!("{count} objects"), format!("{count} Objekte")),
+    }
+}
+
+/// 🌀️ The Hamilton product `left ⊗ right` of two `(x, y, z, w)` quaternions — a world-axis delta composed onto an
+/// object's own orientation, so a rotation accumulates instead of replacing the pose.
+pub fn cad_quaternion_product(left: [f64; 4], right: [f64; 4]) -> [f64; 4] {
+    let [lx, ly, lz, lw] = left;
+    let [rx, ry, rz, rw] = right;
+    [lw * rx + lx * rw + ly * rz - lz * ry, lw * ry - lx * rz + ly * rw + lz * rx, lw * rz + lx * ry - ly * rx + lz * rw, lw * rw - lx * rx - ly * ry - lz * rz]
+}
+
+/// 🎯️ A selection's target list names at least one object and never one twice.
+pub fn cad_targets_invariant(targets: &[String]) -> Result<(), String> {
+    if targets.is_empty() {
+        return Err("targets must name at least one object".to_string());
+    }
+    match targets.iter().enumerate().find(|(at, id)| targets[..*at].contains(id)) {
+        Some((_, id)) => Err(format!("targets must not repeat {id:?}")),
+        None => Ok(()),
+    }
+}
+
+/// 🧱️ The pre-transform objects a selection transform on `pane` changes, each beside its transformed twin, over the
+/// pane's full object list — `None` when the pane materializes none of the targets.
+pub(crate) fn cad_selection_objects(
+    pane: crate::CadPaneId,
+    targets: &[String],
+    base: &CadSnapshot,
+    transform: impl Fn(&mut crate::standards::v1::subsets::any::io::geometry_import::CadObject),
+) -> Option<(std::sync::Arc<crate::CadWorkingScene>, Vec<crate::standards::v1::subsets::any::io::geometry_import::CadObject>, Vec<crate::standards::v1::subsets::any::io::geometry_import::CadObject>, Vec<String>)> {
+    let scene = crate::cad_pane_local_scene(base, pane)?;
+    let mut objects = crate::cad_scene_pane_objects(&scene, pane).to_vec();
+    let missing: Vec<String> = targets.iter().filter(|id| !objects.iter().any(|object| &object.id == *id)).cloned().collect();
+    if missing.len() == targets.len() {
+        return None;
+    }
+    let mut changed = Vec::new();
+    for object in objects.iter_mut().filter(|object| targets.contains(&object.id)) {
+        let before = object.clone();
+        transform(object);
+        if *object != before {
+            changed.push(before);
+        }
+    }
+    Some((scene, objects, changed, missing))
+}
+
+/// 🧮️ The shared diff of every selection transform on one pane: `transform` rewrites each addressed object the pane
+/// materializes, read off the BASE so the leaf replays on any base. Targets the pane lacks are skipped
+/// (`mutation.partial`), none left is `mutation.target-missing`, an identity motion or an unchanged pose is
+/// `mutation.no-op`, and an empty or repeated target list is a Fatal `mutation.invariant`.
+pub(crate) fn cad_selection_diff(
+    pane: crate::CadPaneId,
+    targets: &[String],
+    identity: bool,
+    base: &CadSnapshot,
+    transform: impl Fn(&mut crate::standards::v1::subsets::any::io::geometry_import::CadObject),
+) -> protocol::MutationOutcome<CadDiff> {
+    if let Err(reason) = cad_targets_invariant(targets) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
+    }
+    let Some((scene, objects, changed, missing)) = cad_selection_objects(pane, targets, base, |object| if !identity { transform(object) }) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("pane {pane:?} materializes none of the {} target(s)", targets.len()), targets.to_vec());
+    };
+    let partial: Vec<protocol::MutationMessage> =
+        (!missing.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped (not in this pane): {}", missing.len(), targets.len(), missing.join(", "))).at(missing)).into_iter().collect();
+    if changed.is_empty() {
+        return protocol::MutationOutcome::new(CadDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "no addressed object changes").at(targets.to_vec())]));
+    }
+    let mut diff = CadDiff::default();
+    crate::cad_pane_child_diff_slot(&mut diff, pane, crate::cad_pane_rematerialized_child(&scene, pane, objects));
+    protocol::MutationOutcome::new(diff).absorb_messages(partial)
+}
+
+/// ↩️ The exact base-derived inverse of a selection transform: the pre-transform objects it changes, which each leaf
+/// folds into ONE absolute pane setter — never a negated offset, angle or factor that would accumulate float error.
+pub(crate) fn cad_selection_inverse_objects(
+    pane: crate::CadPaneId,
+    targets: &[String],
+    identity: bool,
+    base: &CadSnapshot,
+    transform: impl Fn(&mut crate::standards::v1::subsets::any::io::geometry_import::CadObject),
+) -> Vec<crate::standards::v1::subsets::any::io::geometry_import::CadObject> {
+    if identity || cad_targets_invariant(targets).is_err() {
+        return Vec::new();
+    }
+    cad_selection_objects(pane, targets, base, transform).map(|(_, _, changed, _)| changed).unwrap_or_default()
+}
+//#endregion 🔖️SelectionTransform
+
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the cad document, derived per
 /// `📓️derivation-rules.md` from `CadSnapshot`'s shape. `SetSnapshot`/`SetPaneObjects`-as-whole-doc-
@@ -190,6 +301,9 @@ pub enum CadMutation {
     MoveObjects(move_objects::MoveObjects),
     RotateObjects(rotate_objects::RotateObjects),
     ScaleObjects(scale_objects::ScaleObjects),
+    DragSelection(drag_selection::DragSelection),
+    RotateSelection(rotate_selection::RotateSelection),
+    ScaleSelection(scale_selection::ScaleSelection),
 }
 
 /// 🏷️ The kebab-case spelling of every [`CadMutation`] variant, in declaration order — the exact
@@ -221,6 +335,9 @@ pub const KINDS: &[&str] = &[
     "move-objects",
     "rotate-objects",
     "scale-objects",
+    "drag-selection",
+    "rotate-selection",
+    "scale-selection",
 ];
 //#endregion 🔖️Mutations
 
@@ -235,9 +352,12 @@ use super::create_node;
 use super::create_object;
 use super::create_shape_model;
 use super::delete_object;
+use super::drag_selection;
 use super::move_objects;
 use super::rotate_objects;
+use super::rotate_selection;
 use super::scale_objects;
+use super::scale_selection;
 use super::create_structure_classic_model;
 use super::delete_building_model;
 use super::delete_drawing;

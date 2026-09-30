@@ -189,7 +189,12 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "SoilLayer": {
       "title": "SoilLayer",
@@ -372,7 +377,12 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "AnnexChoice": {
       "title": "AnnexChoice",
@@ -392,7 +402,11 @@
             "de": "Deutscher Nationaler Anhang (DIN EN)"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql"
+      ]
     },
     "Pile": {
       "title": "Pile",
@@ -578,7 +592,12 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "FoundationLoadCase": {
       "title": "FoundationLoadCase",
@@ -696,7 +715,12 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "PileTestProfile": {
       "title": "PileTestProfile",
@@ -739,7 +763,12 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     }
   }
 }

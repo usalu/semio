@@ -271,11 +271,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ChangeActionNEd"
+        "ChangeActionNk"
       ],
       "properties": {
-        "ChangeActionNEd": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-action-n-ed/schema.json"
+        "ChangeActionNk": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-action-nk/schema.json"
         }
       }
     },
@@ -283,11 +283,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ChangeActionVEd"
+        "ChangeActionVk"
       ],
       "properties": {
-        "ChangeActionVEd": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-action-v-ed/schema.json"
+        "ChangeActionVk": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-action-vk/schema.json"
         }
       }
     },

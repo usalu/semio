@@ -1823,6 +1823,106 @@ mod tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🚫️rejects-locking-a-volume-the-model-never-held/🦀️.rs"]
                                     mod tests_rejects_locking_a_volume_the_model_never_held;
                                 }
+                                #[path = "."]
+                                pub mod drag_selection_2d {
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection2d/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection2d/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection2d/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection2d/🧪️tests/✋️drags-two-parts/🦀️.rs"]
+                                    mod tests_drags_two_parts;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection2d/🧪️tests/⚠️skips-locked-volume-ghost/🦀️.rs"]
+                                    mod tests_skips_locked_volume_ghost;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection2d/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
+                                    mod tests_rejects_ghosts;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection2d/🧪️tests/⏸️keeps-a-zero-offset/🦀️.rs"]
+                                    mod tests_keeps_a_zero_offset;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection2d/🧪️tests/🧱️no-targets/🦀️.rs"]
+                                    mod tests_no_targets;
+                                }
+                                #[path = "."]
+                                pub mod drag_selection_3d {
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️drag-selection3d/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️drag-selection3d/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️drag-selection3d/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️drag-selection3d/🧪️tests/🚚️drags-part-and-volume/🦀️.rs"]
+                                    mod tests_drags_part_and_volume;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️drag-selection3d/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
+                                    mod tests_skips_locked_ghost;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️drag-selection3d/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
+                                    mod tests_rejects_ghosts;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️drag-selection3d/🧪️tests/⏸️keeps-a-zero-offset/🦀️.rs"]
+                                    mod tests_keeps_a_zero_offset;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️drag-selection3d/🧪️tests/🧱️repeated-targets/🦀️.rs"]
+                                    mod tests_repeated_targets;
+                                }
+                                #[path = "."]
+                                pub mod rotate_selection_3d {
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection3d/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection3d/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection3d/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection3d/🧪️tests/🔄️turns-part-and-volume/🦀️.rs"]
+                                    mod tests_turns_part_and_volume;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection3d/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
+                                    mod tests_skips_locked_ghost;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection3d/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
+                                    mod tests_rejects_ghosts;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection3d/🧪️tests/⏸️keeps-a-zero-angle/🦀️.rs"]
+                                    mod tests_keeps_a_zero_angle;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection3d/🧪️tests/🧱️no-targets/🦀️.rs"]
+                                    mod tests_no_targets;
+                                }
+                                #[path = "."]
+                                pub mod scale_selection_3d {
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection3d/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection3d/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection3d/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection3d/🧪️tests/🔍️scales-parts-and-volume/🦀️.rs"]
+                                    mod tests_scales_parts_and_volume;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection3d/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
+                                    mod tests_skips_locked_ghost;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection3d/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
+                                    mod tests_rejects_ghosts;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection3d/🧪️tests/⏸️keeps-unit-factors/🦀️.rs"]
+                                    mod tests_keeps_unit_factors;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection3d/🧪️tests/🧱️zero-factor/🦀️.rs"]
+                                    mod tests_zero_factor;
+                                }
                             }
                             #[path = "."]
                             pub mod transfer {

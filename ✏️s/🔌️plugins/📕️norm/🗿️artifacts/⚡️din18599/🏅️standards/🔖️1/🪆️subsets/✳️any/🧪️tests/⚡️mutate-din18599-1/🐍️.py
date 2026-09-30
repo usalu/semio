@@ -1,18 +1,12 @@
 """🐍️ DIN V 18599's contribution to the norm reference implementation — the four things that are
 genuinely per-standard, and nothing else.
 
-The second producer this case's differential comparison needs is
-`semio_norm_vocabulary`, the ONE independent Python implementation of the norm mutation vocabulary,
-imported here rather than copied. Its module docstring carries the survey that established no
-third-party library reads or writes `s.norm.*`, the two committed documents it was written from, and
-the honest boundary on the `.dsl.semio` carrier. This file adds no verb, no addressing rule and no
-carrier rule: everything below is DATA read off this subset's own committed catalog, its own
-committed specification vectors and its own committed example document.
-
-Stating it this way is the point. The fifteen norm adapters used to hold fifteen byte-identical
-copies of that engine, which made the reference surface read as fifteen independent implementations
-when it was one. One import says what fifteen copies concealed — a shared bug here agrees with itself
-in all fifteen cases, and that is now visible instead of pretended.
+The second producer this case's differential comparison needs is `semio_norm_vocabulary`, the ONE
+independent Python implementation of the norm mutation vocabulary, imported here rather than copied. Its
+module docstring carries the survey that established no third-party library reads or writes `s.norm.*`
+and the honest boundary on the `.dsl.semio` carrier. This file adds no verb, no addressing rule and no
+carrier rule: everything below is DATA read off this subset's own committed catalog, its own committed
+specification vectors and its own committed example document.
 """
 
 from __future__ import annotations
@@ -28,17 +22,49 @@ build_adapter = _vocabulary.build_adapter
 
 
 # region 🔖️Vocabulary
-#: 🏷️ Every kind this subset's committed catalog declares, in catalog order.
+#: 🏷️ Every kind of `Din18599Mutation`, in the committed catalog's (declaration) order.
 KINDS = [
+    "change-building-category",
+    "change-attachment",
     "change-use-class",
+    "change-method",
     "change-net-floor-area-m2",
+    "change-heated-volume-m3",
+    "change-geg-qp-factor",
+    "change-delta-u-wb",
+    "change-automation-class",
+    "specify-heating-system",
+    "specify-dhw-system",
+    "update-ventilation",
+    "update-cooling",
+    "update-lighting",
+    "update-renewables",
+    "replace-zones",
+    "replace-elements",
+    "change-element-u",
     "update-climate",
 ]
 
-#: 🧫️ The committed specification vector each kind publishes, as (triad directory, fixture name).
+#: 🧫️ The committed specification vector each kind is measured on, as (leaf directory, scenario directory).
 VECTORS = {
-    "change-use-class": ("🏷️use-class", "🏢️reclassifies-the-building-as-an-office"),
-    "change-net-floor-area-m2": ("📐️net-floor-area-m2", "📏️extends-net-floor-area-to-160-m2"),
+    "change-building-category": ("🏠️change-building-category", "🎯️applies-building-category"),
+    "change-attachment": ("🧱change-attachment", "🎯️applies-attachment"),
+    "change-use-class": ("🏷️change-use-class", "🏢️reclassifies-the-building-as-an-office"),
+    "change-method": ("🧮change-method", "🎯️applies-method"),
+    "change-net-floor-area-m2": ("📐️change-net-floor-area-m2", "📏️extends-net-floor-area-to-160-m2"),
+    "change-heated-volume-m3": ("📦change-heated-volume-m3", "🎯️applies-heated-volume-m3"),
+    "change-geg-qp-factor": ("⚖️change-geg-qp-factor", "🎯️applies-geg-qp-factor"),
+    "change-delta-u-wb": ("🌉change-delta-u-wb", "🎯️applies-delta-u-wb"),
+    "change-automation-class": ("🎛️change-automation-class", "🎯️applies-automation-class"),
+    "specify-heating-system": ("🔥specify-heating-system", "🎯️applies-specify-heating-system"),
+    "specify-dhw-system": ("🚿specify-dhw-system", "🎯️applies-specify-dhw-system"),
+    "update-ventilation": ("🌬️update-ventilation", "🎯️applies-update-ventilation"),
+    "update-cooling": ("❄️update-cooling", "🎯️applies-update-cooling"),
+    "update-lighting": ("💡update-lighting", "🎯️applies-update-lighting"),
+    "update-renewables": ("☀️update-renewables", "🎯️applies-update-renewables"),
+    "replace-zones": ("🗺️replace-zones", "🎯️applies-replace-zones"),
+    "replace-elements": ("🧩replace-elements", "🎯️applies-replace-elements"),
+    "change-element-u": ("🌡️change-element-u", "🎯️applies-change-element-u"),
     "update-climate": ("🌦️update-climate", "🌧️refuses-a-negative-january-irradiance"),
 }
 

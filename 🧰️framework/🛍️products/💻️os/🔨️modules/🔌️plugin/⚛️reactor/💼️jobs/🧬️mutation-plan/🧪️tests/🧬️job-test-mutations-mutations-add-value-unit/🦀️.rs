@@ -83,7 +83,7 @@ fn mixed_inverse_groups_stay_forward_before_store_reversal() {
         if let Some(value) = row.get("wrongReversedGroups") {
             let deltas: Vec<i32> = serde_json::from_value(value.clone()).expect("wrong group order");
             let wrong = deltas.into_iter().map(|delta| JobTestOp::AddValue(AddValue { delta })).collect::<Vec<_>>();
-            assert_eq!(apply_stored_inverse(&wrong, &state).expect_err("wrong group order overflows").code, "job-test.value-overflow");
+            assert_eq!(apply_stored_inverse(&wrong, &state).expect_err("wrong group order overflows").code, "mutation.apply.value-overflow");
         }
     }
 }

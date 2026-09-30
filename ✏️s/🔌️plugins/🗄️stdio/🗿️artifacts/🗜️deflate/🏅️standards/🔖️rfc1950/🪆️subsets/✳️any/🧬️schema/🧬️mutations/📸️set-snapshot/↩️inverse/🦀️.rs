@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `set-snapshot`.
 
 use crate::DeflateSnapshot;
-use crate::schema::mutations::{DeflateMutation, apply_deflate_mutation};
+use crate::schema::mutations::DeflateMutation;
 use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.

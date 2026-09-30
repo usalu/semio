@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeMaterialSpecificHeat, base: &EnergyModelSnaps
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Material {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_specific_heat_j_kg_k.is_finite() || payload.new_specific_heat_j_kg_k <= 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Material {}: specific heat (J/kg·K) must be a positive finite value, got {}.", payload.id.0, payload.new_specific_heat_j_kg_k), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Material {}: specific heat (J/kg·K) must be a positive finite value, got {}.", payload.id.0, payload.new_specific_heat_j_kg_k), [payload.id.0.to_string()]);
     }
     if existing.specific_heat_j_kg_k == payload.new_specific_heat_j_kg_k {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Material {} already carries this specific heat (J/kg·K): {}.", payload.id.0, payload.new_specific_heat_j_kg_k));

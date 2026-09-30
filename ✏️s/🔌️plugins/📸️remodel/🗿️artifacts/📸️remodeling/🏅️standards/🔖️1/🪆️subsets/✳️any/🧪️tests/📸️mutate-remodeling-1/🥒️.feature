@@ -43,7 +43,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
 
   ⛓️ OWNERSHIP AND ORDER are the two laws every vector here is measured against. A `delete-*` takes
   what its record OWNS with it (a stream carries its frames, a GCP its observations) and REFUSES with
-  `mutation.referenced` when something that merely names it would be left dangling — a GCP observation
+  `mutation.target-referenced` when something that merely names it would be left dangling — a GCP observation
   addressing the stream, a stream binding or rig entry naming the camera, a frame, texture or geo
   product naming the asset. And every keyed collection is held in ascending key order, so a
   `create-*`/`add-*` puts a member back exactly where a `delete-*`/`remove-*` took it from. Together
@@ -79,7 +79,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
   shared://🏁️commit-reconstruction/⬅️before.json is the two-stream unit scene every toy vector
   starts from, shared://🏁️commit-reconstruction/🦠️mutation.json commits a sparse cloud naming content
   that scene never published, and shared://🏁️commit-reconstruction/➡️after.json is the before-document unchanged,
-  because the documented answer is `mutation.invalid-reconstruction-sparse` and a refused commit must
+  because the documented answer is `mutation.target-mismatch` and a refused commit must
   leave the scene untouched. Its two scenarios address that vector by the same doc-string mechanism as
   every other row — three `shared://` URIs in place of the triple a `<vector>` builds — so both halves
   resolve it at run time and both halves answer for it, the reference deriving the refusal from the
@@ -212,32 +212,32 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | refuses-to-pick-3c0570   | add-gcp-observation       | 🔎add-gcp-observation/🚫️refuses-to-pick-3c0570         | mutation.target-missing                |
       | refuses-a-frame-81beea   | add-stream-frame          | ➕add-stream-frame/🎬️refuses-a-frame-81beea            | mutation.target-missing                |
       | refuses-to-c93e98        | add-stream-frame          | ➕add-stream-frame/🚫️refuses-to-c93e98                 | mutation.target-missing                |
-      | refuses-a-gap            | append-content            | 📦append-content/🚫️refuses-a-gap                       | mutation.content-gap                   |
+      | refuses-a-gap            | append-content            | 📦append-content/🚫️refuses-a-gap                       | mutation.target-mismatch               |
       | refuses-to-8095d3        | change-stream-sync        | ⏱️change-stream-sync/🚫️refuses-to-8095d3              | mutation.target-missing                |
-      | rejects-an-e9fa51        | commit-reconstruction     | 🏁commit-reconstruction/🖼️rejects-an-e9fa51            | mutation.invalid-reconstruction-asset  |
-      | rejects-an-5d3a60        | commit-reconstruction     | 🏁commit-reconstruction/🕸️rejects-an-5d3a60            | mutation.invalid-reconstruction-mesh   |
-      | rejects-an-2e5568        | commit-reconstruction     | 🏁commit-reconstruction/⭐️rejects-an-2e5568            | mutation.invalid-reconstruction-sparse |
-      | refuses-an-asset-cb0d4b  | create-asset              | 🧷create-asset/🚫️refuses-an-asset-cb0d4b               | mutation.invalid-asset-payload         |
+      | rejects-an-e9fa51        | commit-reconstruction     | 🏁commit-reconstruction/🖼️rejects-an-e9fa51            | mutation.target-mismatch               |
+      | rejects-an-5d3a60        | commit-reconstruction     | 🏁commit-reconstruction/🕸️rejects-an-5d3a60            | mutation.target-mismatch               |
+      | rejects-an-2e5568        | commit-reconstruction     | 🏁commit-reconstruction/⭐️rejects-an-2e5568            | mutation.target-mismatch               |
+      | refuses-an-asset-cb0d4b  | create-asset              | 🧷create-asset/🚫️refuses-an-asset-cb0d4b               | mutation.invariant                     |
       | refuses-a-camera-e92a02  | create-camera-calibration | 🔭create-camera-calibration/🚫️refuses-a-camera-e92a02  | mutation.duplicate-id                  |
       | refuses-a-19c1ab         | create-gcp                | 🧿create-gcp/🚫️refuses-a-19c1ab                        | mutation.duplicate-id                  |
       | refuses-a-second-95e04d  | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🚫️refuses-a-second-95e04d      | mutation.duplicate-id                  |
       | refuses-a-rig-cb71ba     | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🚫️refuses-a-rig-cb71ba         | mutation.target-missing                |
       | rejects-a-6b58da         | create-stream             | 🌱create-stream/🔂️rejects-a-6b58da                     | mutation.duplicate-id                  |
       | rejects-a-stream-aac5c2  | create-stream             | 🌱create-stream/👻️rejects-a-stream-aac5c2              | mutation.target-missing                |
-      | refuses-to-5c6f74        | delete-asset              | 🗞️delete-asset/🗺️refuses-to-5c6f74                    | mutation.referenced                    |
+      | refuses-to-5c6f74        | delete-asset              | 🗞️delete-asset/🗺️refuses-to-5c6f74                    | mutation.target-referenced             |
       | refuses-to-c4563a        | delete-asset              | 🗞️delete-asset/🚫️refuses-to-c4563a                    | mutation.target-missing                |
-      | refuses-to-f9541f        | delete-asset              | 🗞️delete-asset/🖼️refuses-to-f9541f                    | mutation.referenced                    |
+      | refuses-to-f9541f        | delete-asset              | 🗞️delete-asset/🖼️refuses-to-f9541f                    | mutation.target-referenced             |
       | refuses-to-73655a        | delete-camera-calibration | 🚫delete-camera-calibration/🚫️refuses-to-73655a        | mutation.target-missing                |
-      | refuses-to-remove-3c8f32 | delete-camera-calibration | 🚫delete-camera-calibration/⛓️refuses-to-remove-3c8f32 | mutation.referenced                    |
+      | refuses-to-remove-3c8f32 | delete-camera-calibration | 🚫delete-camera-calibration/⛓️refuses-to-remove-3c8f32 | mutation.target-referenced             |
       | refuses-to-12366b        | delete-gcp                | 🚮delete-gcp/🚫️refuses-to-12366b                       | mutation.target-missing                |
       | refuses-to-1805df        | delete-rig-extrinsic      | ✂️delete-rig-extrinsic/🚫️refuses-to-1805df            | mutation.target-missing                |
       | refuses-to-3c20ff        | delete-stream             | 🪓delete-stream/🚫️refuses-to-3c20ff                    | mutation.target-missing                |
-      | refuses-to-remove-422a37 | delete-stream             | 🪓delete-stream/⛓️refuses-to-remove-422a37             | mutation.referenced                    |
+      | refuses-to-remove-422a37 | delete-stream             | 🪓delete-stream/⛓️refuses-to-remove-422a37             | mutation.target-referenced             |
       | refuses-missing-content  | remove-content            | 🔪remove-content/🚫️refuses-missing-content             | mutation.target-missing                |
       | refuses-an-109cf1        | remove-gcp-observation    | 🚷remove-gcp-observation/🚫️refuses-an-109cf1           | mutation.target-missing                |
       | refuses-a-frame-e7c374   | remove-stream-frame       | ➖remove-stream-frame/🚫️refuses-a-frame-e7c374         | mutation.target-missing                |
       | refuses-to-clear-b8c54a  | replace-geo-products      | 🗾replace-geo-products/🚫️refuses-to-clear-b8c54a       | mutation.target-missing                |
-      | refuses-a-48f3a6         | replace-mesh-result       | 🧱replace-mesh-result/🚫️refuses-a-48f3a6               | mutation.incomplete-mesh               |
+      | refuses-a-48f3a6         | replace-mesh-result       | 🧱replace-mesh-result/🚫️refuses-a-48f3a6               | mutation.target-mismatch               |
       | refuses-to-clear-30cbb5  | replace-qc                | 🧾replace-qc/🚫️refuses-to-clear-30cbb5                 | mutation.target-missing                |
       | refuses-to-f7f40d        | replace-stream-source     | 🔁replace-stream-source/🚫️refuses-to-f7f40d            | mutation.target-missing                |
       | refuses-to-clear-524569  | replace-trajectory        | 🛣️replace-trajectory/🚫️refuses-to-clear-524569        | mutation.target-missing                |
@@ -303,7 +303,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
     Then the document is left untouched and the declared <code> refusal was raised
     Examples:
       | id                    | kind                  | code                                   |
-      | commit-reconstruction | commit-reconstruction | mutation.invalid-reconstruction-sparse |
+      | commit-reconstruction | commit-reconstruction | mutation.target-mismatch               |
 
   @id-inverse
   @level-exhaustive
@@ -426,36 +426,36 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
       | refuses-a-frame-81beea      | add-stream-frame          | ➕add-stream-frame/🎬️refuses-a-frame-81beea            | mutation.target-missing                |
       | refuses-to-c93e98           | add-stream-frame          | ➕add-stream-frame/🚫️refuses-to-c93e98                 | mutation.target-missing                |
       | warns-that-the-1e8abe       | add-stream-frame          | ➕add-stream-frame/🔁️warns-that-the-1e8abe             | mutation.no-op                         |
-      | refuses-a-gap               | append-content            | 📦append-content/🚫️refuses-a-gap                       | mutation.content-gap                   |
+      | refuses-a-gap               | append-content            | 📦append-content/🚫️refuses-a-gap                       | mutation.target-mismatch               |
       | warns-that-the-leaves-exist | append-content            | 📦append-content/🔁️warns-that-the-leaves-exist         | mutation.no-op                         |
       | refuses-to-8095d3           | change-stream-sync        | ⏱️change-stream-sync/🚫️refuses-to-8095d3              | mutation.target-missing                |
       | warns-that-the-a98c13       | change-stream-sync        | ⏱️change-stream-sync/🔁️warns-that-the-a98c13          | mutation.no-op                         |
-      | rejects-an-e9fa51           | commit-reconstruction     | 🏁commit-reconstruction/🖼️rejects-an-e9fa51            | mutation.invalid-reconstruction-asset  |
-      | rejects-an-5d3a60           | commit-reconstruction     | 🏁commit-reconstruction/🕸️rejects-an-5d3a60            | mutation.invalid-reconstruction-mesh   |
-      | rejects-an-2e5568           | commit-reconstruction     | 🏁commit-reconstruction/⭐️rejects-an-2e5568            | mutation.invalid-reconstruction-sparse |
-      | refuses-an-asset-cb0d4b     | create-asset              | 🧷create-asset/🚫️refuses-an-asset-cb0d4b               | mutation.invalid-asset-payload         |
+      | rejects-an-e9fa51           | commit-reconstruction     | 🏁commit-reconstruction/🖼️rejects-an-e9fa51            | mutation.target-mismatch               |
+      | rejects-an-5d3a60           | commit-reconstruction     | 🏁commit-reconstruction/🕸️rejects-an-5d3a60            | mutation.target-mismatch               |
+      | rejects-an-2e5568           | commit-reconstruction     | 🏁commit-reconstruction/⭐️rejects-an-2e5568            | mutation.target-mismatch               |
+      | refuses-an-asset-cb0d4b     | create-asset              | 🧷create-asset/🚫️refuses-an-asset-cb0d4b               | mutation.invariant                     |
       | refuses-a-camera-e92a02     | create-camera-calibration | 🔭create-camera-calibration/🚫️refuses-a-camera-e92a02  | mutation.duplicate-id                  |
       | refuses-a-19c1ab            | create-gcp                | 🧿create-gcp/🚫️refuses-a-19c1ab                        | mutation.duplicate-id                  |
       | refuses-a-second-95e04d     | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🚫️refuses-a-second-95e04d      | mutation.duplicate-id                  |
       | refuses-a-rig-cb71ba        | create-rig-extrinsic      | ⛓️create-rig-extrinsic/🚫️refuses-a-rig-cb71ba         | mutation.target-missing                |
       | rejects-a-6b58da            | create-stream             | 🌱create-stream/🔂️rejects-a-6b58da                     | mutation.duplicate-id                  |
       | rejects-a-stream-aac5c2     | create-stream             | 🌱create-stream/👻️rejects-a-stream-aac5c2              | mutation.target-missing                |
-      | refuses-to-5c6f74           | delete-asset              | 🗞️delete-asset/🗺️refuses-to-5c6f74                    | mutation.referenced                    |
+      | refuses-to-5c6f74           | delete-asset              | 🗞️delete-asset/🗺️refuses-to-5c6f74                    | mutation.target-referenced             |
       | refuses-to-c4563a           | delete-asset              | 🗞️delete-asset/🚫️refuses-to-c4563a                    | mutation.target-missing                |
-      | refuses-to-f9541f           | delete-asset              | 🗞️delete-asset/🖼️refuses-to-f9541f                    | mutation.referenced                    |
+      | refuses-to-f9541f           | delete-asset              | 🗞️delete-asset/🖼️refuses-to-f9541f                    | mutation.target-referenced             |
       | refuses-to-73655a           | delete-camera-calibration | 🚫delete-camera-calibration/🚫️refuses-to-73655a        | mutation.target-missing                |
-      | refuses-to-remove-3c8f32    | delete-camera-calibration | 🚫delete-camera-calibration/⛓️refuses-to-remove-3c8f32 | mutation.referenced                    |
+      | refuses-to-remove-3c8f32    | delete-camera-calibration | 🚫delete-camera-calibration/⛓️refuses-to-remove-3c8f32 | mutation.target-referenced             |
       | refuses-to-12366b           | delete-gcp                | 🚮delete-gcp/🚫️refuses-to-12366b                       | mutation.target-missing                |
       | refuses-to-1805df           | delete-rig-extrinsic      | ✂️delete-rig-extrinsic/🚫️refuses-to-1805df            | mutation.target-missing                |
       | refuses-to-3c20ff           | delete-stream             | 🪓delete-stream/🚫️refuses-to-3c20ff                    | mutation.target-missing                |
-      | refuses-to-remove-422a37    | delete-stream             | 🪓delete-stream/⛓️refuses-to-remove-422a37             | mutation.referenced                    |
+      | refuses-to-remove-422a37    | delete-stream             | 🪓delete-stream/⛓️refuses-to-remove-422a37             | mutation.target-referenced             |
       | refuses-missing-content     | remove-content            | 🔪remove-content/🚫️refuses-missing-content             | mutation.target-missing                |
       | refuses-an-109cf1           | remove-gcp-observation    | 🚷remove-gcp-observation/🚫️refuses-an-109cf1           | mutation.target-missing                |
       | refuses-a-frame-e7c374      | remove-stream-frame       | ➖remove-stream-frame/🚫️refuses-a-frame-e7c374         | mutation.target-missing                |
       | warns-that-the-675b6e       | replace-dense             | ☁️replace-dense/🔁️warns-that-the-675b6e               | mutation.no-op                         |
       | refuses-to-clear-b8c54a     | replace-geo-products      | 🗾replace-geo-products/🚫️refuses-to-clear-b8c54a       | mutation.target-missing                |
       | warns-that-the-b39bab       | replace-mesh-result       | 🧱replace-mesh-result/🔁️warns-that-the-b39bab          | mutation.no-op                         |
-      | refuses-a-48f3a6            | replace-mesh-result       | 🧱replace-mesh-result/🚫️refuses-a-48f3a6               | mutation.incomplete-mesh               |
+      | refuses-a-48f3a6            | replace-mesh-result       | 🧱replace-mesh-result/🚫️refuses-a-48f3a6               | mutation.target-mismatch               |
       | refuses-to-clear-30cbb5     | replace-qc                | 🧾replace-qc/🚫️refuses-to-clear-30cbb5                 | mutation.target-missing                |
       | warns-that-the-56a3a9       | replace-sparse            | ⭐replace-sparse/🔁️warns-that-the-56a3a9               | mutation.no-op                         |
       | refuses-to-f7f40d           | replace-stream-source     | 🔁replace-stream-source/🚫️refuses-to-f7f40d            | mutation.target-missing                |
@@ -496,7 +496,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
     Then the document is the committed before-document again, member positions included, and the two implementations agree
     Examples:
       | id                    | kind                  | code                                   |
-      | commit-reconstruction | commit-reconstruction | mutation.invalid-reconstruction-sparse |
+      | commit-reconstruction | commit-reconstruction | mutation.target-mismatch               |
 
   @id-identity-round-trip
   @level-long

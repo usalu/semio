@@ -1,0 +1,97 @@
+{
+  "schema": "semio.test.document-http-removal/v1",
+  "neutral": {
+    "schema": "semio.os.document-http-port/v1",
+    "owner": "neutral",
+    "serviceId": "neutral.service",
+    "operations": [
+      {
+        "action": "run",
+        "method": "POST",
+        "route": [
+          "contributed",
+          "neutral",
+          "run"
+        ],
+        "sendBody": true,
+        "cursorField": null,
+        "requestMaxBytes": 1024,
+        "responseMaxBytes": 1024,
+        "inputSchema": "{\"$schema\": \"http://json-schema.org/draft-07/schema#\", \"$id\": \"neutral:request\", \"type\": \"object\", \"additionalProperties\": false, \"required\": [\"schema\", \"value\"], \"properties\": {\"schema\": {\"const\": \"neutral.request/v1\"}, \"value\": {\"type\": \"integer\", \"minimum\": 0, \"maximum\": 16}}}",
+        "outputSchema": "{\"$schema\": \"http://json-schema.org/draft-07/schema#\", \"$id\": \"neutral:reply\", \"type\": \"object\", \"additionalProperties\": false, \"required\": [\"schema\", \"value\"], \"properties\": {\"schema\": {\"const\": \"neutral.reply/v1\"}, \"value\": {\"type\": \"integer\", \"minimum\": 0, \"maximum\": 16}}}"
+      }
+    ]
+  },
+  "secondary": {
+    "schema": "semio.os.document-http-port/v1",
+    "owner": "secondary",
+    "serviceId": "secondary.service",
+    "operations": [
+      {
+        "action": "run",
+        "method": "POST",
+        "route": [
+          "contributed",
+          "secondary",
+          "run"
+        ],
+        "sendBody": true,
+        "cursorField": null,
+        "requestMaxBytes": 1024,
+        "responseMaxBytes": 1024,
+        "inputSchema": "{\"$schema\": \"http://json-schema.org/draft-07/schema#\", \"$id\": \"secondary:request\", \"type\": \"object\", \"additionalProperties\": false, \"required\": [\"schema\", \"value\"], \"properties\": {\"schema\": {\"const\": \"secondary.request/v1\"}, \"value\": {\"type\": \"integer\", \"minimum\": 0, \"maximum\": 16}}}",
+        "outputSchema": "{\"$schema\": \"http://json-schema.org/draft-07/schema#\", \"$id\": \"secondary:reply\", \"type\": \"object\", \"additionalProperties\": false, \"required\": [\"schema\", \"value\"], \"properties\": {\"schema\": {\"const\": \"secondary.reply/v1\"}, \"value\": {\"type\": \"integer\", \"minimum\": 0, \"maximum\": 16}}}"
+      }
+    ]
+  },
+  "request": {
+    "schema": "neutral.request/v1",
+    "value": 7
+  },
+  "reply": {
+    "schema": "neutral.reply/v1",
+    "value": 7
+  },
+  "vectors": [
+    {
+      "name": "valid",
+      "value": {
+        "schema": "neutral.request/v1",
+        "value": 7
+      },
+      "valid": true
+    },
+    {
+      "name": "foreign-schema",
+      "value": {
+        "schema": "secondary.request/v1",
+        "value": 7
+      },
+      "valid": false
+    },
+    {
+      "name": "unknown-field",
+      "value": {
+        "schema": "neutral.request/v1",
+        "value": 7,
+        "extra": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "unbounded",
+      "value": {
+        "schema": "neutral.request/v1",
+        "value": 17
+      },
+      "valid": false
+    }
+  ],
+  "lifecycle": [
+    "install-neutral",
+    "install-secondary",
+    "remove-secondary",
+    "install-secondary",
+    "remove-secondary"
+  ]
+}

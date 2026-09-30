@@ -110,7 +110,7 @@ pub mod derived_construction {
             let outcome = <SHomeMutation as protocol::Mutation<SHomeSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }

@@ -527,12 +527,18 @@ def set_header_records(model, header: dict) -> None:
 
 
 def add_instance(model, instance: dict) -> None:
-    """➕ One `Part21Instance` wire record added at its own id through IfcOpenShell's typed API."""
+    """➕ One `Part21Instance` wire record added at its own id through IfcOpenShell's typed API. An unset argument is
+    left unset rather than assigned `None`: IfcOpenShell refuses to null a mandatory attribute explicitly, and an
+    attribute it never set is written as `$` all the same."""
     records = instance["entities"]
     if len(records) != 1:
         raise ValueError("IfcOpenShell's typed API cannot construct a complex (multi-type) instance; #%s asks for %d records" % (instance["id"], len(records)))
-    scratch = ifcopenshell.file(schema=model.schema)
-    model.add(scratch.create_entity(records[0]["typeName"], *[literal(argument) for argument in records[0]["arguments"]]), int(instance["id"]))
+    created = ifcopenshell.file(schema=model.schema).create_entity(records[0]["typeName"])
+    for index, argument in enumerate(records[0]["arguments"]):
+        value = literal(argument)
+        if value is not None:
+            created[index] = value
+    model.add(created, int(instance["id"]))
 
 
 def snapshot_model(snapshot: dict):

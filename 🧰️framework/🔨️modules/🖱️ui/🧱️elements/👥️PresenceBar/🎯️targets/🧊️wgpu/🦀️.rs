@@ -50,6 +50,16 @@ pub struct PresencePeerRow {
     /// 🤖️ The hub-admitted principal is an AI agent acting under a delegation — React's `isAgent`: the row
     /// carries the agent badge inside its accessible name, and is never folded into its delegating human.
     pub is_agent: bool,
+    /// ⏪️ What the peer is doing that the roster names — React's `activity`: its host-localized `text` is part of the
+    /// row's accessible name, its `badge` marks the row visibly (a peer editing the history in time travel wears `⏪`).
+    pub activity: Option<PresenceActivity>,
+}
+
+/// ⏪️ One peer activity the roster names — React's `PresencePeer.activity`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PresenceActivity {
+    pub text: String,
+    pub badge: String,
 }
 
 //#region 🔖️Palette
@@ -140,6 +150,9 @@ pub fn build_presence_bar_localized(id: impl Into<String>, peers: &[PresencePeer
         if peer.is_agent {
             row.push(presence_stack(format!("peer-agent-badge:{}", peer.actor), vec![presence_text(presence_agent_label(locale))]));
         }
+        if let Some(activity) = &peer.activity {
+            row.push(presence_stack(format!("peer-activity-badge:{}", peer.actor), vec![presence_text(activity.badge.clone()), presence_text(activity.text.clone())]));
+        }
         children.push(presence_stack(format!("peer:{}", peer.actor), row));
     }
 
@@ -182,7 +195,43 @@ pub fn presence_bar_chip_text(peers: &[PresencePeerRow], max: Option<usize>, loc
     }
     let max = max.unwrap_or(PRESENCE_BAR_DEFAULT_MAX);
     let visible_count = peers.len().min(max);
-    let mut parts: Vec<String> = peers[..visible_count].iter().map(|peer| if peer.is_agent { format!("{} ({})", peer.label, presence_agent_label(locale)) } else { peer.label.clone() }).collect();
+    let mut parts: Vec<String> = peers[..visible_count]
+        .iter()
+        .map(|peer| {
+            let name = if peer.is_agent { format!("{} ({})", peer.label, presence_agent_label(locale)) } else { peer.label.clone() };
+            match &peer.activity {
+                Some(activity) => format!("{name} {}", activity.badge),
+                None => name,
+            }
+        })
+        .collect();
+    if peers.len() > visible_count {
+        parts.push(presence_overflow_label(peers.len() - visible_count, locale));
+    }
+    parts.join(" · ")
+}
+
+/// ♿️ What the roster chip is announced as — React's per-row `aria-label` joined like [`presence_bar_chip_text`]: each
+/// visible peer is its name with its qualifiers in parentheses (the agent word, then its activity text), never the
+/// decorative badge, then the overflow suffix.
+// 🚫️async: E1 pure accessor consumed by sync render/paint call sites — see R9
+pub fn presence_bar_chip_accessible_text(peers: &[PresencePeerRow], max: Option<usize>, locale: Locale) -> String {
+    if peers.is_empty() {
+        return presence_empty_label(locale);
+    }
+    let max = max.unwrap_or(PRESENCE_BAR_DEFAULT_MAX);
+    let visible_count = peers.len().min(max);
+    let mut parts: Vec<String> = peers[..visible_count]
+        .iter()
+        .map(|peer| {
+            let qualifiers: Vec<String> = peer.is_agent.then(|| presence_agent_label(locale)).into_iter().chain(peer.activity.as_ref().map(|activity| activity.text.clone())).collect();
+            if qualifiers.is_empty() {
+                peer.label.clone()
+            } else {
+                format!("{} ({})", peer.label, qualifiers.join(", "))
+            }
+        })
+        .collect();
     if peers.len() > visible_count {
         parts.push(presence_overflow_label(peers.len() - visible_count, locale));
     }

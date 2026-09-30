@@ -42,9 +42,10 @@ envelope preamble and the ordered `key=value` fields as written — a shape deri
 artifacts' own committed bytes and PINNED by re-emitting each file byte for byte, which a misreading
 could not do. It deliberately does not map carrier tokens onto the JSON snapshot's enum spellings:
 that mapping is stated nowhere, and inferring it would be reverse-engineering rather than a second
-reading. Two subsets — `iso16757` and `vdi3805` — write a nesting notation this grammar-less carrier
-cannot describe, and this module REFUSES them rather than guessing; that refusal is a standing
-finding about the specification, not a defect to be tuned away.
+reading. Two subsets — `iso16757` and `vdi3805` — continue a field's record or list value over the
+following lines; those lines are read the way a table's rows are, as written and balanced by their
+unquoted brackets, so the nesting is carried byte for byte and still never interpreted. That nesting
+notation has no published grammar either, which stays a standing finding about the specification.
 
 🔗 Reached by the fifteen adapters through the `oracleHostPackage` this plugin's
 `🔣️oracle.json` declares, which puts this directory on the generated host's import path.
@@ -147,11 +148,211 @@ def collection_key(document, kind):
         key = key_of(document, candidate)
         if key is not None:
             return key
+    segments = noun.split("-")
+    for cut in range(len(segments) - 1, 0, -1):
+        for candidate in collection_names("-".join(segments[:cut])):
+            key = key_of(document, candidate)
+            if key is not None and isinstance(document.get(key), list):
+                return key
+    for cut in range(1, len(segments)):
+        for candidate in collection_names("-".join(segments[cut:])):
+            key = key_of(document, candidate)
+            if key is not None and isinstance(document.get(key), list):
+                return key
     lists = [key for key, value in document.items() if isinstance(value, list)]
     if len(lists) == 1:
         return lists[0]
     slots = [key for key, value in document.items() if is_composed_slot(value)]
     return slots[0] if len(slots) == 1 else None
+
+
+def collection_names(entity):
+    """🔠 The spellings a collection of `entity` records may carry — the regular `-s` plural first, then
+    the `-y → -ies` one, then the bare noun — so `storey` finds `storeys` and `assessment` `assessments`."""
+    return (entity + "s", re.sub(r"y$", "ies", entity), entity)
+
+
+def facet_slot(document, name, value):
+    """🧱 The slot an `update` facet argument replaces as a whole: the document field its name spells,
+    or the member of the like-named collection that carries the facet's own `id` — `bridgeFatigueItem`
+    naming one item of `bridgeFatigue` — else, an upsert, the slot one past that collection's end."""
+    key = key_of(document, name)
+    if key is not None:
+        return document, key
+    entity = facet_entity(name)
+    for candidate in collection_names(entity):
+        parent, key = find_container(document, candidate)
+        if parent is not None and isinstance(parent[key], list) and isinstance(value, dict) and "id" in value:
+            position = next((position for position, member in enumerate(parent[key]) if isinstance(member, dict) and member.get("id") == value["id"]), None)
+            return parent[key], len(parent[key]) if position is None else position
+    return None, None
+
+
+def facet_entity(name):
+    """🏷️ The entity an `update` facet argument names: its own spelling, less a trailing `Item`."""
+    return re.sub(r"(?<=[a-z0-9])[-_]?[Ii]tem$", "", str(name))
+
+
+def place(owner, slot, value):
+    """📥 Writes one slot, appending when the slot is one past the end of a list."""
+    if isinstance(owner, list) and slot == len(owner):
+        owner.append(copy.deepcopy(value))
+    else:
+        owner[slot] = copy.deepcopy(value)
+
+
+def kebab(name):
+    """🔤 A camelCase or snake_case name in the kind noun's kebab spelling."""
+    return re.sub(r"(?<!^)(?=[A-Z])", "-", str(name)).lower().replace("_", "-")
+
+
+def qualified_field(member, kind, name):
+    """🔬 The `(owner, key)` of `name` inside one collection member, preferring the sub-record the kind's noun
+    names just before the field — `change-beam-stud-spacing-m {index, newSpacingM}` writes the beam's
+    `studs.spacingM`, not the beam's own `spacingM` — else the shallowest field so spelled."""
+    segments, field = kind.split("-")[1:], kebab(name).split("-")
+    if len(segments) > len(field) and segments[-len(field):] == field:
+        rest = segments[: -len(field)]
+        for cut in range(len(rest)):
+            for candidate in collection_names("-".join(rest[cut:])):
+                holder = key_of(member, candidate) if isinstance(member, dict) else None
+                if holder is not None and isinstance(member[holder], dict) and key_of(member[holder], name) is not None:
+                    return member[holder], key_of(member[holder], name)
+    return member_field(member, name)
+
+
+def selected_field(document, kind, address):
+    """🎚️ The field a selector argument picks out of a family: `change-buckling-length {axis: "z", newLength}`
+    writes `bucklingLengthZ` — the kind's noun followed by the selector's value — where the record holds it."""
+    if not isinstance(document, dict):
+        return None
+    noun = kind.split("-", 1)[1]
+    return next((key_of(document, noun + "-" + value) for value in address.values() if isinstance(value, str) and key_of(document, noun + "-" + value) is not None), None)
+
+
+def qualified_slot(document, kind, name, replacement):
+    """🧷 The last-resort slot of a `new<Field>` no owner locates: the field the kind's noun followed by the
+    field spells (`change-design-working-life {newYears}` writes `designWorkingLifeYears`), else the shallowest
+    field a trailing part of the field's own name spells that could hold the value
+    (`change-manufacturer-file {newManufacturerFile}` writes the catalog's `file`)."""
+    key = key_of(document, kind.split("-", 1)[1] + "-" + str(name))
+    if key is not None:
+        return document, key
+    segments = kebab(name).split("-")
+    for cut in range(1, len(segments)):
+        parent, key = find_container(document, "-".join(segments[cut:]))
+        if parent is not None and compatible(parent[key], replacement):
+            return parent, key
+    return None, None
+
+
+def member_field(member, name):
+    """🔬 The `(owner, key)` of the shallowest field spelled `name` inside one collection member — its own
+    fields first, then its nested records and lists breadth-first in order — or `(None, None)`. The naming
+    mechanic names a field, not its depth: `change-accidental-assumed-force` writes the `assumedForce` the
+    case's impact record carries."""
+    frontier = [member]
+    while frontier:
+        nested = []
+        for node in frontier:
+            if isinstance(node, dict):
+                key = key_of(node, name)
+                if key is not None:
+                    return node, key
+                nested.extend(value for value in node.values() if isinstance(value, (dict, list)))
+            elif isinstance(node, list):
+                nested.extend(value for value in node if isinstance(value, (dict, list)))
+        frontier = nested
+    return None, None
+
+
+def indexed_collection(document, kind, names):
+    """📚 The ordered collection an index-addressed setter writes: the one the kind's noun names, else the one
+    collection whose every member carries each named field — `change-self-weight-assumed-gk` finds the
+    collection whose members hold `assumedGk`, where no spelling of `self-weight` names it."""
+    items = document.get(collection_key(document, kind) or "")
+    if isinstance(items, list):
+        return items
+    carriers = [value for value in document.values() if isinstance(value, list) and value and all(member_field(member, name)[0] is not None for member in value for name in names)]
+    return carriers[0] if len(carriers) == 1 else None
+
+
+#: 🔀️ The normalised spellings of `reorder`'s two positional arguments; positions, never addressing steps.
+POSITIONS = {"from": "to", "fromindex": "toindex"}
+POSITIONS = {**POSITIONS, **{value: key for key, value in POSITIONS.items()}}
+
+
+def positions(arguments):
+    """🔀️ The argument names `reorder` carries its source and target positions under: `from`/`to` or
+    `fromIndex`/`toIndex`, in whichever spelling the wire writes."""
+    source = next((key for key in arguments if normalised(key) in ("from", "fromindex")), "from")
+    target = next((key for key in arguments if normalised(key) == POSITIONS.get(normalised(source), "to")), "to")
+    return source, target
+
+
+def descent(document, kind, arguments):
+    """🪜 The addressing steps and the record they select: the `<entity>Index`/`<entity>Id` steps alone, else
+    led by a bare `index` into the collection the kind's leading noun names —
+    `change-beam-action-q-area-pa {index, actionIndex, newQAreaPa}` writes action `actionIndex` of beam `index`."""
+    steps = address_steps(kind, arguments)
+    record = addressed_record(document, steps) if steps else None
+    if record is None and steps and isinstance(arguments.get("index"), int) and not isinstance(arguments.get("index"), bool):
+        led = [("index", arguments["index"])] + steps
+        found = addressed_record(document, led, kind)
+        if found is not None:
+            return led, found
+    return steps, record
+
+
+def address_steps(kind, arguments):
+    """🪜 The addressing arguments that descend to the record a nested kind acts inside: every
+    `<entity>Index` position and `<entity>Id` native key in wire order, never a new value. The last
+    `<entity>Id` of a `remove`/`delete` without a bare `index` names the removed member itself, so it
+    stays with the verb instead of descending into the record it removes."""
+    steps = [(key, value) for key, value in arguments.items() if not normalised(key).startswith("new") and normalised(key) not in POSITIONS and ((re.search(r"[a-z0-9](Index|_index)$", key) and isinstance(value, int)) or (re.search(r"[a-z0-9](Id|_id)$", key) and isinstance(value, str)))]
+    if steps and kind.split("-")[0] in ("remove", "delete") and "index" not in arguments and re.search(r"(Id|_id)$", steps[-1][0]):
+        steps = steps[:-1]
+    return steps
+
+
+def addressed_record(document, steps, kind=None):
+    """🧭 The record a nested addressing selects, or `None`: each step picks, inside the record the previous
+    one selected, the member at an `<entity>Index` position or the member carrying an `<entity>Id` as its
+    native `id`, of the `<entity>` collection found by spelling — else, for a native key, of the one list
+    that holds it (`bridgeId` finds `thermalBridges`, `ventId` finds `ventSystems`). A bare `index` step
+    names the collection of the kind's leading noun."""
+    node = document
+    for argument, value in steps:
+        if not isinstance(node, dict):
+            return None
+        entity = kind.split("-")[1] if argument == "index" and kind else re.sub(r"[-_]?(index|id)$", "", argument, flags=re.IGNORECASE)
+        named = [node[key_of(node, name)] for name in collection_names(entity) if key_of(node, name) is not None and isinstance(node[key_of(node, name)], list)]
+        holders = [items for items in node.values() if isinstance(items, list) and any(member_matches(member, value) for member in items)] if isinstance(value, str) else []
+        items = named[0] if named else (holders[0] if len(holders) == 1 else None)
+        if items is None:
+            return None
+        if isinstance(value, int):
+            node = items[value] if value < len(items) else None
+        else:
+            node = next((member for member in items if member_matches(member, value)), None)
+    return node if isinstance(node, dict) else None
+
+
+def nested_arguments(arguments, steps):
+    """✂️ The arguments left for the verb once the addressing steps have descended to its record."""
+    descended = {key for key, _ in steps}
+    return {key: value for key, value in arguments.items() if key not in descended}
+
+
+def nested_kind(kind, steps):
+    """🏷️ The kind as the selected record reads it: every entity a step descended through is dropped from the
+    front of the noun, so `change-member-label-en {memberId, newValue}` writes the member's own `labelEn`."""
+    verb, noun = kind.split("-", 1)
+    for argument, _ in steps:
+        entity = noun.split("-")[0] if argument == "index" else re.sub(r"(?<!^)(?=[A-Z])", "-", re.sub(r"[-_]?(index|id)$", "", argument, flags=re.IGNORECASE)).lower().replace("_", "-")
+        if noun.startswith(entity + "-"):
+            noun = noun[len(entity) + 1:]
+    return f"{verb}-{noun}"
 # endregion 🔖️Document
 
 
@@ -162,8 +363,9 @@ def singular(noun):
 
 
 def plural(noun):
-    """*️⃣ The plural of an entity noun."""
-    return noun[:-1] + "ies" if noun.endswith("y") else noun + "s"
+    """*️⃣ The plural of an entity noun — `-ies`, `-es` after a sibilant (`product-classes`,
+    `product-indexes`), else `-s`."""
+    return noun[:-1] + "ies" if noun.endswith("y") else noun + "es" if re.search(r"(s|x|z|ch|sh)$", noun) else noun + "s"
 
 
 def find_container(document, name):
@@ -248,41 +450,59 @@ def target_slot(document, kind, address, name, replacement=None):
     selects a member of it, and `name` — the `new_<field>` argument's field, or the noun's own trailing
     segments — selects the field inside. Returns `(owner, key)` or `(None, None)`."""
     segments = kind.split("-")[1:]
-    for cut in range(len(segments), 0, -1):
-        owner_name = "-".join(segments[:cut])
-        parent, key = find_container(document, plural(owner_name))
-        if parent is None:
-            parent, key = find_container(document, owner_name)
-        if parent is None:
-            continue
-        owner = parent[key]
-        if address:
-            container, member_key = member_slot(owner, address)
-            if container is None:
-                values = [value for name, value in address.items() if name != "index"]
-                if isinstance(owner, dict) and len(values) == 1:
-                    return owner, str(values[0])
+    for finder in (find_container, suffixed_container):
+        for cut in range(len(segments), 0, -1):
+            owner_name = "-".join(segments[:cut])
+            parent, key = finder(document, plural(owner_name))
+            if parent is None:
+                parent, key = finder(document, owner_name)
+            if parent is None:
                 continue
-            member = container[member_key]
-            if name is not None and isinstance(member, dict):
-                inner = key_of(member, name)
-                if inner is not None:
-                    if replacement is None or compatible(member[inner], replacement):
-                        return member, inner
-                else:
-                    holder, field = identity_slot(member, name)
-                    if holder is not None:
-                        return holder, field
-                    rest = "-".join(segments[cut:])
-                    if rest and key_of(member, rest) is not None:
-                        return member, key_of(member, rest)
-            return container, member_key
-        if name is not None and isinstance(owner, dict):
-            slot = (owner, key_of(owner, name)) if key_of(owner, name) is not None else identity_slot(owner, name)
-            if slot[0] is not None:
-                return slot
-        if cut == len(segments):
-            return parent, key
+            owner = parent[key]
+            if address:
+                container, member_key = member_slot(owner, address)
+                if container is None:
+                    values = [value for name, value in address.items() if name != "index"]
+                    if isinstance(owner, dict) and len(values) == 1:
+                        return owner, str(values[0])
+                    continue
+                member = container[member_key]
+                if name is not None and isinstance(member, dict):
+                    inner = key_of(member, name)
+                    if inner is not None:
+                        if replacement is None or compatible(member[inner], replacement):
+                            return member, inner
+                    else:
+                        holder, field = identity_slot(member, name)
+                        if holder is not None:
+                            return holder, field
+                        rest = "-".join(segments[cut:])
+                        if rest and key_of(member, rest) is not None:
+                            return member, key_of(member, rest)
+                return container, member_key
+            if name is not None and isinstance(owner, dict):
+                slot = (owner, key_of(owner, name)) if key_of(owner, name) is not None else identity_slot(owner, name)
+                if slot[0] is not None:
+                    return slot
+            if cut == len(segments):
+                return parent, key
+    return None, None
+
+
+def suffixed_container(document, name):
+    """🧭 The shallowest object whose key ENDS with `name`'s spelling and is longer than it — the owner a
+    kind names by its head noun alone: `change-wall-base-width` finds `retainingWalls`."""
+    want, frontier = normalised(name), [document]
+    while frontier:
+        nested = []
+        for node in frontier:
+            if not isinstance(node, dict):
+                continue
+            for key in node:
+                if normalised(key) != want and normalised(key).endswith(want):
+                    return node, key
+            nested.extend(value for value in node.values() if isinstance(value, dict))
+        frontier = nested
     return None, None
 # endregion 🔖️Entities
 
@@ -345,12 +565,14 @@ def derived_entries(recipe, sources):
 def derived_view(base):
     """🔎 The `(view_path, source_path)` pair of a derived mirror this document keeps — a list of entries
     that is wholly a projection of another list, and must therefore be rebuilt whenever that other list
-    moves. Discovered from the base document, so nothing here is declared for a subset that has none."""
+    moves. Discovered from the base document, so nothing here is declared for a subset that has none. A
+    list nested inside the records it would project (or containing them) is part of those records, never
+    a mirror of them: a one-element `buildings[0].storeys[0].variables` reads back from `buildings` too."""
     for path, node in walk(base):
         if not isinstance(node, list) or not node or not all(isinstance(member, dict) for member in node):
             continue
         for other, records in walk(base):
-            if other == path or not isinstance(records, list) or len(records) != len(node) or not all(isinstance(record, dict) for record in records):
+            if path[:len(other)] == other or other[:len(path)] == path or not isinstance(records, list) or len(records) != len(node) or not all(isinstance(record, dict) for record in records):
                 continue
             recipes = [projection_recipe(record, entry) for record, entry in zip(records, node)]
             if recipes and all(recipe is not None for recipe in recipes) and len({tuple(sorted(recipe.items(), key=str)) for recipe in recipes}) == 1:
@@ -384,6 +606,21 @@ class Refused(Exception):
     """🚫 A mutation this vocabulary cannot express on this document; the document must not move."""
 
 
+#: ➕️ The verbs that bring a member into an id-keyed collection or a set-like list; `introduce` is the
+#: catalogue vocabulary's spelling of `create`.
+ADDS = ("create", "add", "introduce")
+
+#: ➖️ The verbs that take one out again; `retire` is the catalogue vocabulary's spelling of `delete`.
+DROPS = ("delete", "remove", "retire")
+
+
+def replaces_whole(document, verb, arguments):
+    """🧱 Whether a setter without a `new<Field>` argument replaces whole slots: always for `update`, whose
+    arguments are facets, and for any other setter whose every argument spells a slot of the document —
+    `change-materials {materials}` replaces the list."""
+    return verb == "update" or (bool(arguments) and all(facet_slot(document, argument, value)[0] is not None for argument, value in arguments.items()))
+
+
 def apply_mutation(base, kind, arguments, view=MISSING):
     """⚙️ Applies one typed mutation and returns the resulting document, raising [`Refused`] when the
     verb's addressing law cannot be satisfied — an out-of-range index, a field the document has no key
@@ -393,29 +630,48 @@ def apply_mutation(base, kind, arguments, view=MISSING):
 
 
 def apply_verb(document, kind, arguments):
-    """⚙️ The verb itself, on a document this call owns."""
+    """⚙️ The verb itself, on a document this call owns — inside the record a nested addressing selects."""
+    steps, record = descent(document, kind, arguments)
+    if record is not None:
+        apply_verb(record, nested_kind(kind, steps), nested_arguments(arguments, steps))
+        return document
+    if any(isinstance(value, int) for _, value in steps):
+        raise Refused("%s addresses a nested record %s that this document does not hold" % (kind, json.dumps(dict(steps))))
     verb = kind.split("-")[0]
     updates = new_value_arguments(arguments)
     address = {key: value for key, value in arguments.items() if key not in updates}
 
-    if verb in ("change", "set", "update", "rename", "edit", "replace", "resize"):
+    if verb in ("change", "set", "specify", "update", "rename", "edit", "replace", "resize"):
+        if not updates and replaces_whole(document, verb, arguments):
+            for argument, value in arguments.items():
+                owner, slot = facet_slot(document, argument, value)
+                if owner is None:
+                    raise Refused("%s replaces the facet %r, which this document neither holds as a field nor as an identified member" % (kind, argument))
+                place(owner, slot, value)
+            return document
         if not updates:
             raise Refused("%s carries no new-value argument" % kind)
         if "index" in address:
-            items = document.get(collection_key(document, kind) or "")
+            items = indexed_collection(document, kind, [named_field(argument) for argument in updates])
             index = address["index"]
             if not isinstance(items, list) or not isinstance(index, int) or index >= len(items):
                 raise Refused("%s addresses element %s of a collection that does not hold it" % (kind, index))
             for argument in updates:
-                key = key_of(items[index], named_field(argument))
-                if key is None:
+                owner, key = qualified_field(items[index], kind, named_field(argument))
+                if owner is None:
                     raise Refused("%s names element field %r, which this document has no key for" % (kind, named_field(argument)))
-                items[index][key] = copy.deepcopy(arguments[argument])
+                owner[key] = copy.deepcopy(arguments[argument])
+            return document
+        selected = selected_field(document, kind, address) if len(updates) == 1 else None
+        if selected is not None:
+            document[selected] = copy.deepcopy(arguments[updates[0]])
             return document
         for argument in updates:
             key = key_of(document, named_field(argument))
             if key is None:
                 owner, slot = target_slot(document, kind, address, named_field(argument), arguments[argument])
+                if owner is None:
+                    owner, slot = qualified_slot(document, kind, named_field(argument), arguments[argument])
                 if owner is None:
                     raise Refused("%s names %r, which this document has no key for at its root or under the owner the kind's noun locates" % (kind, named_field(argument)))
                 owner[slot] = copy.deepcopy(arguments[argument])
@@ -432,7 +688,9 @@ def apply_verb(document, kind, arguments):
             raise Refused("%s would seed the composed child slot %r, whose childId is content-addressed by a function no specification in this repository states" % (kind, key))
         if not isinstance(items, list):
             raise Refused("%s addresses %r, which is not an ordered collection" % (kind, key))
-        element = next((value for name, value in arguments.items() if name != "index"), None)
+        element = next((value for name, value in arguments.items() if name != "index" and isinstance(value, (dict, list))), None)
+        if element is None:
+            element = next((value for name, value in arguments.items() if name != "index"), None)
         if element is None:
             raise Refused("%s carries no element to insert" % kind)
         items.insert(min(arguments.get("index", len(items)), len(items)), copy.deepcopy(element))
@@ -454,13 +712,13 @@ def apply_verb(document, kind, arguments):
         items = document.get(key or "")
         if is_composed_slot(items):
             raise Refused("%s addresses the composed child slot %r, whose contents this document does not carry" % (kind, key))
-        source, target = arguments.get("from"), arguments.get("to")
+        source, target = (arguments.get(name) for name in positions(arguments))
         if not isinstance(items, list) or not isinstance(source, int) or not isinstance(target, int) or source >= len(items) or target >= len(items):
             raise Refused("%s addresses positions %s→%s of a collection that does not hold them" % (kind, source, target))
         items.insert(target, items.pop(source))
         return document
 
-    if verb in ("create", "delete", "add"):
+    if verb in ADDS + DROPS:
         return collection_verb(document, kind, arguments)
 
     raise AssertionError("%s: this implementation does not implement the verb this kind declares" % kind)
@@ -508,7 +766,7 @@ def collection_verb(document, kind, arguments):
     collection, noun = owned_collection(document, kind, arguments)
     if collection is None:
         raise Refused("%s addresses a collection this document does not carry" % kind)
-    if verb in ("create", "add"):
+    if verb in ADDS:
         element = next((value for name, value in arguments.items() if normalised(name) == normalised(noun)), None)
         if element is None:
             element = next((value for name, value in arguments.items() if isinstance(value, (dict, list))), None)
@@ -538,27 +796,61 @@ def collection_verb(document, kind, arguments):
 
 def inverse_mutation(kinds, document, kind, arguments):
     """↩️ The mutation's own inverse, always computed from the BASE document, and empty when the target
-    is missing — both stated by the addressing convention."""
+    is missing — both stated by the addressing convention. A nested kind inverts inside the record its
+    addressing selects and every inverse step keeps that same addressing."""
+    steps, record = descent(document, kind, arguments)
+    if record is not None:
+        inner = nested_kind(kind, steps)
+        prefix = kind.split("-", 1)[1][: len(kind.split("-", 1)[1]) - len(inner.split("-", 1)[1])]
+        outer = lambda step: next((candidate for candidate in (step.replace("-", "-" + prefix, 1), step) if candidate in kinds), step)
+        return [(outer(step), {**dict(steps), **payload}) for step, payload in inverse_mutation([nested_kind(candidate, steps) for candidate in kinds], record, inner, nested_arguments(arguments, steps))]
+    if any(isinstance(value, int) for _, value in steps):
+        return []
     verb = kind.split("-")[0]
     updates = new_value_arguments(arguments)
     address = {key: value for key, value in arguments.items() if key not in updates}
     noun = "-".join(kind.split("-")[1:])
 
-    if verb in ("change", "set", "update", "rename", "edit", "replace", "resize"):
+    if verb in ("change", "set", "specify", "update", "rename", "edit", "replace", "resize"):
+        if not updates and replaces_whole(document, verb, arguments):
+            restored, drops = {}, []
+            for argument, value in arguments.items():
+                owner, slot = facet_slot(document, argument, value)
+                if owner is None:
+                    return []
+                if isinstance(owner, list) and slot == len(owner):
+                    partner = declared_partner(kinds, DROPS, kebab(facet_entity(argument)))
+                    if partner is None:
+                        return []
+                    drops.append((partner, {"index": slot} if partner.startswith("remove-") else {"id": value["id"]}))
+                    continue
+                restored[argument] = copy.deepcopy(owner[slot])
+            return ([(kind, restored)] if restored else []) + drops
         source = document
         if "index" in address:
-            items = document.get(collection_key(document, kind) or "")
+            items = indexed_collection(document, kind, [named_field(argument) for argument in updates])
             index = address["index"]
             if not isinstance(items, list) or not isinstance(index, int) or index >= len(items):
                 return []
-            source = items[index]
+            restored = dict(address)
+            for argument in updates:
+                owner, key = qualified_field(items[index], kind, named_field(argument))
+                if owner is None:
+                    return []
+                restored[argument] = copy.deepcopy(owner[key])
+            return [(kind, restored)]
         restored = dict(address)
+        selected = selected_field(source, kind, address) if len(updates) == 1 else None
+        if selected is not None:
+            return [(kind, {**restored, updates[0]: copy.deepcopy(source[selected])})]
         for argument in updates:
             key = key_of(source, named_field(argument))
             if key is not None:
                 restored[argument] = copy.deepcopy(source[key])
                 continue
             owner, slot = target_slot(document, kind, address, named_field(argument), arguments[argument])
+            if owner is None:
+                owner, slot = qualified_slot(document, kind, named_field(argument), arguments[argument])
             if owner is None:
                 return []
             restored[argument] = copy.deepcopy(owner[slot])
@@ -570,7 +862,7 @@ def inverse_mutation(kinds, document, kind, arguments):
             return []
         return [("remove-" + noun, {"index": min(arguments.get("index", len(items)), len(items))})]
 
-    if verb == "remove" and ("insert-" + noun) in kinds:
+    if verb == "remove" and ("insert-" + noun) in kinds and "index" in arguments:
         items = document.get(collection_key(document, kind) or "")
         index = arguments.get("index")
         if not isinstance(items, list) or not isinstance(index, int) or index >= len(items):
@@ -579,20 +871,22 @@ def inverse_mutation(kinds, document, kind, arguments):
 
     if verb == "reorder":
         items = document.get(collection_key(document, kind) or "")
-        source, target = arguments.get("from"), arguments.get("to")
+        source_name, target_name = positions(arguments)
+        source, target = arguments.get(source_name), arguments.get(target_name)
         if not isinstance(items, list) or not isinstance(source, int) or not isinstance(target, int) or source >= len(items) or target >= len(items):
             return []
-        return [(kind, {"from": min(target, len(items) - 1), "to": source})]
+        return [(kind, {source_name: min(target, len(items) - 1), target_name: source})]
 
-    if verb in ("create", "add"):
+    if verb in ADDS:
         collection, member = owned_collection(document, kind, arguments)
-        partner = declared_partner(kinds, ("delete", "remove", "insert"), noun)
+        partner = declared_partner(kinds, ("delete", "remove", "insert", "retire"), noun)
         if partner is None or collection is None:
             return []
-        element = next((value for name, value in arguments.items() if normalised(name) == normalised(member)), None)
-        return [(partner, undo_address(collection, element, arguments, member))]
+        carrier = next((name for name in arguments if normalised(name) in (normalised(member), normalised(noun))), None)
+        element = arguments.get(carrier)
+        return [(partner, undo_address(collection, element, {name: value for name, value in arguments.items() if name != carrier}, member))]
 
-    if verb in ("delete", "remove"):
+    if verb in DROPS:
         collection, member = owned_collection(document, kind, arguments)
         if collection is None:
             return []
@@ -601,11 +895,11 @@ def inverse_mutation(kinds, document, kind, arguments):
             return []
         captured = copy.deepcopy(container[member_key])
         owner_address = {name: value for name, value in arguments.items() if name != "index" and normalised(name) != normalised(member) and not normalised(name).endswith(normalised(member) + "id")}
-        partner = declared_partner(kinds, ("create", "add", "insert"), noun)
+        partner = declared_partner(kinds, ("create", "add", "insert", "introduce"), noun)
         if partner is not None:
             payload = dict(owner_address)
             payload[member] = captured
-            if isinstance(container, list) and "index" in arguments:
+            if isinstance(container, list):
                 payload["index"] = member_key
             return [(partner, payload)]
         setter = declared_partner(kinds, ("change", "set", "replace"), noun)
@@ -664,7 +958,11 @@ def split_fields(line):
 
 def parse_dsl(envelope, text):
     """📖 Reads the committed `.dsl.semio` artifact at the carrier level: the envelope preamble, the
-    ordered `key=value` field lines, and any typed table block written `name [col:TYPE …] { rows }`."""
+    ordered `key=value` field lines, and any typed table block written `name [col:TYPE …] { rows }`. Each
+    row keeps the indentation it is written with, because a record-valued cell opens a nested table whose
+    rows sit deeper than the table's own, and that depth is carrier bytes, not a grammar to infer. A field
+    line whose value opens a record or list that closes lines later carries those lines as its `body`,
+    kept the same way."""
     header = PREAMBLE.match(text)
     if header is None:
         raise AssertionError("identity-round-trip: the committed artifact does not open with a semio text preamble")
@@ -681,7 +979,7 @@ def parse_dsl(envelope, text):
             columns = [column.split(":", 1) for column in split_fields(table.group(2))]
             rows = []
             while cursor < len(lines) and lines[cursor] != "}":
-                rows.append(split_fields(lines[cursor]))
+                rows.append({"indent": lines[cursor][: len(lines[cursor]) - len(lines[cursor].lstrip(" "))], "fields": split_fields(lines[cursor])})
                 cursor += 1
             if cursor >= len(lines):
                 raise AssertionError("identity-round-trip: table %r is never closed" % table.group(1))
@@ -703,8 +1001,32 @@ def parse_dsl(envelope, text):
                     "vocabulary above is unaffected: it is specified, and both implementations agree on all of it. This "
                     "is a documentation gap in the subset, not a defect in either codec." % token)
             fields.append([key, value])
-        blocks.append({"fields": fields})
+        block, depth = {"fields": fields}, bracket_depth(line)
+        if depth > 0:
+            block["body"] = []
+            while cursor < len(lines) and depth > 0:
+                block["body"].append({"indent": lines[cursor][: len(lines[cursor]) - len(lines[cursor].lstrip(" "))], "fields": split_fields(lines[cursor])})
+                depth += bracket_depth(lines[cursor])
+                cursor += 1
+            if depth > 0:
+                raise AssertionError("identity-round-trip: the record %r opens is never closed" % fields[-1][0])
+        blocks.append(block)
     return {"envelope": header.group(1), "version": int(header.group(2)), "blocks": blocks}
+
+
+def bracket_depth(line):
+    """🔢 How many record `{` and list `[` brackets one carrier line leaves open, quoted text excluded. A field
+    line that leaves one open continues its value over the following lines, which are kept as written —
+    indentation included — until the brackets balance, exactly as a table keeps its rows."""
+    depth, quoted = 0, False
+    for character in line:
+        if character == '"':
+            quoted = not quoted
+        elif not quoted and character in "{[":
+            depth += 1
+        elif not quoted and character in "}]":
+            depth -= 1
+    return depth
 
 
 def carrier_projection(text):
@@ -728,9 +1050,10 @@ def print_dsl(document):
     for block in document["blocks"]:
         if "fields" in block:
             lines.append(" ".join("%s=%s" % (key, value) for key, value in block["fields"]))
+            lines.extend(row["indent"] + " ".join(row["fields"]) for row in block.get("body", []))
             continue
         lines.append("%s [%s] {" % (block["table"], " ".join(":".join(column) for column in block["columns"])))
-        lines.extend("  " + " ".join(row) for row in block["rows"])
+        lines.extend(row["indent"] + " ".join(row["fields"]) for row in block["rows"])
         lines.append("}")
     return "semio %s v%d\n%s\n" % (document["envelope"], document["version"], "\n".join(lines))
 # endregion 🔖️Carrier

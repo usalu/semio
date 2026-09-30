@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWallBaseWidth",
+  "id": "wall-W1",
+  "newBaseWidth": 2.9
+}

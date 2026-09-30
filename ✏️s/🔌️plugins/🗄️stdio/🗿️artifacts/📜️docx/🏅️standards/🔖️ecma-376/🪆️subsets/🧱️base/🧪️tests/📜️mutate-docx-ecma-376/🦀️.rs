@@ -112,9 +112,9 @@ fn set_snapshot_inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{mutable_input, set_snapshot_document};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_docx;
-    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_docx;
-    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::any::schema::mutations::{apply_docx_mutation, decode_docx_mutation_payload, set_snapshot};
+    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx;
+    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx;
+    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::mutations::{apply_docx_mutation, decode_docx_mutation_payload, inverse_docx_mutation, set_snapshot};
     use semio_s_artifact_stdio_docx::{DocxMutation, DocxSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::docx::standards::v_ecma_376::subsets::base::project_docx_ecma_376;
 
@@ -132,9 +132,21 @@ mod subject {
         decode_docx_mutation_payload(&spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null).to_string())
     }
 
-    /// ↩️ The whole-document undo every inverse scenario lands on: `set-snapshot` back to the untouched base.
-    fn restore(base: &DocxSnapshot) -> DocxMutation {
-        DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })
+    /// ↩️ Applies `mutation` to `base` and then the production inverse it plans on `base` — the law every inverse
+    /// scenario holds this implementation to.
+    fn applied_and_undone(base: &DocxSnapshot, mutation: &DocxMutation) -> DocxSnapshot {
+        let mut snapshot = base.clone();
+        apply_docx_mutation(&mut snapshot, mutation);
+        for undo in inverse_docx_mutation(mutation, base) {
+            apply_docx_mutation(&mut snapshot, &undo);
+        }
+        snapshot
+    }
+
+    /// 📸️ The whole-document replacement by the snapshot this repository's own codec decodes from the committed
+    /// after-document — a `set-snapshot` payload is an entire package, not a table cell.
+    fn replacement(ctx: &Context) -> Result<DocxMutation, String> {
+        Ok(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: decode(&set_snapshot_document(ctx)?)? }))
     }
 
     /// 📦️ The produced package as the `actual-docx` artifact the `docx-ecma-376-jszip-compare-v1` pipeline reads.
@@ -153,26 +165,18 @@ mod subject {
 
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = decode(&mutable_input(ctx)?)?;
-        let mut snapshot = base.clone();
-        apply_docx_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
-        apply_docx_mutation(&mut snapshot, &restore(&base));
-        actual(ctx, encode(&snapshot)?)
+        actual(ctx, encode(&applied_and_undone(&base, &mutation_from_spec(&ctx.doc_json()?)?))?)
     }
 
-    /// 📸️ The whole document replaced by the snapshot this repository's own codec decodes from the committed
-    /// after-document — a `set-snapshot` payload is an entire package, not a table cell.
-    pub fn set_snapshot(ctx: &Context) -> Result<Outcome, String> {
+    pub fn mutate_set_snapshot(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
-        apply_docx_mutation(&mut snapshot, &DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: decode(&set_snapshot_document(ctx)?)? }));
+        apply_docx_mutation(&mut snapshot, &replacement(ctx)?);
         actual(ctx, encode(&snapshot)?)
     }
 
-    pub fn set_snapshot_inverse(ctx: &Context) -> Result<Outcome, String> {
+    pub fn inverse_set_snapshot(ctx: &Context) -> Result<Outcome, String> {
         let base = decode(&mutable_input(ctx)?)?;
-        let mut snapshot = base.clone();
-        apply_docx_mutation(&mut snapshot, &DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: decode(&set_snapshot_document(ctx)?)? }));
-        apply_docx_mutation(&mut snapshot, &restore(&base));
-        actual(ctx, encode(&snapshot)?)
+        actual(ctx, encode(&applied_and_undone(&base, &replacement(ctx)?))?)
     }
 
     /// 🔒️ The no-byte-pass-through rule: the subject must fully parse the real artifact into its
@@ -194,11 +198,11 @@ mod subject {
 /// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("set-snapshot", set_snapshot_oracle).oracle("set-snapshot-inverse", set_snapshot_inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("mutate-set-snapshot", set_snapshot_oracle).oracle("inverse-set-snapshot", set_snapshot_inverse_oracle);
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse).subject("set-snapshot", subject::set_snapshot).subject("set-snapshot-inverse", subject::set_snapshot_inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse).subject("mutate-set-snapshot", subject::mutate_set_snapshot).subject("inverse-set-snapshot", subject::inverse_set_snapshot);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

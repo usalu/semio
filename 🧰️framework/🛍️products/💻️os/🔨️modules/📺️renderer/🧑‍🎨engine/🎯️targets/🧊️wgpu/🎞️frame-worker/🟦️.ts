@@ -59,6 +59,9 @@ type RendererBindings = {
   dumpAccessibility?: (windowId?: string) => string;
   /** 🧊️ Every World3d surface's PUBLISHED mesh payload, per role — the oracle a committed fixture is compared against. */
   dumpMeshStats?: (windowId?: string) => string;
+  /** 🎲️ Every Board2d surface's published board (page rect, camera, positions, selection, counts) — the twin of React's
+   * Board2dHost `data-board-*` vitals, answered on request only. */
+  dumpBoard2d?: (windowId?: string) => string;
   /** 🎯️ The shell chrome's pointer registry and its dispatched-action ledger — the chrome twin of the DOM a
    * React parity probe reads. Diagnostics-gated in the renderer, so an unarmed page answers `armed: false`. */
   dumpChrome?: (windowId?: string) => string;
@@ -494,7 +497,7 @@ function answerIntrospection(message: Extract<BrowserFrameUiMessage, { kind: "in
     respond(null, "renderer bindings are not mounted in this Worker");
     return;
   }
-  const hook = message.probe === "structure" ? bindings.dumpStructure : message.probe === "accessibility" ? bindings.dumpAccessibility : message.probe === "mesh-stats" ? bindings.dumpMeshStats : message.probe === "chrome" ? bindings.dumpChrome : message.probe === "agent-bridge-scope" ? bindings.dumpAgentBridgeOfferScope : bindings.dumpFrameStats;
+  const hook = message.probe === "structure" ? bindings.dumpStructure : message.probe === "accessibility" ? bindings.dumpAccessibility : message.probe === "mesh-stats" ? bindings.dumpMeshStats : message.probe === "board2d" ? bindings.dumpBoard2d : message.probe === "chrome" ? bindings.dumpChrome : message.probe === "agent-bridge-scope" ? bindings.dumpAgentBridgeOfferScope : bindings.dumpFrameStats;
   if (!hook) {
     respond(null, `renderer bindings expose no ${message.probe} introspection export`);
     return;

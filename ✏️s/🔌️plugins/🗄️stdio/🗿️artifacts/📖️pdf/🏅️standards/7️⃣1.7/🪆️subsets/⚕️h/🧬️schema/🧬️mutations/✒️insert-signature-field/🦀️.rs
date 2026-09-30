@@ -3,7 +3,6 @@
 use super::remove_signature_field::RemoveSignatureField;
 use super::PdfHMutation;
 use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
-use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -20,7 +19,7 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for InsertSignatureField {
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         let mut next = base.clone();
         support::insert_signature_field(&mut next, &self.name);
-        MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
+        MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
     fn inverse(&self, _base: &PdfSnapshot) -> Vec<PdfHMutation> {

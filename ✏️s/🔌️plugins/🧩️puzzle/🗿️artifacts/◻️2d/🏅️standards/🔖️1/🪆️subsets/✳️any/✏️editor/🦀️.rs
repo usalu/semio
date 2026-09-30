@@ -3212,7 +3212,9 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                 Ok(Self::progress("puzzle2d-example-catalogs", "Replacing kind catalogs", "Artkataloge werden ersetzt"))
             }
             Puzzle2dExampleStage::Catalogs => {
-                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs(target.meta.kind_catalogs.clone()));
+                if snapshot.typed().meta.kind_catalogs != target.meta.kind_catalogs {
+                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs(target.meta.kind_catalogs.clone()));
+                }
                 self.stage = Puzzle2dExampleStage::Nodes;
                 Ok(Self::progress("puzzle2d-example-node", "Adding example node", "Beispielknoten wird hinzugefügt"))
             }
@@ -5016,6 +5018,22 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             InteractionVerb::Select | InteractionVerb::ClearSelection | InteractionVerb::SelectAll => puzzle2d_select_scope(),
             InteractionVerb::SetSelectionMode | InteractionVerb::SetGranularity => puzzle2d_window_and_engagements_scope(),
         })
+    }
+
+    /// 📨️ Every host event ends the window's open select-tool gesture with zero trace under the reason the tool records:
+    /// a blur `blur`, a lost pointer capture `captureLost`, a utility switch or a closing window `retired`, an opened
+    /// history edit `frozen` and a remote edit `baseMoved` — the typed `translateSelection{phase: "abort"}` of that window,
+    /// which no host sends itself.
+    fn host_event(event: &semio_framework_plugin::HostEvent) -> Option<Self::Command> {
+        use semio_framework_plugin::HostEvent;
+        let reason = match event {
+            HostEvent::WindowBlurred { .. } => ToolAbortReason::Blur,
+            HostEvent::PointerCaptureLost { .. } => ToolAbortReason::CaptureLost,
+            HostEvent::UtilityChanged { .. } | HostEvent::Retiring { .. } => ToolAbortReason::Retired,
+            HostEvent::TimeTravelFrozen { .. } => ToolAbortReason::Frozen,
+            HostEvent::BaseMoved { .. } => ToolAbortReason::BaseMoved,
+        };
+        Some(Puzzle2dCommand::from_action("translateSelection", Some(json!({ "phase": "abort", "reason": reason.as_str() })), Some(event.window_id().to_string())))
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {

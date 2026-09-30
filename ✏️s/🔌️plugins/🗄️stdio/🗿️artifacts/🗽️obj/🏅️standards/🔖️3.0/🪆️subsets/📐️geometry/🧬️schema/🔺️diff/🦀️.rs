@@ -841,13 +841,13 @@ fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified
     let mut removed = BTreeSet::new();
     for &index in removed_indices {
         if index >= base_len || !removed.insert(index) {
-            return Err(MutationApplyError::new("invalid-remove-index", "removal target must exist exactly once").at([target, &index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-remove-index", "removal target must exist exactly once").at([target, &index.to_string()]));
         }
     }
     let mut modified = BTreeSet::new();
     for index in modified_indices {
         if index >= base_len || removed.contains(&index) || !modified.insert(index) {
-            return Err(MutationApplyError::new("invalid-modify-index", "modification target must exist exactly once and remain present").at([target, &index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-modify-index", "modification target must exist exactly once and remain present").at([target, &index.to_string()]));
         }
     }
     let mut additions: Vec<usize> = added_indices.into_iter().collect();
@@ -855,7 +855,7 @@ fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified
     let mut previous = None;
     for (length, index) in (base_len - removed.len()..).zip(additions) {
         if index > length || previous == Some(index) {
-            return Err(MutationApplyError::new("invalid-add-index", "addition target must be unique and within the evolving sequence").at([target, &index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-add-index", "addition target must be unique and within the evolving sequence").at([target, &index.to_string()]));
         }
         previous = Some(index);
     }
@@ -873,19 +873,19 @@ fn validate_named_targets<'a>(
     let mut base = BTreeSet::new();
     for name in base_names {
         if !base.insert(name) {
-            return Err(MutationApplyError::new("duplicate-base-target", "base names must be unique").at([target, name]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-base-target", "base names must be unique").at([target, name]));
         }
     }
     let mut removed = BTreeSet::new();
     for name in removed_names {
         if !base.contains(name) || !removed.insert(name) {
-            return Err(MutationApplyError::new("invalid-remove-target", "removal target must exist exactly once").at([target, name]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-remove-target", "removal target must exist exactly once").at([target, name]));
         }
     }
     let mut modified = BTreeSet::new();
     for name in modified_names {
         if !base.contains(name) || removed.contains(name) || !modified.insert(name) {
-            return Err(MutationApplyError::new("invalid-modify-target", "modification target must exist exactly once and remain present").at([target, name]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-modify-target", "modification target must exist exactly once and remain present").at([target, name]));
         }
     }
     let mut additions: Vec<(usize, &str)> = added.into_iter().collect();
@@ -894,7 +894,7 @@ fn validate_named_targets<'a>(
     let mut previous = None;
     for (length, (index, name)) in (base.len() - removed.len()..).zip(additions) {
         if base.contains(name) || !added_names.insert(name) || index > length || previous == Some(index) {
-            return Err(MutationApplyError::new("invalid-add-target", "addition name and position must be unique and valid").at([target, name]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-add-target", "addition name and position must be unique and valid").at([target, name]));
         }
         previous = Some(index);
     }

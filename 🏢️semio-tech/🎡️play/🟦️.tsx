@@ -30,7 +30,7 @@ import {
 import { createBrowserStoragePort, resolvePlaygroundBoot } from "@semio-tech/framework";
 import { PLUGIN_CATALOG } from "@semio-tech/plugin-registry/catalog";
 import { FrameworkOsShell, resolveShellLocks, resolveShellDefaults } from "@semio-tech/framework-renderer-react";
-import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-js";
+import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
 import { PlayCard } from "./⚛️play-card.tsx";
 import { PLAY_LOCALE, PLAY_PANES, SEMIO_TECH_PLAY_INTRODUCTION, SEMIO_TECH_PLAY_LOGO_SVG, type PlayPaneSpec } from "./🪧️brand.ts";
 import "./🎨️globals.css";

@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.vdi3805` — checked against PyPI, which serves no `vdi3805`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../🧪️tests/🏭️mutate-vdi3805-1/🐍️.py`, all 20 kinds of `Vdi3805Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `vdi3805-1-mutate`'s external-oracle requirement for its 20-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 20 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.vdi3805` — checked against PyPI, which serves no `vdi3805`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../🧪️tests/🏭️mutate-vdi3805-1/🐍️.py`, all 19 kinds of `Vdi3805Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `vdi3805-1-mutate`'s external-oracle requirement for its 19-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 19 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -49,7 +49,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": "📓️taxonomy.md; 📓️derivation-rules.md; .dsl.semio",
         "fixtureCoverage": {
-          "vectors": 20,
+          "vectors": 19,
           "capabilitiesCovered": [
             "vdi3805-1-mutate"
           ]
@@ -66,200 +66,13 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
-          "mutationId": "add-geometry-connection",
-          "sourceMutationDirectoryName": "🔌️add-geometry-connection",
-          "mutationDirectoryName": "🔌️add-geometry-connection",
-          "scenarios": [
-            {
-              "id": "attaches-the-drain-connection-to-geom-valve-50",
-              "directoryName": "🚰️attaches-the-drain-connection-to-geom-valve-50"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-correction-as-of",
-          "sourceMutationDirectoryName": "📅️change-correction-as-of",
-          "mutationDirectoryName": "📅️change-correction-as-of",
-          "scenarios": [
-            {
-              "id": "advances-the-correction-cut-off-to-2025-03",
-              "directoryName": "📅️advances-the-correction-cut-off-to-2025-03"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-edition-profile",
-          "sourceMutationDirectoryName": "🔖️change-edition-profile",
-          "mutationDirectoryName": "🔖️change-edition-profile",
-          "scenarios": [
-            {
-              "id": "switches-sheet-8-from-legacy-to-current",
-              "directoryName": "🆕️switches-sheet-8-from-legacy-to-current"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-strict-mode",
-          "sourceMutationDirectoryName": "🔒️change-strict-mode",
-          "mutationDirectoryName": "🔒️change-strict-mode",
-          "scenarios": [
-            {
-              "id": "turns-strict-mode-on",
-              "directoryName": "🔒️turns-strict-mode-on"
-            }
-          ]
-        },
-        {
-          "mutationId": "add-curve",
-          "sourceMutationDirectoryName": "📈️add-curve",
-          "mutationDirectoryName": "📈️add-curve",
-          "scenarios": [
-            {
-              "id": "adds-the-curve-dp-pressure-drop-curve",
-              "directoryName": "📈️adds-the-curve-dp-pressure-drop-curve"
-            }
-          ]
-        },
-        {
-          "mutationId": "add-geometry",
-          "sourceMutationDirectoryName": "🧊️add-geometry",
-          "mutationDirectoryName": "🧊️add-geometry",
-          "scenarios": [
-            {
-              "id": "adds-the-geom-valve-80-definition",
-              "directoryName": "🧊️adds-the-geom-valve-80-definition"
-            }
-          ]
-        },
-        {
-          "mutationId": "add-product",
-          "sourceMutationDirectoryName": "📦️add-product",
-          "mutationDirectoryName": "📦️add-product",
-          "scenarios": [
-            {
-              "id": "appends-vlv-80-002-and-its-index-entry",
-              "directoryName": "📦️appends-vlv-80-002-and-its-index-entry"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-curve",
-          "sourceMutationDirectoryName": "📉️remove-curve",
-          "mutationDirectoryName": "📉️remove-curve",
-          "scenarios": [
-            {
-              "id": "removes-the-curve-kvs-flow-curve",
-              "directoryName": "🚫️removes-the-curve-kvs-flow-curve"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-geometry",
-          "sourceMutationDirectoryName": "🚮️remove-geometry",
-          "mutationDirectoryName": "🚮️remove-geometry",
-          "scenarios": [
-            {
-              "id": "removes-the-geom-valve-50-definition",
-              "directoryName": "🚫️removes-the-geom-valve-50-definition"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-product",
-          "sourceMutationDirectoryName": "🗑️remove-product",
-          "mutationDirectoryName": "🗑️remove-product",
-          "scenarios": [
-            {
-              "id": "removes-vlv-50-001-and-its-index-entry",
-              "directoryName": "🚫️removes-vlv-50-001-and-its-index-entry"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-edition-profile",
-          "sourceMutationDirectoryName": "🧹️remove-edition-profile",
-          "mutationDirectoryName": "🧹️remove-edition-profile",
-          "scenarios": [
-            {
-              "id": "clears-the-sheet-8-legacy-override",
-              "directoryName": "🧹️clears-the-sheet-8-legacy-override"
-            }
-          ]
-        },
-        {
-          "mutationId": "remove-geometry-connection",
-          "sourceMutationDirectoryName": "✂️remove-geometry-connection",
-          "mutationDirectoryName": "✂️remove-geometry-connection",
-          "scenarios": [
-            {
-              "id": "detaches-the-out-connection-from-geom-valve-50",
-              "directoryName": "🔌️detaches-the-out-connection-from-geom-valve-50"
-            }
-          ]
-        },
-        {
-          "mutationId": "rename-product",
-          "sourceMutationDirectoryName": "🏷️rename-product",
-          "mutationDirectoryName": "🏷️rename-product",
-          "scenarios": [
-            {
-              "id": "retitles-vlv-50-001-and-resyncs-its-index-tags",
-              "directoryName": "🏷️retitles-vlv-50-001-and-resyncs-its-index-tags"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-curve-points",
-          "sourceMutationDirectoryName": "📍️change-curve-points",
-          "mutationDirectoryName": "📍️change-curve-points",
-          "scenarios": [
-            {
-              "id": "resamples-curve-kvs-onto-three-points",
-              "directoryName": "📍️resamples-curve-kvs-onto-three-points"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-geometry-parameters",
-          "sourceMutationDirectoryName": "🧮️change-geometry-parameters",
-          "mutationDirectoryName": "🧮️change-geometry-parameters",
-          "scenarios": [
-            {
-              "id": "rescales-geom-valve-50-to-half-and-adds-clearance",
-              "directoryName": "➗️rescales-geom-valve-50-to-half-and-adds-clearance"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-product-configuration",
-          "sourceMutationDirectoryName": "🎛️change-product-configuration",
-          "mutationDirectoryName": "🎛️change-product-configuration",
-          "scenarios": [
-            {
-              "id": "reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn",
-              "directoryName": "📏️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn"
-            }
-          ]
-        },
-        {
-          "mutationId": "resize-geometry",
-          "sourceMutationDirectoryName": "📐️resize-geometry",
-          "mutationDirectoryName": "📐️resize-geometry",
-          "scenarios": [
-            {
-              "id": "doubles-the-geom-valve-50-bounding-box",
-              "directoryName": "📐️doubles-the-geom-valve-50-bounding-box"
-            }
-          ]
-        },
-        {
           "mutationId": "change-manufacturer-file",
           "sourceMutationDirectoryName": "🏭️change-manufacturer-file",
           "mutationDirectoryName": "🏭️change-manufacturer-file",
           "scenarios": [
             {
-              "id": "renames-the-header-manufacturer-to-acme",
-              "directoryName": "✏️renames-the-header-manufacturer-to-acme"
+              "id": "sets-file",
+              "directoryName": "✏️sets-file"
             }
           ]
         },
@@ -269,8 +82,195 @@
           "mutationDirectoryName": "🚧️change-limits",
           "scenarios": [
             {
-              "id": "tightens-every-untrusted-input-limit",
-              "directoryName": "🛡️tightens-every-untrusted-input-limit"
+              "id": "tightens-every",
+              "directoryName": "🛡️tightens-every"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-correction-as-of",
+          "sourceMutationDirectoryName": "📅️change-correction-as-of",
+          "mutationDirectoryName": "📅️change-correction-as-of",
+          "scenarios": [
+            {
+              "id": "sets-of",
+              "directoryName": "✏️sets-of"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-strict-mode",
+          "sourceMutationDirectoryName": "🔒️change-strict-mode",
+          "mutationDirectoryName": "🔒️change-strict-mode",
+          "scenarios": [
+            {
+              "id": "turns-strict",
+              "directoryName": "🔒️turns-strict"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-edition-profile",
+          "sourceMutationDirectoryName": "🔖️change-edition-profile",
+          "mutationDirectoryName": "🔖️change-edition-profile",
+          "scenarios": [
+            {
+              "id": "to-current",
+              "directoryName": "✏️to-current"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-edition-profile",
+          "sourceMutationDirectoryName": "🧹️remove-edition-profile",
+          "mutationDirectoryName": "🧹️remove-edition-profile",
+          "scenarios": [
+            {
+              "id": "removes",
+              "directoryName": "➖️removes"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-product",
+          "sourceMutationDirectoryName": "📦️add-product",
+          "mutationDirectoryName": "📦️add-product",
+          "scenarios": [
+            {
+              "id": "appends-vlv-80-002",
+              "directoryName": "📦️appends-vlv-80-002"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-product",
+          "sourceMutationDirectoryName": "🗑️remove-product",
+          "mutationDirectoryName": "🗑️remove-product",
+          "scenarios": [
+            {
+              "id": "removes-vlv-50-001",
+              "directoryName": "🚫️removes-vlv-50-001"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-product",
+          "sourceMutationDirectoryName": "🏷️rename-product",
+          "mutationDirectoryName": "🏷️rename-product",
+          "scenarios": [
+            {
+              "id": "retitles-vlv-50",
+              "directoryName": "🏷️retitles-vlv-50"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-product-configuration",
+          "sourceMutationDirectoryName": "🎛️change-product-configuration",
+          "mutationDirectoryName": "🎛️change-product-configuration",
+          "scenarios": [
+            {
+              "id": "sets",
+              "directoryName": "✏️sets"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-geometry",
+          "sourceMutationDirectoryName": "🧊️add-geometry",
+          "mutationDirectoryName": "🧊️add-geometry",
+          "scenarios": [
+            {
+              "id": "adds-the-geom-valve",
+              "directoryName": "🧊️adds-the-geom-valve"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-geometry",
+          "sourceMutationDirectoryName": "🚮️remove-geometry",
+          "mutationDirectoryName": "🚮️remove-geometry",
+          "scenarios": [
+            {
+              "id": "removes-the-geom",
+              "directoryName": "🚫️removes-the-geom"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-geometry",
+          "sourceMutationDirectoryName": "📐️resize-geometry",
+          "mutationDirectoryName": "📐️resize-geometry",
+          "scenarios": [
+            {
+              "id": "doubles-the-geom",
+              "directoryName": "📐️doubles-the-geom"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-geometry-connection",
+          "sourceMutationDirectoryName": "🔌️add-geometry-connection",
+          "mutationDirectoryName": "🔌️add-geometry-connection",
+          "scenarios": [
+            {
+              "id": "adds",
+              "directoryName": "➕️adds"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-geometry-connection",
+          "sourceMutationDirectoryName": "✂️remove-geometry-connection",
+          "mutationDirectoryName": "✂️remove-geometry-connection",
+          "scenarios": [
+            {
+              "id": "removes",
+              "directoryName": "➖️removes"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-geometry-parameters",
+          "sourceMutationDirectoryName": "🧮️change-geometry-parameters",
+          "mutationDirectoryName": "🧮️change-geometry-parameters",
+          "scenarios": [
+            {
+              "id": "sets",
+              "directoryName": "✏️sets"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-curve",
+          "sourceMutationDirectoryName": "📈️add-curve",
+          "mutationDirectoryName": "📈️add-curve",
+          "scenarios": [
+            {
+              "id": "adds-the-curve-dp",
+              "directoryName": "📈️adds-the-curve-dp"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-curve",
+          "sourceMutationDirectoryName": "📉️remove-curve",
+          "mutationDirectoryName": "📉️remove-curve",
+          "scenarios": [
+            {
+              "id": "removes-the-curve",
+              "directoryName": "🚫️removes-the-curve"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-curve-points",
+          "sourceMutationDirectoryName": "📍️change-curve-points",
+          "mutationDirectoryName": "📍️change-curve-points",
+          "scenarios": [
+            {
+              "id": "sets-points",
+              "directoryName": "✏️sets-points"
             }
           ]
         }
@@ -308,18 +308,38 @@
       "subsetDirectoryName": "✳️any",
       "mutations": [
         {
-          "id": "add-geometry-connection",
+          "id": "change-manufacturer-file",
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
-            "operation": "add-geometry-connection",
+            "operation": "change-manufacturer-file",
             "bridgeVersion": 1,
-            "variant": "AddGeometryConnection"
+            "variant": "ChangeManufacturerFile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "geometry"
+        },
+        {
+          "id": "change-limits",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-limits",
+            "bridgeVersion": 1,
+            "variant": "ChangeLimits"
           },
           "oracleRequirements": [
             {
@@ -348,28 +368,7 @@
               "qualifyingKind": "verified-native-second-implementation"
             }
           ],
-          "subset": "catalog"
-        },
-        {
-          "id": "change-edition-profile",
-          "capability": "vdi3805-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-edition-profile",
-            "bridgeVersion": 1,
-            "variant": "ChangeEditionProfile"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "vdi3805-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "catalog"
+          "subset": "geometry"
         },
         {
           "id": "change-strict-mode",
@@ -390,20 +389,20 @@
               "qualifyingKind": "verified-native-second-implementation"
             }
           ],
-          "subset": "catalog"
+          "subset": "geometry"
         },
         {
-          "id": "add-curve",
+          "id": "change-edition-profile",
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "rejected"
+            "no-op"
           ],
           "productionDispatch": {
-            "operation": "add-curve",
+            "operation": "change-edition-profile",
             "bridgeVersion": 1,
-            "variant": "AddCurve"
+            "variant": "ChangeEditionProfile"
           },
           "oracleRequirements": [
             {
@@ -411,10 +410,10 @@
               "qualifyingKind": "verified-native-second-implementation"
             }
           ],
-          "subset": "curves"
+          "subset": "geometry"
         },
         {
-          "id": "add-geometry",
+          "id": "remove-edition-profile",
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -422,9 +421,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "add-geometry",
+            "operation": "remove-edition-profile",
             "bridgeVersion": 1,
-            "variant": "AddGeometry"
+            "variant": "RemoveEditionProfile"
           },
           "oracleRequirements": [
             {
@@ -453,48 +452,6 @@
               "qualifyingKind": "verified-native-second-implementation"
             }
           ],
-          "subset": "catalog"
-        },
-        {
-          "id": "remove-curve",
-          "capability": "vdi3805-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "rejected",
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "remove-curve",
-            "bridgeVersion": 1,
-            "variant": "RemoveCurve"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "vdi3805-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "curves"
-        },
-        {
-          "id": "remove-geometry",
-          "capability": "vdi3805-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "rejected",
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "remove-geometry",
-            "bridgeVersion": 1,
-            "variant": "RemoveGeometry"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "vdi3805-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
           "subset": "geometry"
         },
         {
@@ -502,55 +459,13 @@
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
-            "rejected",
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "remove-product",
             "bridgeVersion": 1,
             "variant": "RemoveProduct"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "vdi3805-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "catalog"
-        },
-        {
-          "id": "remove-edition-profile",
-          "capability": "vdi3805-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "rejected",
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "remove-edition-profile",
-            "bridgeVersion": 1,
-            "variant": "RemoveEditionProfile"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "vdi3805-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "catalog"
-        },
-        {
-          "id": "remove-geometry-connection",
-          "capability": "vdi3805-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "rejected",
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "remove-geometry-connection",
-            "bridgeVersion": 1,
-            "variant": "RemoveGeometryConnection"
           },
           "oracleRequirements": [
             {
@@ -580,50 +495,6 @@
               "qualifyingKind": "verified-native-second-implementation"
             }
           ],
-          "subset": "catalog"
-        },
-        {
-          "id": "change-curve-points",
-          "capability": "vdi3805-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-curve-points",
-            "bridgeVersion": 1,
-            "variant": "ChangeCurvePoints"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "vdi3805-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "curves"
-        },
-        {
-          "id": "change-geometry-parameters",
-          "capability": "vdi3805-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-geometry-parameters",
-            "bridgeVersion": 1,
-            "variant": "ChangeGeometryParameters"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "vdi3805-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
           "subset": "geometry"
         },
         {
@@ -646,7 +517,49 @@
               "qualifyingKind": "verified-native-second-implementation"
             }
           ],
-          "subset": "catalog"
+          "subset": "geometry"
+        },
+        {
+          "id": "add-geometry",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "add-geometry",
+            "bridgeVersion": 1,
+            "variant": "AddGeometry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "geometry"
+        },
+        {
+          "id": "remove-geometry",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-geometry",
+            "bridgeVersion": 1,
+            "variant": "RemoveGeometry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "geometry"
         },
         {
           "id": "resize-geometry",
@@ -671,17 +584,18 @@
           "subset": "geometry"
         },
         {
-          "id": "change-manufacturer-file",
+          "id": "add-geometry-connection",
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-manufacturer-file",
+            "operation": "add-geometry-connection",
             "bridgeVersion": 1,
-            "variant": "ChangeManufacturerFile"
+            "variant": "AddGeometryConnection"
           },
           "oracleRequirements": [
             {
@@ -689,20 +603,20 @@
               "qualifyingKind": "verified-native-second-implementation"
             }
           ],
-          "subset": "catalog"
+          "subset": "geometry"
         },
         {
-          "id": "change-limits",
+          "id": "remove-geometry-connection",
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-limits",
+            "operation": "remove-geometry-connection",
             "bridgeVersion": 1,
-            "variant": "ChangeLimits"
+            "variant": "RemoveGeometryConnection"
           },
           "oracleRequirements": [
             {
@@ -710,7 +624,93 @@
               "qualifyingKind": "verified-native-second-implementation"
             }
           ],
-          "subset": "catalog"
+          "subset": "geometry"
+        },
+        {
+          "id": "change-geometry-parameters",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-geometry-parameters",
+            "bridgeVersion": 1,
+            "variant": "ChangeGeometryParameters"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "geometry"
+        },
+        {
+          "id": "add-curve",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "add-curve",
+            "bridgeVersion": 1,
+            "variant": "AddCurve"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "geometry"
+        },
+        {
+          "id": "remove-curve",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-curve",
+            "bridgeVersion": 1,
+            "variant": "RemoveCurve"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "geometry"
+        },
+        {
+          "id": "change-curve-points",
+          "capability": "vdi3805-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-curve-points",
+            "bridgeVersion": 1,
+            "variant": "ChangeCurvePoints"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "vdi3805-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "geometry"
         }
       ]
     }

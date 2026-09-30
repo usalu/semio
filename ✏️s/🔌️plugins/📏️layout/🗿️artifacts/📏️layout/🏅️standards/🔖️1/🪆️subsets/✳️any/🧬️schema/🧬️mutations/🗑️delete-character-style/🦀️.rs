@@ -28,7 +28,7 @@ pub fn diff_delete_character_style(payload: &DeleteCharacterStyle, base: &Layout
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Character style \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
     if base.stories.iter().any(|story| story.style_runs.iter().any(|run| run.character_style_id.as_deref() == Some(payload.id.as_str()))) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Character style \"{}\" is used by a story.", payload.id), [payload.id.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-referenced", format!("Character style \"{}\" is used by a story.", payload.id), [payload.id.clone()]);
     }
     protocol::MutationOutcome::new(LayoutDiff { character_styles: Some(LayoutCharacterStylesDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
 }

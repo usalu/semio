@@ -26,15 +26,15 @@
           "role": "expected-before-bcf",
           "path": "../🧫️fixtures/👁️insert-viewpoint-applied/⬅️before.bcf",
           "mediaType": "application/octet-stream",
-          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
-          "bytes": 1555
+          "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
+          "bytes": 1559
         },
         {
           "role": "expected-after-bcf",
           "path": "../🧫️fixtures/👁️insert-viewpoint-applied/➡️after.bcf",
           "mediaType": "application/octet-stream",
-          "sha256": "sha256:60046f820bb6f0c8c06115948dd91c8684478cca5a6fb3042d4d2fd218332068",
-          "bytes": 1878
+          "sha256": "sha256:2f5d877f65257d8b9c93e02ba5de5ca569ba185b152ba8493d0738e9692639c1",
+          "bytes": 1882
         }
       ],
       "generator": {
@@ -77,8 +77,8 @@
           "role": "expected-before-bcf",
           "path": "../🧫️fixtures/🙈️remove-viewpoint-applied/⬅️before.bcf",
           "mediaType": "application/octet-stream",
-          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
-          "bytes": 1555
+          "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
+          "bytes": 1559
         },
         {
           "role": "expected-after-bcf",
@@ -128,8 +128,8 @@
           "role": "expected-before-bcf",
           "path": "../🧫️fixtures/🕳️remove-viewpoint-rejected-missing/⬅️before.bcf",
           "mediaType": "application/octet-stream",
-          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
-          "bytes": 1555
+          "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
+          "bytes": 1559
         }
       ],
       "generator": {
@@ -172,15 +172,15 @@
           "role": "expected-before-bcf",
           "path": "../🧫️fixtures/📷️set-viewpoint-camera-applied/⬅️before.bcf",
           "mediaType": "application/octet-stream",
-          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
-          "bytes": 1555
+          "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
+          "bytes": 1559
         },
         {
           "role": "expected-after-bcf",
           "path": "../🧫️fixtures/📷️set-viewpoint-camera-applied/➡️after.bcf",
           "mediaType": "application/octet-stream",
-          "sha256": "sha256:32bd83314252644f72b9ce5613d0d6eeac98de57c0075e525b9d9fd78dd27ec8",
-          "bytes": 1551
+          "sha256": "sha256:b8d83e072402e529695b4f0ca1b73c522d7d60fdc2b3a099f9f27438fc43cc2e",
+          "bytes": 1555
         }
       ],
       "generator": {
@@ -223,15 +223,15 @@
           "role": "expected-before-bcf",
           "path": "../🧫️fixtures/🧱️set-viewpoint-components-applied/⬅️before.bcf",
           "mediaType": "application/octet-stream",
-          "sha256": "sha256:c6a5e0efbc206065523469bcbd2c95051022590cc2020725ae2970babaad4d02",
-          "bytes": 1555
+          "sha256": "sha256:a5f1855a32e3d2623066c938cef6a9839747984420c601cbd3148156c6442b0c",
+          "bytes": 1559
         },
         {
           "role": "expected-after-bcf",
           "path": "../🧫️fixtures/🧱️set-viewpoint-components-applied/➡️after.bcf",
           "mediaType": "application/octet-stream",
-          "sha256": "sha256:1df04563a19e9d60330724afb5456d1582b55359d488bdb153c8abfbe8f62798",
-          "bytes": 1549
+          "sha256": "sha256:d98972e7983d324225f04bc59f1f749765a9dd57e23d924796e8138108588ae0",
+          "bytes": 1553
         }
       ],
       "generator": {

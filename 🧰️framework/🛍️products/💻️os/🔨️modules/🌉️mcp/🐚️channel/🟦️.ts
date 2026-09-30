@@ -115,7 +115,7 @@ export type ShellAppFrameV1 =
 
 /** ⚠️ The fault codes the gateway's own `map_fault` recognises. Anything else becomes an opaque
  * `INTERNAL` on the agent's side, so a shell that wants to be understood answers one of these. */
-export type ShellAppFaultCode = "viewer.read-only" | "capability-denied" | "mutation.rejected" | "transaction.generation-mismatch" | "transaction.instance-busy" | "budget.exceeded" | "capability.not-found" | "plugin.unavailable" | "channel.not-wired";
+export type ShellAppFaultCode = "viewer.read-only" | "capability-denied" | "app.command.rejected" | "transaction.generation-mismatch" | "transaction.instance-busy" | "budget.exceeded" | "capability.not-found" | "plugin.unavailable" | "channel.not-wired";
 
 export function shellAppFault(code: ShellAppFaultCode, message: string): ShellAppFrameV1 {
   return { kind: "error", code, message };

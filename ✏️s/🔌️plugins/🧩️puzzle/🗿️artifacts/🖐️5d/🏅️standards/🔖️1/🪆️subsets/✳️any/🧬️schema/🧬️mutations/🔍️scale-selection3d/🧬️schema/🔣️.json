@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/mutation/scale-selection3d/schema.json",
+  "title": "ScaleSelection3d",
+  "description": "The `scale-selection3d` mutation record — a relative per-axis scaling of parts and target volumes, each about its own origin; internally tagged `\"mutation\": \"scaleSelection3d\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targets",
+    "factors"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "scaleSelection3d",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Targets",
+          "de": "Ziele"
+        },
+        "description": {
+          "en": "Parts and target volumes to scale; locked or missing ones are skipped.",
+          "de": "Zu skalierende Teile und Zielvolumen; gesperrte oder fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": [
+            "part",
+            "targetVolume"
+          ],
+          "domain": "vortex",
+          "granularity": "part"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "factors": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Factors",
+          "de": "Faktoren"
+        },
+        "description": {
+          "en": "Per-axis factors (x, y, z) every target's scale is multiplied by; 1 keeps an axis.",
+          "de": "Faktoren je Achse (x, y, z), mit denen die Skalierung jedes Ziels multipliziert wird; 1 behält eine Achse bei."
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "scale",
+        "order": 20
+      }
+    }
+  }
+}

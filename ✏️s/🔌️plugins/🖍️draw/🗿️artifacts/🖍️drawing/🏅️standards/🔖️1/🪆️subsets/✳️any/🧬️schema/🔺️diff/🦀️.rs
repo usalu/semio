@@ -481,6 +481,18 @@ pub fn diff_set_layer_transform(layer_id: &str, transform: &crate::DrawingTransf
     layer_base_patch(layer_id, DrawingLayerPatch { transform_json: Some(dsl::json::to_json_string(transform)), ..Default::default() })
 }
 
+/// ↔️ Several layers' transform patches in one sparse delta, in the given order.
+pub fn diff_set_layer_transforms(entries: impl IntoIterator<Item = (String, crate::DrawingTransform)>) -> DrawingDiff {
+    let patched = entries.into_iter().map(|(id, transform)| DrawingLayerPatchEntry { id, patch: DrawingLayerPatch { transform_json: Some(dsl::json::to_json_string(&transform)), ..Default::default() } }).collect();
+    DrawingDiff { layers: Some(DrawingLayersDelta { patched, ..Default::default() }), ..Default::default() }
+}
+
+/// ✏️ Several paths' geometry patches in one sparse delta, in the given order.
+pub fn diff_set_path_geometries(entries: impl IntoIterator<Item = (String, Vec<crate::PathSegment>)>) -> DrawingDiff {
+    let patched = entries.into_iter().map(|(id, segments)| DrawingLayerPatchEntry { id, patch: DrawingLayerPatch { path_segments: Some(segments), ..Default::default() } }).collect();
+    DrawingDiff { layers: Some(DrawingLayersDelta { patched, ..Default::default() }), ..Default::default() }
+}
+
 /// 🎨 Layer fill patch.
 pub fn diff_set_fill(layer_id: &str, fill: &Option<FillStyle>) -> DrawingDiff {
     layer_base_patch(layer_id, DrawingLayerPatch { fill_json: Some(dsl::json::to_json_string(fill)), ..Default::default() })

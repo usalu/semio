@@ -1,0 +1,26 @@
+{
+  "artifact": null,
+  "structureId": null,
+  "geotechnicalCategory": null,
+  "designSituation": null,
+  "designApproach": null,
+  "annex": null,
+  "groundwaterLevel": null,
+  "investigationDepth": null,
+  "layers": null,
+  "footings": null,
+  "piles": null,
+  "retainingWalls": null,
+  "slopes": {
+    "values": [
+      {
+        "id": "slope-S1",
+        "angleDeg": 30.0,
+        "height": 6.0,
+        "length": 14.0,
+        "governingLayerId": "layer-sand"
+      }
+    ]
+  },
+  "upliftCases": null
+}

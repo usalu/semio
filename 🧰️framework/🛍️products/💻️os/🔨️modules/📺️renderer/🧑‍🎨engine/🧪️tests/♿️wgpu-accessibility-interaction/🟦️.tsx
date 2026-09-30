@@ -462,6 +462,28 @@ describe("wgpu accessibility interaction contract", () => {
     mirror.dispose();
   });
 
+  it("mirrors every transient notice as the polite status React renders, named by its message and described by its code", async () => {
+    type NoticeFixture = { readonly node: { readonly key: string; readonly role: string; readonly live: string }; readonly notices: readonly { readonly code: string | null; readonly message: string }[] };
+    const notices = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🧯️wgpu-transient-notice/🔣️.json"), "utf8")) as NoticeFixture;
+    vi.useFakeTimers();
+    for (const notice of notices.notices) {
+      const root = document.createElement("div");
+      document.body.append(root);
+      const sent: WireEvent[] = [];
+      const node = { nodeId: 1, key: notices.node.key, role: notices.node.role, depth: 0, label: notice.message, ...(notice.code === null ? {} : { description: notice.code }), live: notices.node.live, focusable: false, tabbable: false, actionable: false };
+      const json = JSON.stringify({ windows: [{ windowId: "shell.chrome", windowGeneration: 1, nodes: [node] }] });
+      const mirror = createAccessibilityMirror(root, { introspect: async () => json, enqueueLossless: (event) => { sent.push(event as WireEvent); return true; } }, "en");
+      mirror.refresh();
+      await vi.advanceTimersByTimeAsync(400);
+      const status = root.querySelector<HTMLElement>(`[data-node-key="${notices.node.key}"]`)!;
+      expect([getRole(status), status.getAttribute("aria-live"), computeAccessibleName(status), computeAccessibleDescription(status), status.tabIndex], notice.message).toEqual([notices.node.role, notices.node.live, notice.message, notice.code ?? "", -1]);
+      status.click();
+      expect(sent, "a status is announced, never activated").toEqual([]);
+      mirror.dispose();
+      root.remove();
+    }
+  });
+
   it("mounts an open retained Select as a read-only combobox with live listbox options", async () => {
     vi.useFakeTimers();
     const root = document.createElement("div");

@@ -191,6 +191,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/framework": "workspace:*",
+        "@semio-tech/presentation": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
         "pdfjs-dist": "^5.4.296",
         "reveal.js": "^5.2.1",
@@ -364,10 +365,6 @@
       "name": "@semio-tech/cad-js",
       "version": "0.1.0",
       "dependencies": {
-        "@semio-tech/cad-js-module-aec-building": "workspace:*",
-        "@semio-tech/cad-js-module-aec-building-energy": "workspace:*",
-        "@semio-tech/cad-js-module-aec-building-structure": "workspace:*",
-        "@semio-tech/cad-js-module-spatial-shape": "workspace:*",
         "@semio-tech/framework": "workspace:*",
         "@semio-tech/infinite-world-r3f": "workspace:*",
         "@semio-tech/machine": "workspace:*",
@@ -811,6 +808,13 @@
     "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust": {
       "name": "@semio-tech/puzzle-wasm",
       "version": "0.1.0",
+    },
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/puzzle-2d",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework-renderer-react": "workspace:*",
+      },
     },
     "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript": {
       "name": "@semio-tech/block-js",
@@ -2406,6 +2410,8 @@
     "@semio-tech/procedural-js": ["@semio-tech/procedural-js@workspace:✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript"],
 
     "@semio-tech/process-js": ["@semio-tech/process-js@workspace:✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript"],
+
+    "@semio-tech/puzzle-2d": ["@semio-tech/puzzle-2d@workspace:✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🟦️typescript"],
 
     "@semio-tech/puzzle-5d-react": ["@semio-tech/puzzle-5d-react@workspace:✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/📦️packages/🟦️typescript"],
 

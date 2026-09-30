@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection3d",
+  "semanticKind": "rotate-selection3d",
+  "displayName": "Rotate Selection 3d",
+  "emoji": "🔄️",
+  "aggregateVariant": "RotateSelection3d",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "rotate-selection3d",
+  "binaryTag": 37,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

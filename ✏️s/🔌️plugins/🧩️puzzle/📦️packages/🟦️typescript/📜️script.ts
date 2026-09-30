@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧩️ `@semio-tech/puzzle-js` router: `bun ./📜️script.ts test`. */
+/** 🧩️ `@semio-tech/puzzle-2d` router: `bun ./📜️script.ts test`. */
 import { resolve } from "node:path";
 import Ajv from "ajv";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";

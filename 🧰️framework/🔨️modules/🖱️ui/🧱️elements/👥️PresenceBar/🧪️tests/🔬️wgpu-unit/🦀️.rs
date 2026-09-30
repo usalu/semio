@@ -1,7 +1,7 @@
 use super::*;
 
 fn peer(actor: &str, label: &str, role: Option<PresenceRole>) -> PresencePeerRow {
-    PresencePeerRow { actor: actor.into(), user_id: None, label: label.into(), role, connected_at_ms: None, color: None, is_agent: false }
+    PresencePeerRow { actor: actor.into(), user_id: None, label: label.into(), role, connected_at_ms: None, color: None, is_agent: false, activity: None }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -81,3 +81,22 @@ async fn an_agent_row_carries_the_agent_badge_in_both_tongues_and_a_person_never
         assert_eq!(presence_bar_chip_text(&peers, None, locale), format!("Ada · Drafting agent ({word})"));
     }
 }
+
+/// ⏪️ A peer's activity marks its row with the badge node `peer-activity-badge:<actor>` and the painted chip with the
+/// badge, while the announced chip carries the activity text after the agent word and never the decorative badge —
+/// React's `PresenceBar` `activity`; a peer without one is unchanged.
+#[semio_framework_async_macros::async_test]
+async fn an_activity_badges_its_row_and_is_announced_in_the_accessible_name() {
+    let editing = PresencePeerRow { activity: Some(PresenceActivity { text: "Ada is editing Drag selection in time travel".into(), badge: "⏪".into() }), ..peer("actor-a", "Ada", Some(PresenceRole::Author)) };
+    let agent = PresencePeerRow { is_agent: true, activity: Some(PresenceActivity { text: "Drafting agent is editing the history in time travel".into(), badge: "⏪".into() }), ..peer("actor-agent", "Drafting agent", None) };
+    let peers = vec![editing, agent, peer("actor-b", "Bob", None)];
+    let tree = format!("{:?}", build_presence_bar_localized("s-presence-peers", &peers, None, Locale::En));
+    assert!(tree.contains("peer-activity-badge:actor-a") && tree.contains("peer-activity-badge:actor-agent") && !tree.contains("peer-activity-badge:actor-b"));
+    assert_eq!(presence_bar_chip_text(&peers, None, Locale::En), "Ada ⏪ · Drafting agent (AI agent) ⏪ · Bob");
+    assert_eq!(
+        presence_bar_chip_accessible_text(&peers, None, Locale::En),
+        "Ada (Ada is editing Drag selection in time travel) · Drafting agent (AI agent, Drafting agent is editing the history in time travel) · Bob"
+    );
+    assert_eq!(presence_bar_chip_accessible_text(&[], None, Locale::De), "Niemand sonst ist hier");
+}
+

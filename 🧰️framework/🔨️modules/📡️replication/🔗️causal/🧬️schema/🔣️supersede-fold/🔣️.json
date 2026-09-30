@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/replication/supersede-fold.json",
   "title": "Semio Supersede Fold Law Steps",
-  "description": "Language-agnostic steps for the supersession half of the history fold: edits, transitions in arrival order, and the expected final alternative and effective supersessions after each prefix. HLCs are `{actor: 0, physical_ms: logicalMs, logical: 0}`; transition ids are given verbatim.",
+  "description": "Language-agnostic steps for the supersession half of the history fold: edits, transitions in arrival order, and the expected final alternative (`null` while the trunk is active) and effective supersessions after each prefix. HLCs are `{actor: 0, physical_ms: logicalMs, logical: 0}`; transition ids are given verbatim.",
   "definitions": {
     "Id": {
       "type": "string",
@@ -223,6 +223,7 @@
   "required": [
     "schema",
     "documentId",
+    "trunkAlternativeId",
     "edits",
     "steps"
   ],
@@ -232,6 +233,11 @@
     },
     "documentId": {
       "$ref": "#/definitions/Id"
+    },
+    "trunkAlternativeId": {
+      "description": "The document's trunk alternative id (`trunk_alternative_id`, pinned by the history-transition corpus `trunks` vectors); a supersession scoped to it applies while the trunk is active, a checkout naming it activates the trunk.",
+      "type": "string",
+      "pattern": "^trunk-[0-9a-f]{16}$"
     },
     "edits": {
       "type": "array",

@@ -13,8 +13,8 @@
   "exports": {
     ".": "./🟦️.tsx",
     "./runtime": "./🟦️.tsx",
-    "./i18n": "../../🌐️i18n/🟦️.ts",
-    "./chrome": "../../🪟️chrome/🟦️.ts",
+    "./i18n": "./🌐️i18n.ts",
+    "./chrome": "./🪟️chrome.ts",
     "./test": "./🟦️.ts",
     "./components.json": "../../../../components.json",
     "./🧵️.css": "../../../../🧵️styles/🎨️.css",

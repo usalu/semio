@@ -2067,7 +2067,7 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
   const sourceBoundary = process.platform === "win32" ? resolve(options.cwd).toLowerCase() : resolve(options.cwd);
   if (sourceBoundary === targetBoundary || sourceBoundary.startsWith(targetBoundary + sep)) throw new Error("Cargo target must not contain the source workspace");
   const env = { ...configuredEnv, CARGO_TARGET_DIR: cargoTargetDir };
-  const nativeEnv = { ...env, ...options.nativeEnv, CARGO_TARGET_DIR: cargoTargetDir };
+  const nativeEnv: NodeJS.ProcessEnv = { ...env, ...options.nativeEnv, CARGO_TARGET_DIR: cargoTargetDir };
   delete nativeEnv.RUST_TEST_NOCAPTURE;
   if (!isAbsolute(options.cwd) || !options.groups.length || options.groups.length > 64) throw new Error("Exact Cargo laws require a bounded nonempty target list and absolute cwd");
   const groupKeys = options.groups.map((group) => JSON.stringify([group.package, group.target.kind, group.target.name ?? ""]));

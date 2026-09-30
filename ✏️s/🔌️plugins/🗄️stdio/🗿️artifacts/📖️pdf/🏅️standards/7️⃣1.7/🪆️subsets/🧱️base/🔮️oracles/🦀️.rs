@@ -42,51 +42,6 @@ pub const KINDS: &[&str] = &["insert-page", "remove-page", "set-page-media-box",
 pub const UNOBSERVABLE: &[&str] = &["insert-object"];
 //#endregion 🔖️Vocabulary
 
-//#region 🔖️PageContentLaw
-/// 🧱️ The three kinds whose REFERENCE undo has to rebuild a page's content stream, and therefore
-/// cannot restore `contentOperators`. The vocabulary itself carries the typed operator list
-/// (`PdfPage.content`, `InsertPage`/`SetPageContent`/`AppendPageContent` all speak `PdfOp`), so the
-/// subject restores a page's original stream exactly; the loss is this reference's own undo, which
-/// captures a page's prior text through `Tj` alone ([`page_text`]) and rebuilds a minimal
-/// `BT /F1 12 Tf 72 720 Td (…) Tj ET` from it. Page 8 of the real thesis carries 294 operators —
-/// glyph positioning, graphics state, the lot — set with `TJ`, and no `Tj` capture can bring them
-/// back.
-///
-/// ⚖️ Exactly ONE axis is exempted, and only for these three kinds. `version`, `pageCount`, every
-/// page's `mediaBox`, `cropBox`, `rotate` and — critically — the shown `text` all stay under the
-/// full law, as does the whole `objectGraph` surface. Lives here
-/// rather than in the case adapter because the adapter's `inverse-<kind>` handler and this module's
-/// own `every_declared_kind_is_observable_and_its_inverse_restores_the_document` must exempt the
-/// same axis for the same three kinds or one of them is measuring a different law.
-pub fn regenerates_page_content(kind: &str) -> bool {
-    matches!(kind, "remove-page" | "append-page-content" | "set-page-content")
-}
-
-/// ✂️ The same projection with every page's `contentOperators` dropped — nothing else is touched,
-/// so a divergence anywhere else still fails. @see [`regenerates_page_content`].
-pub fn without_content_operators(projection: &Json) -> Json {
-    let Json::Object(fields) = projection else { return projection.clone() };
-    Json::Object(
-        fields
-            .iter()
-            .map(|(key, value)| {
-                if key != "pages" {
-                    return (key.clone(), value.clone());
-                }
-                let Json::Array(pages) = value else { return (key.clone(), value.clone()) };
-                let stripped = pages
-                    .iter()
-                    .map(|page| match page {
-                        Json::Object(entries) => Json::Object(entries.iter().filter(|(name, _)| name != "contentOperators").cloned().collect()),
-                        other => other.clone(),
-                    })
-                    .collect();
-                (key.clone(), Json::Array(stripped))
-            })
-            .collect(),
-    )
-}
-//#endregion 🔖️PageContentLaw
 
 #[cfg(feature = "oracles")]
 //#region 🔖️Oracles
@@ -230,9 +185,10 @@ mod oracles {
     //#endregion 🔖️JsonValue
 
     //#region 🔖️ContentStream
-    /// ✏️️ The leaf wire's `PdfOp` list (`{"op": "beginText"|"setFont"|"moveText"|"showText"|"endText", …}`) written as a
-    /// content stream by `lopdf`'s own encoder — the text-object operators the case's rows and this module's undo capture
-    /// speak. Any other operator is refused rather than skipped.
+    /// ✏️️ The leaf wire's `PdfOp` list written as a content stream by `lopdf`'s own encoder: the text-object operators
+    /// the case's rows speak (`{"op": "beginText"|"setFont"|"moveText"|"showText"|"endText", …}`) and the wire's generic
+    /// `{"op": "unknown", "operator", "operands"}`, in which this module's undo captures a page's operators verbatim. Any
+    /// other operator is refused rather than skipped.
     fn content_stream(ops: &[Json]) -> Result<Vec<u8>, String> {
         let operations = ops
             .iter()
@@ -243,6 +199,7 @@ mod oracles {
                     "setFont" => Operation::new("Tf", vec![Object::Name(op.str("name").into_bytes()), Object::Real(number_field(op, "size") as f32)]),
                     "moveText" => Operation::new("Td", vec![Object::Real(number_field(op, "tx") as f32), Object::Real(number_field(op, "ty") as f32)]),
                     "showText" => Operation::new("Tj", vec![text_operand(op.get("text").unwrap_or(&Json::Null))?]),
+                    "unknown" => Operation::new(&op.str("operator"), op.array("operands").iter().map(json_to_object).collect::<Result<Vec<_>, String>>()?),
                     other => return Err(format!("content operator {other:?} is outside this oracle's text-object vocabulary")),
                 })
             })
@@ -259,42 +216,12 @@ mod oracles {
         }
     }
 
-    /// ✏️️ The minimal `BT /F1 12 Tf 72 720 Td (…) Tj ET` op list carrying `text` as one `Tj` — the reference's own lossy
-    /// rebuild of a page from its captured `Tj` text. A page with NO extractable text gets a bare `BT ET`: the real
-    /// thesis sets its type with `TJ`, so [`page_text`] extracts nothing from it, and a `() Tj` would turn a page the
-    /// independent reader projects as `text: []` into one it projects as `text: [""]`.
-    fn text_ops(text: &str) -> Json {
-        let op = |name: &str, members: Vec<(&str, Json)>| object([("op", Json::String(name.to_string()))].into_iter().chain(members).collect());
-        if text.is_empty() {
-            return Json::Array(vec![op("beginText", vec![]), op("endText", vec![])]);
-        }
-        Json::Array(vec![
-            op("beginText", vec![]),
-            op("setFont", vec![("name", Json::String("F1".to_string())), ("size", Json::Number(12.0))]),
-            op("moveText", vec![("tx", Json::Number(72.0)), ("ty", Json::Number(720.0))]),
-            op("showText", vec![("text", object(vec![("kind", Json::String("text".to_string())), ("text", Json::String(text.to_string()))]))]),
-            op("endText", vec![]),
-        ])
-    }
-
-    /// 🔎️ Concatenated `Tj` operand text of one page's content -- the independent-reader counterpart
-    /// of what [`text_ops`] writes, used to capture a page's prior text before mutating it.
-    fn page_text(document: &Document, page_id: ObjectId) -> String {
-        let content = document.get_page_content(page_id);
-        let tj_operand_separator = "
-";
-        Content::decode(&content)
-            .map(|decoded| {
-                decoded
-                    .operations
-                    .iter()
-                    .filter(|operation| operation.operator == "Tj")
-                    .flat_map(|operation| operation.operands.iter())
-                    .filter_map(|operand| operand.as_str().ok().map(|bytes| String::from_utf8_lossy(bytes).to_string()))
-                    .collect::<Vec<_>>()
-                    .join(tj_operand_separator)
-            })
-            .unwrap_or_default()
+    /// 📸️ One page's content captured operator for operator, as the wire's generic `unknown` `PdfOp` records `lopdf`
+    /// decoded it — what an undo that has to put a page's own stream back carries, so [`content_stream`] re-encodes the
+    /// very operators and operands the page held.
+    fn page_ops(document: &Document, page_id: ObjectId) -> Result<Json, String> {
+        let decoded = Content::decode(&document.get_page_content(page_id)).map_err(|error| format!("lopdf could not decode the page content: {error}"))?;
+        Ok(Json::Array(decoded.operations.iter().map(|operation| object(vec![("op", Json::String("unknown".to_string())), ("operator", Json::String(operation.operator.clone())), ("operands", Json::Array(operation.operands.iter().map(object_to_json).collect()))])).collect()))
     }
     //#endregion 🔖️ContentStream
 
@@ -524,7 +451,7 @@ mod oracles {
                             .map(|items| items.iter().map(|item| item.as_float().unwrap_or(0.0)).collect::<Vec<f32>>())
                             .unwrap_or_else(|| vec![0.0, 0.0, 612.0, 792.0]);
                         let rotate = document.get_dictionary(page_id).ok().and_then(|dict| dict.get(b"Rotate").ok()).and_then(|value| value.as_i64().ok()).unwrap_or(0);
-                        let page = object(vec![("mediaBox", number_array(&media_box)), ("rotate", Json::Number(rotate as f64)), ("content", text_ops(&page_text(document, page_id)))]);
+                        let page = object(vec![("mediaBox", number_array(&media_box)), ("rotate", Json::Number(rotate as f64)), ("content", page_ops(document, page_id)?)]);
                         spec("insert-page", object(vec![("index", Json::Number(index as f64)), ("page", page)]))
                     }
                     None => return Err(format!("remove-page index {index} has no inverse target")),
@@ -552,8 +479,8 @@ mod oracles {
             }
             "append-page-content" => {
                 let index = usize_field(params, "index");
-                let prior = page_id_at(document, index).map(|page_id| page_text(document, page_id)).unwrap_or_default();
-                spec("set-page-content", object(vec![("index", Json::Number(index as f64)), ("content", text_ops(&prior))]))
+                let page_id = page_id_at(document, index).ok_or_else(|| format!("{kind} index {index} has no inverse target"))?;
+                spec("set-page-content", object(vec![("index", Json::Number(index as f64)), ("content", page_ops(document, page_id)?)]))
             }
             "insert-object" => spec("remove-object", object(vec![("id", params.get("id").cloned().unwrap_or(Json::Null))])),
             "remove-object" => {
@@ -617,8 +544,8 @@ mod oracles {
             }
             "set-page-content" => {
                 let index = usize_field(params, "index");
-                let prior = page_id_at(document, index).map(|page_id| page_text(document, page_id)).unwrap_or_default();
-                spec("set-page-content", object(vec![("index", Json::Number(index as f64)), ("content", text_ops(&prior))]))
+                let page_id = page_id_at(document, index).ok_or_else(|| format!("{kind} index {index} has no inverse target"))?;
+                spec("set-page-content", object(vec![("index", Json::Number(index as f64)), ("content", page_ops(document, page_id)?)]))
             }
             "set-page-rotation" => {
                 let index = usize_field(params, "index");

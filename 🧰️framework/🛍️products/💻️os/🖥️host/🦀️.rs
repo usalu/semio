@@ -447,7 +447,7 @@ pub mod host {
     impl<P, Op: Mutation<P>> BackboneDocument<P, Op> {
         /// 🧮️ The edits the event log leaves applied, in fold order — what a projection replays.
         pub fn applied_edit_ids(&self) -> Result<Vec<String>, VcsError> {
-            store::fold_event_log::<P, Op>(&self.vcs.edits.iter().collect::<Vec<_>>(), &self.transitions, &self.conflicts).map(|fold| fold.applied)
+            store::fold_event_log::<P, Op>(&self.id, &self.vcs.edits.iter().collect::<Vec<_>>(), &self.transitions, &self.conflicts).map(|fold| fold.applied)
         }
     }
 
@@ -505,6 +505,7 @@ pub mod host {
             edit_messages: store::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages.clone()),
             conflicts: document.conflicts.clone(),
             transitions: document.transitions.clone(),
+            history_shape: protocol::HistoryShape::Document,
         })
     }
 
@@ -815,6 +816,7 @@ pub mod host {
                 edit_messages: store::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages),
                 conflicts: document.conflicts,
                 transitions: document.transitions,
+                history_shape: protocol::HistoryShape::Document,
             });
             let inner = resolve_kernel_future(ArtifactStore::new(envelope))?;
             Ok(Self { inner, name: document.name })

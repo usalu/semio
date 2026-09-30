@@ -252,10 +252,12 @@ type WorldSelectionRecord = {
   /** 🎛️ Plugin-authored gumball handle flags (e.g. puzzle3d Move/Rotate). When set, overrides {@link gumballConfigForTransformMode}. */
   readonly gumballConfig?: GumballConfig;
   /** ⚡️ When true the gumball dispatches `translateSelection`/`rotateSelection`/`scaleSelection`
-   * INCREMENTALLY while the pointer moves (latest pose wins, one round trip in flight at a time) and
-   * the host draws the DOCUMENT's answer instead of a local instance preview — the app owns the pose
-   * mid-drag, so every dependent view (a fem3d results window re-solving under the moved node) tracks
-   * the gesture live. Drag end commits the remaining delta and closes the `transformEnd` bracket. */
+   * INCREMENTALLY while the pointer moves (latest pose wins, one round trip in flight at a time) as
+   * `phase: "stream"` ticks of ONE open tool transaction, and the host draws the app's answer instead of
+   * a local instance preview — the app previews the open transaction, so every dependent view (a fem3d
+   * results window re-solving under the moved node) tracks the gesture live. Drag end sends the remaining
+   * delta as `phase: "commit"`; blur or unmount mid-drag sends `phase: "abort"` with its `reason`. Without
+   * it the host previews locally and dispatches ONE net delta on release (no `phase`: a one-shot transaction). */
   readonly gumballLiveDispatch?: boolean;
   readonly hoveredComponent?: WorldHoverComponent;
   readonly showEdges?: boolean;
@@ -2662,6 +2664,15 @@ export function gumballTransformDeltaBetweenPoses(
     return null;
   }
   return { action: "scaleSelection", args: { ...base, sx, sy, sz } };
+}
+
+/** 🛑️ The pose delta that moves nothing for a gumball handle kind — what a live gesture's `commit` carries when its
+ * tail moved nothing, and the verb its `abort` names. */
+export function gumballIdentityDelta(transformMode: string | undefined, base: Record<string, unknown>, handleKind?: GumballHandleKind): { readonly action: string; readonly args: Record<string, unknown> } {
+  const kind = gumballKindForTransformMode(transformMode, handleKind);
+  if (kind === "translate") return { action: "translateSelection", args: { ...base, dx: 0, dy: 0, dz: 0 } };
+  if (kind === "rotate") return { action: "rotateSelection", args: { ...base, ax: 0, ay: 0, az: 1, angle: 0 } };
+  return { action: "scaleSelection", args: { ...base, sx: 1, sy: 1, sz: 1 } };
 }
 
 /** ⚡️ Local mid-drag gumball preview delta — applied imperatively to selected instance roots so meshes track the pointer without a WASM/React round-trip (same instant path as catalogue drop ghosts). */
@@ -6021,9 +6032,13 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
    * delta reaches the guest, matches no document object, and completes with a refusal notice instead of
    * an edit: the long-standing `gumball-scene-delta` red, where `data-instances-json` never moved. */
   const gumballGestureArgsRef = useRef<{ readonly mode: string; readonly ids: readonly string[] } | null>(null);
-  /** 🧲️ Serialized WASM begin/end chain — mid-drag is local-only unless the selection record asks for
-   * live dispatch; either way every delta and the closing `transformEnd` ride this one FIFO. */
+  /** 🧲️ Serialized gesture chain — mid-drag is local-only unless the selection record asks for live dispatch;
+   * either way every delta, the live `commit` and a host `abort` ride this one FIFO. */
   const gumballDragChainRef = useRef(Promise.resolve());
+  /** 🛠️ A live gesture already streamed a tick, so the app holds its open tool transaction — what a host abort drops. */
+  const gumballLiveStreamedRef = useRef(false);
+  /** 🧯️ The host aborted the live gesture in flight: the rest of this drag (moves and release) is swallowed. */
+  const gumballLiveAbortedRef = useRef(false);
   /** ⚡️ Live-dispatch bookkeeping: the last pose a delta was ENQUEUED from, the newest pose the pointer
    * reported, the handle kind, and whether a mid-drag round trip is outstanding. Latest pose wins: a
    * pointer that outruns the guest collapses every skipped pose into the next delta. */
@@ -6978,15 +6993,17 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       ? marqueeCommitHold
       : (sharedSelectionPreview ?? marqueePreview);
 
+  /** 🛠️ Dispatches one pose delta of the gesture as its tool-transaction `phase`: none for a one-shot net delta,
+   * `stream` for a live tick, `commit` for a live release (an identity delta when the tail moved nothing). */
   const dispatchGumballPoseDelta = useCallback(
-    (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
+    (kind: GumballHandleKind, before: GumballPose, after: GumballPose, phase?: "stream" | "commit") => {
       // 🕹️ The gesture's OWN ids (pinned at drag start), never the selection as it stands now.
       const base = gumballGestureArgsRef.current ?? selectionArgs();
       if (base.ids.length === 0) {
         console.info("gumball pose delta skipped", { reason: "no-selection-ids", transformMode: selection.transformMode, kind, args: base });
         return Promise.resolve();
       }
-      const payload = gumballTransformDeltaBetweenPoses(selection.transformMode, before, after, base, kind);
+      const payload = gumballTransformDeltaBetweenPoses(selection.transformMode, before, after, base, kind) ?? (phase === "commit" ? gumballIdentityDelta(selection.transformMode, base, kind) : null);
       if (!payload) {
         // 🧯️ A drag whose pose did not move commits NOTHING. It used to synthesize a fixed 0.5 translate
         // along the handle's axis instead — a document edit the user never made, minted precisely when the
@@ -7005,7 +7022,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         });
         return Promise.resolve();
       }
-      return Promise.resolve(dispatch(payload.action, payload.args));
+      return Promise.resolve(dispatch(payload.action, phase ? { ...payload.args, phase } : payload.args));
     },
     [dispatch, selection.transformMode, selectionArgs],
   );
@@ -7023,10 +7040,41 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       gumballLiveCommittedPoseRef.current = before;
       gumballLiveLatestPoseRef.current = before;
       gumballLiveHandleKindRef.current = _kind;
-      void enqueueGumballDispatch(() => Promise.resolve(dispatch("transformBegin")));
+      gumballLiveStreamedRef.current = false;
+      gumballLiveAbortedRef.current = false;
     },
-    [dispatch, enqueueGumballDispatch, selectionArgs],
+    [selectionArgs],
   );
+
+  /** 🧯️ Host abort of a live gesture whose ticks opened the app's tool transaction: `phase: "abort"` with the reason
+   * drops it with zero trace, and the rest of this drag is swallowed. A gesture that streamed nothing leaves nothing. */
+  const abortGumballLiveGesture = useCallback(
+    (reason: "blur" | "captureLost") => {
+      const kind = gumballLiveHandleKindRef.current;
+      const base = gumballGestureArgsRef.current;
+      if (!gumballLiveDispatch || !kind || !base || !gumballLiveStreamedRef.current) return;
+      gumballLiveAbortedRef.current = true;
+      gumballLiveStreamedRef.current = false;
+      gumballDragStartPoseRef.current = null;
+      gumballLiveCommittedPoseRef.current = null;
+      gumballLiveLatestPoseRef.current = null;
+      gumballLiveHandleKindRef.current = null;
+      gumballGestureArgsRef.current = null;
+      const verb = gumballIdentityDelta(selection.transformMode, base, kind);
+      void enqueueGumballDispatch(() => Promise.resolve(dispatch(verb.action, { ...base, phase: "abort", reason })));
+    },
+    [dispatch, enqueueGumballDispatch, gumballLiveDispatch, selection.transformMode],
+  );
+  const abortGumballLiveGestureRef = useRef(abortGumballLiveGesture);
+  abortGumballLiveGestureRef.current = abortGumballLiveGesture;
+  useEffect(() => {
+    const onBlur = () => abortGumballLiveGestureRef.current("blur");
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("blur", onBlur);
+      abortGumballLiveGestureRef.current("captureLost");
+    };
+  }, []);
 
   /** ⚡️ Enqueues ONE incremental delta from the last enqueued pose to the newest one, at most one in
    * flight; when it settles, whatever pose arrived meanwhile is folded into the next. */
@@ -7038,7 +7086,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     if (!committed || !latest || !kind || gumballPosesEqual(committed, latest)) return;
     gumballLiveInFlightRef.current = true;
     gumballLiveCommittedPoseRef.current = latest;
-    void enqueueGumballDispatch(() => dispatchGumballPoseDelta(kind, committed, latest)).finally(() => {
+    gumballLiveStreamedRef.current = true;
+    void enqueueGumballDispatch(() => dispatchGumballPoseDelta(kind, committed, latest, "stream")).finally(() => {
       gumballLiveInFlightRef.current = false;
       pumpGumballLiveDispatch();
     });
@@ -7047,7 +7096,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const handleGumballDrag = useCallback(
     (kind: GumballHandleKind, pose: GumballPose) => {
       // ⚡️ Without live dispatch mid-drag stays local (WorldInstancesLayer imperative preview) — no WASM/React composite rebuild.
-      if (!gumballLiveDispatch) return;
+      if (!gumballLiveDispatch || gumballLiveAbortedRef.current) return;
       gumballLiveLatestPoseRef.current = pose;
       gumballLiveHandleKindRef.current = kind;
       pumpGumballLiveDispatch();
@@ -7057,20 +7106,25 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const handleGumballDragEnd = useCallback(
     (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
-      // ⚡️ Live dispatch already committed everything up to the last enqueued pose; the tail is the remaining delta.
+      if (gumballLiveAbortedRef.current) {
+        gumballLiveAbortedRef.current = false;
+        return;
+      }
+      // ⚡️ Live dispatch already streamed everything up to the last enqueued pose; the tail is the remaining delta.
       const startPose = gumballLiveDispatch ? (gumballLiveCommittedPoseRef.current ?? before) : (gumballDragStartPoseRef.current ?? before);
       gumballDragStartPoseRef.current = null;
       gumballLiveCommittedPoseRef.current = null;
       gumballLiveLatestPoseRef.current = null;
       gumballLiveHandleKindRef.current = null;
+      gumballLiveStreamedRef.current = false;
       void enqueueGumballDispatch(async () => {
-        // One absolute delta — the app commits it directly; `transformEnd` only closes the host bracket.
-        if (!gumballPosesEqual(startPose, after)) await dispatchGumballPoseDelta(kind, startPose, after);
-        await Promise.resolve(dispatch("transformEnd"));
+        // 🛠️ Live: the tail commits the ONE open transaction. Local: one net delta is one one-shot transaction.
+        if (gumballLiveDispatch) await dispatchGumballPoseDelta(kind, startPose, after, "commit");
+        else if (!gumballPosesEqual(startPose, after)) await dispatchGumballPoseDelta(kind, startPose, after);
         gumballGestureArgsRef.current = null;
       });
     },
-    [dispatch, dispatchGumballPoseDelta, enqueueGumballDispatch, gumballLiveDispatch],
+    [dispatchGumballPoseDelta, enqueueGumballDispatch, gumballLiveDispatch],
   );
 
   const handleFaceDragStart = useCallback((args: { objectId: string; faceId: number; normal: readonly [number, number, number]; point: readonly [number, number, number]; faceExtent?: readonly [number, number] }) => {

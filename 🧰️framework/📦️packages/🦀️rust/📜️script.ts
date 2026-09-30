@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀️ `@semio-tech/framework` task router: `bun ./📜️script.ts test|generate|check|lint`. */
-import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, runCmdStatus, runTestBudgeted, runVitest, resolveTestLevel } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runExactCargoLaws, runCargoLint, runCargoTestBudgeted, runCmdStatus, runTestBudgeted, runVitest, resolveTestLevel } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
@@ -19,6 +19,76 @@ class WireRetirementNativeScript extends BundleScript {
   }
 }
 //#endregion 🧹️WireRetirement
+
+/** 🧱️ Verifies portable ownership witnesses before their native contract consumers. */
+class FixtureOwnershipTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments.length === 1 && segments[0] !== "source")) throw new Error("test-fixture-ownership accepts only source");
+    await runTestBudgeted(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🧪️tests/🧱️fixture-ownership/🟦️.ts")], { cwd: this.repoRoot });
+    if (segments[0] === "source") return;
+    let cancelled = false;
+    const interrupt = (): void => { cancelled = true; };
+    process.on("SIGINT", interrupt);
+    process.on("SIGTERM", interrupt);
+    try {
+      const receipts = await runExactCargoLaws({
+        cwd: this.repoRoot,
+        env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },
+        nativeEnv: { RUST_MIN_STACK: "268435456" },
+        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(this.root, "🗑️generated", "fixture-ownership"),
+        buildBudgetMs: buildBudgetMs(),
+        listBudgetMs: 60_000,
+        lawBudgetMs: 120_000,
+        cancelled: () => cancelled,
+        progress: event => console.log(`fixture-ownership ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`),
+        groups: [
+          { package: "semio-framework-surface", target: { kind: "lib" }, laws: [
+            "paint_stroke_refuses_locked_layers_and_locked_ancestors",
+          ] },
+          { package: "semio-framework-artifact-flow-flow", target: { kind: "lib" }, laws: [
+            "authored_slider_labels_survive_json_dag_and_chrome",
+          ] },
+          { package: "semio-framework-os-flow", target: { kind: "lib" }, laws: [
+            "slider_ghost_descriptor_requires_authored_label",
+          ] },
+          { package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: [
+            "execution_target_status_vocabulary_matches_the_corpus",
+            "execution_target_lease_compares_every_plan_and_verified_byte_field",
+          ] },
+          { package: "semio-framework-os-mcp", target: { kind: "lib" }, laws: [
+            "a_503_inference_unavailable_becomes_a_retryable_plugin_unavailable_that_names_the_missing_binding",
+            "a_submit_intent_encodes_within_the_fixed_bound_and_every_hostile_field_is_refused",
+            "an_approval_intent_carries_only_the_job_and_its_exact_proposal_digest",
+            "the_four_client_paths_are_exact_percent_encoded_hub_paths",
+            "a_reply_decodes_by_its_closed_code_and_never_by_its_ambiguous_status",
+            "a_two_hundred_reply_must_declare_its_own_exact_schema_and_carry_no_unknown_field",
+            "a_submit_call_posts_the_bounded_closed_intent_to_the_exact_job_route",
+            "an_events_call_refuses_a_foreign_job_id_or_an_out_of_range_cursor_before_any_request",
+            "an_already_cancelled_operation_context_never_reaches_the_hub_and_maps_to_cancelled",
+            "a_transport_failure_maps_onto_the_closed_route_vocabulary_and_never_a_fabricated_success",
+            "an_approval_receipt_must_bind_the_exact_job_proposal_and_durable_undo_scope",
+            "a_retained_local_wait_is_interrupted_by_its_own_operation_label_and_by_nothing_else",
+            "every_inference_job_tool_is_denied_without_its_scope_and_admitted_by_inference_execute",
+            "a_job_handle_is_readable_only_by_its_own_session_and_its_own_authenticated_subject",
+            "a_booting_hub_roster_is_unavailable_never_empty",
+            "the_four_capabilities_are_direct_object_typed_gateway_tools_with_bilingual_descriptions",
+            "neutral_job_pages_refuse_foreign_jobs_and_private_payloads",
+            "authenticated_hub_catalog_hydrates_exact_selected_descriptor_and_revocation_removes_it",
+            "a_catalog_refresh_fetches_each_descriptor_once_and_the_next_refresh_none",
+            "a_hub_workspace_catalog_follows_a_new_descriptor_authority_generation",
+            "authenticated_hub_workspace_resources_are_snapshot_only_scoped_and_fail_closed_when_stale",
+            "authenticated_hub_discovery_uses_retained_selection_and_never_installed_fallback",
+            "inference_approval_encoding_consumes_the_framework_owned_contract",
+          ] },
+        ],
+      });
+      console.log(`fixture-ownership: ${receipts.reduce((count, receipt) => count + receipt.assertions, 0)} exact native laws passed`);
+    } finally {
+      process.off("SIGINT", interrupt);
+      process.off("SIGTERM", interrupt);
+    }
+  }
+}
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -150,6 +220,6 @@ class CheckScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-core-modules", CoreModulesTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-fixture-ownership", FixtureOwnershipTestScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-core-modules", CoreModulesTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

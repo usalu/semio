@@ -84,13 +84,9 @@ fn artboard_scene_records(document: &DrawingSnapshot) -> Vec<DslValue> {
 pub fn render(document: &DrawingSnapshot, config: &config::DrawingCanvasWindowConfig, preview: &DrawingGesturePreview, active_utility: &str, selection: &[String], point_selection: &[String]) -> UiAssemblyResult<BuiltNode> {
     let mut scene_nodes = crate::schema::flatten_drawing_document_with_transformation(document,preview.transformation.as_ref());
     if let Some(movement)=&preview.node_translation {
-        let references=movement.point_ids.iter().filter_map(|id|crate::editor::drawing::interaction::points::parse_point_id(id)).collect::<Vec<_>>();
         for node in &mut scene_nodes {
-            let selected=references.iter().filter(|point|point.layer_id==node.id).collect::<Vec<_>>();
-            if selected.is_empty() {continue;}
-            let geometry=crate::editor::drawing::interaction::points::geometry_id(&node.segments);
-            if selected.iter().any(|point|Some(point.geometry)!=geometry.as_deref()) {continue;}
-            let points=selected.iter().map(|point|crate::schema::geometry::editing::PathPointRef {index:point.index,point:point.point}).collect::<Vec<_>>();
+            let points=movement.targets.iter().filter(|target|target.layer_id==node.id).map(|target|crate::schema::geometry::editing::PathPointRef {index:target.index,point:target.point}).collect::<Vec<_>>();
+            if points.is_empty() {continue;}
             if let Ok(segments)=crate::schema::geometry::editing::translate_world_path_points(&node.segments,&points,node.transform,movement.delta) {node.segments=segments;}
         }
     }

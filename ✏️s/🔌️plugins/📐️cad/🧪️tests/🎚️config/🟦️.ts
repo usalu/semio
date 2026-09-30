@@ -25,10 +25,10 @@ const DOMAIN_FILES = [
   `${ARTIFACT_EDITOR_ENGINE}/🏃️runtime/🟦️.ts`,
   `${ARTIFACT_EDITOR_ENGINE}/🎬️actions/🟦️.ts`,
   `${ARTIFACT_EDITOR_ENGINE}/🗿️artifact/🟦️.ts`,
-  "../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️.ts",
-  "../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts",
+  "🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+  "🧪️tests/🔮️spatial-kernel/📐️geometry/🟦️.ts",
   "../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts",
-  "../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🟦️.ts",
+  "🧪️tests/🔮️spatial-kernel/🧠️semio/🟦️.ts",
   "🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️.ts",
 ];
 
@@ -45,7 +45,7 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/cad-js",
     mode: "test",
-    include: ["🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts"],
+    include: ["🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts", "🧪️tests/🔬️layering/🟦️.ts"],
     includeSource: DOMAIN_FILES,
     coverage: { include: DOMAIN_FILES },
     environment: "node",

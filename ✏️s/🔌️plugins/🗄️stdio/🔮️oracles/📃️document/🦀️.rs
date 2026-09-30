@@ -747,6 +747,147 @@ pub mod ooxml {
     }
     //#endregion 🔖️PackageFacts
 
+    //#region 🔖️PackageWire
+    /// ✂️ XML character escaping for text content and, with `attribute`, for a double-quoted attribute value — whitespace
+    /// an attribute carries is written as character references so a reader's attribute normalization keeps it.
+    fn escape_xml(text: &str, attribute: bool) -> String {
+        let mut out = String::with_capacity(text.len());
+        for character in text.chars() {
+            match character {
+                '&' => out.push_str("&amp;"),
+                '<' => out.push_str("&lt;"),
+                '>' => out.push_str("&gt;"),
+                '"' if attribute => out.push_str("&quot;"),
+                '\t' if attribute => out.push_str("&#9;"),
+                '\n' if attribute => out.push_str("&#10;"),
+                '\r' if attribute => out.push_str("&#13;"),
+                other => out.push(other),
+            }
+        }
+        out
+    }
+
+    /// 🧵️ One wire `XmlNode` (`{kind: element|text|cData|comment|processingInstruction, …}`) as XML text.
+    fn xml_node_text(node: &Json, out: &mut String) -> Result<(), String> {
+        match node.str("kind").as_str() {
+            "element" => {
+                let name = node.str("name");
+                out.push('<');
+                out.push_str(&name);
+                for attribute in node.array("attrs") {
+                    out.push_str(&format!(" {}=\"{}\"", attribute.str("name"), escape_xml(&attribute.str("value"), true)));
+                }
+                let children = node.array("children");
+                if children.is_empty() {
+                    out.push_str("/>");
+                    return Ok(());
+                }
+                out.push('>');
+                for child in &children {
+                    xml_node_text(child, out)?;
+                }
+                out.push_str(&format!("</{name}>"));
+            }
+            "text" => out.push_str(&escape_xml(&node.str("text"), false)),
+            "cData" => out.push_str(&format!("<![CDATA[{}]]>", node.str("text"))),
+            "comment" => out.push_str(&format!("<!--{}-->", node.str("text"))),
+            "processingInstruction" => out.push_str(&format!("<?{} {}?>", node.str("target"), node.str("data"))),
+            other => return Err(format!("unknown XML node kind {other:?}")),
+        }
+        Ok(())
+    }
+
+    /// 🧵️ One wire `XmlDocument` (`{declaration?, prolog?, root?, epilog?}`) as the XML text of an OPC part. A document type
+    /// declaration has no place in an OPC part, so a document carrying one is refused rather than silently dropped.
+    fn xml_document_text(document: &Json) -> Result<String, String> {
+        if document.get("doctype").is_some() {
+            return Err("an OPC XML part carries no document type declaration".to_string());
+        }
+        let mut out = String::new();
+        if let Some(declaration) = document.get("declaration") {
+            let quote = if declaration.str("quote") == "single" { '\'' } else { '"' };
+            out.push_str(&format!("<?xml version={quote}{}{quote}", declaration.str("version")));
+            if let Some(Json::String(encoding)) = declaration.get("encoding") {
+                out.push_str(&format!(" encoding={quote}{encoding}{quote}"));
+            }
+            if let Some(Json::Bool(standalone)) = declaration.get("standalone") {
+                out.push_str(&format!(" standalone={quote}{}{quote}", if *standalone { "yes" } else { "no" }));
+            }
+            out.push_str("?>");
+        }
+        for node in document.array("prolog") {
+            xml_node_text(&node, &mut out)?;
+        }
+        if let Some(root) = document.get("root") {
+            xml_node_text(root, &mut out)?;
+        }
+        for node in document.array("epilog") {
+            xml_node_text(&node, &mut out)?;
+        }
+        Ok(out)
+    }
+
+    /// 🔗️ The `.rels` part that holds `source`'s relationships (`""` is the package itself: `_rels/.rels`).
+    pub fn relationships_part_path(source: &str) -> String {
+        match source.rsplit_once('/') {
+            Some((directory, file)) => format!("{directory}/_rels/{file}.rels"),
+            None if source.is_empty() => "_rels/.rels".to_string(),
+            None => format!("_rels/{source}.rels"),
+        }
+    }
+
+    /// 🔗️ One source's wire relationships (`[{id, relType, target, targetMode: internal|external}]`) as a `.rels` part.
+    fn relationships_text(relationships: &[Json]) -> String {
+        let mut out = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">");
+        for relationship in relationships {
+            out.push_str(&format!("<Relationship Id=\"{}\" Type=\"{}\" Target=\"{}\"", escape_xml(&relationship.str("id"), true), escape_xml(&relationship.str("relType"), true), escape_xml(&relationship.str("target"), true)));
+            if relationship.str("targetMode") == "external" {
+                out.push_str(" TargetMode=\"External\"");
+            }
+            out.push_str("/>");
+        }
+        out.push_str("</Relationships>");
+        out
+    }
+
+    /// 📦️ The package an OOXML snapshot wire (`{opc: {parts, contentTypes, relationships}, xmlParts}`) describes, written by
+    /// this engine alone: `[Content_Types].xml` from the typed table, one `.rels` part per relationship source, every opaque
+    /// part verbatim and every logical XML part serialized from its own document — "the document becomes this snapshot",
+    /// reproduced by a second producer that never reaches this repository's OPC codec.
+    pub fn write_snapshot_package(snapshot: &Json) -> Result<Vec<u8>, String> {
+        let opc = snapshot.get("opc").ok_or("the snapshot carries no `opc` package")?;
+        let content_types = opc.get("contentTypes").cloned().unwrap_or(Json::Null);
+        let pairs = |key: &str| -> Vec<(String, String)> {
+            content_types
+                .array(key)
+                .iter()
+                .map(|pair| match pair {
+                    Json::Array(items) => (items.first().and_then(|item| if let Json::String(text) = item { Some(text.clone()) } else { None }).unwrap_or_default(), items.get(1).and_then(|item| if let Json::String(text) = item { Some(text.clone()) } else { None }).unwrap_or_default()),
+                    _ => (String::new(), String::new()),
+                })
+                .collect()
+        };
+        let mut parts = Vec::new();
+        write_content_types(&mut parts, &pairs("defaults"), &pairs("overrides"))?;
+        if let Some(Json::Object(sources)) = opc.get("relationships") {
+            for (source, relationships) in sources {
+                if let Json::Array(relationships) = relationships {
+                    set_part(&mut parts, &relationships_part_path(source), relationships_text(relationships).into_bytes());
+                }
+            }
+        }
+        for part in opc.array("parts") {
+            let bytes = part.array("bytes").iter().filter_map(|byte| if let Json::Number(value) = byte { Some(*value as u8) } else { None }).collect();
+            set_part(&mut parts, &part.str("path"), bytes);
+        }
+        for part in snapshot.array("xmlParts") {
+            let document = part.get("document").ok_or_else(|| format!("logical XML part {} carries no document", part.str("path")))?;
+            set_part(&mut parts, &part.str("path"), xml_document_text(document)?.into_bytes());
+        }
+        write_parts(&parts)
+    }
+    //#endregion 🔖️PackageWire
+
     //#region 🔖️ConformanceMutations
     /// 🏅️ One artifact's conformance-class coordinates. Each pair is `[transitional, strict]` — the
     /// ISO/IEC 29500-4 value first, the ISO/IEC 29500-1 value second — which is what makes the class

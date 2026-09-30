@@ -68,7 +68,7 @@ impl SemioObjectDiff {
 
 impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
     fn apply(&self, base: &SemioObjectSnapshot) -> protocol::MutationApplyResult<SemioObjectSnapshot> {
-        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.child-identity".into(), message, target: Vec::new() })?;
+        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.apply.child-identity".into(), message, target: Vec::new() })?;
         let mut next = base.clone();
         if let Some(t) = &self.transform {
             next.transform = *t;

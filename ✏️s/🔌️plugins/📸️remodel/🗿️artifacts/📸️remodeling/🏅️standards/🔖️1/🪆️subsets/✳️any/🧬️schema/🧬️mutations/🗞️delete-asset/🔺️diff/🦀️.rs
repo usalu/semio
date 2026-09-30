@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `DeleteAsset`. A missing key ⇒ Error `mutation.target-missing`; an
 //! asset any stream frame, the mesh texture or a geo product still names ⇒ Error
-//! `mutation.referenced` — the same ownership rule `delete-stream` and `delete-camera-calibration`
+//! `mutation.target-referenced` — the same ownership rule `delete-stream` and `delete-camera-calibration`
 //! follow, so the document never keeps a reference to a leaf that is gone. The accepted branch drops
 //! the durable leaf the handle owned together with the `assets` entry, which is what makes
 //! `create-asset` its exact inverse.
@@ -24,7 +24,7 @@ pub fn diff(payload: &super::DeleteAsset, base: &RemodelingSnapshot) -> protocol
         }
     }
     if !referencing.is_empty() {
-        return protocol::MutationOutcome::error("mutation.referenced", format!("Asset \"{}\" is still referenced by {} place(s) in the document.", payload.key, referencing.len()), referencing);
+        return protocol::MutationOutcome::error("mutation.target-referenced", format!("Asset \"{}\" is still referenced by {} place(s) in the document.", payload.key, referencing.len()), referencing);
     }
     let mut assets = base.assets.clone();
     let mut durable_artifacts = base.durable_artifacts.clone();

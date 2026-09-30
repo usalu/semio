@@ -93,7 +93,7 @@ model shape, needed to validate the collections this subset's own kinds do not w
 LOADS = {"nodal": {"kind", "id", "nodeId", "dof", "value"}, "memberUdl": {"kind", "id", "elementId", "wx", "wy"}, "area": {"kind", "id", "regionId", "pressure"}}
 """🏋️ The three load variants, as the schema and the committed vectors spell them."""
 
-DUPLICATE_ID, ID_MISMATCH, INVARIANT = "mutation.duplicate-id", "mutation.id-mismatch", "mutation.invariant"
+DUPLICATE_ID, TARGET_MISMATCH, INVARIANT = "mutation.duplicate-id", "mutation.target-mismatch", "mutation.invariant"
 TARGET_MISSING, TARGET_REFERENCED, NO_OP = "mutation.target-missing", "mutation.target-referenced", "mutation.no-op"
 """🚦️ The closed diagnostic vocabulary. The three Fatal codes say the PAYLOAD is inadmissible on any
 base; the two Error codes say THIS base cannot host it; `no-op` is a Warning beside an applied,
@@ -444,7 +444,7 @@ def apply_mutation(document, mutation):
                 error(TARGET_MISSING, [mutation["loadId"]], 'Load "%s" does not exist in case "%s".' % (mutation["loadId"], case["id"]))
             load = copy.deepcopy(mutation["newLoad"])
             if load["id"] != mutation["loadId"]:
-                fatal(ID_MISMATCH, [mutation["loadId"], load["id"]], 'A replace-load may not rename "%s" to "%s".' % (mutation["loadId"], load["id"]))
+                error(TARGET_MISMATCH, [mutation["loadId"], load["id"]], 'A replace-load may not rename "%s" to "%s".' % (mutation["loadId"], load["id"]))
             resolve_load(result, load)
             check_load(load)
             if case["loads"][at] == load:
@@ -480,7 +480,7 @@ def apply_mutation(document, mutation):
                 error(TARGET_MISSING, [mutation["id"]], '%s "%s" does not exist.' % (noun.capitalize(), mutation["id"]))
             record = copy.deepcopy(mutation[replace_argument])
             if record["id"] != mutation["id"]:
-                fatal(ID_MISMATCH, [mutation["id"], record["id"]], 'A replace-%s may not rename "%s" to "%s".' % (noun, mutation["id"], record["id"]))
+                error(TARGET_MISMATCH, [mutation["id"], record["id"]], 'A replace-%s may not rename "%s" to "%s".' % (noun, mutation["id"], record["id"]))
             check_record(result, noun, record)
             if items[at] == record:
                 warn(NO_OP, '%s "%s" is already equal to the replacement value.' % (noun.capitalize(), mutation["id"]))

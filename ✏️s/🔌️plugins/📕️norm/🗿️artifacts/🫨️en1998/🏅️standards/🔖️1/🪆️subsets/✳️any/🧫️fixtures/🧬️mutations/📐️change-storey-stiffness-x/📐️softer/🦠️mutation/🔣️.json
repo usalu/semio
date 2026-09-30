@@ -1,0 +1,6 @@
+{
+  "mutation": "changeStoreyStiffnessX",
+  "buildingIndex": 0,
+  "storeyIndex": 3,
+  "newStiffnessX": 120000000.0
+}

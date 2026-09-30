@@ -49,6 +49,9 @@ impl En1990Diff {
             if let Some(value) = &self.inspection_level {
                 next.inspection_level = value.clone();
             }
+            if let Some(value) = &self.k_fi_declared {
+                next.k_fi_declared = *value;
+            }
             if let Some(value) = &self.beta_computed {
                 next.beta_computed = *value;
             }
@@ -115,6 +118,9 @@ impl MutationDiff<En1990Snapshot> for En1990Diff {
             if let Some(value) = &self.inspection_level {
                 next.inspection_level = value.clone();
             }
+            if let Some(value) = &self.k_fi_declared {
+                next.k_fi_declared = *value;
+            }
             if let Some(value) = &self.beta_computed {
                 next.beta_computed = *value;
             }
@@ -152,6 +158,8 @@ impl MutationDiff<En1990Snapshot> for En1990Diff {
         }
         take!(annex);
         take!(project_id);
+        take!(structure_kind);
+        take!(altitude_m);
         take!(consequence_class);
         take!(reliability_class);
         take!(design_working_life_category);
@@ -159,12 +167,14 @@ impl MutationDiff<En1990Snapshot> for En1990Diff {
         take!(reference_period_years);
         take!(supervision_level);
         take!(inspection_level);
+        take!(k_fi_declared);
         take!(beta_computed);
         take!(permanents);
         take!(variables);
         take!(accidentals);
         take!(seismics);
         take!(members);
+        take!(bridge_sls);
         take!(effects);
     }
 

@@ -74,6 +74,15 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/scale-objects/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/drag-selection/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/rotate-selection/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/scale-selection/schema.json"
     }
   ]
 }

@@ -64,7 +64,7 @@ async fn inverse_restores_before() {
     assert_eq!(snapshot, base, "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: inverse did not restore the before-snapshot");
 }
 
-/// 🔣️ Both committed snapshots and the committed mutation are canonical. `new_algorithm_seed`
+/// 🔣️ Both committed snapshots and the committed mutation are canonical. `newAlgorithmSeed`
 /// carries no `skip_serializing_if`, so an absent seed must be committed as an explicit `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
     let reencoded = pack::json_from_dsl_value(&(mutation()).to_value());
     let original = pack::parse_json(MUTATION).expect("mutation reparses");
     assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "update-graph-algorithm/restates-the-unset-algorithm-and-its-absent-seed: committed mutation JSON is not canonical ({reencoded:?} vs {original:?})");
-    assert!(original.pointer("/UpdateGraphAlgorithm/new_algorithm_seed").expect("the payload commits its seed slot").is_null(), "an absent seed is committed as an explicit null, never omitted");
+    assert!(original.pointer("/UpdateGraphAlgorithm/newAlgorithmSeed").expect("the payload commits its seed slot").is_null(), "an absent seed is committed as an explicit null, never omitted");
 }
 
 /// 🎯️ The declared outcome — `no-op`, with one `mutation.no-op` warning — is what the builder emits.

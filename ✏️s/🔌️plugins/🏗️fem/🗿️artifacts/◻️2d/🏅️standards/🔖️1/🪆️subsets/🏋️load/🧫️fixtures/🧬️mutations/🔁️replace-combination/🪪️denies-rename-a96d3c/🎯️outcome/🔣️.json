@@ -1,6 +1,6 @@
 {
   "status": "rejected",
-  "code": "mutation.id-mismatch",
+  "code": "mutation.target-mismatch",
   "path": [
     "uls1",
     "uls1_b"

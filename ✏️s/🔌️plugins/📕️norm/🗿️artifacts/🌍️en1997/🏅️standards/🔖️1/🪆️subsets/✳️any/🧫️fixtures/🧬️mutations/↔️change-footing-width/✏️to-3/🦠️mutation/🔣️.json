@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFootingWidth",
+  "id": "footing-F1",
+  "newWidth": 3.0
+}

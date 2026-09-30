@@ -4562,6 +4562,17 @@
       "slugPattern": "^mutation$",
       "allowEmojiOnly": false
     },
+    "mutation-wire-witness": {
+      "emoji": "🧾️",
+      "slugPattern": "^wire-witness$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "fixtures",
+        "members-of-schema",
+        "plugin-test-mutations",
+        "store-fixture-mutations"
+      ]
+    },
     "inverse": {
       "emoji": "↩️",
       "slugPattern": "^inverse$",
@@ -10622,6 +10633,8 @@
         "fixtures"
       ],
       "memberNames": [
+        "🩹️patch-data",
+        "🩹️patch-snapshot",
         "🏢️nakagin-ground-floor",
         "🥞️layered-overview",
         "🔄️replace-points",
@@ -12368,6 +12381,236 @@
         "schema"
       ],
       "memberNames": [
+        "#️⃣change-bar-layer-count",
+        "↔️change-footing-width",
+        "↔️change-member-width",
+        "↔️move-widget",
+        "↕️change-member-height",
+        "↘️change-action-v-ed",
+        "▶️start-run-node",
+        "☑️change-selected-check-index",
+        "♻️replace-flow-host-snapshot",
+        "⚓️insert-anchor",
+        "⚖️scale-objects",
+        "✋️drag-selection",
+        "🔄️rotate-selection",
+        "🔍️scale-selection",
+        "⚗️change-material-designation",
+        "⛔️unbind-output",
+        "⛰️change-slope-angle",
+        "✂️disconnect-edge",
+        "✂️remove-node",
+        "✂️remove-synapse",
+        "✅️finish-run-node",
+        "✒️set-story-runs",
+        "✖️remove-map-entry",
+        "❄️change-cold-formed",
+        "❌delete-object",
+        "➕add-member",
+        "➕insert-footing",
+        "➕insert-list-item",
+        "➕️add-node",
+        "➕️add-widget",
+        "➕️insert-bridge-fatigue",
+        "➕️insert-cold-formed-member",
+        "➕️insert-crane-runway",
+        "➕️insert-fatigue-detail",
+        "➕️insert-fire-exposure",
+        "➕️insert-joint",
+        "➕️insert-layer",
+        "➕️insert-load-case",
+        "➕️insert-material",
+        "➕️insert-member",
+        "➕️insert-member-action",
+        "➕️insert-pile",
+        "➕️insert-plated-panel",
+        "➕️insert-section",
+        "➕️insert-silo-shell",
+        "➕️insert-table-row",
+        "➕️insert-tension-component",
+        "➕️insert-tower-leg",
+        "➖remove-footing",
+        "➖remove-list-item",
+        "➖remove-member",
+        "➖️remove-bridge-fatigue",
+        "➖️remove-cold-formed-member",
+        "➖️remove-crane-runway",
+        "➖️remove-fatigue-detail",
+        "➖️remove-fire-exposure",
+        "➖️remove-joint",
+        "➖️remove-layer",
+        "➖️remove-load-case",
+        "➖️remove-material",
+        "➖️remove-member",
+        "➖️remove-member-action",
+        "➖️remove-pile",
+        "➖️remove-plated-panel",
+        "➖️remove-section",
+        "➖️remove-silo-shell",
+        "➖️remove-table-row",
+        "➖️remove-tension-component",
+        "➖️remove-tower-leg",
+        "⤴️change-action-mk",
+        "⤴️change-member-my-ed",
+        "⬇️change-footing-embedment",
+        "⭕change-bar-layer-diameter",
+        "🅾️remove-font",
+        "🆔️set-document-id",
+        "🆕create-object",
+        "🌀rotate-objects",
+        "🌀️change-layer-oedometric-modulus",
+        "🌄️remove-shading",
+        "🌅️set-shading",
+        "🌈️set-color-space",
+        "🌉️change-member-span",
+        "🌐apply-graph",
+        "🌫️remove-image",
+        "🎚️remove-ext-g-state",
+        "🎚️update-link",
+        "🎛️set-ext-g-state",
+        "🎞️apply-animation",
+        "🎥️set-camera",
+        "🎨️remove-color-space",
+        "🎨️update-character-style",
+        "🎪️remove-named-destination",
+        "🎬apply-video",
+        "🎭️change-layer-mask",
+        "🎯️set-named-destination",
+        "🏋️change-action-n-ed",
+        "🏋️change-member-n-ed",
+        "🏗️change-members",
+        "🏛️apply-model",
+        "🏞️set-image",
+        "🏢️create-building-storey",
+        "🏳️set-output-intents",
+        "🏷️change-title",
+        "🏷️set-drawing-text",
+        "🏷️set-properties",
+        "👁️set-optional-content",
+        "💧change-groundwater-level",
+        "📃apply-document",
+        "📄️set-form",
+        "📅️change-design-situation",
+        "📅️change-design-working-life",
+        "📋️set-acro-form",
+        "📌️insert-annotation",
+        "📍change-anchor-h-ef",
+        "📍️remove-annotation",
+        "📎set-page-overrides",
+        "📎️set-embedded-file",
+        "📏️change-delta-c-dev",
+        "📏️change-member-buckling-length",
+        "📏️change-pile-length",
+        "📏️set-page-user-unit",
+        "📐apply-cad",
+        "📐️change-layer-phi-prime",
+        "📐️change-layer-transform",
+        "📐️change-layout",
+        "📐️change-member-effective-depth",
+        "📐️change-sections",
+        "📐️set-page-guides",
+        "📑create-layer",
+        "📑️set-outlines",
+        "📑️update-text-frame",
+        "📓️update-spread",
+        "📖️set-page-layout",
+        "📖️update-parent-page",
+        "📝️set-annotation",
+        "📝️update-paragraph-style",
+        "📤bind-output",
+        "📤remove-pile",
+        "📥add-input",
+        "📥insert-pile",
+        "📦apply-object",
+        "📽️apply-presentation",
+        "🔀apply-flow",
+        "🔀️move-synapse",
+        "🔀️reorder-members",
+        "🔁set-value",
+        "🔁️replace-content",
+        "🔄change-synapse",
+        "🔄update-node-ports",
+        "🔄️change-fatigue-details",
+        "🔊apply-audio",
+        "🔌bind-input",
+        "🔍️set-lod-mode",
+        "🔎️change-investigation-depth",
+        "🔏️seal-run",
+        "🔏️set-mark-info",
+        "🔐️set-encryption",
+        "🔒bind-parameter-field",
+        "🔓unbind-parameter-field",
+        "🔖️remove-properties",
+        "🔗change-connections",
+        "🔗connect-ports",
+        "🔗️add-synapse",
+        "🔢apply-value",
+        "🔢change-pile-count",
+        "🔢️set-page-labels",
+        "🔤apply-text",
+        "🔤️set-font",
+        "🔥change-member-axis-distance",
+        "🔥️change-fire-scenarios",
+        "🔥️change-member-fire-rating",
+        "🔥️change-weld-throat",
+        "🔩change-bolt-count",
+        "🔩change-reinforcement-f-yk",
+        "🕸️apply-mesh",
+        "🖊️apply-drawing",
+        "🖋️create-character-style",
+        "🖋️insert-content",
+        "🖌️set-paragraph-style",
+        "🖥️set-page-mode",
+        "🖼️set-page-box",
+        "🗂️apply-table",
+        "🗂️change-geotechnical-category",
+        "🗂️set-catalog-entry",
+        "🗂️update-layer",
+        "🗃️remove-embedded-file",
+        "🗄️set-page-parent",
+        "🗑️delete-character-style",
+        "🗑️remove-anchor",
+        "🗑️remove-node",
+        "🗑️remove-widget",
+        "🗝️set-map-entry",
+        "🗞️remove-form",
+        "🗣️set-language",
+        "🚀️start-run",
+        "🚚move-objects",
+        "🚪unbind-input",
+        "🚪️set-open-action",
+        "🚮remove-input",
+        "🛠️set-viewer-preferences",
+        "🛡️change-member-cover",
+        "🧩add-parameter",
+        "🧩️insert-xml-node",
+        "🧩️replace-xml-node",
+        "🧩️set-pattern",
+        "🧪change-cement-type",
+        "🧰apply-kit",
+        "🧱apply-brep",
+        "🧱change-concrete-f-ck",
+        "🧱change-materials",
+        "🧱change-plate-thickness",
+        "🧱change-wall-base-width",
+        "🧲set-frame-layer",
+        "🧷change-anchor-a-s",
+        "🧷set-node",
+        "🧹remove-parameter",
+        "🧹️remove-xml-node",
+        "🧺️remove-catalog-entry",
+        "🧻️remove-content",
+        "🧾️set-metadata",
+        "🩹change-parameter",
+        "🩹change-widget",
+        "🩹️patch-data",
+        "🩹️patch-pixels",
+        "🩹️patch-snapshot",
+        "🪜reorder-frame",
+        "🪡️remove-pattern",
+        "🪢change-member-stirrup-spacing",
+        "🪵️append-run-log",
+        "🫙change-shells",
         "🌉️create-edge",
         "🥞️layered-overview",
         "👉️edit-rhs",
@@ -17094,255 +17337,13 @@
           "nodeType": "file",
           "kindId": "rust-source",
           "sourceFilename": "🦀️.rs"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            }
-          ],
-          "nodeType": "directory",
-          "kindId": "fsm"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            }
-          ],
-          "nodeType": "file",
-          "kindId": "rust-source",
-          "sourceFilename": "🦀️.rs"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            },
-            {
-              "kindId": "packages",
-              "literal": "📦️packages"
-            }
-          ],
-          "nodeType": "directory",
-          "kindId": "packages"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            },
-            {
-              "kindId": "packages",
-              "literal": "📦️packages"
-            },
-            {
-              "kindId": "rust-language",
-              "literal": "🦀️rust"
-            }
-          ],
-          "nodeType": "directory",
-          "kindId": "rust-language"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            },
-            {
-              "kindId": "packages",
-              "literal": "📦️packages"
-            },
-            {
-              "kindId": "rust-language",
-              "literal": "🦀️rust"
-            }
-          ],
-          "nodeType": "file",
-          "fixedFilenameContractId": "cargo-manifest"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            },
-            {
-              "kindId": "packages",
-              "literal": "📦️packages"
-            },
-            {
-              "kindId": "rust-language",
-              "literal": "🦀️rust"
-            }
-          ],
-          "nodeType": "file",
-          "fixedFilenameContractId": "nx-project-manifest"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            },
-            {
-              "kindId": "packages",
-              "literal": "📦️packages"
-            },
-            {
-              "kindId": "rust-language",
-              "literal": "🦀️rust"
-            }
-          ],
-          "nodeType": "file",
-          "fixedFilenameContractId": "root-script"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            },
-            {
-              "kindId": "macros",
-              "literal": "✨️macros"
-            }
-          ],
-          "nodeType": "directory",
-          "kindId": "macros"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            },
-            {
-              "kindId": "macros",
-              "literal": "✨️macros"
-            }
-          ],
-          "nodeType": "file",
-          "kindId": "rust-source",
-          "sourceFilename": "🦀️.rs"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            },
-            {
-              "kindId": "macros",
-              "literal": "✨️macros"
-            },
-            {
-              "kindId": "packages",
-              "literal": "📦️packages"
-            }
-          ],
-          "nodeType": "directory",
-          "kindId": "packages"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            },
-            {
-              "kindId": "macros",
-              "literal": "✨️macros"
-            },
-            {
-              "kindId": "packages",
-              "literal": "📦️packages"
-            },
-            {
-              "kindId": "rust-language",
-              "literal": "🦀️rust"
-            }
-          ],
-          "nodeType": "directory",
-          "kindId": "rust-language"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            },
-            {
-              "kindId": "macros",
-              "literal": "✨️macros"
-            },
-            {
-              "kindId": "packages",
-              "literal": "📦️packages"
-            },
-            {
-              "kindId": "rust-language",
-              "literal": "🦀️rust"
-            }
-          ],
-          "nodeType": "file",
-          "fixedFilenameContractId": "cargo-manifest"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            },
-            {
-              "kindId": "macros",
-              "literal": "✨️macros"
-            },
-            {
-              "kindId": "packages",
-              "literal": "📦️packages"
-            },
-            {
-              "kindId": "rust-language",
-              "literal": "🦀️rust"
-            }
-          ],
-          "nodeType": "file",
-          "fixedFilenameContractId": "nx-project-manifest"
-        },
-        {
-          "pathSegments": [
-            {
-              "kindId": "fsm",
-              "literal": "🔄️fsm"
-            },
-            {
-              "kindId": "macros",
-              "literal": "✨️macros"
-            },
-            {
-              "kindId": "packages",
-              "literal": "📦️packages"
-            },
-            {
-              "kindId": "rust-language",
-              "literal": "🦀️rust"
-            }
-          ],
-          "nodeType": "file",
-          "fixedFilenameContractId": "root-script"
         }
       ],
       "exclusiveAlternatives": [],
-      "realizedNodeCount": 16,
+      "realizedNodeCount": 2,
       "pathBudgetReserve": {
         "derivation": "longest-canonical-descendant-suffix",
-        "bytes": 72
+        "bytes": 11
       }
     },
     "mutation-implementation-case-v1": {
@@ -28377,6 +28378,9 @@
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust"
       ],
       "inputPatterns": [
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🏛️model/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/📐️geometry/🔣️.json",
+        "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/📐️geometry/🧬️contract/🔣️.json",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🔣️.json",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",
@@ -29027,13 +29031,16 @@
     }
   },
   "roles": [
-    "plugin",
     "framework",
     "product",
     "hub",
     "s-module",
+    "plugin",
     "extension",
-    "tool"
+    "tool",
+    "library",
+    "artifact",
+    "test"
   ],
   "langs": [
     "🦀️rust",
@@ -29308,7 +29315,9 @@
         "reason": "A domain-neutral framework module owns the contracts its two independent consumers share."
       },
       "implementation-module-engine-session": {
-        "pathPatterns": ["✏️s/🔨️modules/*/⚙️engine/*/🌊️session"],
+        "pathPatterns": [
+          "✏️s/🔨️modules/*/⚙️engine/*/🌊️session"
+        ],
         "reason": "An implementation domain engine session owns its explicit runtime authority and invocation contracts."
       },
       "implementation-dev-module": {
@@ -30893,6 +30902,13 @@
         "toRoles": [
           "plugin",
           "extension"
+        ],
+        "fromOwnerPaths": [
+          "^✏️s/🔨️modules/"
+        ],
+        "toOwnerSegments": [
+          "🔌️plugins",
+          "🧩️extensions"
         ]
       },
       "cargo-plugins-no-extensions": {
@@ -30901,8 +30917,110 @@
         ],
         "toRoles": [
           "extension"
+        ],
+        "fromOwnerPaths": [
+          "^✏️s/🔌️plugins/[^/]+/(?!🗿️artifacts/|🧩️extensions/)"
+        ],
+        "toOwnerSegments": [
+          "🧩️extensions"
+        ]
+      },
+      "cargo-plugins-no-artifacts": {
+        "fromRoles": [
+          "plugin"
+        ],
+        "toRoles": [
+          "artifact"
+        ],
+        "toOwnerSegments": [
+          "🗿️artifacts"
+        ],
+        "fromOwnerPaths": [
+          "^✏️s/🔌️plugins/[^/]+/(?!🗿️artifacts/|🧩️extensions/)"
         ]
       }
-    }
+    },
+    "ownerRoles": [
+      {
+        "path": "(?:^|/)🗿️artifacts/[^/]+/📦️packages/🦀️rust$",
+        "roles": [
+          "artifact"
+        ]
+      },
+      {
+        "path": "^✏️s/🔌️plugins/[^/]+/📦️packages/🦀️rust$",
+        "roles": [
+          "plugin"
+        ]
+      },
+      {
+        "path": "^✏️s/🔌️plugins/[^/]+/🧩️extensions/[^/]+/📦️packages/🦀️rust$",
+        "roles": [
+          "extension"
+        ]
+      },
+      {
+        "path": "^✏️s/🔨️modules/",
+        "roles": [
+          "s-module"
+        ]
+      },
+      {
+        "path": "^✏️s/🧑‍💻dev/",
+        "roles": [
+          "test",
+          "tool"
+        ]
+      },
+      {
+        "path": "^✏️s/🔌️plugins/",
+        "roles": [
+          "s-module",
+          "library",
+          "tool",
+          "test",
+          "extension"
+        ]
+      },
+      {
+        "path": "^✏️s/",
+        "roles": [
+          "s-module",
+          "product",
+          "tool",
+          "test"
+        ]
+      },
+      {
+        "path": "^🌎️hub/",
+        "roles": [
+          "hub",
+          "library",
+          "tool",
+          "test"
+        ]
+      },
+      {
+        "path": "^🧰️framework/",
+        "roles": [
+          "framework",
+          "product",
+          "library",
+          "tool",
+          "test",
+          "artifact"
+        ]
+      },
+      {
+        "path": "^(?:♻️mit-bestand|🏢️semio-tech|👴️leutwiler|🎓️teaching)/",
+        "roles": [
+          "product",
+          "hub",
+          "library",
+          "tool",
+          "test"
+        ]
+      }
+    ]
   }
 }

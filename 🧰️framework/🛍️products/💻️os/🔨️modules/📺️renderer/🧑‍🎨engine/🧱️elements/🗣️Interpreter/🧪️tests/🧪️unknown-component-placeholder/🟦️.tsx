@@ -89,7 +89,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   //#region CorpusConformance
-  /** 🧪️ Consumes the shared conformance corpus (`🧬️contract/🧫️fixtures/🧪️conformance/`, 70 cases) —
+  /** 🧪️ Consumes the shared conformance corpus (`🧬️contract/🧫️fixtures/🧪️conformance/`, 71 cases) —
    * the load-bearing proof that this React store agrees with the Rust `apply_patch`/`validate_snapshot`
    * the GPU renderer also builds on. For each accept case: loads the snapshot (+ patch, if present)
    * into a real `📃️UiDocumentStore` and asserts the retained tree shape, every node's accessibility
@@ -151,8 +151,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
 
     const cases = loadCorpus();
-    it("loads all 70 corpus fixtures", () => {
-      expect(cases.length).toBe(70);
+    it("loads all 71 corpus fixtures", () => {
+      expect(cases.length).toBe(71);
     });
 
     for (const testCase of cases) {
@@ -237,6 +237,15 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(hex.value).toBe("#ff800080");
       const alpha = color.container.querySelector<HTMLElement>('[role="slider"]')!;
       expect([alpha.getAttribute("aria-valuemin"), alpha.getAttribute("aria-valuemax"), alpha.getAttribute("aria-valuenow")]).toEqual(["0", "1", "0.5"]);
+      cleanup();
+      const rows = mount("tree-row-recipes");
+      const named = (label: string) => rows.container.querySelector<HTMLElement>(`[aria-label="${label}"]`);
+      for (const label of ["Tint", "Hex", "Alpha", "X", "Y", "Remove Piece 3", "Remove Piece 7", "Use selection", "Add target", "Replay progress"]) expect(named(label), label).not.toBeNull();
+      expect([...rows.container.querySelectorAll<HTMLInputElement>('input[type="color"]')].map((swatch) => swatch.value)).toEqual(["#ff8000"]);
+      expect(rows.container.querySelector('[role="progressbar"]')?.getAttribute("aria-valuenow")).toBe("3");
+      expect(rows.container.textContent).toContain("Replaying 3 of 7");
+      const rowOf = (label: string) => named(label)!.closest('[role="treeitem"]')?.getAttribute("aria-label") ?? named(label)!.closest('[role="treeitem"]')?.textContent;
+      for (const [label, row] of [["Hex", "Tint"], ["X", "Offset"], ["Remove Piece 3", "Targets"], ["Replay progress", "Replay"]] as const) expect(rowOf(label), label).toContain(row);
       cleanup();
       const references = mount("reference-list");
       expect([...references.container.querySelectorAll("button")].map((button) => button.getAttribute("aria-label"))).toEqual(expect.arrayContaining(["Remove Piece 3", "Remove Piece 7", "Use selection"]));

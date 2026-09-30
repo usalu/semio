@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceElement`.
 use super::ReplaceElement;
 use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dElementsDelta, Fem3dElementsPatchEntry};
-use crate::standards::v1::subsets::any::schema::mutations::{id_mismatch, resolve_element};
+use crate::standards::v1::subsets::any::schema::mutations::{target_mismatch, resolve_element};
 use crate::{element_id, Fem3dSnapshot};
 
 //#region 🔖️Diff
@@ -11,7 +11,7 @@ pub fn diff(payload: &ReplaceElement, base: &Fem3dSnapshot) -> protocol::Mutatio
     };
     let replacement = element_id(&payload.new_element);
     if replacement != payload.id {
-        return id_mismatch("Element", &payload.id, replacement);
+        return target_mismatch("Element", &payload.id, replacement);
     }
     if existing == payload.new_element.as_ref() {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Element \"{}\" already has that value.", payload.id));

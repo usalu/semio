@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\udccf\ufe0flayout/\ud83d\uddff\ufe0fartifacts/\ud83d\udccf\ufe0flayout/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\ud83e\uddec\ufe0fschema/\ud83e\uddec\ufe0fmutations/\u270b\ufe0fdrag-frames",
+  "semanticKind": "drag-frames",
+  "displayName": "Drag Frames",
+  "emoji": "\u270b\ufe0f",
+  "aggregateVariant": "DragFrames",
+  "payloadSchema": "\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+  "textOpcode": null,
+  "binaryTag": 46,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

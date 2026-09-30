@@ -1541,9 +1541,18 @@ export type ShellBrand = {
 
 /** 🕹️ Mirrors `semio_framework_core::history_action_definitions` — the six framework-owned
  * History actions every editor receives, used by the shell to render the same set without a wasm round trip. A viewer
- * receives only the read cursor (`switchAlternative`, `checkoutCheckpoint`): its manifest never declares a verb its guard
- * rejects. */
+ * receives none of them: `switchAlternative` and `checkoutCheckpoint` commit a shared `Checkout` transition, and its
+ * manifest never declares a verb its guard rejects. */
 export const HISTORY_ACTION_IDS = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint"] as const;
+/** 🪪️ `switchAlternative`'s alternative id argument — mirrors Rust `SWITCH_ALTERNATIVE_ARG_ALTERNATIVE_ID`. */
+export const SWITCH_ALTERNATIVE_ARG_ALTERNATIVE_ID = "alternativeId";
+
+/** 📨️ The host-forwarded window fact `hostEvent{windowId, kind}` — mirrors Rust `HOST_EVENT_ACTION_ID`: a pane's focus loss,
+ * lost pointer capture or closing reaches its program, which ends an open gesture there without a trace. */
+export const HOST_EVENT_ACTION_ID = "hostEvent";
+/** 🏷️ The kinds a host forwards — mirror Rust `HOST_EVENT_KIND_BLUR`, `HOST_EVENT_KIND_CAPTURE_LOST`, `HOST_EVENT_KIND_RETIRING`. */
+export const HOST_EVENT_KINDS = ["blur", "captureLost", "retiring"] as const;
+export type HostEventKind = (typeof HOST_EVENT_KINDS)[number];
 
 /** ✏️ Mirrors Rust `HISTORY_EDIT_ACTION_IDS` — the twelve reserved history-edit verbs, host-driven on the instance's
  * one time-travel session. Every verb but `historyEditBegin`/`historyEditExit` may carry `generation`

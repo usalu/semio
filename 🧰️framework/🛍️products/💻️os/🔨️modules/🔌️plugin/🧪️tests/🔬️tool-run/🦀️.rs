@@ -668,7 +668,7 @@ async fn drain(probe: &mut MemoryBackbone) -> (usize, usize) {
     probe.receive().await.expect("probe receive").into_iter().fold((0, 0), |(mutations, genesis), message| match message {
         BackboneMessage::Mutations { .. } | BackboneMessage::Member { .. } => (mutations + 1, genesis),
         BackboneMessage::Genesis { .. } => (mutations, genesis + 1),
-        BackboneMessage::Ack { .. } => (mutations, genesis),
+        BackboneMessage::Ack { .. } | BackboneMessage::Retract { .. } => (mutations, genesis),
     })
 }
 
@@ -795,6 +795,31 @@ async fn tool_run_finalize_publishes_one_grouped_edit_one_mutations_batch_and_un
     let undone = app.snapshot().expect("committed after undo");
     assert_eq!((undone.count, undone.label.as_str()), (number(&expected["countAfterUndo"]) as i32, text(&expected["labelAfterUndo"])), "one undo removes the whole run");
     drop(probe);
+    close(&mut app);
+}
+
+/// ⚖️ LAW: a finalized run is ONE tool transaction — every op of its one edit carries the same `TransactionRef`
+/// (`tx-<hex16>`, tool `<appId>#<toolId>`), the edit keeps no single-locale description, and its history row is the
+/// tool's own declared label in every locale.
+#[semio_framework_async_macros::async_test]
+async fn tool_run_finalize_is_one_transaction_labelled_by_its_tool_in_every_locale() {
+    let fixture = fixture();
+    let mut app = toy_app(number(&fixture["finalize"]["units"])).await;
+    start(&mut app, text(&fixture["toolId"])).await;
+    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
+    run_action(&mut app, "toolRunFinalize").await;
+    pump_until(&mut app, "finalize publishes", |app| app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work()).await;
+    let edit = app.store.envelope().vcs.edits.last().expect("finalized edit");
+    let (edit_id, description) = (edit.id.clone(), edit.description.clone());
+    let transaction = edit.mutation_meta.first().and_then(|meta| meta.transaction.clone()).expect("the finalized edit is a tool transaction");
+    assert!(edit.mutation_meta.iter().all(|meta| meta.transaction.as_ref() == Some(&transaction)), "every op of the run carries the one ref");
+    assert_eq!(transaction.tool, format!("{}#{}", ToyRunApp::APP_ID, text(&fixture["toolId"])));
+    assert!(transaction.id.starts_with("tx-") && transaction.id.len() == "tx-".len() + 16, "a minted transaction id: {}", transaction.id);
+    assert_eq!(description, None, "the row label comes from the tool, never from a single-locale description");
+    let history = app.build_history_view(None).await;
+    let row = history.commands.iter().find(|row| row.edit_id.as_deref() == Some(edit_id.as_str())).expect("the run's history row");
+    assert_eq!(row.transaction.as_ref(), Some(&transaction));
+    assert_eq!((row.label.resolve(Terminology::Native, Locale::En).to_string(), row.label.resolve(Terminology::Native, Locale::De).to_string()), ("Toy fill".to_string(), "Spielfüllung".to_string()));
     close(&mut app);
 }
 

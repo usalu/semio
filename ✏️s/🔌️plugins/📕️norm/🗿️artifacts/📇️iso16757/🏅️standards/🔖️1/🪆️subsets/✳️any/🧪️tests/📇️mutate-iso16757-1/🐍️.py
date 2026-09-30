@@ -63,35 +63,35 @@ KINDS = [
 
 #: 🧫️ The committed specification vector each kind publishes, as (triad directory, fixture name).
 VECTORS = {
-    "change-exchange-process": ("🔄️change-exchange-process", "🔄️advances-the-exchange-stage-to-determine-product"),
-    "change-script-limits": ("🚦️change-script-limits", "🚦️doubles-the-step-budget-and-quintuples-the-timeout"),
-    "replace-part-number-rule": ("🧮️replace-part-number-rule", "🧮️swaps-the-literal-rule-for-a-height-driven-script"),
-    "change-part-number-input": ("🎛️change-part-number-input", "🔢️raises-the-height-part-number-input-to-750"),
-    "remove-part-number-input": ("🔌️remove-part-number-input", "🔢️drops-the-length-part-number-input"),
-    "change-selection-class": ("🎯️change-selection-class", "🎯️retargets-the-selection-at-the-towel-radiator-class"),
-    "change-selection-series": ("🧵️change-selection-series", "🧵️narrows-the-selection-to-the-pr-plus-series"),
-    "add-selection-constraint": ("🔒️add-selection-constraint", "🔒️appends-a-width-under-800-constraint"),
-    "remove-selection-constraint": ("🔓️remove-selection-constraint", "🔓️drops-the-trailing-length-constraint"),
-    "rename-catalogue": ("📇️rename-catalogue", "📇️restamps-the-catalogue-as-the-2026-edition"),
-    "rename-manufacturer": ("🏭️rename-manufacturer", "🏭️adds-the-ag-suffix-to-the-manufacturer"),
-    "introduce-product-group": ("🧺️introduce-product-group", "🧺️appends-a-towel-radiators-group"),
-    "retire-product-group": ("🧹️retire-product-group", "🚫️removes-the-radiators-group-and-strands-its-class"),
-    "rename-product-group": ("🗂️rename-product-group", "✏️renames-the-radiators-group-to-panel-radiators"),
-    "introduce-product": ("📦️introduce-product", "📦️appends-a-pr900-product-to-the-existing-series"),
-    "retire-product": ("🚫️retire-product", "🚫️removes-the-pr600-product-from-the-catalogue"),
-    "rename-product": ("🏷️rename-product", "✏️renames-pr600-to-the-compact-variant-name"),
-    "introduce-property-definition": ("📐️introduce-property-definition", "📏️appends-a-selection-scoped-length-property"),
-    "retire-property-definition": ("🧽️retire-property-definition", "🚫️removes-the-height-property-definition"),
-    "introduce-subject": ("🌳️introduce-subject", "🌳️appends-a-towel-radiator-subject-under-the-radiator-parent"),
-    "retire-subject": ("✂️retire-subject", "🚫️removes-the-radiator-subject-from-the-dictionary"),
-    "introduce-product-class": ("🏷️introduce-product-class", "🏷️appends-a-towel-radiator-class"),
-    "retire-product-class": ("🗑️retire-product-class", "🗑️removes-the-panel-radiator-class"),
-    "introduce-product-series": ("📚introduce-product-series", "📚appends-a-pr-plus-series"),
-    "retire-product-series": ("🗑️retire-product-series", "🗑️removes-the-pr-series"),
-    "introduce-product-index": ("🔎introduce-product-index", "🔎appends-a-pr600-index"),
-    "retire-product-index": ("🗑️retire-product-index", "🗑️removes-the-pr600-index"),
-    "introduce-geometry-object": ("📐introduce-geometry-object", "📐appends-a-pr600-geometry"),
-    "retire-geometry-object": ("🗑️retire-geometry-object", "🗑️removes-the-pr600-geometry"),
+    "change-exchange-process": ("🔄️change-exchange-process", "✏️sets"),
+    "change-script-limits": ("🚦️change-script-limits", "✏️to-20000"),
+    "replace-part-number-rule": ("🧮️replace-part-number-rule", "✏️sets"),
+    "change-part-number-input": ("🎛️change-part-number-input", "✏️sets"),
+    "remove-part-number-input": ("🔌️remove-part-number-input", "➖️removes"),
+    "change-selection-class": ("🎯️change-selection-class", "✏️to-class"),
+    "change-selection-series": ("🧵️change-selection-series", "✏️to-series"),
+    "add-selection-constraint": ("🔒️add-selection-constraint", "➕️adds"),
+    "remove-selection-constraint": ("🔓️remove-selection-constraint", "✏️sets"),
+    "rename-catalogue": ("📇️rename-catalogue", "✏️to-fixture"),
+    "rename-manufacturer": ("🏭️rename-manufacturer", "🏭️adds-the-ag"),
+    "introduce-product-group": ("🧺️introduce-product-group", "✏️sets"),
+    "retire-product-group": ("🧹️retire-product-group", "➖️retires"),
+    "rename-product-group": ("🗂️rename-product-group", "✏️to-panel"),
+    "introduce-product": ("📦️introduce-product", "➕️introduces"),
+    "retire-product": ("🚫️retire-product", "🚫️removes-the-pr600"),
+    "rename-product": ("🏷️rename-product", "✏️renames-pr600"),
+    "introduce-property-definition": ("📐️introduce-property-definition", "✏️new"),
+    "retire-property-definition": ("🧽️retire-property-definition", "✏️sets"),
+    "introduce-subject": ("🌳️introduce-subject", "🌳️appends-towel"),
+    "retire-subject": ("✂️retire-subject", "➖️retires-subject"),
+    "introduce-product-class": ("🏷️introduce-product-class", "✏️sets"),
+    "retire-product-class": ("🗑️retire-product-class", "➖️retires"),
+    "introduce-product-series": ("📚introduce-product-series", "📚appends-a-pr"),
+    "retire-product-series": ("🗑️retire-product-series", "➖️retires"),
+    "introduce-product-index": ("🔎introduce-product-index", "➕️introduces"),
+    "retire-product-index": ("🗑️retire-product-index", "➖️retires"),
+    "introduce-geometry-object": ("📐introduce-geometry-object", "➕️introduces"),
+    "retire-geometry-object": ("🗑️retire-geometry-object", "➖️retires"),
 }
 
 #: 🗣️ The real committed ISO 16757 document, read where the domain already keeps it.
@@ -107,5 +107,5 @@ def adapter():
     """🧭️ Registration is by FULL expanded scenario id, so this mirrors the feature's `Examples` tables
     exactly. Oracle role only: registering these handlers as subjects as well would make the reference
     its own subject and manufacture a guaranteed-green self-comparison."""
-    return build_adapter(Subset("ISO 16757", KINDS, VECTORS, DSL_ASSET, ENVELOPE, vector_root="shared://🧬️mutations"))
+    return build_adapter(Subset("ISO 16757", KINDS, VECTORS, DSL_ASSET, ENVELOPE))
 # endregion 🔖️Registration

@@ -180,7 +180,7 @@ pub fn forms_diff_from_delta(delta: &FormsStepsDelta, base: &FormsSnapshot) -> F
 impl FormsDiff {
     /// 🧬️ Applies sparse document fields onto a full artifact.
     pub fn apply_to_artifact(&self, artifact: &FormsArtifact) -> protocol::MutationApplyResult<FormsArtifact> {
-        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.child-identity".into(), message, target: Vec::new() })?;
+        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.apply.child-identity".into(), message, target: Vec::new() })?;
         Ok({
             let mut next = artifact.clone();
             if let Some(schema) = &self.schema {
@@ -210,7 +210,7 @@ impl FormsDiff {
 
 impl MutationDiff<FormsSnapshot> for FormsDiff {
     fn apply(&self, snapshot: &FormsSnapshot) -> protocol::MutationApplyResult<FormsSnapshot> {
-        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.child-identity".into(), message, target: Vec::new() })?;
+        self.validate().map_err(|message| protocol::MutationApplyError { code: "mutation.apply.child-identity".into(), message, target: Vec::new() })?;
         Ok({
             let mut next = snapshot.clone();
             if let Some(schema) = &self.schema {

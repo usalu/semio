@@ -2,7 +2,6 @@
 import { NativeDependenciesScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts";
 import { flowTypedRetirementSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts";
 import { toolJobArtifactEnvelopeRejectionTransferSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️tool-job-artifact-envelope-rejection-transfer/🟦️.ts";
-import { toolJobPuzzleReservedRoutesSelfTests } from "./✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🔬️tool-job-puzzle-reserved-routes/🟦️.ts";
 import { toolJobLiveFixedReplaySelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-live-fixed-replay/🟦️.ts";
 import { toolJobFemNumericalMicrocursorSelfTests } from "./✏️s/🔌️plugins/🏗️fem/🧪️tests/🔬️tool-job-fem-numerical-microcursor/🟦️.ts";
 import { toolJobFixedOperationRegistrySelfTests } from "./🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️tool-job-fixed-operation-registry/🟦️.ts";
@@ -5874,8 +5873,8 @@ function toolJobDrawingGestureOperationOwnerExact(drawingEditor: string, drawing
   ];
   const requiredOwner = [
     "struct DrawingGestureOperationOwner",
-    "FixedOperationRegistry<DrawingGestureOperationOwner, 64>",
-    "impl semio_framework_job::FixedOperationOwner for DrawingGestureOperationOwner",
+    "FixedOperationRegistry<DrawingGestureOperationOwner, DRAWING_GESTURE_OPERATION_SLOTS>",
+    "impl FixedOperationOwner for DrawingGestureOperationOwner",
     "struct DrawingInstanceOperationOwner",
     "struct DrawingGestureOperationJob",
     "type Job = DrawingGestureOperationJob",
@@ -5885,27 +5884,29 @@ function toolJobDrawingGestureOperationOwnerExact(drawingEditor: string, drawing
     "registry.register(DrawingGestureOperationJobFactory::new(&controller))",
     "instance_owner: request.instance_operation_owner",
     "fn preview_projection(&mut self, canonical_base_revision: [u8; 32], active_utility: &str)",
-    "async fn render_with_instance_operation_owner(",
-    "owner.preview_projection(operation.canonical_base_revision, &cfg.snapshot.active_utility_id)",
+    "fn render_with_instance_operation_owner(",
+    "owner.preview_projection(operation.canonical_base_revision, drawing_active_utility(view_state))",
     "DrawingGesturePreview",
     "DRAWING_GESTURE_PREVIEW_POINT_CAPACITY",
     "if observed_revision != base_revision",
     "DrawingRetainedCommandDecoder",
-    "decoder.feed(*byte)",
+    "decoder.feed_page(page)",
     "UiFixedList<TracePointerWork, TRACE_POINTER_WORK_CAPACITY>",
-    "struct DrawingDraftQuery",
-    "query.advance(snapshot)",
+    "struct DrawingTool",
+    "ToolMachineRunner<canvas_tool::CanvasTool, DrawingToolHost>",
+    "Emit::commit_transaction(transaction, mutations)",
+    "query.cursor.advance(",
     "TracePointerJob::new_marquee",
     "DrawingQueryPublication",
     "query.publication_step()",
     "interaction_select_effect_from_targets",
     "session.trace_pointer",
     "session.point_query",
-    "session.draft_query",
+    "session.tool",
     "DrawingCommand::CanvasPointerDown(payload) => canvas_pointer_down::handle",
     "if DRAWING_GESTURE_TOOL_IDS.contains(&command.command_id())",
     "Drawing gesture commands are reachable only through their exact retained factory owner",
-    "if session.gesture.matches(\"idle\") && session.trace_pointer.is_none()",
+    "if session.tool.at_rest() && session.trace_pointer.is_none()",
     "base_revision",
     "fn cancel(&mut self)",
     "fn terminal_is_empty(&self) -> bool",
@@ -5931,6 +5932,8 @@ function toolJobDrawingGestureOperationOwnerExact(drawingEditor: string, drawing
     !drawingEditor.includes("fn resolve_point_pick") &&
     !drawingEditor.includes("fn marquee_layer_hits") &&
     !drawingEditor.includes("fn commit_draft(") &&
+    !drawingEditor.includes("coalesce_key: Some(") &&
+    !drawingEditor.includes("mod fsm") &&
     !drawingEditor.includes("Vec<TracePointerWork>") &&
     !drawingEditor.includes("drawing_gesture_preview_payload") &&
     !drawingEditor.includes("interaction_targets_json") &&
@@ -8951,7 +8954,7 @@ export class VerifyScript extends Script {
   /** 🧱️ Enforces dependency direction through the repository library's taxonomy-owned graph rule. */
   private runLayering(segments: string[]): void {
     if (segments.length) throw new Error("Expected verify layering");
-    runCmd("bun", ["nx", "run", "@semio-tech/repo-lib:lint-dependency-direction"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["nx", "run-many", "-p", "@semio-tech/repo-lib", "-t", "lint-dependency-direction", "lint-rust-source-direction", "lint-cargo-dependency-direction", "--skip-nx-cache", ...semioNxParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
   }
 
   /** 🏛️ Executes architecture contract checks contributed by their owning Nx projects. */
@@ -21439,13 +21442,73 @@ function policyMutationArtifactEngineBreaches(repoRoot: string): BreachRecord[] 
 //#region 🔧️PolicyRuleMutationOutcomeMergePolicy
 /**
  * 🎫️ `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` C2/C4/C10 gates: every
- * `🔺️diff` leaf must report through `protocol::MutationOutcome<D>` using only the 7 frozen codes
- * (`📋️contract-freeze.md` §C2), `validate` is deleted everywhere, `Severity::Hint` is gone, the CRDT
+ * `🔺️diff` leaf must report through `protocol::MutationOutcome<D>` using only the 9 frozen codes
+ * (`📋️contract-freeze.md` §C2 plus the two state-dependent `Error` codes `mutation.target-referenced` and
+ * `mutation.target-mismatch` added 2026-09-30, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING), `validate` is deleted everywhere, `Severity::Hint` is gone, the CRDT
  * merge-strategy/conflict-rule vocabulary reaches zero, `MergePolicy`'s 3 variants mirror across all 4
- * surfaces, and the dsl derive macro's two build-shape entry points stay byte-identical.
+ * surfaces that spell them, and the dsl derive macro's package glue mounts its one owner implementation.
+ * All seven rules read one shared git-visible inventory (`policyMutationLawInventory`).
  */
-const POLICY_MUTATION_FROZEN_CODES = ["mutation.target-missing", "mutation.no-op", "mutation.partial", "mutation.clamped", "mutation.duplicate-id", "mutation.invariant", "mutation.cascade"] as const;
-const POLICY_MUTATION_FROZEN_CODE_SET = new Set<string>(POLICY_MUTATION_FROZEN_CODES);
+/** 📖️The frozen outcome-code vocabulary's language-agnostic document — the one table this gate, the Rust protocol
+ * (`OUTCOME_CODES`, persistence) and the TypeScript twin (`outcomeCodeLevel`) share. */
+const POLICY_OUTCOME_CODE_FIXTURE = "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🧫️outcome-code/🔣️.json";
+type PolicyOutcomeLevel = "info" | "warning" | "error" | "fatal";
+type PolicyOutcomeVocabulary = Readonly<{ codes: ReadonlyMap<string, PolicyOutcomeLevel>; applyPattern: RegExp; applyLevel: PolicyOutcomeLevel }>;
+
+/** 📖️Reads the frozen vocabulary; a missing or malformed document fails the gate instead of admitting everything. */
+function policyOutcomeVocabulary(repoRoot: string): PolicyOutcomeVocabulary {
+  const document = JSON.parse(policyReadFileSafe(repoRoot, POLICY_OUTCOME_CODE_FIXTURE)) as { codes: { code: string; level: PolicyOutcomeLevel }[]; apply: { pattern: string; level: PolicyOutcomeLevel } };
+  return { codes: new Map(document.codes.map((row) => [row.code, row.level])), applyPattern: new RegExp(document.apply.pattern), applyLevel: document.apply.level };
+}
+
+/** ⚖️The level the vocabulary fixes for `code`; `null` outside it. */
+function policyOutcomeCodeLevel(vocabulary: PolicyOutcomeVocabulary, code: string): PolicyOutcomeLevel | null {
+  return vocabulary.codes.get(code) ?? (vocabulary.applyPattern.test(code) ? vocabulary.applyLevel : null);
+}
+
+/** 🗂️What the mutation-outcome-law rules read: git-visible regular source files and the `🧬️mutations` directories above them. */
+type PolicyMutationLawInventory = Readonly<{ files: readonly string[]; mutationsDirs: readonly string[] }>;
+/** 🔎️Every position the rules scan: sources, Python oracles, Gherkin specifications and committed `🎯️outcome` documents. */
+const POLICY_MUTATION_LAW_PATHSPECS = ["*.rs", "*.ts", "*.tsx", "*.py", "*.feature", "*🎯️outcome/🔣️.json"] as const;
+const POLICY_MUTATION_LAW_INVENTORIES = new Map<string, PolicyMutationLawInventory>();
+
+/**
+ * 🗂️The mutation-outcome-law gate's ONE repo walk, memoized per root and shared by all seven rules: git's own inventory of
+ * tracked and unignored files (`git ls-files -co --exclude-standard`), so ignored build trees are never entered and a
+ * symlink is never followed — git lists a link as one path and nothing beneath it. Taxonomy `pathExclusions` (opaque
+ * prefixes), `POLICY_SKIP_DIRS` segments and the router itself drop before any filesystem access, and `lstat` keeps regular
+ * files only, so a link (the root `.tmp-ticket` convenience link) or a deleted tracked path is skipped instead of read.
+ */
+function policyMutationLawInventory(repoRoot: string): PolicyMutationLawInventory {
+  const cached = POLICY_MUTATION_LAW_INVENTORIES.get(repoRoot);
+  if (cached) return cached;
+  const listed = Bun.spawnSync(["git", "ls-files", "-co", "--exclude-standard", "-z", "--", ...POLICY_MUTATION_LAW_PATHSPECS], { cwd: repoRoot });
+  if (listed.exitCode !== 0) throw new Error(`git-visible mutation-outcome-law inventory failed: ${listed.stderr.toString()}`);
+  const taxonomy = loadTaxonomy();
+  const files = [...new Set(listed.stdout.toString().split("\0").map((relPath) => relPath.normalize("NFC")))]
+    .filter((relPath) => relPath && !POLICY_MUTATION_LAW_SELF_PATHS.has(relPath) && !relPath.split("/").some((segment) => POLICY_SKIP_DIRS.has(segment)) && !taxonomyRelativePathIsExcluded(relPath, taxonomy))
+    .filter((relPath) => {
+      try {
+        return lstatSync(join(repoRoot, relPath)).isFile();
+      } catch {
+        return false;
+      }
+    })
+    .sort();
+  const mutationsDirs = new Set<string>();
+  for (const relPath of files) {
+    const segments = relPath.split("/");
+    for (let index = 0; index < segments.length - 1; index++) if (segments[index] === POLICY_MUTATIONS_FACET) mutationsDirs.add(segments.slice(0, index + 1).join("/"));
+  }
+  const inventory: PolicyMutationLawInventory = { files, mutationsDirs: [...mutationsDirs].sort() };
+  POLICY_MUTATION_LAW_INVENTORIES.set(repoRoot, inventory);
+  return inventory;
+}
+
+/** 🦀️The inventory's Rust sources. */
+function policyMutationLawRustFiles(repoRoot: string): string[] {
+  return policyMutationLawInventory(repoRoot).files.filter((relPath) => relPath.endsWith(".rs"));
+}
 
 /** 🧩️ A direct mutation is composite exactly when it visibly owns an explicit plan facet. */
 function policyIsCompositeMutationDir(repoRoot: string, mutationRel: string): boolean {
@@ -21454,13 +21517,14 @@ function policyIsCompositeMutationDir(repoRoot: string, mutationRel: string): bo
 
 /**
  * 📏️Rule 1: every `🧬️mutations/<slug>/🔺️diff/🦀️.rs` must return `protocol::MutationOutcome<`
- * and reference at least one of the 7 frozen codes. Composite mutation dirs (own `🧩️plan`, not `🔺️diff`) are out of scope — their outcome folds from
+ * and reference at least one of the 9 frozen codes. Composite mutation dirs (own `🧩️plan`, not `🔺️diff`) are out of scope — their outcome folds from
  * the plan. A leaf whose `🔺️diff` doesn't exist yet is tracked by `policyMutationTriadCompletenessBreaches`
  * instead, not here.
  */
 export function policyMutationOutcomeBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const mutationsRel of policyFindAllMutationsDirs(repoRoot)) {
+  const vocabulary = policyOutcomeVocabulary(repoRoot);
+  for (const mutationsRel of policyMutationLawInventory(repoRoot).mutationsDirs) {
     const artRel = policyArtifactRootOfMutationsDir(mutationsRel);
     for (const mutName of policyListMutationDirs(repoRoot, mutationsRel)) {
       const mutRel = `${mutationsRel}/${mutName}`;
@@ -21481,11 +21545,11 @@ export function policyMutationOutcomeBreaches(repoRoot: string): BreachRecord[] 
         });
         continue;
       }
-      const hasCode = POLICY_MUTATION_FROZEN_CODES.some((code) => content.includes(code));
+      const hasCode = [...vocabulary.codes.keys()].some((code) => content.includes(code));
       if (hasCode) continue;
       breaches.push({
         id: `mutation-outcome-missing-code-${diffRel}`,
-        summary: `"${diffRel}" returns protocol::MutationOutcome<..> but never references one of the 7 frozen message codes`,
+        summary: `"${diffRel}" returns protocol::MutationOutcome<..> but never references one of the 9 frozen message codes`,
         kind: "mutation-migration/outcome",
         scope: artRel,
         priority: "high",
@@ -21497,58 +21561,124 @@ export function policyMutationOutcomeBreaches(repoRoot: string): BreachRecord[] 
   return breaches;
 }
 
-/** 🔎️Matches definite `MutationOutcome::(error|fatal)(...)`/`MutationMessage::(info|warn|error|fatal)(...)` builders — always genuine regardless of surrounding context, capturing the first string-literal argument. */
-const POLICY_MUTATION_MESSAGE_CODE_BUILDER_RE = /\b(?:MutationOutcome::(?:error|fatal)|MutationMessage::(?:info|warn|error|fatal))\s*\(\s*"([^"]*)"/g;
-/** 🔎️Matches the chainable `.info(..)`/`.warn(..)` shorthand — only checked inside a fn body already proven to build a `MutationOutcome` (see `policyMutationMessageCodeBreaches`), never file-wide, so an unrelated `console.warn(..)`/`log::warn!`/`tracing::warn!` can never match. */
-const POLICY_MUTATION_MESSAGE_CODE_CHAIN_RE = /\.(?:info|warn)\s*\(\s*"([^"]*)"/g;
-/** 🔎️Finds `fn <name>(..` openers so rule 2 can scope the chainable-call check one function body at a time (paired with `policyExtractFnBody`). */
+/** 🔎️Rust outcome builders with the level they fix: `MutationOutcome::(error|fatal)(..)` and `MutationMessage::(info|warn|error|fatal)(..)`. */
+const POLICY_OUTCOME_RUST_BUILDER_RE = /\b(?:MutationOutcome::(error|fatal)|MutationMessage::(info|warn|error|fatal))\s*\(\s*"([^"]*)"/g;
+/** 🔎️The chainable `.info(..)`/`.warn(..)` shorthand — checked only inside a `fn` body that builds a `MutationOutcome`, so an unrelated `console.warn(..)`/`tracing::warn!` never matches. */
+const POLICY_OUTCOME_RUST_CHAIN_RE = /\.(info|warn)\s*\(\s*"([^"]*)"/g;
+/** 🔎️Apply-time rejections (`MutationOutcome::apply_to` persists them as `Fatal` messages): `MutationApplyError::new("…")`, `MutationApplyError { code: "…" }`. */
+const POLICY_OUTCOME_RUST_APPLY_RE = /\bMutationApplyError(?:::new\s*\(\s*|\s*\{\s*code:\s*)"([^"]*)"/g;
+/** 🔎️TypeScript twins: `refuse("<level>", "<code>", ..)` and `{ level: "<level>", code: "mutation.…" }` messages. */
+const POLICY_OUTCOME_TS_REFUSE_RE = /\brefuse\(\s*"(info|warning|error|fatal)"\s*,\s*"([^"]*)"/g;
+const POLICY_OUTCOME_TS_OBJECT_RE = /\blevel:\s*"(info|warning|error|fatal)"\s*,\s*code:\s*"(mutation\.[^"]*)"|\bcode:\s*"(mutation\.[^"]*)"\s*,\s*level:\s*"(info|warning|error|fatal)"/g;
+/** 🔎️Python second implementations: `("<level>", "<dotted-code>")` outcome tuples. */
+const POLICY_OUTCOME_PY_TUPLE_RE = /\(\s*"(info|warning|error|fatal)"\s*,\s*"([a-z0-9]+(?:[.-][a-z0-9]+)+)"\s*\)/g;
+/** 🔎️A complete string literal in the `mutation.` namespace — an outcome code wherever mutation leaves, diffs and oracles spell one. */
+const POLICY_OUTCOME_NAMESPACE_LITERAL_RE = /["'`](mutation\.[a-z0-9][a-z0-9.-]*)["'`]/g;
+/** 🔎️A `mutation.` token in a Gherkin specification (`mutation.apply.<detail>` placeholders excluded). */
+const POLICY_OUTCOME_FEATURE_TOKEN_RE = /(?<![\w.-])(mutation\.[a-z0-9][a-z0-9-]*(?:\.[a-z0-9][a-z0-9-]*)*)(?![\w-]|\.[<*])/g;
+/** 🔎️Finds `fn <name>(..` openers so the chainable shorthand is scoped to outcome-building bodies. */
 const POLICY_FN_DECL_RE = /\bfn\s+[A-Za-z_]\w*/g;
+/** 🔎️Outcome-code positions by domain: mutation leaves, diffs and their oracles. */
+const POLICY_OUTCOME_LEAF_SEGMENTS = ["/🧬️mutations/", "/🔺️diff/"] as const;
+
+/** 🧱️Spans of every `fn` body that mentions `MutationOutcome`, found with ONE literal-masked brace pass per file. */
+function policyOutcomeFnBodyMask(content: string): Uint8Array {
+  const masked = policyMaskLiterals(content);
+  const close = new Int32Array(masked.length).fill(-1);
+  const stack: number[] = [];
+  for (let i = 0; i < masked.length; i++) {
+    const ch = masked.charCodeAt(i);
+    if (ch === 123) stack.push(i);
+    else if (ch === 125) {
+      const open = stack.pop();
+      if (open !== undefined) close[open] = i;
+    }
+  }
+  const mask = new Uint8Array(content.length);
+  POLICY_FN_DECL_RE.lastIndex = 0;
+  let fm: RegExpExecArray | null;
+  while ((fm = POLICY_FN_DECL_RE.exec(masked))) {
+    const open = masked.indexOf("{", fm.index);
+    const end = open === -1 ? -1 : close[open]!;
+    if (end !== -1 && content.slice(open, end + 1).includes("MutationOutcome")) mask.fill(1, open, end + 1);
+  }
+  return mask;
+}
 
 /**
- * 📏️Rule 2: any message-constructing call's first argument must be exactly one of the 7 frozen codes
- * (📋️contract-freeze.md §C2) — no per-plugin codes, ever. Scoped to `.rs` files (the codes are a Rust
- * vocabulary; this also keeps 📜️script.ts itself, which is a `.ts` file, out of its own scan). Definite
- * builders are checked file-wide; the chainable `.info(..)`/`.warn(..)` shorthand is checked only
- * inside a `fn` body that itself references `MutationOutcome` — a plain `console.warn(..)` embedded as
- * a JS string literal inside a Rust file (never inside such a body) can never false-positive here.
+ * 📏️Rule 2: every outcome-code position spells a code of the frozen vocabulary (`🎮️mutation/🧫️fixtures/🧫️outcome-code`)
+ * at the one level it fixes — persistence (`🏪️store` `expected_mutation_message_level`) refuses anything else. Positions:
+ * Rust builders and the chainable shorthand inside outcome-building bodies (code + level), `MutationApplyError` codes
+ * (`mutation.apply.<detail>`), `mutation.` literals in mutation leaves/diffs (Rust, TypeScript) and Python oracles, the
+ * TypeScript twins' `refuse(..)`/`{ level, code }` messages, Python `(level, code)` tuples, committed `🎯️outcome` documents
+ * (code + level) and Gherkin specifications. Non-outcome fault, diagnostic and command codes live in their own namespaces.
  */
 export function policyMutationMessageCodeBreaches(repoRoot: string): BreachRecord[] {
+  const vocabulary = policyOutcomeVocabulary(repoRoot);
   const breaches: BreachRecord[] = [];
-  for (const relPath of policyAllRustFiles(repoRoot)) {
+  for (const relPath of policyMutationLawInventory(repoRoot).files) {
     const content = policyReadFileSafe(repoRoot, relPath);
     if (!content) continue;
-    const reportedLines = new Set<number>();
-    const pushIfBad = (code: string, index: number) => {
-      if (POLICY_MUTATION_FROZEN_CODE_SET.has(code)) return;
+    const reported = new Set<string>();
+    const check = (code: string, level: PolicyOutcomeLevel | null, index: number, apply = false) => {
+      const expected = policyOutcomeCodeLevel(vocabulary, code);
+      const fault = apply ? (vocabulary.applyPattern.test(code) ? null : "is not a mutation.apply.<detail> apply-rejection code") : expected === null ? "is not in the frozen outcome vocabulary" : level !== null && level !== expected ? `is fixed at ${expected}, not ${level}` : null;
+      if (fault === null) return;
       const line = policyLineOfIndex(content, index);
-      if (reportedLines.has(line)) return;
-      reportedLines.add(line);
+      if (reported.has(`${line}:${code}`)) return;
+      reported.add(`${line}:${code}`);
       breaches.push({
-        id: `mutation-message-code-${relPath}-${line}`,
-        summary: `"${relPath}:${line}" uses message code "${code}" — not one of the 7 frozen codes`,
+        id: `mutation-message-code-${relPath}-${line}-${code}`,
+        summary: `"${relPath}:${line}" outcome code "${code}"${level === null ? "" : ` at ${level}`} ${fault}`,
         kind: "mutation-migration/message-code",
         scope: relPath,
         line,
         priority: "high",
-        reason: "C2's frozen code set is exactly 7 generic codes — there are no per-plugin codes. An eighth code must be reported to the coordinator, never invented.",
-        solution: `Map this message onto mutation.target-missing/no-op/partial/clamped/duplicate-id/invariant/cascade, or report the gap to the coordinator if none fits.`,
+        reason: "Persistence admits exactly the frozen outcome vocabulary, each code at its one level (`🎮️mutation/🧫️fixtures/🧫️outcome-code`); any other code or level makes the history unpersistable. There are no per-plugin codes.",
+        solution: "Map the refusal by meaning: missing → mutation.target-missing, still referenced → mutation.target-referenced, inconsistent with the current state → mutation.target-mismatch, duplicate identity → mutation.duplicate-id, payload-intrinsic → mutation.invariant (+ schema bound or x-semio-invariant), apply-time failure → mutation.apply.<detail>; use the level the vocabulary fixes (MutationOutcome::refuse picks it for runtime codes).",
       });
     };
-
-    POLICY_MUTATION_MESSAGE_CODE_BUILDER_RE.lastIndex = 0;
-    let m: RegExpExecArray | null;
-    while ((m = POLICY_MUTATION_MESSAGE_CODE_BUILDER_RE.exec(content))) pushIfBad(m[1]!, m.index);
-
-    if (!content.includes("MutationOutcome")) continue;
-    POLICY_FN_DECL_RE.lastIndex = 0;
-    let fm: RegExpExecArray | null;
-    while ((fm = POLICY_FN_DECL_RE.exec(content))) {
-      const body = policyExtractFnBody(content, fm.index);
-      if (!body || !body.includes("MutationOutcome")) continue;
-      const bodyStart = content.indexOf(body, fm.index);
-      POLICY_MUTATION_MESSAGE_CODE_CHAIN_RE.lastIndex = 0;
-      let cm: RegExpExecArray | null;
-      while ((cm = POLICY_MUTATION_MESSAGE_CODE_CHAIN_RE.exec(body))) pushIfBad(cm[1]!, bodyStart + cm.index);
+    const scan = (re: RegExp, visit: (m: RegExpExecArray) => void) => {
+      re.lastIndex = 0;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(content))) visit(m);
+    };
+    const leaf = POLICY_OUTCOME_LEAF_SEGMENTS.some((segment) => `/${relPath}`.includes(segment));
+    if (relPath.endsWith(".rs")) {
+      scan(POLICY_OUTCOME_RUST_BUILDER_RE, (m) => check(m[3]!, ((m[1] ?? m[2]) === "warn" ? "warning" : (m[1] ?? m[2])) as PolicyOutcomeLevel, m.index));
+      scan(POLICY_OUTCOME_RUST_APPLY_RE, (m) => check(m[1]!, null, m.index, true));
+      if (leaf) scan(POLICY_OUTCOME_NAMESPACE_LITERAL_RE, (m) => check(m[1]!, null, m.index));
+      if (content.includes("MutationOutcome")) {
+        const bodies = policyOutcomeFnBodyMask(content);
+        scan(POLICY_OUTCOME_RUST_CHAIN_RE, (m) => {
+          if (bodies[m.index] === 1) check(m[2]!, m[1] === "warn" ? "warning" : "info", m.index);
+        });
+      }
+    } else if (relPath.endsWith(".ts") || relPath.endsWith(".tsx")) {
+      scan(POLICY_OUTCOME_TS_REFUSE_RE, (m) => check(m[2]!, m[1] as PolicyOutcomeLevel, m.index));
+      scan(POLICY_OUTCOME_TS_OBJECT_RE, (m) => check((m[2] ?? m[3])!, (m[1] ?? m[4]) as PolicyOutcomeLevel, m.index));
+      if (leaf) scan(POLICY_OUTCOME_NAMESPACE_LITERAL_RE, (m) => check(m[1]!, null, m.index));
+    } else if (relPath.endsWith(".py")) {
+      if (!relPath.includes("🧪️tests/")) continue;
+      scan(POLICY_OUTCOME_PY_TUPLE_RE, (m) => check(m[2]!, m[1] as PolicyOutcomeLevel, m.index));
+      scan(POLICY_OUTCOME_NAMESPACE_LITERAL_RE, (m) => check(m[1]!, null, m.index));
+    } else if (relPath.endsWith(".feature")) {
+      scan(POLICY_OUTCOME_FEATURE_TOKEN_RE, (m) => {
+        if (!/\.(json|rs|ts|tsx|py|md|txt)$/.test(m[1]!)) check(m[1]!, null, m.index);
+      });
+    } else {
+      let outcome: unknown;
+      try {
+        outcome = JSON.parse(content);
+      } catch {
+        continue;
+      }
+      const level = (value: unknown): PolicyOutcomeLevel | null => (value === "warn" ? "warning" : typeof value === "string" ? (value as PolicyOutcomeLevel) : null);
+      const record = outcome as { code?: unknown; level?: unknown; messages?: unknown };
+      if (typeof record.code === "string") check(record.code, level(record.level), content.indexOf(`"${record.code}"`));
+      for (const message of Array.isArray(record.messages) ? (record.messages as { code?: unknown; level?: unknown }[]) : []) {
+        if (typeof message.code === "string") check(message.code, level(message.level), content.indexOf(`"${message.code}"`));
+      }
     }
   }
   return breaches;
@@ -21560,12 +21690,12 @@ const POLICY_CRDT_VOCABULARY_RE = new RegExp(`\\b(${POLICY_CRDT_VOCABULARY_TOKEN
 
 /**
  * 📏️Rule 3: zero repo-wide occurrences of the CRDT merge-strategy/conflict-rule vocabulary C10 deletes
- * (`.🧬semio/`, `node_modules`, `target`, `dist` excluded via `POLICY_SKIP_DIRS`). Scoped to `.rs` files —
+ * (git-visible files of `policyMutationLawInventory`; `.🧬semio/`, `node_modules`, `target`, `dist` excluded via `POLICY_SKIP_DIRS`). Scoped to `.rs` files —
  * every token is a Rust-only identifier (no TS mirror was ever specified for the deleted CRDT pair).
  */
 export function policyNoCrdtVocabularyBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const relPath of policyAllRustFiles(repoRoot)) {
+  for (const relPath of policyMutationLawRustFiles(repoRoot)) {
     const content = policyReadFileSafe(repoRoot, relPath);
     if (!content) continue;
     POLICY_CRDT_VOCABULARY_RE.lastIndex = 0;
@@ -21604,7 +21734,7 @@ const POLICY_MUTATION_KIND_IMPL_RE = /\bimpl\b[^\n{]*\b(?:CompositeMutationKind|
  */
 export function policyNoValidateOverrideBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  for (const relPath of policyAllRustFiles(repoRoot)) {
+  for (const relPath of policyMutationLawRustFiles(repoRoot)) {
     const content = policyReadFileSafe(repoRoot, relPath);
     if (!content) continue;
     const reportedLines = new Set<number>();
@@ -21646,9 +21776,9 @@ export function policyNoValidateOverrideBreaches(repoRoot: string): BreachRecord
 /** 🔎️The canonical root command router excludes only its own source from the policy scan. */
 const POLICY_MUTATION_LAW_SELF_PATHS = new Set<string>(["📜️script.ts"]);
 
-/** 🔎️Source files (`.rs`/`.ts`/`.tsx`) repo-wide, excluding the canonical root router whose policy literals must not scan themselves. */
+/** 🔎️The inventory's source files (`.rs`/`.ts`/`.tsx`) repo-wide — the canonical root router, whose policy literals must not scan themselves, is already out. */
 function policyMutationLawSourceFiles(repoRoot: string): string[] {
-  return policyWalkRelFiles(repoRoot, [""], (relPath, name) => (name.endsWith(".rs") || name.endsWith(".ts") || name.endsWith(".tsx")) && !POLICY_MUTATION_LAW_SELF_PATHS.has(relPath));
+  return policyMutationLawInventory(repoRoot).files.filter((relPath) => relPath.endsWith(".rs") || relPath.endsWith(".ts") || relPath.endsWith(".tsx"));
 }
 
 const POLICY_SEVERITY_HINT_STRUCT_RE = /\bSeverity(?:::|\.)Hint\b/g;
@@ -21704,68 +21834,70 @@ export function policySeverityInfoBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
-/** 🔎️The 3 frozen MergePolicy variants (C3) mirrored at exactly these 4 surfaces. */
+/** 🔎️The 3 frozen MergePolicy variants (C3) spelled at exactly these 4 surfaces. */
 const POLICY_MERGE_POLICY_VARIANTS = ["LaissezFaire", "Normal", "Vigilant"] as const;
-/** 🔡️Idiomatic per-language spelling accepted for each variant — Rust surfaces spell it exactly like the enum (`LaissezFaire`); TS surfaces (host codec, kernel types, i18n) may use either the PascalCase mirror or the camelCase object-key form (`laissezFaire`) that idiomatic TS reaches for. Presence-only, per surface's own convention — this is a mirror-existence check, not a shape check. */
+/** 🔡️Idiomatic per-language spelling accepted for each variant — Rust surfaces spell it exactly like the enum (`LaissezFaire`); TS surfaces (kernel types, label contract, i18n bundles) may use either the PascalCase mirror or the camelCase object-key form (`laissezFaire`) that idiomatic TS reaches for. Presence-only, per surface's own convention — this is a mirror-existence check, not a shape check. */
 const POLICY_MERGE_POLICY_VARIANT_SPELLINGS: Readonly<Record<(typeof POLICY_MERGE_POLICY_VARIANTS)[number], readonly string[]>> = {
   LaissezFaire: ["LaissezFaire", "laissezFaire"],
   Normal: ["Normal", "normal"],
   Vigilant: ["Vigilant", "vigilant"],
 };
+/** 🗺️The surfaces that SPELL the variants. The host codec (`💻️os/🟦️.ts`) carries only the ordinal through the kernel twin's `mergePolicyAsU8`, so the kernel types stand for it. */
 const POLICY_MERGE_POLICY_SURFACES: readonly { label: string; relPath: string }[] = [
-  { label: "Rust spine (protocol::MergePolicy, 📡️spr/🧾️wire)", relPath: "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧾️wire/🦀️.rs" },
-  { label: "TS host codec (💻️os/🟦️.ts)", relPath: "🧰️framework/🛍️products/💻️os/🟦️.ts" },
+  { label: "Rust spine (protocol::MergePolicy, 📡️replication/🧾️wire)", relPath: "🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs" },
   { label: "TS kernel types (🎠️kernel/🟦️.ts)", relPath: "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts" },
-  { label: "i18n bundles (de+en, 🖱️ui react index.tsx)", relPath: "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx" },
+  { label: "UI label contract (📚️I18n policy.*)", relPath: "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx" },
+  { label: "i18n bundles (en+de, ⚛️react/🌐️i18n)", relPath: "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts" },
 ];
 
 /**
- * 📏️Rule 6: the three `MergePolicy` variants must be present in all 4 frozen surfaces from C3/C9,
+ * 📏️Rule 6: the three `MergePolicy` variants must be present in all 4 surfaces that spell them (C3/C9),
  * each under whatever idiomatic spelling that surface's language uses (`POLICY_MERGE_POLICY_VARIANT_
- * SPELLINGS` — as substrings, this is a mirror-existence check, not a shape check); fewer than all
- * four ⇒ one breach per surface that's missing at least one variant under any of its spellings.
+ * SPELLINGS` — as substrings, this is a mirror-existence check, not a shape check); one breach per surface
+ * that is missing at least one variant under any of its spellings, or that no longer exists at all.
  */
 export function policyMergePolicyParityBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const surface of POLICY_MERGE_POLICY_SURFACES) {
     const content = policyReadFileSafe(repoRoot, surface.relPath);
-    const missing = POLICY_MERGE_POLICY_VARIANTS.filter((v) => !POLICY_MERGE_POLICY_VARIANT_SPELLINGS[v].some((spelling) => content.includes(spelling)));
+    const missing = content ? POLICY_MERGE_POLICY_VARIANTS.filter((v) => !POLICY_MERGE_POLICY_VARIANT_SPELLINGS[v].some((spelling) => content.includes(spelling))) : [...POLICY_MERGE_POLICY_VARIANTS];
     if (missing.length === 0) continue;
     breaches.push({
       id: `merge-policy-parity-${surface.relPath}`,
-      summary: `"${surface.relPath}" (${surface.label}) is missing MergePolicy variant(s): ${missing.join(", ")}`,
+      summary: content ? `"${surface.relPath}" (${surface.label}) is missing MergePolicy variant(s): ${missing.join(", ")}` : `"${surface.relPath}" (${surface.label}) does not exist — the surface moved and this gate lists a stale path`,
       kind: "mutation-migration/merge-policy-parity",
       scope: surface.relPath,
       priority: "high",
-      reason: "C3/C9: MergePolicy {LaissezFaire, Normal, Vigilant} must mirror across all 4 surfaces (Rust spine, TS host codec, TS kernel types, both i18n bundles) or the merge-policy setting silently desyncs across a surface.",
-      solution: `Add the missing MergePolicy variant name(s) to ${surface.relPath} (see 📋️contract-freeze.md §C3/C9 for the exact shape expected at this surface).`,
+      reason: "C3/C9: MergePolicy {LaissezFaire, Normal, Vigilant} must mirror across all 4 surfaces that spell it (Rust spine, TS kernel types, UI label contract, en+de i18n bundles) or the merge-policy setting silently desyncs across a surface.",
+      solution: content ? `Add the missing MergePolicy variant name(s) to ${surface.relPath} (see 📋️contract-freeze.md §C3/C9 for the exact shape expected at this surface).` : `Point POLICY_MERGE_POLICY_SURFACES at the file that now spells this surface.`,
     });
   }
   return breaches;
 }
 
-const POLICY_DERIVE_MIRROR_A = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs";
-const POLICY_DERIVE_MIRROR_B = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/🦀️.rs";
+const POLICY_DERIVE_OWNER = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs";
+const POLICY_DERIVE_GLUE = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/🦀️.rs";
+/** 🔎️The glue's one mount of the owner implementation. */
+const POLICY_DERIVE_GLUE_MOUNT_RE = /#\[path\s*=\s*"\.\.\/\.\.\/🦀️\.rs"\]\s*mod\s+component\s*;/;
 
-/** 📏️Rule 7: the dsl derive macro's two build-shape entry points must stay byte-identical — a drift means one shape silently runs stale derive logic. */
-export function policyDeriveMirrorBreaches(repoRoot: string): BreachRecord[] {
-  const a = policyReadFileSafe(repoRoot, POLICY_DERIVE_MIRROR_A);
-  const b = policyReadFileSafe(repoRoot, POLICY_DERIVE_MIRROR_B);
-  if (a === b) return [];
+/** 📏️Rule 7: the dsl derive macro has ONE implementation — the proc-macro package glue mounts the owner `🦀️.rs` (`#[path = "../../🦀️.rs"] mod component;`) and only forwards to it, so no build shape can run a stale copy of the derive logic. */
+export function policyDeriveGlueMountBreaches(repoRoot: string): BreachRecord[] {
+  const glue = policyReadFileSafe(repoRoot, POLICY_DERIVE_GLUE);
+  if (policyReadFileSafe(repoRoot, POLICY_DERIVE_OWNER) && POLICY_DERIVE_GLUE_MOUNT_RE.test(glue) && !/\bfn\s+expand_/.test(glue)) return [];
   return [
     {
-      id: `derive-mirror-drift-${POLICY_DERIVE_MIRROR_A}`,
-      summary: `"${POLICY_DERIVE_MIRROR_A}" and "${POLICY_DERIVE_MIRROR_B}" have drifted — they must stay byte-identical`,
-      kind: "mutation-migration/derive-mirror",
-      scope: POLICY_DERIVE_MIRROR_A,
+      id: `derive-glue-mount-${POLICY_DERIVE_GLUE}`,
+      summary: `"${POLICY_DERIVE_GLUE}" does not mount the derive owner "${POLICY_DERIVE_OWNER}" as its one implementation`,
+      kind: "mutation-migration/derive-glue-mount",
+      scope: POLICY_DERIVE_GLUE,
       priority: "high",
-      reason: "The dsl derive macro's component.rs and its glue.rs copy under 📦️packages/🦀️rust are two build-shape entry points for the exact same macro body — any drift means one shape silently runs stale derive logic.",
-      solution: `Copy whichever of the two files has the real edit over the other so they stay byte-identical (${POLICY_DERIVE_MIRROR_A} ⇔ ${POLICY_DERIVE_MIRROR_B}).`,
+      reason: "The dsl derive macro's proc-macro package is glue: it mounts the owner implementation instead of carrying a copy, so the macro body exists once and no build shape runs stale derive logic.",
+      solution: `Make ${POLICY_DERIVE_GLUE} mount the owner with #[path = "../../🦀️.rs"] mod component; and forward each #[proc_macro_derive] entry to component::expand_*; move any expand_* body into ${POLICY_DERIVE_OWNER}.`,
     },
   ];
 }
 
-/** ⚖️Aggregates this ticket's 7 mutation-outcome / merge-policy / no-CRDT / no-validate / derive-mirror gates — the bundle both `policy` (below) and `VerifyScript.runGate`/`verify mutation-outcome-law` share. */
+/** ⚖️Aggregates this ticket's 7 mutation-outcome / merge-policy / no-CRDT / no-validate / derive-glue gates over ONE shared inventory (`policyMutationLawInventory`) — the bundle both `policy` (below) and `VerifyScript.runGate`/`verify mutation-outcome-law` share. */
 function policyMutationOutcomeMergePolicyBreaches(repoRoot: string): BreachRecord[] {
   return [
     ...policyMutationOutcomeBreaches(repoRoot),
@@ -21774,7 +21906,7 @@ function policyMutationOutcomeMergePolicyBreaches(repoRoot: string): BreachRecor
     ...policyNoValidateOverrideBreaches(repoRoot),
     ...policySeverityInfoBreaches(repoRoot),
     ...policyMergePolicyParityBreaches(repoRoot),
-    ...policyDeriveMirrorBreaches(repoRoot),
+    ...policyDeriveGlueMountBreaches(repoRoot),
   ];
 }
 //#endregion 🔧️PolicyRuleMutationOutcomeMergePolicy

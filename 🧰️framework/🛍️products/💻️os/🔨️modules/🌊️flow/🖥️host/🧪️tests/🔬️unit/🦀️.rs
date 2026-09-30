@@ -1319,8 +1319,11 @@ fn synapse_to_a_missing_port_does_not_create_an_engine_edge() {
 
 
 #[test]
-fn slider_ghost_descriptor_without_label_parses() {
-    let descriptor: WidgetDescriptor = crate::os_pack::json::from_json_str(r#"{"kind":"inputSlider"}"#).expect("slider ghost");
+fn slider_ghost_descriptor_requires_authored_label() {
+    let missing = r#"{"kind":"inputSlider"}"#;
+    assert!(crate::os_pack::json::from_json_str::<WidgetDescriptor>(missing).is_err());
+    assert!(serde_json::from_str::<WidgetDescriptor>(missing).is_err());
+    let descriptor: WidgetDescriptor = crate::os_pack::json::from_json_str(r#"{"kind":"inputSlider","label":""}"#).expect("authored empty label");
     let WidgetDescriptor::InputSlider { label, .. } = descriptor else { panic!("expected a slider"); };
     assert!(label.is_empty());
 }

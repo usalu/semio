@@ -261,7 +261,8 @@ pub use component::utilities::{utility_button, utility_collection, utility_separ
 pub use geometry::Rect;
 #[cfg(feature = "wgpu")]
 pub use presence_bar::{
-    build_presence_bar, build_presence_bar_localized, presence_bar_chip_text, presence_color, presence_css_var, presence_empty_label, presence_overflow_label, PresenceAppearance, PresenceHsl, PresencePeerRow, PresenceRole, PRESENCE_BAR_DEFAULT_MAX,
+    build_presence_bar, build_presence_bar_localized, presence_bar_chip_accessible_text, presence_bar_chip_text, presence_color, presence_css_var, presence_empty_label, presence_overflow_label, PresenceActivity, PresenceAppearance, PresenceHsl, PresencePeerRow, PresenceRole,
+    PRESENCE_BAR_DEFAULT_MAX,
 };
 pub use theme::{shell_floor_paints, GlassStyle, Level, Rgba, SurfaceFill, SurfaceScope, Theme};
 // 🧩️ `DrawList`'s CPU draw-command accumulator + the two selection-marquee paint helpers that push

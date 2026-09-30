@@ -220,13 +220,13 @@ fn session_refusal_text(code: &str, locale: Locale) -> Option<&'static str> {
     Some(time_travel_label(label, locale))
 }
 
-/// 🛑️ The history-edit refusal a fault code or fault text names, as `(code, message, severity)` in `locale` — React's
-/// `HISTORY_REFUSAL_LABEL_KEYS`: a hub `history.*` transition refusal is an error, a session `timeTravel.*` refusal a
-/// warning (the verb was refused, nothing was lost).
-pub(crate) fn history_refusal_notice(fault: &str, locale: Locale) -> Option<(&'static str, &'static str, semio_framework::Severity)> {
-    let hub = HISTORY_REFUSALS.iter().find(|(code, _, _)| fault.contains(code)).map(|(code, en, de)| {
+/// 🛑️ The history-edit refusal one machine `code` is, as `(code, message, severity)` in `locale` — React's
+/// `historyRefusalCodeV1` over `HISTORY_REFUSAL_LABEL_KEYS`: a hub `history.*` transition refusal is an error, a session
+/// `timeTravel.*` refusal a warning (the verb was refused, nothing was lost). Only an exact code matches; prose never does.
+pub(crate) fn history_refusal_notice(code: &str, locale: Locale) -> Option<(&'static str, &'static str, semio_framework::Severity)> {
+    let hub = HISTORY_REFUSALS.iter().find(|(known, _, _)| *known == code).map(|(known, en, de)| {
         (
-            *code,
+            *known,
             match locale {
                 Locale::En => *en,
                 Locale::De => *de,
@@ -234,7 +234,14 @@ pub(crate) fn history_refusal_notice(fault: &str, locale: Locale) -> Option<(&'s
             semio_framework::Severity::Error,
         )
     });
-    hub.or_else(|| SESSION_REFUSALS.into_iter().find(|code| fault.contains(code)).and_then(|code| Some((code, session_refusal_text(code, locale)?, semio_framework::Severity::Warning))))
+    hub.or_else(|| SESSION_REFUSALS.into_iter().find(|known| *known == code).and_then(|known| Some((known, session_refusal_text(known, locale)?, semio_framework::Severity::Warning))))
+}
+
+/// 🔎️ The history-edit refusal a dispatch-fault string carries — React's `historyRefusalOfFaultV1`. The funnel's string is
+/// `code: message`, then ` — code: message [target]; …` for the report's messages (the browser prefixes its bridge
+/// call), so the fault's own code comes first and each report code after it; each is read as one whole token.
+pub(crate) fn history_refusal_of_fault(fault: &str, locale: Locale) -> Option<(&'static str, &'static str, semio_framework::Severity)> {
+    fault.split(|c: char| c.is_whitespace() || matches!(c, ':' | ';' | ',' | '[' | ']' | '(' | ')')).find_map(|token| history_refusal_notice(token, locale))
 }
 
 /// 📝️ The band's lines in one locale; a line the session does not carry is `None` — React's `TimeTravelBandTextV1`.
@@ -392,6 +399,66 @@ pub(crate) fn time_travel_indicator_control_id(window_id: &str) -> String {
 }
 //#endregion 🪟️TimeTravelIndicator
 
+//#region 👥️PeerHistoryEdits
+/// ⏪️ The badge a peer's roster row wears while that peer edits the history — React's `timeTravelPeerPresenceV1`.
+pub(crate) const TIME_TRAVEL_PEER_BADGE: &str = "⏪";
+
+/// 🗝️ The node keys the framework history body gives a history row and a mutation child (`🔌️plugin/🦀️.rs`
+/// `ui_history_panel`), which a peer's open history edit marks — React's `HISTORY_ROW_KEY_PREFIX` and
+/// `HISTORY_MUTATION_ROW_KEY_PREFIX`.
+pub(crate) const HISTORY_ROW_KEY_PREFIX: &str = "framework.history.entry.";
+pub(crate) const HISTORY_MUTATION_ROW_KEY_PREFIX: &str = "framework.history.mutation.";
+
+/// 🗣️ `ui.timeTravel.peer.editingTarget`, or `.editingHistory` without a target.
+fn peer_editing_text(name: &str, target: Option<&str>, locale: Locale) -> String {
+    match (target, locale) {
+        (Some(target), Locale::En) => format!("{name} is editing {target} in time travel"),
+        (Some(target), Locale::De) => format!("{name} bearbeitet {target} in der Zeitreise"),
+        (None, Locale::En) => format!("{name} is editing the history in time travel"),
+        (None, Locale::De) => format!("{name} bearbeitet den Verlauf in der Zeitreise"),
+    }
+}
+
+/// 🗣️ `ui.timeTravel.peer.editingRow`.
+fn peer_editing_row_text(name: &str, locale: Locale) -> String {
+    match locale {
+        Locale::En => format!("{name} is editing this in time travel"),
+        Locale::De => format!("{name} bearbeitet dies in der Zeitreise"),
+    }
+}
+
+/// 👥️ What the shell shows about peers' open history edits: each editing peer's roster activity by actor, and the
+/// notes by history-body node key, sorted by key with one key's lines joined by ` · `.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub(crate) struct TimeTravelPeerPresence {
+    pub activities: Vec<(String, ui_wgpu::wgpu::PresenceActivity)>,
+    pub notes: Vec<(String, String)>,
+}
+
+/// 👥️ Peers' open history edits labelled from THIS replica's own history rows — React's `timeTravelPeerPresenceV1`
+/// (the wire carries only the mutation id, the stage and the draft count, never locale text). `editing` is each editing
+/// peer as `(actor, name, mutation id)`: its chip reads "Ada is editing Drag selection in time travel" (the history in
+/// general when the mutation is not among the local rows), and the mutation's node and its history row get a note
+/// naming who edits them.
+pub(crate) fn time_travel_peer_presence<'a>(editing: impl IntoIterator<Item = (&'a str, &'a str, &'a str)>, entries: &BTreeMap<String, semio_framework::kernel::HistoryEntry>, terminology: Terminology, locale: Locale) -> TimeTravelPeerPresence {
+    let mut notes: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let activities = editing
+        .into_iter()
+        .map(|(actor, name, mutation_id)| {
+            let row = entries.values().find(|entry| entry.mutations.iter().any(|mutation| mutation.mutation_id == mutation_id));
+            let target = row.and_then(|entry| entry.mutations.iter().find(|mutation| mutation.mutation_id == mutation_id)).map(|mutation| mutation.label.resolve(terminology, locale).to_string()).filter(|target| !target.is_empty());
+            let note = peer_editing_row_text(name, locale);
+            if let Some(entry) = row {
+                notes.entry(format!("{HISTORY_ROW_KEY_PREFIX}{}", entry.seq)).or_default().push(note.clone());
+            }
+            notes.entry(format!("{HISTORY_MUTATION_ROW_KEY_PREFIX}{mutation_id}")).or_default().push(note);
+            (actor.to_string(), ui_wgpu::wgpu::PresenceActivity { text: peer_editing_text(name, target.as_deref(), locale), badge: TIME_TRAVEL_PEER_BADGE.to_string() })
+        })
+        .collect();
+    TimeTravelPeerPresence { activities, notes: notes.into_iter().map(|(key, lines)| (key, lines.join(" · "))).collect() }
+}
+//#endregion 👥️PeerHistoryEdits
+
 impl ShellState {
     /// ⏪️ Takes the session status one history patch carries (absent = no session). The edge into a session reveals
     /// the History panel tab, whose Rust-built body holds the editor — the twin of the tool-run panel reveal.
@@ -406,6 +473,20 @@ impl ShellState {
     /// ⏪️ The live session status, if a history edit is open.
     pub fn history_time_travel(&self) -> Option<&HistoryTimeTravel> {
         self.history_time_travel.as_ref()
+    }
+
+    /// 👥️ The open history edits of the peers on the roster this shell paints (the attached surface's, like
+    /// `footer_presence_rows`), labelled from this replica's history rows on the shell's axes.
+    pub(crate) fn peer_time_travel_presence(&self) -> TimeTravelPeerPresence {
+        let Some(surface) = self.presence_surface.as_deref() else { return TimeTravelPeerPresence::default() };
+        let editing = self.presence_peers.iter().filter(|peer| peer.surface.as_deref() == Some(surface)).filter_map(|peer| Some((peer.actor.as_str(), peer.label.as_deref().unwrap_or(peer.actor.as_str()), peer.history_edit.as_ref()?.mutation_id.as_str())));
+        time_travel_peer_presence(editing, &self.history_entries, self.active_terminology(), self.active_locale())
+    }
+
+    /// 👥️ Hands the retained history body the peers' row notes — React's shell-root presence overlay. Runs every frame;
+    /// with no peer editing it is one empty comparison per window. `true` when a window's notes changed.
+    pub(crate) fn publish_peer_time_travel_notes(&self) -> bool {
+        crate::interpreter::set_ui_presence_notes(&self.peer_time_travel_presence().notes)
     }
 
     /// ⏱️ While the runtime replays or finalizes, re-reads the history at most every [`TIME_TRAVEL_POLL_MS`] and folds the

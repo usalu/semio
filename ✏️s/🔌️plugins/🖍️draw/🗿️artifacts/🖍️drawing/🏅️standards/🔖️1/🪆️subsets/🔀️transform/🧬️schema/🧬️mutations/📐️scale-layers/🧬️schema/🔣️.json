@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/scale-layers/schema.json",
+  "title": "ScaleLayers",
+  "description": "The `scale-layers` mutation record — a relative, parametric scaling of a set of layers by two axis factors about one world-space pivot, applied through each layer's parent transform. Internally tagged `\"mutation\": \"scaleLayers\"`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targets",
+    "pivotX",
+    "pivotY",
+    "scaleX",
+    "scaleY"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "scaleLayers",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layers",
+          "de": "Ebenen"
+        },
+        "description": {
+          "en": "Layers to scale; a layer inside a scaled group scales with the group, locked, hidden or missing ones are skipped.",
+          "de": "Zu skalierende Ebenen; eine Ebene in einer skalierten Gruppe skaliert mit der Gruppe, gesperrte, ausgeblendete oder fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "strokes",
+          "granularity": "stroke"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "pivotX": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Pivot X",
+          "de": "Bezugspunkt X"
+        },
+        "description": {
+          "en": "The point that stays in place while scaling.",
+          "de": "Der Punkt, der beim Skalieren an seiner Stelle bleibt."
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "pivot",
+        "order": 20
+      }
+    },
+    "pivotY": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Pivot Y",
+          "de": "Bezugspunkt Y"
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "pivot",
+        "order": 30
+      }
+    },
+    "scaleX": {
+      "type": "number",
+      "not": {
+        "const": 0
+      },
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Scale X",
+          "de": "Skalierung X"
+        },
+        "description": {
+          "en": "Horizontal factor; negative values mirror, zero is not allowed.",
+          "de": "Horizontaler Faktor; negative Werte spiegeln, null ist nicht erlaubt."
+        },
+        "step": 0.01,
+        "precision": 3,
+        "snaps": [
+          -1,
+          1
+        ],
+        "group": "scale",
+        "order": 40
+      }
+    },
+    "scaleY": {
+      "type": "number",
+      "not": {
+        "const": 0
+      },
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Scale Y",
+          "de": "Skalierung Y"
+        },
+        "description": {
+          "en": "Vertical factor; negative values mirror, zero is not allowed.",
+          "de": "Vertikaler Faktor; negative Werte spiegeln, null ist nicht erlaubt."
+        },
+        "step": 0.01,
+        "precision": 3,
+        "snaps": [
+          -1,
+          1
+        ],
+        "group": "scale",
+        "order": 50
+      }
+    }
+  }
+}

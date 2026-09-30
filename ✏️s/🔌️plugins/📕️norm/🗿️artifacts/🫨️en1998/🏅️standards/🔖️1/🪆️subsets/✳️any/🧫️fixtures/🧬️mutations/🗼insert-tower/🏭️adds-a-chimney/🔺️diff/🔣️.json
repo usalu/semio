@@ -1,0 +1,46 @@
+{
+  "artifact": null,
+  "annex": null,
+  "site": null,
+  "buildings": null,
+  "bridges": null,
+  "assessments": null,
+  "silos": null,
+  "tanks": null,
+  "foundations": null,
+  "retainingWalls": null,
+  "towers": [
+    {
+      "id": "tw-1",
+      "heightM": 45.0,
+      "mRdNm": 8000000.0,
+      "isChimney": false,
+      "qNominal": 2.5,
+      "permanentGkN": 1000000.0,
+      "correlatedOccupancy": true,
+      "variables": [
+        {
+          "id": "tw-q1",
+          "category": "E",
+          "qkN": 50000.0
+        }
+      ]
+    },
+    {
+      "id": "tw-2",
+      "heightM": 60.0,
+      "mRdNm": 8000000.0,
+      "isChimney": true,
+      "qNominal": 2.5,
+      "permanentGkN": 1000000.0,
+      "correlatedOccupancy": true,
+      "variables": [
+        {
+          "id": "tw-2-q1",
+          "category": "E",
+          "qkN": 50000.0
+        }
+      ]
+    }
+  ]
+}

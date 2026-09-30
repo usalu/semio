@@ -8,14 +8,14 @@ use crate::standards::v1::subsets::any::schema::{find_layer,layer_transform};
 pub struct ChangeLayerTransform {pub layer_id:String,pub expected:RasterTransform,pub transform:RasterTransform}
 pub fn validate(payload:&ChangeLayerTransform,base:&RasterSnapshot)->Result<(),&'static str>{
     let Some(layer @ (RasterLayerNode::Pixel {..}|RasterLayerNode::Group {..}))=find_layer(&base.layers,&payload.layer_id) else {return Err("mutation.target-missing");};
-    if layer_transform(layer)!=&payload.expected {return Err("mutation.transform-conflict");}
-    for value in [&payload.expected,&payload.transform] {semio_framework_pixels::compositing::inverse(value.as_affine()).map_err(|_|"mutation.transform-invalid")?;}
+    if layer_transform(layer)!=&payload.expected {return Err("mutation.target-mismatch");}
+    for value in [&payload.expected,&payload.transform] {semio_framework_pixels::compositing::inverse(value.as_affine()).map_err(|_|"mutation.invariant")?;}
     Ok(())
 }
 impl protocol::MutationKind<RasterSnapshot,RasterMutation> for ChangeLayerTransform {
     const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor {verb:"change",entity:"layer-transform",kind:"change-layer-transform",record:"ChangedLayerTransform"};
     fn diff(&self,base:&RasterSnapshot)->protocol::MutationOutcome<RasterDiff>{
-        if let Err(code)=validate(self,base){return protocol::MutationOutcome::error(code,"Transform cannot be applied to this layer revision.",[self.layer_id.clone()]);}
+        if let Err(code)=validate(self,base){return protocol::MutationOutcome::refuse(code,"Transform cannot be applied to this layer revision.",[self.layer_id.clone()]);}
         protocol::MutationOutcome::new(diff_patch_layer(&self.layer_id,RasterLayerPatch {transform:Some(self.transform.clone()),..Default::default()}))
     }
     fn inverse(&self,base:&RasterSnapshot)->Vec<RasterMutation>{

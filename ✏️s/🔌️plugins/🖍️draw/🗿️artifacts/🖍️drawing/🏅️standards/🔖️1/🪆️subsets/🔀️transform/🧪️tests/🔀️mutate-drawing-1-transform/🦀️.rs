@@ -19,7 +19,7 @@ use semio_s_plugin_stdio_test_oracle::law;
 //#region 🔖️Kinds
 /// 🏷️ This subset's own slice of `KINDS` in `../../🧬️schema/🧬️mutations/🦀️.rs` — duplicated,
 /// not imported, because the oracle-only build must not link the subject crate.
-const KINDS: &[&str] = &["set-layer-boolean-operation", "update-layer-trace-params", "update-layer-transform"];
+const KINDS: &[&str] = &["set-layer-boolean-operation", "update-layer-trace-params", "update-layer-transform", "drag-layers", "rotate-layers", "scale-layers", "drag-path-points"];
 
 /// 👁️ Kinds whose committed specification vector declares NO movement — a refusal or an
 /// accepted no-op — so the observability law must not be claimed for them.
@@ -47,6 +47,26 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
             include_str!("../../🧫️fixtures/🧬️mutations/🔄️update-layer-transform/📐️translates-and-scales-shape-a/📸️snapshot/⬅️before/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🔄️update-layer-transform/📐️translates-and-scales-shape-a/🦠️mutation/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🔄️update-layer-transform/📐️translates-and-scales-shape-a/📸️snapshot/➡️after/🔣️.json"),
+        ),
+        "drag-layers" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/📸️snapshot/➡️after/🔣️.json"),
+        ),
+        "rotate-layers" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/📸️snapshot/➡️after/🔣️.json"),
+        ),
+        "scale-layers" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles-a-rect/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles-a-rect/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles-a-rect/📸️snapshot/➡️after/🔣️.json"),
+        ),
+        "drag-path-points" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️drag-path-points/📍️drags-two-anchors/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️drag-path-points/📍️drags-two-anchors/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️drag-path-points/📍️drags-two-anchors/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-drawing-1-transform: {other:?} is not a declared kind of this subset"),
     }

@@ -1,0 +1,6 @@
+{
+  "ChangeZoneMetabolicRate": {
+    "zoneId": "zone-office",
+    "newMetabolicRateMet": 1.4
+  }
+}

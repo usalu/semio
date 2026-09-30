@@ -21,7 +21,7 @@
 //! Every type, parser and writer below is a fresh, independent implementation — it never imports
 //! this crate's own `AviSnapshot`/`AviMainHeader`/`AviStreamHeader`/`AviStreamFormat`/`AviChunk`/
 //! `RiffChunk` types (see this crate's own purity gate). The AVI 1.0 byte layouts themselves
-//! (`AVIMAINHEADER` 56 bytes, `AVISTREAMHEADER` 64 bytes, `BITMAPINFOHEADER`/`WAVEFORMATEX`, the
+//! (`AVIMAINHEADER` 56 bytes, `AVISTREAMHEADER` 56 or 64 bytes, `BITMAPINFOHEADER`/`WAVEFORMATEX`, the
 //! `idx1` `AVIIF_KEYFRAME` 0x10 flag and its movi-list-relative offset convention) are the format's
 //! own public specification, not this repository's code — an independent reader and an independent
 //! writer both have to agree with the SAME spec to be readers/writers of AVI at all.
@@ -37,15 +37,13 @@
 //! projection below only ever claims the fields the schema actually has slots for.
 //!
 //! A second, sharper real-fixture finding: the fixture's own `strh` is 56 bytes, not 64 —
-//! `ffmpeg`'s AVI-1.0 muxer writes the classic `AVISTREAMHEADER` with `rcFrame` simply omitted, a
-//! real, common, spec-legal producer behaviour. This module's [`parse_strh`] tolerates it (missing
-//! trailing bytes default to zero, the same tolerance every real-world AVI reader needs). The
-//! production `decode_avi` in `../../🚪️io/🦀️.rs` requires exactly 64 bytes and returns
-//! `Err("avi: strh shorter than 64 bytes")` on this real file — a genuine pre-existing subject-side
-//! gap this real fixture exposes, not introduced here, and not one this oracle module can or should
-//! paper over by weakening its own tolerance to match. It stays visible: the `sut`-gated subject
-//! handlers in the case's own `🦀️.rs` will fail at `decode_avi` the moment the subject
-//! phase compiles, exactly the outcome wave 7's TIFF/BMP precedents already established as correct.
+//! `ffmpeg`'s AVI-1.0 muxer writes the classic `AVISTREAMHEADER` whose `rcFrame` is four 16-bit
+//! `SHORT`s (here `(0, 0, 480, 432)`, the real frame rectangle), not the four `LONG`s of the modern
+//! 64-byte form. [`parse_strh`] reads whichever form is on the wire and records its width, and
+//! [`write_strh`] writes that same form back, so the independent `riff-avi-codec` probe reads both
+//! producers' `strh` identically. Reading the classic form as two `LONG`s would fold the rectangle's
+//! right and bottom edges into one bogus `top` of 28312032, which is what this model did until the
+//! comparison pipeline first read its output.
 //!
 //! The vocabulary is per SUBSET, not per artifact: two standards of the same format declare
 //! different mutations, and a subset that shares an implementation with another reaches it through
@@ -63,7 +61,7 @@
 //!
 //! Mutation params are the leaf's wire payload (`payload_value()`): binary payloads (a `movi` chunk's
 //! data, an unknown top-level chunk's data, `strf`'s `extra` bytes) travel as byte arrays, and a member
-//! this independent model has no slot for (a non-64-byte `rcFrame` form, `strhExtra`, `strlExtra`,
+//! this independent model has no slot for (an `rcFrameWidth` other than 0, 8 or 16, `strhExtra`, `strlExtra`,
 //! `hdrlExtra`) is refused rather than silently dropped.
 //!
 //! @see ../🔣️oracle.json — the mutation catalog this module is measured against.
@@ -96,7 +94,8 @@ mod oracles {
         reserved: [u32; 4],
     }
 
-    /// 🏷️ `strh` — `AVISTREAMHEADER`, 64 bytes (`rcFrame` is 4 `LONG`s).
+    /// 🏷️ `strh` — `AVISTREAMHEADER`: 48 fixed bytes, then `rcFrame` as 4 `LONG`s (`rc_frame_width` 16), 4 `SHORT`s
+    /// (8) or absent (0).
     #[derive(Clone, Debug, Default, PartialEq)]
     struct OStreamHeader {
         fcc_type: String,
@@ -116,6 +115,7 @@ mod oracles {
         rc_frame_top: i32,
         rc_frame_right: i32,
         rc_frame_bottom: i32,
+        rc_frame_width: u8,
     }
 
     /// 🎨️ `strf`, discriminated by the owning stream's `fccType` — the independent mirror of this
@@ -257,17 +257,19 @@ mod oracles {
         out
     }
 
-    /// 📐️ Accepts a `strh` as short as 56 bytes — the classic (pre-OpenDML, `RECT rcFrame` simply
-    /// omitted) `AVISTREAMHEADER` real encoders including `ffmpeg`'s own AVI-1.0 muxer still write,
-    /// confirmed against the real committed fixture (its own `strh` IS 56 bytes, not 64) — treating
-    /// any missing trailing `rcFrame` field as zero, the same tolerance every real-world AVI reader
-    /// has to have. Production's own `decode_avi` requires exactly 64 and rejects this real file;
-    /// see the module doc comment's honesty note.
+    /// 📐️ Reads the 48 fixed bytes and then `rcFrame` in whichever form the producer wrote: 4 `LONG`s when the
+    /// chunk is at least 64 bytes, the classic 4 `SHORT`s `ffmpeg`'s AVI-1.0 muxer writes when it is 56 (the real
+    /// committed fixture's own form), and none below that. A `strh` missing a fixed field is refused.
     fn parse_strh(payload: &[u8]) -> Result<OStreamHeader, String> {
-        if payload.len() < 56 {
-            return Err(format!("avi: strh is {} byte(s), need at least 56", payload.len()));
+        if payload.len() < 48 {
+            return Err(format!("avi: strh is {} byte(s), need at least 48", payload.len()));
         }
-        let rc = |offset: usize| if payload.len() >= offset + 4 { i32le(payload, offset) } else { 0 };
+        let short = |offset: usize| i16::from_le_bytes([payload[offset], payload[offset + 1]]) as i32;
+        let (rc_frame_left, rc_frame_top, rc_frame_right, rc_frame_bottom, rc_frame_width) = match payload.len() {
+            64.. => (i32le(payload, 48), i32le(payload, 52), i32le(payload, 56), i32le(payload, 60), 16),
+            56.. => (short(48), short(50), short(52), short(54), 8),
+            _ => (0, 0, 0, 0, 0),
+        };
         Ok(OStreamHeader {
             fcc_type: String::from_utf8_lossy(&payload[0..4]).into_owned(),
             fcc_handler: String::from_utf8_lossy(&payload[4..8]).into_owned(),
@@ -282,16 +284,16 @@ mod oracles {
             suggested_buffer_size: u32le(payload, 36),
             quality: i32le(payload, 40),
             sample_size: u32le(payload, 44),
-            rc_frame_left: rc(48),
-            rc_frame_top: rc(52),
-            rc_frame_right: rc(56),
-            rc_frame_bottom: rc(60),
+            rc_frame_left,
+            rc_frame_top,
+            rc_frame_right,
+            rc_frame_bottom,
+            rc_frame_width,
         })
     }
 
-    /// ✍️ Always emits the full 64-byte form (`rcFrame` included, zero if it was never present on
-    /// decode) — normalizing a short real-world `strh` to the complete struct on write, the same
-    /// kind of documented-normal-form choice `AviSnapshot`'s own encode already makes elsewhere.
+    /// ✍️ Writes `rcFrame` back in the form [`parse_strh`] recorded — 4 `LONG`s, 4 `SHORT`s or none — so a
+    /// producer's classic 56-byte `strh` is neither promoted nor misread.
     fn write_strh(header: &OStreamHeader) -> Vec<u8> {
         let mut out = Vec::with_capacity(64);
         out.extend_from_slice(&fourcc4(&header.fcc_type));
@@ -307,8 +309,11 @@ mod oracles {
         out.extend_from_slice(&header.suggested_buffer_size.to_le_bytes());
         out.extend_from_slice(&header.quality.to_le_bytes());
         out.extend_from_slice(&header.sample_size.to_le_bytes());
-        for value in [header.rc_frame_left, header.rc_frame_top, header.rc_frame_right, header.rc_frame_bottom] {
-            out.extend_from_slice(&value.to_le_bytes());
+        let rectangle = [header.rc_frame_left, header.rc_frame_top, header.rc_frame_right, header.rc_frame_bottom];
+        match header.rc_frame_width {
+            16 => rectangle.iter().for_each(|value| out.extend_from_slice(&value.to_le_bytes())),
+            8 => rectangle.iter().for_each(|value| out.extend_from_slice(&(*value as i16).to_le_bytes())),
+            _ => {}
         }
         out
     }
@@ -605,17 +610,18 @@ mod oracles {
             ("rcFrameTop", Json::Number(header.rc_frame_top as f64)),
             ("rcFrameRight", Json::Number(header.rc_frame_right as f64)),
             ("rcFrameBottom", Json::Number(header.rc_frame_bottom as f64)),
-            ("rcFrameWidth", Json::Number(16.0)),
+            ("rcFrameWidth", Json::Number(header.rc_frame_width as f64)),
             ("strhExtra", Json::Array(Vec::new())),
         ])
     }
 
-    /// 📏️ This model always writes the modern 64-byte `strh` (`rcFrame` as four `LONG`s), so any other declared
-    /// `rcFrameWidth` is refused rather than silently promoted.
+    /// 📏️ A wire `strh`; `rcFrameWidth` names the `rcFrame` form — 16 (`LONG`s), 8 (`SHORT`s) or 0 (absent) — and
+    /// any other width is refused rather than silently promoted.
     fn strh_from_json(value: &Json) -> Result<OStreamHeader, String> {
-        if value.get("rcFrameWidth").is_some_and(|width| *width != Json::Number(16.0)) {
-            return Err(format!("`rcFrameWidth` {} is not the 64-byte form this model writes", value.get("rcFrameWidth").map(Json::to_string).unwrap_or_default()));
-        }
+        let rc_frame_width = match value.get("rcFrameWidth") {
+            Some(Json::Number(width)) if [0.0, 8.0, 16.0].contains(width) => *width as u8,
+            other => return Err(format!("`rcFrameWidth` {other:?} is not an rcFrame form this model writes (0, 8 or 16)")),
+        };
         refuse_unmodelled(value, "strhExtra")?;
         Ok(OStreamHeader {
             fcc_type: value.str("fccType"),
@@ -635,6 +641,7 @@ mod oracles {
             rc_frame_top: num(value, "rcFrameTop") as i32,
             rc_frame_right: num(value, "rcFrameRight") as i32,
             rc_frame_bottom: num(value, "rcFrameBottom") as i32,
+            rc_frame_width,
         })
     }
 

@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution. `CadMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one. 🪆️ The five object-lifecycle kinds (create-object, delete-object, move-objects, rotate-objects, scale-objects) carry NO committed (before, mutation, diff, outcome, after) quintet, and that is a property of the vocabulary rather than missing work. The state they read is the addressed pane's composed s.stdio.semio.model child MATERIALIZATION (store::ArtifactChild::local_owner), which is deliberately absent from every wire codec — that type's own doc says it is intentionally absent from equality, debug, DSL, pack and JSON identity. A committed before-snapshot can therefore only describe a pane whose child handle carries no owner, in which every one of these verbs is a mutation.no-op — a vector the differential reference in 🧪️tests/📐️mutate-cad-1/🐍️.py refuses by construction (\"the committed vector declares this kind applied, yet the document did not move\"). Their specification lives instead in the Rust laws beside each leaf (🧬️schema/🧬️mutations/<kind>/🧪️tests/), which build the materialization in process and assert apply, inverse, no-op and target-missing against it. Registering a wire vector for them needs a persisted child resolver first (store::LinkResolver / ChildStoreFactory); once the pane content is on the wire an ordinary quintet becomes expressible and these five rows gain scenarios like every other kind.",
+  "_comment": "🧩️ This subset's own contribution. `CadMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one. 🪆️ The five object-lifecycle kinds (create-object, delete-object, move-objects, rotate-objects, scale-objects) carry NO committed (before, mutation, diff, outcome, after) quintet, and that is a property of the vocabulary rather than missing work. The state they read is the addressed pane's composed s.stdio.semio.model child MATERIALIZATION (store::ArtifactChild::local_owner), which is deliberately absent from every wire codec — that type's own doc says it is intentionally absent from equality, debug, DSL, pack and JSON identity. A committed before-snapshot can therefore only describe a pane whose child handle carries no owner, in which every one of these verbs is a mutation.no-op — a vector the differential reference in 🧪️tests/📐️mutate-cad-1/🐍️.py refuses by construction (\"the committed vector declares this kind applied, yet the document did not move\"). Their specification lives instead in the Rust laws beside each leaf (🧬️schema/🧬️mutations/<kind>/🧪️tests/), which build the materialization in process and assert apply, inverse, no-op and target-missing against it. Registering a wire vector for them needs a persisted child resolver first (store::LinkResolver / ChildStoreFactory); once the pane content is on the wire an ordinary quintet becomes expressible and these five rows gain scenarios like every other kind. Their payload wire alone is pinned meanwhile: each leaf commits a payload-only witness (🧫️fixtures/🧬️mutations/<leaf>/🧾️wire-witness/🦠️mutation/🔣️.json) that the schema mutation-payloads lint validates against the leaf schema and that semio_payload_law_cad_mutation plus object_lifecycle_wire_witnesses_are_the_canonical_rust_wire decode and re-encode exactly.",
   "oracles": [
     {
       "id": "cad-python-independent",
@@ -294,7 +294,10 @@
         "delete-object",
         "move-objects",
         "rotate-objects",
-        "scale-objects"
+        "scale-objects",
+        "drag-selection",
+        "rotate-selection",
+        "scale-selection"
       ]
     }
   ],
@@ -673,6 +676,28 @@
           "subset": "structure"
         },
         {
+          "id": "drag-selection",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "no-op",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "drag-selection",
+            "bridgeVersion": 1,
+            "variant": "DragSelection"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "object"
+        },
+        {
           "id": "move-objects",
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -804,6 +829,28 @@
           "subset": "object"
         },
         {
+          "id": "rotate-selection",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "no-op",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-selection",
+            "bridgeVersion": 1,
+            "variant": "RotateSelection"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "object"
+        },
+        {
           "id": "scale-objects",
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -816,6 +863,28 @@
             "operation": "scale-objects",
             "bridgeVersion": 1,
             "variant": "ScaleObjects"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "cad-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "object"
+        },
+        {
+          "id": "scale-selection",
+          "capability": "cad-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "rejected",
+            "no-op",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "scale-selection",
+            "bridgeVersion": 1,
+            "variant": "ScaleSelection"
           },
           "oracleRequirements": [
             {

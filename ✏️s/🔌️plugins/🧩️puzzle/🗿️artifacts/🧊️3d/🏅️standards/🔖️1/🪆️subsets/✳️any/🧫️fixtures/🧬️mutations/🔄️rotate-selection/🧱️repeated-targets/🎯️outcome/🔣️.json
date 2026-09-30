@@ -1,0 +1,9 @@
+{
+  "code": "mutation.invariant",
+  "path": [
+    "object-a",
+    "object-b",
+    "object-a"
+  ],
+  "status": "rejected"
+}

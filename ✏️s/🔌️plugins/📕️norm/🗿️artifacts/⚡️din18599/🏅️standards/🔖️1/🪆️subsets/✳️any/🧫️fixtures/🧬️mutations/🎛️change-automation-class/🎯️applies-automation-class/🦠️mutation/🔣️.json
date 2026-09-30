@@ -1,0 +1,4 @@
+{
+  "mutation": "changeAutomationClass",
+  "newAutomationClass": "A"
+}

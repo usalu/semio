@@ -9,6 +9,7 @@ export const DOCUMENT_BACKBONE_CONTROL_MAXIMUM_BYTES = 4096;
 export function documentBackboneEffectV1(bytes: Uint8Array): "mutations" | "remote-ingest-receipt" {
   const message = decodeBackboneMessage(bytes);
   if (message.kind === "genesis") throw new Error("actor-document-port.genesis-requires-cold-pair");
+  if (message.kind === "retract") throw new Error("actor-document-port.retract-flows-to-the-store");
   return message.kind === "ack" ? "remote-ingest-receipt" : "mutations";
 }
 

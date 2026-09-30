@@ -27,7 +27,15 @@
           "columns_gutter": null,
           "frame_added": null,
           "frame_removed": "frame-text",
-          "frame_patched": null
+          "frame_patched": null,
+          "frame_layer": null,
+          "frame_order": null,
+          "guides": null,
+          "layer_added": null,
+          "layer_patched": null,
+          "layer_removed": null,
+          "overrides": null,
+          "parent_page_id": null
         }
       }
     ],

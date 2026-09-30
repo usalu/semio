@@ -43,7 +43,7 @@ only the key they are filed under is adopted. `delete-asset`'s inverse sidesteps
 ⛓️ OWNERSHIP AND ORDER, the two rules every verb here is read against. A record may be removed with
 what it OWNS (a stream carries its frames, a GCP carries its observations) but never with what merely
 NAMES it: a stream a GCP observation addresses, a camera a stream or a rig entry binds, an asset a
-frame, texture or geo product references, all earn `mutation.referenced` instead. And every keyed
+frame, texture or geo product references, all earn `mutation.target-referenced` instead. And every keyed
 collection is held in ascending key order, so a `create`/`add` puts a member back exactly where a
 `delete`/`remove` took it from. Together those make every kind's inverse a single step of this same
 vocabulary that restores the committed BEFORE-document exactly — this module needs no synthetic
@@ -593,9 +593,9 @@ def refusal_of(kind, base, payload):
     (`mutation.target-missing`); a value a
     verb constrains must satisfy that constraint (`mutation.invariant`); resubmitting the value a
     document already holds changes nothing (`mutation.no-op`); a content handle names only content the
-    document stores complete, and only a reconstruction commit binds one (`mutation.incomplete-mesh`,
-    `mutation.invalid-asset-payload`, `mutation.invalid-reconstruction-*`); a content leaf is bounded,
-    contiguous and never rewritten (`mutation.invalid-content-chunk`, `mutation.content-*`)."""
+    document stores complete, and only a reconstruction commit binds one (`mutation.target-mismatch`,
+    `mutation.invariant`, `mutation.target-mismatch`); a content leaf is bounded,
+    contiguous and never rewritten (`mutation.invariant`, `mutation.target-mismatch`)."""
     streams, gcps = base["streams"], base["gcps"]
     cameras, rig = base["calibration"]["cameras"], base["calibration"]["rig"]
     params, results = base["params"], base["results"]
@@ -613,7 +613,7 @@ def refusal_of(kind, base, payload):
         if _index_of(streams, payload["id"]) < 0:
             return "mutation.target-missing"
         # 🔗 A GCP owns its observations; a stream one of them names may not be taken out from under it.
-        return "mutation.referenced" if any(o["streamId"] == payload["id"] for gcp in gcps for o in gcp["observations"]) else None
+        return "mutation.target-referenced" if any(o["streamId"] == payload["id"] for gcp in gcps for o in gcp["observations"]) else None
     if kind == "change-stream-sync":
         index = _index_of(streams, payload["id"])
         if index < 0:
@@ -638,12 +638,12 @@ def refusal_of(kind, base, payload):
     if kind == "create-asset":
         # 🔗 Durable content is bound by a reconstruction commit; an imported raster carries its own bytes.
         if content_handle(payload["asset"]["data"]) is not None:
-            return "mutation.invalid-asset-payload"
+            return "mutation.invariant"
         try:
             raw = base64.b64decode(payload["asset"]["data"], validate=True)
         except ValueError:
-            return "mutation.invalid-asset-payload"
-        return "mutation.invalid-asset-payload" if len(raw) > RASTER_CONTENT_BYTES else None
+            return "mutation.invariant"
+        return "mutation.invariant" if len(raw) > RASTER_CONTENT_BYTES else None
     if kind == "delete-asset":
         if payload["key"] not in base["assets"]:
             return "mutation.target-missing"
@@ -652,7 +652,7 @@ def refusal_of(kind, base, payload):
         if results["geo"] is not None:
             referenced = referenced or any(results["geo"][slot] == payload["key"] for slot in ("dsmAssetId", "dtmAssetId", "orthoAssetId"))
         # 🔗 Removing content the document still names would leave a reference pointing at nothing.
-        return "mutation.referenced" if referenced else None
+        return "mutation.target-referenced" if referenced else None
     if kind == "create-camera-calibration":
         return "mutation.duplicate-id" if _index_of(cameras, payload["camera"]["id"]) >= 0 else None
     if kind == "update-camera-calibration":
@@ -671,7 +671,7 @@ def refusal_of(kind, base, payload):
             return "mutation.target-missing"
         referenced = any(stream["cameraId"] == payload["cameraId"] for stream in streams) or _index_of(rig, payload["cameraId"], key="cameraId") >= 0
         # 🔗 A calibration owns nothing; it may not leave while a stream binding or a rig entry needs it.
-        return "mutation.referenced" if referenced else None
+        return "mutation.target-referenced" if referenced else None
     if kind == "create-rig-extrinsic":
         camera_id = payload["extrinsic"]["cameraId"]
         if _index_of(rig, camera_id, key="cameraId") >= 0:
@@ -727,7 +727,7 @@ def refusal_of(kind, base, payload):
     if kind == "replace-mesh-result":
         named = mesh_content_handle(payload["mesh"]["mesh"])
         if named is not None and not content_complete(base["durableArtifacts"], named[0], "mesh", named[1]):
-            return "mutation.incomplete-mesh"
+            return "mutation.target-mismatch"
         return "mutation.no-op" if payload["mesh"] == results["mesh"] else None
     if kind in RESULT_SLOT:
         slot, arg = RESULT_SLOT[kind], RESULT_ARG[kind]
@@ -742,7 +742,7 @@ def refusal_of(kind, base, payload):
         if entry is None:
             return "mutation.target-missing"
         if payload["from"] > len(entry["chunks"]):
-            return "mutation.content-gap"
+            return "mutation.target-mismatch"
         return "mutation.no-op" if payload["from"] == len(entry["chunks"]) else None
     if kind == "commit-reconstruction":
         return refuses_commit(base, payload)
@@ -756,23 +756,23 @@ def refuses_append(store, payload):
     only repeats stored leaves changes nothing; and the entry stays inside its kind's envelope."""
     raws = [leaf(encoded) for encoded in payload["chunks"]]
     if not raws or any(raw is None for raw in raws):
-        return "mutation.invalid-content-chunk"
+        return "mutation.invariant"
     entry = store.get(payload["contentId"])
     stored = [] if entry is None else entry["chunks"]
     first = payload["first"]
     if first > len(stored):
-        return "mutation.content-gap"
+        return "mutation.target-mismatch"
     if entry is not None and (entry["kind"], entry["mime"], entry["width"], entry["height"]) != (payload["kind"], payload["mime"], payload["width"], payload["height"]):
-        return "mutation.content-kind-mismatch"
+        return "mutation.target-mismatch"
     repeated = stored[first : first + len(payload["chunks"])]
     if repeated != payload["chunks"][: len(repeated)]:
-        return "mutation.content-conflict"
+        return "mutation.target-mismatch"
     if len(repeated) == len(payload["chunks"]):
         return "mutation.no-op"
     max_bytes, max_leaves = CONTENT_ENVELOPE[payload["kind"]]
     kept = sum(len(leaf(encoded) or b"") for encoded in stored[: first + len(repeated)])
     if first + len(payload["chunks"]) > max_leaves or kept + sum(len(raw) for raw in raws) > max_bytes:
-        return "mutation.content-capacity"
+        return "mutation.target-mismatch"
     return None
 
 
@@ -785,14 +785,14 @@ def refuses_commit(base, payload):
     sparse = payload["sparse"]
     named = None if sparse is None else content_handle(sparse["points"])
     if named is not None and not content_complete(store, named[0], "sparse", named[1]):
-        return "mutation.invalid-reconstruction-sparse"
+        return "mutation.target-mismatch"
     named = None if payload["mesh"] is None else mesh_content_handle(payload["mesh"]["mesh"])
     if named is not None and not content_complete(store, named[0], "mesh", named[1]):
-        return "mutation.invalid-reconstruction-mesh"
+        return "mutation.target-mismatch"
     for binding in payload["assets"]:
         content_id = binding.get("contentId")
         if content_id is not None and not (content_id in store and content_complete(store, content_id, "image", len(store[content_id]["chunks"]))):
-            return "mutation.invalid-reconstruction-asset"
+            return "mutation.target-mismatch"
     return "mutation.no-op" if apply_commit_reconstruction(base, payload) == base else None
 # endregion 🔖️Vocabulary — refusal rules
 

@@ -22,8 +22,8 @@ Feature: Apply every typed wfc3d mutation twice — once in Rust, once in Python
   A `create-*` carries the collection's CANONICAL SORTED insertion index, which is what makes a delete
   followed by its inverse restore the row's position rather than append it. There are TWO cascades and
   they are asymmetric: `delete-slot` drops every edge incident to the slot and says so with an
-  `info`-level `wfc3d.slot.edges-cascaded`, while `delete-tile` drops every rule NAMING the tile AND
-  releases every pin ON it, under `wfc3d.tile.references-cascaded`. And a refusal produces an EMPTY
+  `info`-level `mutation.cascade`, while `delete-tile` drops every rule NAMING the tile AND
+  releases every pin ON it, under `mutation.cascade`. And a refusal produces an EMPTY
   delta with a diagnostic rather than an error, so applying a refused mutation is a document no-op —
   which is why the reference asserts the outcome's messages, not an error type.
 

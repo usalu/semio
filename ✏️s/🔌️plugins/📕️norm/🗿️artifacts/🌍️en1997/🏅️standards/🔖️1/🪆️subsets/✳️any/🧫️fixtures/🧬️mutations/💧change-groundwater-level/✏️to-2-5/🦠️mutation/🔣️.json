@@ -1,0 +1,4 @@
+{
+  "mutation": "changeGroundwaterLevel",
+  "newGroundwaterLevel": -2.5
+}

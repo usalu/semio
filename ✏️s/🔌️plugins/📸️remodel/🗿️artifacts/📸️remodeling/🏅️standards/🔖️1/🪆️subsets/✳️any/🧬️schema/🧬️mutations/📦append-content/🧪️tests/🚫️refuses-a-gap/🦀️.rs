@@ -51,7 +51,7 @@ async fn declared_refusal_holds() {
     assert_eq!(produced.diff(), &RemodelingDiff::default(), "append-content/refuses-a-gap: a refusing leaf must carry an empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "append-content/refuses-a-gap: exactly one diagnostic is expected, got {messages:?}");
-    assert_eq!(messages[0].code.0, "mutation.content-gap", "append-content/refuses-a-gap: the declared code must be the emitted one");
+    assert_eq!(messages[0].code.0, "mutation.target-mismatch", "append-content/refuses-a-gap: the declared code must be the emitted one");
     assert_eq!(messages[0].level, protocol::Severity::Error, "append-content/refuses-a-gap: the declared level must be the emitted one");
     assert_eq!(declared.get("code").and_then(|code| code.as_str()), Some(messages[0].code.0.as_str()), "the committed outcome must name the emitted code");
     let declared_path: Vec<String> = match declared.get("path") {

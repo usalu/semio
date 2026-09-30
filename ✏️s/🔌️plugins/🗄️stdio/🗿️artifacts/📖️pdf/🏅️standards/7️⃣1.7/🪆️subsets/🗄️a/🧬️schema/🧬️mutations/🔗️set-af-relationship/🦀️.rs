@@ -7,7 +7,6 @@ use crate::standards::v1_7::subsets::base::schema::{
     diff::PdfDiff,
     snapshot::{PdfObject, PdfSnapshot},
 };
-use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -27,7 +26,7 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for SetAfRelationship {
         if let Some(id) = support::file_spec_named(&next, &self.file_name) {
             support::set_entry(&mut next, id, "AFRelationship", PdfObject::Name(self.relationship.clone()));
         }
-        MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
+        MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfAMutation> {

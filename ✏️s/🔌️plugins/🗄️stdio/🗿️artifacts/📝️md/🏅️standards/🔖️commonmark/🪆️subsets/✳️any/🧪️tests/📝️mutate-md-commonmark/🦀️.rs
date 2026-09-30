@@ -3,7 +3,8 @@
 //! Every scenario copies the one real, committed README fixture into the case work directory
 //! first; the committed fixture is never written to. `oracle` drives the registered `comrak`
 //! reference implementation through this subset's own oracle module (`oracle_apply_mutation`,
-//! `project_md`, `inverse_mutation_spec`); `subject` drives this repository's own
+//! `oracle_apply_mutation_inverse`, `project_md`), whose answer is the projection of the AST it edited; `subject`
+//! drives this repository's own
 //! `MdMutation`/`apply_md_mutation`/`MdSnapshot::from_text`/`MdSnapshot::to_text` — the real, typed,
 //! event-sourced mutation pipeline, not an ad hoc text edit. Both results are read back by the
 //! INDEPENDENT `comrak`-backed `project_md` before the `ordered-json-v1` profile compares them. The
@@ -11,7 +12,7 @@
 //! compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::md::standards::v_commonmark::subsets::any::{inverse_mutation_spec, oracle_apply_mutation, oracle_round_trip, project_md};
+use semio_s_plugin_stdio_test_oracle::artifacts::md::standards::v_commonmark::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_md};
 
 
 //#region 🔖️Input
@@ -37,8 +38,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
     let kind = spec.str("kind");
     let input = mutable_input(ctx, INPUT, "input.md")?;
-    let bytes = oracle_apply_mutation(&input, &spec)?;
-    let projection = project_md(&bytes)?;
+    let (bytes, projection) = oracle_apply_mutation(&input, &spec)?;
     if projection_divergence(&projection, &project_md(&input)?).is_none() {
         return Err(format!("{kind:?} left the semantic projection exactly as it found it -- a mutation whose parameters make it a no-op against the real artifact is not a test of that kind"));
     }
@@ -58,19 +58,16 @@ fn projection_divergence(restored: &Json, original: &Json) -> Option<String> {
     Some(format!("first divergence at char {at} of {} vs {} -- got …{}… want …{}…", left.len(), right.len(), window(&left), window(&right)))
 }
 
-/// ↩️ Applies the row's forward mutation, then this subset's own algebraic inverse of it (computed
-/// by `inverse_mutation_spec` from the ORIGINAL document's own INDEPENDENT `comrak` projection, the
-/// same restore-the-prior-value law `MdMutation::inverse` implements), and asserts the restoration
-/// against the ORIGINAL document's own projection before ever reaching the framework's
-/// oracle-vs-subject comparison.
+/// ↩️ Applies the row's forward mutation, then the oracle's own algebraic inverse of it (computed
+/// from the ORIGINAL document's own INDEPENDENT `comrak` projection, the same restore-the-prior-value
+/// law `MdMutation::inverse` implements) to one `comrak` tree, and asserts the restoration against
+/// the ORIGINAL document's own projection before ever reaching the framework's oracle-vs-subject
+/// comparison.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
     let input = mutable_input(ctx, INPUT, "input.md")?;
     let original_projection = project_md(&input)?;
-    let mutated = oracle_apply_mutation(&input, &spec)?;
-    let inverse_spec = inverse_mutation_spec(&input, &spec)?;
-    let restored = oracle_apply_mutation(&mutated, &inverse_spec)?;
-    let projection = project_md(&restored)?;
+    let (restored, projection) = oracle_apply_mutation_inverse(&input, &spec)?;
     if let Some(divergence) = projection_divergence(&projection, &original_projection) {
         return Err(format!("inverse law violated: {:?} followed by its own inverse did not restore the original document's projection -- {divergence}", spec.str("kind")));
     }

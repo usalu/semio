@@ -1034,3 +1034,49 @@ fn passive_chrome_regions_are_not_announced_as_buttons() {
         assert_eq!(nodes.iter().any(|node| Some(node.key.as_str()) == row["id"].as_str()), row["announced"].as_bool().unwrap());
     }
 }
+
+#[test]
+fn compact_theme_spacing_and_named_metrics_match_neutral_css_pixels() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🧫️fixtures/📐️theme-geometry/🔣️.json")).expect("theme geometry fixture");
+    let bindings: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/📐️geometry/🔣️.json")).expect("theme geometry bindings");
+    for case in fixture["cases"].as_array().expect("geometry cases") {
+        let mut document = shell_theme_document_base().clone();
+        document.spacing.insert("compact".into(), case["compact"].as_str().expect("compact spacing").into());
+        for (section, rows) in case["metrics"].as_object().expect("metrics") {
+            for (key, value) in rows.as_object().expect("metric rows") {
+                document.metrics.entry(section.clone()).or_default().insert(key.clone(), ThemeNumber::Scalar(value.as_f64().expect("scalar metric")));
+            }
+        }
+        document.metrics.entry("dom".into()).or_default().insert("rootRemPx".into(), ThemeNumber::Scalar(case["rootRemPx"].as_f64().expect("root rem")));
+        let theme = theme_from_document(&document, false);
+        let actual = BTreeMap::from([
+            ("navbar_height", theme.navbar_height), ("footer_height", theme.footer_height),
+            ("panel_header_height", theme.panel_header_height), ("control_height", theme.control_height),
+            ("control_height_small", theme.control_height_small), ("gap_standard", theme.gap_standard),
+            ("padding_standard", theme.padding_standard), ("panel_inset", theme.panel_inset),
+            ("tree_row_height", theme.tree_row_height), ("tree_indent_per_level", theme.tree_indent_per_level),
+            ("tree_toggle_width", theme.tree_toggle_width), ("panel_min_width", theme.panel_min_width),
+            ("panel_max_width", theme.panel_max_width), ("window_measures_default_width", theme.window_measures_default_width),
+            ("window_engagement_max_width", theme.window_engagement_max_width), ("font_size_body", theme.font_size_body),
+            ("font_size_small", theme.font_size_small), ("font_size_emphasized", theme.font_size_emphasized),
+        ]);
+        assert_eq!(actual.len(), bindings["bindings"].as_array().expect("geometry bindings").len());
+        for binding in bindings["bindings"].as_array().expect("geometry bindings") {
+            let field = binding["themeField"].as_str().expect("theme field");
+            let expected = case["expected"][field].as_f64().expect("expected pixels");
+            let value = f64::from(actual[field]);
+            assert!((value - expected).abs() < 0.0001, "{} {field}: expected {expected}, actual {value}", case["name"]);
+        }
+        println!("[DEBUG] theme geometry {} compact={} rootRem={} navbar={} tree={} font={}", case["name"], case["compact"], case["rootRemPx"], theme.navbar_height, theme.tree_row_height, theme.font_size_body);
+    }
+    for compact in fixture["invalid"].as_array().expect("invalid compact lengths") {
+        let mut document = shell_theme_document_base().clone();
+        document.spacing.insert("compact".into(), compact.as_str().expect("invalid compact").into());
+        assert!(ThemeDocument::parse(&serde_json::to_string(&document).expect("theme json")).is_none(), "invalid compact accepted: {compact}");
+    }
+    for root in [0.0, -1.0] {
+        let mut document = shell_theme_document_base().clone();
+        document.metrics.entry("dom".into()).or_default().insert("rootRemPx".into(), ThemeNumber::Scalar(root));
+        assert!(ThemeDocument::parse(&serde_json::to_string(&document).expect("theme json")).is_none(), "invalid root rem accepted: {root}");
+    }
+}

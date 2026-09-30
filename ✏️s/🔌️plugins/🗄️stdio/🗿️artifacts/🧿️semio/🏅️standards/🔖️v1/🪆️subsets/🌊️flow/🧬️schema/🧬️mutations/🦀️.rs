@@ -9,8 +9,8 @@
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use crate::standards::v1::subsets::flow::schema::diff::{
-    dec_edge, dec_node, dec_point2, dec_port_ref, dec_str, diff_insert_edge, diff_insert_node, diff_remove_edge, diff_remove_node, diff_remove_node_param, diff_set_edge_endpoints, diff_set_edge_kind, diff_set_node_kind, diff_set_node_label,
-    diff_set_node_param, diff_set_node_position, diff_set_snapshot, enc_edge, enc_node, enc_point2, enc_port_ref, enc_str, SemioFlowDiff,
+    dec_edge, dec_f64, dec_node, dec_point2, dec_port_ref, dec_str, diff_insert_edge, diff_insert_node, diff_remove_edge, diff_remove_node, diff_remove_node_param, diff_set_edge_endpoints, diff_set_edge_kind, diff_set_node_kind, diff_set_node_label,
+    diff_set_node_param, diff_set_node_position, diff_set_snapshot, enc_edge, enc_f64, enc_node, enc_point2, enc_port_ref, enc_str, SemioFlowDiff,
 };
 use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
 use protocol::Mutation;
@@ -42,6 +42,8 @@ pub mod set_node_label;
 pub mod set_node_param;
 #[path = "📍️set-node-position/🦀️.rs"]
 pub mod set_node_position;
+#[path = "✋️drag-nodes/🦀️.rs"]
+pub mod drag_nodes;
 /// 📐️ Typed content mutation for `s.stdio.semio.flow`. Addresses `nodes`/`edges` by `id` (both
 /// id-keyed collections) and a node's own `params` by `(id, key)`.
 //#region 🔖️Leaves
@@ -86,6 +88,8 @@ pub enum SemioFlowMutation {
     SetEdgeEndpoints(set_edge_endpoints::SetEdgeEndpoints),
     /// 🏷️ Sets edge `id`'s `kind`.
     SetEdgeKind(set_edge_kind::SetEdgeKind),
+    /// ✋️ Drags the `targets` nodes by one relative `(dx, dy)` offset.
+    DragNodes(drag_nodes::DragNodes),
 }
 
 /// 🏷️ The declared mutation vocabulary of `s.stdio.semio.flow`, in `SemioFlowMutation`'s own
@@ -93,7 +97,7 @@ pub enum SemioFlowMutation {
 /// `tag` ordinal (see [`wire_tag`]), for `parse_flow_mutation`'s keyword match, and for the
 /// `semio-v1-flow` catalog in `../../🔣️oracle.json`. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps all three honest.
-pub const KINDS: &[&str] = &["set-snapshot", "insert-node", "remove-node", "set-node-kind", "set-node-label", "set-node-position", "set-node-param", "remove-node-param", "insert-edge", "remove-edge", "set-edge-endpoints", "set-edge-kind"];
+pub const KINDS: &[&str] = &["set-snapshot", "insert-node", "remove-node", "set-node-kind", "set-node-label", "set-node-position", "set-node-param", "remove-node-param", "insert-edge", "remove-edge", "set-edge-endpoints", "set-edge-kind", "drag-nodes"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -145,6 +149,9 @@ fn param_value_at<'a>(base: &'a SemioFlowSnapshot, id: &str, key: &str) -> Optio
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &SemioFlowMutation, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<SemioFlowDiff> {
+    if let SemioFlowMutation::DragNodes(drag) = this {
+        return drag.outcome(base);
+    }
     protocol::MutationOutcome::new(match this {
         SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
         SemioFlowMutation::InsertNode(insert_node::InsertNode { node }) => diff_insert_node(node.clone()),
@@ -158,6 +165,7 @@ pub(crate) fn agg_diff(this: &SemioFlowMutation, base: &SemioFlowSnapshot) -> pr
         SemioFlowMutation::RemoveEdge(remove_edge::RemoveEdge { id }) => diff_remove_edge(id),
         SemioFlowMutation::SetEdgeEndpoints(set_edge_endpoints::SetEdgeEndpoints { id, from, to }) => diff_set_edge_endpoints(id, from.clone(), to.clone()),
         SemioFlowMutation::SetEdgeKind(set_edge_kind::SetEdgeKind { id, kind }) => diff_set_edge_kind(id, kind),
+        SemioFlowMutation::DragNodes(_) => SemioFlowDiff::default(),
     })
 }
 
@@ -209,6 +217,7 @@ pub(crate) fn agg_inverse(this: &SemioFlowMutation, base: &SemioFlowSnapshot) ->
             Some(edge) => vec![SemioFlowMutation::SetEdgeKind(set_edge_kind::SetEdgeKind { id: id.clone(), kind: edge.kind.clone() })],
             None => Vec::new(),
         },
+        SemioFlowMutation::DragNodes(drag) => drag.undo(base),
     }
 }
 //#endregion 🔖️MutationTrait
@@ -251,6 +260,7 @@ fn print_flow_mutation(m: &SemioFlowMutation) -> String {
         SemioFlowMutation::RemoveEdge(remove_edge::RemoveEdge { id }) => format!("remove-edge id={}", enc_str(id)),
         SemioFlowMutation::SetEdgeEndpoints(set_edge_endpoints::SetEdgeEndpoints { id, from, to }) => format!("set-edge-endpoints id={} from={} to={}", enc_str(id), enc_port_ref(from), enc_port_ref(to)),
         SemioFlowMutation::SetEdgeKind(set_edge_kind::SetEdgeKind { id, kind }) => format!("set-edge-kind id={} kind={}", enc_str(id), enc_str(kind)),
+        SemioFlowMutation::DragNodes(drag_nodes::DragNodes { targets, dx, dy }) => format!("drag-nodes targets=[{}] dx={} dy={}", targets.iter().map(|id| enc_str(id)).collect::<Vec<_>>().join(","), enc_f64(*dx), enc_f64(*dy)),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -271,6 +281,11 @@ fn parse_flow_mutation(line: &str) -> Result<SemioFlowMutation, String> {
         "remove-edge" => Ok(SemioFlowMutation::RemoveEdge(remove_edge::RemoveEdge { id: dec_str(arg("id")?)? })),
         "set-edge-endpoints" => Ok(SemioFlowMutation::SetEdgeEndpoints(set_edge_endpoints::SetEdgeEndpoints { id: dec_str(arg("id")?)?, from: dec_port_ref(arg("from")?)?, to: dec_port_ref(arg("to")?)? })),
         "set-edge-kind" => Ok(SemioFlowMutation::SetEdgeKind(set_edge_kind::SetEdgeKind { id: dec_str(arg("id")?)?, kind: dec_str(arg("kind")?)? })),
+        "drag-nodes" => Ok(SemioFlowMutation::DragNodes(drag_nodes::DragNodes {
+            targets: split_top_level(strip_brackets(arg("targets")?)?, ',').into_iter().filter(|id| !id.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?,
+            dx: dec_f64(arg("dx")?)?,
+            dy: dec_f64(arg("dy")?)?,
+        })),
         other => Err(format!("flow mutation: unknown keyword {other:?}")),
     }
 }
@@ -299,6 +314,7 @@ const TAG_INSERT_EDGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-
 const TAG_REMOVE_EDGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-edge");
 const TAG_SET_EDGE_ENDPOINTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-edge-endpoints");
 const TAG_SET_EDGE_KIND: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-edge-kind");
+const TAG_DRAG_NODES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "drag-nodes");
 //#endregion 🏷️WireTags
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -316,6 +332,7 @@ fn wire_tag(m: &SemioFlowMutation) -> u8 {
         SemioFlowMutation::RemoveEdge(_) => TAG_REMOVE_EDGE,
         SemioFlowMutation::SetEdgeEndpoints(_) => TAG_SET_EDGE_ENDPOINTS,
         SemioFlowMutation::SetEdgeKind(_) => TAG_SET_EDGE_KIND,
+        SemioFlowMutation::DragNodes(_) => TAG_DRAG_NODES,
     }
 }
 /// ✂️ Just the `key=value ...` argument tail of `print_flow_mutation` — the binary frame's `tag`
@@ -400,6 +417,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioFlowMutation> {
         SemioFlowMutation::RemoveEdge(remove_edge::RemoveEdge { id: "e1".into() }),
         SemioFlowMutation::SetEdgeEndpoints(set_edge_endpoints::SetEdgeEndpoints { id: "e1".into(), from: PortRef { node: "n2".into(), port: "out".into() }, to: PortRef { node: "n1".into(), port: "in".into() } }),
         SemioFlowMutation::SetEdgeKind(set_edge_kind::SetEdgeKind { id: "e1".into(), kind: "changed".into() }),
+        SemioFlowMutation::DragNodes(drag_nodes::DragNodes { targets: vec!["n1".into(), "n2".into()], dx: 12.5, dy: -4.0 }),
     ]
 }
 //#endregion 🔖️Demo

@@ -1,0 +1,46 @@
+{
+  "schema": "semio.replication.outcome-code",
+  "codes": [
+    { "code": "mutation.target-missing", "level": "error", "meaning": "The addressed target does not exist (state-dependent)." },
+    { "code": "mutation.target-referenced", "level": "error", "meaning": "The target is still referenced elsewhere in the document (state-dependent)." },
+    { "code": "mutation.target-mismatch", "level": "error", "meaning": "The payload is inconsistent with the target's current state (state-dependent)." },
+    { "code": "mutation.no-op", "level": "warning", "meaning": "The mutation changes nothing." },
+    { "code": "mutation.partial", "level": "warning", "meaning": "Only part of the mutation applied." },
+    { "code": "mutation.clamped", "level": "warning", "meaning": "A value was clamped into its admissible range." },
+    { "code": "mutation.duplicate-id", "level": "fatal", "meaning": "The mutation would mint an identity that already exists." },
+    { "code": "mutation.invariant", "level": "fatal", "meaning": "The payload violates an invariant its leaf schema states (bounds or x-semio-invariant)." },
+    { "code": "mutation.cascade", "level": "info", "meaning": "The mutation also changed dependent content." }
+  ],
+  "apply": {
+    "prefix": "mutation.apply.",
+    "pattern": "^mutation\\.apply\\.[a-z0-9]+(?:-[a-z0-9]+)*$",
+    "level": "fatal",
+    "accepted": [
+      "mutation.apply.missing-target",
+      "mutation.apply.invalid-base",
+      "mutation.apply.child-identity",
+      "mutation.apply.invalid-add-index"
+    ]
+  },
+  "rejected": [
+    "",
+    "mutation",
+    "mutation.apply",
+    "mutation.apply.",
+    "mutation.apply.Invalid",
+    "mutation.apply.invalid.base",
+    "mutation.missing",
+    "mutation.missing-target",
+    "mutation.referenced",
+    "mutation.rejected",
+    "mutation.child-identity",
+    "mutation.id-mismatch",
+    "mutation.targetMissing",
+    "invalid-add-index",
+    "wfc3d.slot.missing",
+    "forms.missing-response",
+    "stdio.pdf.remove-page.invalid-target",
+    "gltf.mutation.relation-absent",
+    "app.command.rejected"
+  ]
+}

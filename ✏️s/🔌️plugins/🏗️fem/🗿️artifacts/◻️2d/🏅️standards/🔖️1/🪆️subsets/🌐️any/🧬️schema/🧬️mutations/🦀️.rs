@@ -57,6 +57,7 @@ pub enum Fem2dMutation {
     ReplaceLoad(replace_load::ReplaceLoad),
     ChangeLoadCaseName(change_load_case_name::ChangeLoadCaseName),
     ReplaceCombination(replace_combination::ReplaceCombination),
+    MoveSelection(move_selection::MoveSelection),
 }
 //#endregion 🔖️Mutations
 
@@ -89,6 +90,7 @@ use super::replace_element;
 use super::replace_load;
 use super::replace_material;
 use super::replace_node;
+use super::move_selection;
 use super::replace_region;
 use super::replace_section;
 use super::replace_support;
@@ -123,10 +125,10 @@ pub fn inverse_fem2d_mutation(snapshot: &Fem2dSnapshot, mutation: &Fem2dMutation
 /// per leaf is exactly how they drifted apart (a `create-element` that resolved four references
 /// next to a `replace-element` that resolved none). Each leaf now spends one line per rule.
 ///
-/// 🚦️ Level discipline. `mutation.duplicate-id`, `mutation.id-mismatch` and `mutation.invariant`
-/// are `Fatal`: they say the PAYLOAD is wrong, so no merge policy may absorb them and no later base
-/// can make them right. `mutation.target-missing` and `mutation.target-referenced` are `Error`:
-/// they say this BASE cannot host the payload, which a different base may well be able to.
+/// 🚦️ Level discipline. `mutation.duplicate-id` and `mutation.invariant` are `Fatal`: they say the PAYLOAD is
+/// wrong, so no merge policy may absorb them and no later base can make them right. `mutation.target-missing`,
+/// `mutation.target-referenced` and `mutation.target-mismatch` (a `replace-` whose record renames the target it
+/// selects) are `Error`: they say this BASE cannot host the payload as it stands.
 ///
 /// @see 📓️w13-fem2d-semantics.md — the per-kind rule table these guards implement.
 pub mod guards {
@@ -150,8 +152,8 @@ pub mod guards {
     /// refused. Renaming a record is `delete-` + `create-` + re-pointing the referrers.
     pub fn identity_matches(noun: &str, target: &str, replacement: &str) -> Option<Rejection> {
         (target != replacement).then(|| {
-            protocol::MutationOutcome::fatal(
-                "mutation.id-mismatch",
+            protocol::MutationOutcome::error(
+                "mutation.target-mismatch",
                 format!("A replace-{noun} selects \"{target}\" but carries a record identified \"{replacement}\"; a replacement may not rename its target."),
                 [target.to_string(), replacement.to_string()],
             )
@@ -464,6 +466,7 @@ pub const KINDS: &[&str] = &[
     "replace-load",
     "change-load-case-name",
     "replace-combination",
+    "move-selection",
 ];
 //#endregion 🔖️Kinds
 

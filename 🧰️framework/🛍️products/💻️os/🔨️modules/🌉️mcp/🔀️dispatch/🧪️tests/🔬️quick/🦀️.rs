@@ -475,7 +475,7 @@ fn every_fault_code_maps_to_the_right_gateway_error_code() {
     let cases = [
         ("viewer.read-only", GatewayErrorCode::PermissionDenied),
         ("capability-denied", GatewayErrorCode::PermissionDenied),
-        ("mutation.rejected", GatewayErrorCode::SideEffectRejected),
+        ("app.command.rejected", GatewayErrorCode::SideEffectRejected),
         ("transaction.generation-mismatch", GatewayErrorCode::RevisionConflict),
         ("transaction.instance-busy", GatewayErrorCode::PreconditionFailed),
         ("budget.exceeded", GatewayErrorCode::BudgetExceeded),
@@ -545,7 +545,7 @@ fn saga_commits_in_reverse_discovery_order_and_compensates_on_failure() {
     let prepared_a = adapter.prepare(&catalog, &principal, &session, "gateway.memberA", serde_json::json!({}), 0, 0).unwrap();
     let prepared_b = adapter.prepare(&catalog, &principal, &session, "gateway.memberB", serde_json::json!({}), 1, 0).unwrap();
 
-    channel.force_commit_fault(0, Fault { code: "mutation.rejected".into(), message: "A rejected".into() });
+    channel.force_commit_fault(0, Fault { code: "app.command.rejected".into(), message: "A rejected".into() });
 
     let saga_handle = adapter.transaction_begin(&session, &[prepared_a.prepared_handle, prepared_b.prepared_handle], 1).unwrap();
     let error = adapter.transaction_commit(&principal, &session, &saga_handle, 2).unwrap_err();
@@ -570,7 +570,7 @@ fn compensation_failure_itself_is_reported_as_compensation_failed() {
     let prepared_a = adapter.prepare(&catalog, &principal, &session, "gateway.memberA", serde_json::json!({}), 0, 0).unwrap();
     let prepared_b = adapter.prepare(&catalog, &principal, &session, "gateway.memberB", serde_json::json!({}), 1, 0).unwrap();
 
-    channel.force_commit_fault(0, Fault { code: "mutation.rejected".into(), message: "A rejected".into() });
+    channel.force_commit_fault(0, Fault { code: "app.command.rejected".into(), message: "A rejected".into() });
     channel.force_undo_fails(1);
 
     let saga_handle = adapter.transaction_begin(&session, &[prepared_a.prepared_handle, prepared_b.prepared_handle], 1).unwrap();

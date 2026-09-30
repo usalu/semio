@@ -1,0 +1,18 @@
+{
+  "mutation": "insertXmlNode",
+  "parent": {
+    "partPath": "word/document.xml",
+    "nodePath": [
+      0,
+      0,
+      0
+    ],
+    "expectedName": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r",
+    "revision": "52f479bec4094a56"
+  },
+  "index": 1,
+  "node": {
+    "kind": "comment",
+    "text": "inserted"
+  }
+}

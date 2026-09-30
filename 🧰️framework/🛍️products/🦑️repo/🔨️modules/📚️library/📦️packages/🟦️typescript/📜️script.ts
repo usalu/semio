@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/repo-lib` router: `bun ./📜️script.ts <typecheck|test [level]|workspaces <--write|--check>>`. */
 import { join } from "node:path";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dependencyDirectionEdges, dependencyDirectionSourceInventory, type DependencyDirectionGraphScope, type DependencyDirectionRule } from "../../🕸️dependencies/🧭️direction/🟦️.ts";
+import { dependencyDirectionEdges, dependencyDirectionSourceInventory, dependencyDirectionWorkspacePackages, type DependencyDirectionGraphScope, type DependencyDirectionRule } from "../../🕸️dependencies/🧭️direction/🟦️.ts";
+import { verifyRustSourceDirection } from "../../🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts";
 import { verifyCargoDependencyDirection } from "../../🕸️dependencies/🧭️direction/🦀️cargo/🏃️execution/🟦️.ts";
 import { runOwnedCommand } from "../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { BundleScript, ScriptRouter, TEST_LEVEL_BUDGET_MS, runBundleScriptMain, runBunx, resolveTestLevel, runTestBudgeted } from "./🟦️.ts";
@@ -30,38 +31,34 @@ class TypecheckScript extends BundleScript {
 async function verifyDependencyDirection(repoRoot: string, env: NodeJS.ProcessEnv): Promise<void> {
   const policy = createRequire(import.meta.url)(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs")) as { forbidden: DependencyDirectionRule[]; options: { exclude: { path: string[] }; doNotFollow: { path: string } } };
   const taxonomy = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as { areaLayers: Record<string, string>; dependencyDirections: { rules: Record<string, unknown> } };
-  const names = ["framework-no-implementation", ...Object.keys(taxonomy.dependencyDirections.rules)];
-  const rules = policy.forbidden.filter((rule) => names.includes(rule.name));
-  if (rules.length !== names.length) throw new Error("Canonical architecture is missing a declared strict rule");
+  const names = ["framework-no-implementation", "repo-no-implementation", "s-modules-no-plugins", ...Object.keys(taxonomy.dependencyDirections.rules)];
+  const patterns = (value: string | readonly string[]): readonly string[] => typeof value === "string" ? [value] : value;
+  const rules = policy.forbidden.filter((rule) => names.includes(rule.name) || rule.name.startsWith("plugin-no-extension-or-artifact-")).map((rule) => ({ ...rule, from: { path: patterns(rule.from.path), ...(rule.from.pathNot ? { pathNot: patterns(rule.from.pathNot) } : {}) }, to: { path: patterns(rule.to.path), ...(rule.to.pathNot ? { pathNot: patterns(rule.to.pathNot) } : {}) } }));
+  if (names.some((name) => !rules.some((rule) => rule.name === name))) throw new Error("Canonical architecture is missing a declared strict rule");
   const artifactRoot = env.SEMIO_TEST_ARTIFACT_DIR!;
   mkdirSync(artifactRoot, { recursive: true });
   const output = mkdtempSync(join(artifactRoot, "canonical-direction-"));
   try {
     const configPath = join(output, "🔣️config.json"), reportPath = join(output, "🔣️graph.json");
     writeFileSync(configPath, JSON.stringify({ forbidden: rules, options: policy.options }));
-    const areas = Object.entries(taxonomy.areaLayers).filter(([, layer]) => layer === "framework").map(([area]) => area);
-    if (!areas.length) throw new Error("Canonical architecture requires a taxonomy framework area");
-    const workspaces = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")).workspaces as unknown;
-    if (!Array.isArray(workspaces) || workspaces.some((path) => typeof path !== "string" || !path)) throw new Error("Canonical architecture requires readable authored workspace metadata");
-    const workspacePackages = workspaces.filter((path) => !policy.options.exclude.path.some((pattern) => new RegExp(pattern, "u").test(path))).map((path) => {
-      const manifest = JSON.parse(readFileSync(join(repoRoot, path, "package.json"), "utf8")), name = manifest.name as unknown;
-      if (typeof name !== "string" || !name) throw new Error(`Canonical architecture requires an authored package name: ${path}`);
-      const exports = manifest.exports && typeof manifest.exports === "object" && !Array.isArray(manifest.exports) && Object.keys(manifest.exports).some((key) => key.startsWith(".")) ? Object.keys(manifest.exports).filter((key) => manifest.exports[key] !== null) : ["."];
-      return { name, owner: path, exports };
-    });
+    const areas = Object.keys(taxonomy.areaLayers).filter((area) => existsSync(join(repoRoot, area)));
+    const rootSources = readdirSync(repoRoot, { withFileTypes: true }).filter((entry) => (entry.isFile() || entry.isSymbolicLink()) && /\.(?:[cm]?[jt]s|[jt]sx)$/u.test(entry.name)).map((entry) => entry.name);
+    if (!areas.some((area) => taxonomy.areaLayers[area] === "framework")) throw new Error("Canonical architecture requires a taxonomy framework area");
+    const workspacePackages = dependencyDirectionWorkspacePackages(repoRoot, policy.options.exclude.path);
     const scope: DependencyDirectionGraphScope = { workspaceRoots: Object.keys(taxonomy.areaLayers), workspacePackages, excludedPaths: policy.options.exclude.path, nonFollowedPaths: [policy.options.doNotFollow.path], expectedSources: [] };
-    const expectedSources = dependencyDirectionSourceInventory(repoRoot, areas, scope);
+    const expectedSources = dependencyDirectionSourceInventory(repoRoot, [...areas, ...rootSources], scope);
     if (!expectedSources.length) throw new Error("Canonical architecture has no followed TypeScript/JavaScript source inventory");
-    console.log(`[canonical-architecture] resolving framework TypeScript/JavaScript dependencies; inventoriedSources=${expectedSources.length}`);
-    await runOwnedCommand(process.execPath, [join(repoRoot, "node_modules/dependency-cruiser/bin/dependency-cruise.mjs"), ...areas, "--config", configPath, "--output-type", "json", "--output-to", reportPath], repoRoot, "canonical-architecture", 120_000, { env });
+    console.log(`[canonical-architecture] resolving present-owner TypeScript/JavaScript dependencies; inventoriedSources=${expectedSources.length}`);
+    await runOwnedCommand(process.execPath, [join(repoRoot, "node_modules/dependency-cruiser/bin/dependency-cruise.mjs"), ...areas, ...rootSources, "--config", configPath, "--output-type", "json", "--output-to", reportPath], repoRoot, "canonical-architecture", 120_000, { env });
     const edges = dependencyDirectionEdges(JSON.parse(readFileSync(reportPath, "utf8")), rules, { ...scope, expectedSources });
     if (edges.length) throw new Error(`Canonical TypeScript/JavaScript architecture found ${edges.length} forbidden semantic dependencies:\n${edges.map((edge) => `${edge.rule}: ${edge.from} → ${edge.to}`).join("\n")}`);
-    console.log("[canonical-architecture] framework TypeScript/JavaScript dependency direction passed");
+    console.log("[canonical-architecture] present-owner TypeScript/JavaScript dependency direction passed");
   } finally { rmSync(output, { recursive: true, force: true }); }
 }
 
 class LintScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "rust-source-direction") { await verifyRustSourceDirection(this.repoRoot); return; }
     if (segments.length === 1 && segments[0] === "cargo-dependency-direction") { await verifyCargoDependencyDirection(this.repoRoot); return; }
     if (segments.length !== 1 || segments[0] !== "dependency-direction") throw new Error("Expected lint dependency-direction");
     await verifyDependencyDirection(this.repoRoot, repoTestArtifactEnvironment(this.repoRoot, "dependency-direction"));
@@ -70,6 +67,12 @@ class LintScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "rust-source-direction") {
+      if (segments.length !== 1) throw new Error("Expected test rust-source-direction");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "rust-source-direction"), budgetMs: 45_000 });
+      return;
+    }
     if (segments[0] === "cargo-dependency-direction") {
       if (segments.length !== 1) throw new Error("Expected test cargo-dependency-direction");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️cargo-dependency-direction/🟦️.ts");
@@ -81,7 +84,6 @@ class TestScript extends BundleScript {
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️dependency-direction/🟦️.ts");
       const env = repoTestArtifactEnvironment(this.repoRoot, "dependency-direction");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, env, budgetMs: 45_000 });
-      await verifyDependencyDirection(this.repoRoot, env);
       return;
     }
     if (segments[0] === "canonical-architecture") {
@@ -89,6 +91,9 @@ class TestScript extends BundleScript {
       await this.run(["canonical-execution"]);
       await this.run(["dependency-direction"]);
       await this.run(["cargo-dependency-direction"]);
+      await this.run(["rust-source-direction"]);
+      await verifyDependencyDirection(this.repoRoot, repoTestArtifactEnvironment(this.repoRoot, "dependency-direction"));
+      await verifyRustSourceDirection(this.repoRoot);
       await verifyCargoDependencyDirection(this.repoRoot);
       return;
     }
@@ -579,6 +584,18 @@ class TestScript extends BundleScript {
       if (segments.length !== 1) throw new Error("Expected test empty-folders");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️empty-folders/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "mutation-case-pair") {
+      if (segments.length !== 1) throw new Error("Expected test mutation-case-pair");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-case-pair/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, "--timeout", "240000"], { cwd: this.repoRoot, budgetMs: 480_000 });
+      return;
+    }
+    if (segments[0] === "mutation-wire-witness") {
+      if (segments.length !== 1) throw new Error("Expected test mutation-wire-witness");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️mutation-wire-witness/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, "--timeout", "240000"], { cwd: this.repoRoot, budgetMs: 480_000 });
       return;
     }
     const { level, rest } = resolveTestLevel(segments);

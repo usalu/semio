@@ -198,6 +198,28 @@ export interface ScaleObjects {
   placements: CadObjectScale[];
 }
 
+/** ✋️ `drag-selection` payload — one pane's objects moved by one relative world offset. */
+export interface DragSelection {
+  pane: CadPaneId;
+  targets: string[];
+  offset: [number, number, number];
+}
+
+/** 🔄️ `rotate-selection` payload — one pane's objects turned in place about one world axis by one angle (radians). */
+export interface RotateSelection {
+  pane: CadPaneId;
+  targets: string[];
+  axis: [number, number, number];
+  angle: number;
+}
+
+/** 🔍️ `scale-selection` payload — one pane's objects scaled in place by one relative factor per axis. */
+export interface ScaleSelection {
+  pane: CadPaneId;
+  targets: string[];
+  factors: [number, number, number];
+}
+
 export type CadMutation =
   | ({ mutation: "createShapeModel" } & CreateShapeModel)
   | ({ mutation: "deleteShapeModel" } & DeleteShapeModel)
@@ -222,4 +244,7 @@ export type CadMutation =
   | ({ mutation: "deleteObject" } & DeleteObject)
   | ({ mutation: "moveObjects" } & MoveObjects)
   | ({ mutation: "rotateObjects" } & RotateObjects)
-  | ({ mutation: "scaleObjects" } & ScaleObjects);
+  | ({ mutation: "scaleObjects" } & ScaleObjects)
+  | ({ mutation: "dragSelection" } & DragSelection)
+  | ({ mutation: "rotateSelection" } & RotateSelection)
+  | ({ mutation: "scaleSelection" } & ScaleSelection);

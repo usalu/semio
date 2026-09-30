@@ -89,7 +89,7 @@ async fn widget_content_round_trips_through_the_composed_child_snapshot() {
 
 #[test]
 fn authored_slider_labels_survive_child_content_round_trip() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🏷️slider-labels.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🧫️fixtures/🏷️slider-labels.json")).unwrap();
     for row in cases["cases"].as_array().unwrap() {
         let widget: Widget = dsl::FromValue::from_value(dsl::DslValue::from(row["widget"].clone())).unwrap();
         let content = flow_content_snapshot_from_working(&[widget.clone()], &[], &flow::OrderedMap::new());

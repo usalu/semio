@@ -1,0 +1,6 @@
+{
+  "ChangeVentSystemType": {
+    "ventId": "vent-central",
+    "newSystemType": "decentral_mech"
+  }
+}

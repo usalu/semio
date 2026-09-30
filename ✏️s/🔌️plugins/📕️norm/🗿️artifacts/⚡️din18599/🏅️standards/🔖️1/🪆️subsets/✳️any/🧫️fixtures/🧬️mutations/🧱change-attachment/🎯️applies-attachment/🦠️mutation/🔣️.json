@@ -1,0 +1,4 @@
+{
+  "mutation": "changeAttachment",
+  "newAttachment": "SemiDetached"
+}

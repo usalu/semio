@@ -940,6 +940,666 @@
           }
         }
       }
+    },
+    "ScrubGesture": {
+      "description": "The press a continuous control's dispatch belongs to (`<control key>:<ms>`); non-empty.",
+      "type": "string",
+      "minLength": 1
+    },
+    "ScrubPhase": {
+      "title": "ScrubPhase",
+      "description": "Where one dispatch of a continuous control sits in its press: a live tick, the release, or a host cancel (its dispatch carries no value).",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "gesture"
+          ],
+          "properties": {
+            "kind": {
+              "const": "tick"
+            },
+            "gesture": {
+              "$ref": "#/$defs/ScrubGesture"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "gesture"
+          ],
+          "properties": {
+            "kind": {
+              "const": "commit"
+            },
+            "gesture": {
+              "$ref": "#/$defs/ScrubGesture"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "gesture",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "abort"
+            },
+            "gesture": {
+              "$ref": "#/$defs/ScrubGesture"
+            },
+            "reason": {
+              "$ref": "#/$defs/ToolAbortReason"
+            }
+          }
+        }
+      ]
+    },
+    "ScrubArgs": {
+      "description": "The scrub protocol arguments a continuous control merges into its binding's args (`value` rides beside them).",
+      "type": "object",
+      "properties": {
+        "gesture": {
+          "type": "string"
+        },
+        "commit": {
+          "type": "boolean"
+        },
+        "abort": {
+          "type": "string"
+        }
+      }
+    },
+    "ScrubInput": {
+      "title": "ScrubInput",
+      "description": "What reaches a scrub: a tick's or the release's ABSOLUTE leaves (the plugin's leaf constructor applied to the value), or a host cancel.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "gesture",
+            "leaves"
+          ],
+          "properties": {
+            "kind": {
+              "const": "tick"
+            },
+            "gesture": {
+              "$ref": "#/$defs/ScrubGesture"
+            },
+            "leaves": {
+              "type": "array"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "gesture",
+            "leaves"
+          ],
+          "properties": {
+            "kind": {
+              "const": "commit"
+            },
+            "gesture": {
+              "$ref": "#/$defs/ScrubGesture"
+            },
+            "leaves": {
+              "type": "array"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "abort"
+            },
+            "reason": {
+              "$ref": "#/$defs/ToolAbortReason"
+            }
+          }
+        }
+      ]
+    },
+    "ScrubOpen": {
+      "title": "ScrubOpen",
+      "description": "One window's open scrub as the ledger persists it (window transient, never history): the press, the document revision it opened on, the authoring tool, the open transaction and its keyed leaves (`0`, `1`, … of the latest tick).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gesture",
+        "base",
+        "tool",
+        "transaction",
+        "entries"
+      ],
+      "properties": {
+        "gesture": {
+          "$ref": "#/$defs/ScrubGesture"
+        },
+        "base": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tool": {
+          "$ref": "#/$defs/ToolId"
+        },
+        "transaction": {
+          "$ref": "#/$defs/TransactionRef"
+        },
+        "entries": {
+          "$ref": "#/$defs/TransactionEntries"
+        }
+      }
+    },
+    "ScrubStep": {
+      "title": "ScrubStep",
+      "description": "What one scrub input did: `open` names the transaction the press holds; the other kinds are the runner's `ToolStep`s.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "transaction"
+          ],
+          "properties": {
+            "kind": {
+              "const": "open"
+            },
+            "transaction": {
+              "$ref": "#/$defs/TransactionRef"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "idle"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "transaction",
+            "mutations"
+          ],
+          "properties": {
+            "kind": {
+              "const": "committed"
+            },
+            "transaction": {
+              "$ref": "#/$defs/TransactionRef"
+            },
+            "mutations": {
+              "type": "array",
+              "minItems": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "transaction",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "aborted"
+            },
+            "transaction": {
+              "$ref": "#/$defs/TransactionRef"
+            },
+            "reason": {
+              "$ref": "#/$defs/ToolAbortReason"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "transaction"
+          ],
+          "properties": {
+            "kind": {
+              "const": "empty"
+            },
+            "transaction": {
+              "$ref": "#/$defs/TransactionRef"
+            }
+          }
+        }
+      ]
+    },
+    "ScrubScenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "steps"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "description": "One input of a window's press.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "window",
+                  "tool",
+                  "base",
+                  "clock",
+                  "input",
+                  "expect"
+                ],
+                "properties": {
+                  "window": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "tool": {
+                    "$ref": "#/$defs/ToolId"
+                  },
+                  "base": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "clock": {
+                    "$ref": "#/$defs/U64"
+                  },
+                  "input": {
+                    "$ref": "#/$defs/ScrubInput"
+                  },
+                  "expect": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "step",
+                      "open",
+                      "provisional"
+                    ],
+                    "properties": {
+                      "step": {
+                        "$ref": "#/$defs/ScrubStep"
+                      },
+                      "open": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "$ref": "#/$defs/ScrubOpen"
+                        }
+                      },
+                      "provisional": {
+                        "type": "array"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "description": "A host cancel of one window's press (only of `gesture` when named).",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "window",
+                  "abort",
+                  "expect"
+                ],
+                "properties": {
+                  "window": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "abort": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "gesture",
+                      "reason"
+                    ],
+                    "properties": {
+                      "gesture": {
+                        "oneOf": [
+                          {
+                            "$ref": "#/$defs/ScrubGesture"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "reason": {
+                        "$ref": "#/$defs/ToolAbortReason"
+                      }
+                    }
+                  },
+                  "expect": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "step",
+                      "open",
+                      "provisional"
+                    ],
+                    "properties": {
+                      "step": {
+                        "$ref": "#/$defs/ScrubStep"
+                      },
+                      "open": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "$ref": "#/$defs/ScrubOpen"
+                        }
+                      },
+                      "provisional": {
+                        "type": "array"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "description": "A host cancel of every open press (time-travel freeze).",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "abortAll",
+                  "expect"
+                ],
+                "properties": {
+                  "abortAll": {
+                    "$ref": "#/$defs/ToolAbortReason"
+                  },
+                  "expect": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "steps",
+                      "open",
+                      "provisional"
+                    ],
+                    "properties": {
+                      "steps": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/$defs/ScrubStep"
+                        }
+                      },
+                      "open": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "$ref": "#/$defs/ScrubOpen"
+                        }
+                      },
+                      "provisional": {
+                        "type": "array"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "description": "The window roster: every other window's press retires.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "retain",
+                  "expect"
+                ],
+                "properties": {
+                  "retain": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "expect": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "steps",
+                      "open",
+                      "provisional"
+                    ],
+                    "properties": {
+                      "steps": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/$defs/ScrubStep"
+                        }
+                      },
+                      "open": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "$ref": "#/$defs/ScrubOpen"
+                        }
+                      },
+                      "provisional": {
+                        "type": "array"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "ScrubChart": {
+      "title": "ScrubChart",
+      "description": "The scrub statechart; the Rust tables, the `statechart!` reference compilation, the TS tables and the xstate oracle are all this chart.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fingerprint",
+        "manifestJson",
+        "states",
+        "initial",
+        "events",
+        "transitions"
+      ],
+      "properties": {
+        "id": {
+          "const": "scrub"
+        },
+        "fingerprint": {
+          "description": "The `statechart!` fingerprint (u64, decimal) gating a persisted scrub's restore.",
+          "type": "string",
+          "pattern": "^[0-9]{1,20}$"
+        },
+        "manifestJson": {
+          "type": "string",
+          "minLength": 2
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "initial": {
+          "type": "string",
+          "minLength": 1
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "Tick",
+              "Commit"
+            ]
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "event",
+              "guard",
+              "to",
+              "action"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "event": {
+                "enum": [
+                  "Tick",
+                  "Commit"
+                ]
+              },
+              "guard": {
+                "oneOf": [
+                  {
+                    "const": "sameGesture"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "to": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "enum": [
+                  "follow",
+                  "settle"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "ScrubLawFixture": {
+      "title": "ScrubLawFixture",
+      "description": "Language-agnostic laws of the scrub machine and ledger (`🧫️fixtures/🧫️scrub-law`): argument parsing, the chart, and step-by-step scenarios with independently minted transaction ids.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "args",
+        "phases",
+        "chart",
+        "actor",
+        "scenarios"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.framework.tool-machine.scrub-law.v1"
+        },
+        "args": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "gesture",
+            "commit",
+            "abort"
+          ],
+          "properties": {
+            "gesture": {
+              "const": "gesture"
+            },
+            "commit": {
+              "const": "commit"
+            },
+            "abort": {
+              "const": "abort"
+            }
+          }
+        },
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "args",
+              "phase"
+            ],
+            "properties": {
+              "args": {
+                "$ref": "#/$defs/ScrubArgs"
+              },
+              "phase": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/ScrubPhase"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "chart": {
+          "$ref": "#/$defs/ScrubChart"
+        },
+        "actor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ScrubScenario"
+          }
+        }
+      }
     }
   }
 }

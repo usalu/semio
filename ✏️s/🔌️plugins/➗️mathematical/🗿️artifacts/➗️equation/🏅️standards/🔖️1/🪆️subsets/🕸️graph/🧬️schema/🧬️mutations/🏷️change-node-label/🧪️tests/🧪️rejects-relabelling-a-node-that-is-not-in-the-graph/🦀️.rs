@@ -70,9 +70,9 @@ async fn inverse_has_no_prior_label_to_restore() {
     assert!(inverse.is_empty(), "change-node-label/rejects-relabelling-a-node-that-is-not-in-the-graph: a rejected relabel must have no inverse steps, got {inverse:?}");
 }
 
-/// 🔣️ Both committed snapshots and the committed mutation are canonical. The payload field stays
-/// snake_case (`new_label`) because `EquationMutation`'s payload structs carry no
-/// `#[serde(rename_all)]` — unlike the nested document types, which do.
+/// 🔣️ Both committed snapshots and the committed mutation are canonical. The payload field is
+/// camelCase (`newLabel`): `EquationMutation`'s leaf structs carry `#[value(rename_all = "camelCase")]`
+/// like the nested document types.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
@@ -84,7 +84,7 @@ async fn committed_json_is_canonical() {
     let reencoded = pack::json_from_dsl_value(&(mutation()).to_value());
     let original = pack::parse_json(MUTATION).expect("mutation reparses");
     assert!(pack::json::value_eq_ignoring_object_order(&reencoded, &original), "change-node-label/rejects-relabelling-a-node-that-is-not-in-the-graph: committed mutation JSON is not canonical ({reencoded:?} vs {original:?})");
-    assert_eq!(original.pointer("/ChangeNodeLabel/new_label").and_then(pack::JsonValue::as_str), Some("Alpha"), "the payload's label field commits snake_case");
+    assert_eq!(original.pointer("/ChangeNodeLabel/newLabel").and_then(pack::JsonValue::as_str), Some("Alpha"), "the payload's label field commits camelCase");
     assert_eq!(BEFORE, AFTER, "a rejected case commits an after-snapshot byte-identical to its before-snapshot");
 }
 

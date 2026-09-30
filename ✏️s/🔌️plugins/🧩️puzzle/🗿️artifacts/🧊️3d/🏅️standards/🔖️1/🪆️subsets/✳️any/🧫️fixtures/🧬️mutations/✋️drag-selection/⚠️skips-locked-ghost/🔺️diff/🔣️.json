@@ -1,0 +1,46 @@
+{
+  "artifact": null,
+  "attractions": null,
+  "domain": null,
+  "meta": null,
+  "objects": {
+    "added": [],
+    "patched": [
+      {
+        "id": "object-b",
+        "patch": {
+          "replacement": {
+            "anchor": "fixed",
+            "hidden": false,
+            "id": "object-b",
+            "locked": false,
+            "objectKind": "object-kind-b",
+            "origin": [
+              5.0,
+              1.0,
+              0.0
+            ],
+            "vortices": [
+              {
+                "hidden": false,
+                "id": "vortex-2",
+                "locked": false,
+                "position": [
+                  -1.0,
+                  0.0,
+                  0.0
+                ],
+                "vortexKind": "vortex-kind-b"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "removed": [],
+    "reordered": null
+  },
+  "references": null,
+  "schema": null,
+  "targetVolumes": null
+}

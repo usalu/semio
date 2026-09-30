@@ -244,6 +244,18 @@ export interface ReplaceCombination {
   id: string;
   newCombination: FemCombination;
 }
+/** 🧭️ One relative gumball transform of named nodes and regions: scale and rotate about the pivot, then offset. */
+export interface MoveSelection {
+  nodeIds: string[];
+  regionIds: string[];
+  pivotX: number;
+  pivotY: number;
+  dx: number;
+  dy: number;
+  angle: number;
+  sx: number;
+  sy: number;
+}
 //#endregion 🔖️Mutations
 
 export type Fem2dMutation =
@@ -275,4 +287,5 @@ export type Fem2dMutation =
   | ({ mutation: "replaceNode" } & ReplaceNode)
   | ({ mutation: "replaceLoad" } & ReplaceLoad)
   | ({ mutation: "changeLoadCaseName" } & ChangeLoadCaseName)
-  | ({ mutation: "replaceCombination" } & ReplaceCombination);
+  | ({ mutation: "replaceCombination" } & ReplaceCombination)
+  | ({ mutation: "moveSelection" } & MoveSelection);

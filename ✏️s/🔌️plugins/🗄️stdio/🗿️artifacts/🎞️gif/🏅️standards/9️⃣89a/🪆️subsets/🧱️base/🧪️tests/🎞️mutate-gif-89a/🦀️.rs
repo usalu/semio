@@ -151,8 +151,8 @@ mod subject {
     /// 🧭️ Registers all 21 kinds' `mutate`/`inverse` scenario ids plus the round trip, mirroring
     /// `super::adapter`'s oracle registration.
     pub fn register(mut built: Adapter) -> Adapter {
-        built = built.subject("mutate", mutate).subject("mutate-raster", mutate);
-        built = built.subject("inverse", inverse).subject("inverse-raster", inverse);
+        built = built.subject("mutate", mutate);
+        built = built.subject("inverse", inverse);
         built.subject("identity-round-trip", identity_round_trip)
     }
 }
@@ -162,8 +162,8 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("mutate-raster", mutate_oracle);
-    built = built.oracle("inverse", inverse_oracle).oracle("inverse-raster", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle);
+    built = built.oracle("inverse", inverse_oracle);
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {

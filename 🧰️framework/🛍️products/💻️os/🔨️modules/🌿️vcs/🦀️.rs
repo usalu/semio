@@ -560,6 +560,27 @@ impl<T> ArtifactHistoryLedger<T> {
         Ok(value)
     }
 
+    /// ✂️ Removes and answers every entry `remove` selects, in ledger order — how a ledger follows a fold whose facts shrank
+    /// (a retracted transition). Refused, removing nothing, while a reservation or a group decision is open.
+    pub fn extract_if(&mut self, mut remove: impl FnMut(&T) -> bool) -> Result<Vec<T>, ArtifactHistoryReservationFault> {
+        if self.group.is_some() {
+            return Err(ArtifactHistoryReservationFault::GroupUnavailable);
+        }
+        if self.reservation.is_some() {
+            return Err(ArtifactHistoryReservationFault::Busy);
+        }
+        let mut keys = Vec::new();
+        let mut cursor = self.head;
+        while let Some(index) = cursor {
+            let slot = self.slot(index);
+            if slot.value.as_ref().is_some_and(&mut remove) {
+                keys.push(ArtifactHistoryKey { index, generation: slot.generation });
+            }
+            cursor = slot.next;
+        }
+        Ok(keys.into_iter().filter_map(|key| self.remove_key(key).ok()).collect())
+    }
+
     pub fn pop(&mut self) -> Option<T> {
         let index = self.tail?;
         let generation = self.slot(index).generation;
@@ -958,6 +979,9 @@ pub enum VcsError {
     /// ⌛️ A result computed against store generation `expected_generation` (a finished history replay) was offered
     /// after the store moved on to `generation`; the caller computes it again against the live state.
     Stale { expected_generation: u64, generation: u64 },
+    /// 🗂️ A history transition of `kind` was authored on, or offered to, a store whose history `shape` does not hold it —
+    /// a config store's history holds undo and redo only. Refused before anything was recorded.
+    HistoryShape { shape: crate::os_spr::HistoryShape, kind: crate::os_spr::HistoryTransitionKind },
 }
 
 impl std::fmt::Display for VcsError {
@@ -985,6 +1009,7 @@ impl std::fmt::Display for VcsError {
             Self::Rejected { policy, .. } => write!(formatter, "rejected by merge policy {policy:?}"),
             Self::UnknownConflict(id) => write!(formatter, "unknown conflict id: {id}"),
             Self::Stale { expected_generation, generation } => write!(formatter, "stale result: computed at generation {expected_generation}, store is at {generation}"),
+            Self::HistoryShape { shape, kind } => write!(formatter, "a {} history holds no {} transition", shape.name(), kind.name()),
         }
     }
 }

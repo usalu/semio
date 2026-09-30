@@ -3,7 +3,7 @@
   "messages": [
     {
       "level": "error",
-      "code": "s.home.directory-event-page-frontier-race"
+      "code": "mutation.target-mismatch"
     }
   ]
 }

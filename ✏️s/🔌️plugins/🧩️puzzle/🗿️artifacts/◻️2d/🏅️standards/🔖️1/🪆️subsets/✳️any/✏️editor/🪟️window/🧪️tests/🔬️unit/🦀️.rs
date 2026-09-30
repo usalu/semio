@@ -225,3 +225,13 @@ use super::*;
         let parsed = <Puzzle2dWindowConfig as store::ArtifactDsl>::parse_dsl(&printed).expect("window config text parses");
         assert_eq!(parsed, original, "one text round trip must preserve every persisted pane option");
     }
+
+    /// 🫧️ LAW: every Puzzle 2D window transient fits the ephemeral ownership transfer it publishes through — its state
+    /// and mutation stay inside the transfer's inline bound even with an open select-tool gesture, so no window
+    /// transient publication is ever refused for its inline size.
+    #[test]
+    fn the_window_transient_fits_the_ephemeral_transfer_inline_bound() {
+        assert!(std::mem::size_of::<Puzzle2dWindowTransient>() <= store::ARTIFACT_EPHEMERAL_TRANSFER_MAXIMUM_INLINE_BYTES, "state is {} bytes", std::mem::size_of::<Puzzle2dWindowTransient>());
+        assert!(std::mem::size_of::<Puzzle2dWindowTransientMutation>() <= store::ARTIFACT_EPHEMERAL_TRANSFER_MAXIMUM_INLINE_BYTES, "mutation is {} bytes", std::mem::size_of::<Puzzle2dWindowTransientMutation>());
+    }
+

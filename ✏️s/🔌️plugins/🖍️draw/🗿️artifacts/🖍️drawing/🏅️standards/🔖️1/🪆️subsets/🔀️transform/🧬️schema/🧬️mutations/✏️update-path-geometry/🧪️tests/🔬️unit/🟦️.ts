@@ -1,6 +1,6 @@
 /** 🧪️ Ajv and Immer independently validate and apply the shared path edit fixture. */
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
 import { produce } from "immer";
 import { applyPathGeometry } from "../../🦠️mutation/🟦️.ts";
 import { parseDrawingArtifact, type DrawingArtifact, type PathSegment } from "../../../../../../✳️any/🧬️schema/🟦️.ts";
@@ -24,9 +24,11 @@ test("path geometry preserves identity, appearance and undo", () => {
   const before: DrawingArtifact = { schema: "drawing", id: "document", layers: [{ kind: "path", id: "path", name: "Curve", opacity: 0.5, segments: fixture.before }], assets: {} };
   expect(parseDrawingArtifact(before)).toEqual(before);
   const mutation = { layerId: "path", segments: fixture.after as PathSegment[] };
-  const validate = new Ajv({ strict: true, validateFormats: false }).addKeyword("x-semio-state").addSchema(artifactSchema).compile(schema);
-  expect(validate(mutation)).toBe(true);
-  expect(validate({ layerId: "path", segments: [{ kind: "line", to: [0] }] })).toBe(false);
+  const validate = semioSchemaAjvV1({ allErrors: true }).addSchema(artifactSchema).compile(schema);
+  expect(validate({ mutation: "updatePathGeometry", ...mutation })).toBe(true);
+  expect(validate(scenarioMutation)).toBe(true);
+  expect(validate(mutation)).toBe(false);
+  expect(validate({ mutation: "updatePathGeometry", layerId: "path", segments: [{ kind: "line", to: [0] }] })).toBe(false);
   const result = applyPathGeometry(before, mutation);
   const oracle = produce(before, draft => { draft.layers[0]!.segments = fixture.after; });
   expect(result).toEqual(oracle);

@@ -461,12 +461,18 @@ export function devLocalHubDataDir(repoRoot: string, env: NodeJS.ProcessEnv = pr
 /** 🌐️ Brings up the default loopback development hub, or joins the one named by `hubUrl` / `S_HUB_URL`, and proves a
  * session for this serve's profile through the owner's broker. `null` when local-only was asked for, when an explicit hub
  * did not answer within its bound, or when no default hub came up; a hub someone else operates (no broker for this data
- * root) is joined without a session, and the shell's own sign-in stays available. */
+ * root) is joined without a session, and the shell's own sign-in stays available. `S_HUB_URL` names the hub this process
+ * serves with only once one answers: a serve that continues local-first hands its Vite no hub, so the shell never proxies
+ * `/_semio/hub/*` (its trusted plugin catalog first) to a hub that is not there (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-
+ * EDITING follow-up 3: `GET /_semio/hub/trusted-catalog/plugin-modules` answered 500 at every boot of a hub-less serve). */
 export async function ensureDevLocalHub(
   repoRoot: string,
   options: { readonly hubUrl?: string; readonly dataDir?: string; readonly profileId?: string; readonly world?: DevHubWorldV1; readonly joinBoundMs?: number; readonly provider?: DevLocalHubProviderV1; readonly signal?: AbortSignal } = {},
 ): Promise<DevLocalHubSession | null> {
-  if (process.env.S_LOCAL_ONLY === "1" || process.env.S_LOCAL_ONLY === "true") return null;
+  if (process.env.S_LOCAL_ONLY === "1" || process.env.S_LOCAL_ONLY === "true") {
+    delete process.env.S_HUB_URL;
+    return null;
+  }
   const explicit = options.hubUrl ?? process.env.S_HUB_URL;
   const role = devHubRoleV1(explicit);
   const hubUrl = (role === "join" ? explicit! : DEV_LOCAL_HUB_DEFAULT_URL).trim().replace(/\/+$/u, "");
@@ -474,11 +480,12 @@ export async function ensureDevLocalHub(
   const provider = options.provider ?? (process.env[DEV_LOCAL_HUB_PROVIDER_ENV] ? parseDevLocalHubProviderV1(JSON.parse(process.env[DEV_LOCAL_HUB_PROVIDER_ENV]!)) : null);
   const profileId = options.profileId ?? process.env[DEV_LOCAL_HUB_PROFILE_ENV] ?? provider?.defaultProfileId ?? "";
   const world = options.world ?? devHubWorldV1(repoRoot, devHubLocaleV1(), provider);
-  process.env.S_HUB_URL = hubUrl;
+  delete process.env.S_HUB_URL;
   const up = role === "join" ? (await joinDevHubV1(hubUrl, world, options.joinBoundMs ?? DEV_HUB_JOIN_BOUND_MS, DEV_HUB_STATUS_INTERVAL_MS, options.signal)).kind === "joined" : await ownDevHubV1(hubUrl, dataDir, devHubLeaseRootV1(repoRoot), world, options.signal);
   if (!up || options.signal?.aborted) return null;
   const session = await requestLocalBrokerSession(dataDir, hubUrl, profileId, options.signal).catch(() => null);
   if (options.signal?.aborted) return null;
+  process.env.S_HUB_URL = hubUrl;
   if (session === null) {
     world.report({ kind: "no-broker", hubUrl, dataDir });
     return { hubUrl, dataDir, profileId, userId: "" };

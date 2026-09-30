@@ -40,7 +40,7 @@ pub fn precondition(payload: &DuplicateWidget, base: &FlowSnapshot) -> Result<()
     }
     let scene = flow_working_scene(base);
     if !scene.widgets.iter().any(|widget| widget.id() == &payload.source_id) {
-        return Err(MutationMessage::fatal("mutation.target-missing", format!("duplicate-widget: source widget \"{}\" not found", payload.source_id)).at([payload.source_id.clone()]));
+        return Err(MutationMessage::error("mutation.target-missing", format!("duplicate-widget: source widget \"{}\" not found", payload.source_id)).at([payload.source_id.clone()]));
     }
     if scene.widgets.iter().any(|widget| widget.id() == &payload.new_id) {
         return Err(MutationMessage::fatal("mutation.duplicate-id", format!("duplicate-widget: id \"{}\" already taken", payload.new_id)).at([payload.new_id.clone()]));

@@ -5,7 +5,7 @@ import {
 	collectPresentationSlides,
 	loadPresentationFromSlideGlob,
 	resolveArrangement,
-} from "../../⚡️implementations/🟦️typescript/🟦️";
+} from "@semio-tech/presentation";
 // #endregion 🔌️Adapters
 
 //#region 🧪️Recovery

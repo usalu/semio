@@ -267,7 +267,7 @@ pub fn apply_json_i_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonIJ
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 
@@ -291,12 +291,13 @@ pub fn decode_json_i_json_mutation_payload_json(kind: &str, payload: &str) -> Re
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 ///
-/// 🧮️ Gate first, then delegate. A refused clause yields `MutationOutcome::fatal` — LAW 1 of the
-/// frozen outcome contract: a `Fatal` message means the diff is `JsonDiff::default()`, so a
-/// refused I-JSON edit can never reach the snapshot by any path.
+/// 🧮️ Gate first, then delegate. A refused clause yields an empty diff at the level the frozen vocabulary
+/// fixes for its code — `Error` for a missing target, `Fatal` for an invariant (LAW 1: `JsonDiff::default()`),
+/// so a refused I-JSON edit can never reach the snapshot by any path.
 pub(crate) fn agg_diff(this: &JsonIJsonMutation, base: &JsonSnapshot) -> protocol::MutationOutcome<JsonDiff> {
     match lower(this, base) {
         Ok(step) => <JsonMutation as Mutation<JsonSnapshot>>::diff(&step, base),
+        Err((CODE_TARGET_MISSING, message, target)) => protocol::MutationOutcome::error(CODE_TARGET_MISSING, message, target),
         Err((code, message, target)) => protocol::MutationOutcome::fatal(code, message, target),
     }
 }

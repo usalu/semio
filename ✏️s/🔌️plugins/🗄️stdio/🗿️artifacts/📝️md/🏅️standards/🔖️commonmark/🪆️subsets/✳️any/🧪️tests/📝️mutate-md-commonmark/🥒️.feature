@@ -61,16 +61,17 @@ Feature: Apply every typed CommonMark mutation to a real-world document
   of the law, never the projection half its oracle counterpart asserts, which is why that renderer
   bug had been invisible.
 
-  One scenario is left RED rather than tuned away, and it is the reference library's: `comrak`'s
-  CommonMark writer emits a literal `<!-- end list -->` HTML block between a list and a following
-  code block (a conservative guard against an INDENTED code block being absorbed — unnecessary for
-  the fenced code block it itself always writes). Its own reader then reports that separator as a
-  sixth document block, so `parse(render(x)) != x` for `comrak` on `set-snapshot`'s replacement
-  document, while this repository's renderer reproduces exactly the five blocks it was given. The
-  `ordered-json-v1` profile was NOT widened to hide it and no `ignoreKeys` was added: an injected
-  block is document content, and a comparison that forgave it would forgive a real one too. Verified
-  as specific to a list followed by a code block — the real README has 23 lists and `comrak` emits no
-  separator for any of them, because none is followed by a code block.
+  The oracle's answer is the tree it edited, never its writer's text. `comrak`'s CommonMark writer
+  emits a literal `<!-- end list -->` HTML block after every list that a code block or another list
+  follows (a guard against an indented code block or a same-marker list being absorbed — CommonMark
+  §5.3's blank-comment separator device), and its own reader reports that separator as one more
+  document block, so `parse(render(x)) != x` for `comrak` on `set-snapshot`'s replacement document.
+  That block is content no mutation made, so the oracle projects the AST `set-snapshot` produced and
+  keeps the rendering only as the raw bytes it hands back; forward and inverse edit ONE parsed tree,
+  exactly as the subject edits one snapshot. The subject's bytes are still read by `comrak`'s reader,
+  so an injected block on the subject side remains a difference. The `ordered-json-v1` profile was
+  not widened and no `ignoreKeys` was added. The identity round trip still goes through `comrak`'s
+  writer and reader, where the README carries no list followed by a code block or another list.
 
   @id-mutate
   @level-exhaustive

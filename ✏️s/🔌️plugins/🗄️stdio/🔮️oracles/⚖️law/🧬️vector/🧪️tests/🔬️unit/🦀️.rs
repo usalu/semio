@@ -44,7 +44,7 @@ fn a_no_op_vector_requires_exactly_the_warned_no_op_diagnostic() {
 
 #[test]
 fn a_refused_inverse_step_fails_the_inverse_law() {
-    let refused = r#"[{"level":"fatal","code":"mutation.missing-target","message":"gone"}]"#;
+    let refused = r#"[{"level":"error","code":"mutation.target-missing","message":"gone"}]"#;
     let error = inverse("set-zoom", &report(BEFORE, AFTER, AFTER, "[]", AFTER, refused)).unwrap_err();
     assert!(error.contains("was refused"), "{error}");
     let error = inverse("set-zoom", &report(BEFORE, AFTER, AFTER, "[]", AFTER, "[]")).unwrap_err();

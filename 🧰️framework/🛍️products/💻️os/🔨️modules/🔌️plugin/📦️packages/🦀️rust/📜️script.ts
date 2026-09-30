@@ -28,6 +28,7 @@ import { mediaOwnerContextOracle } from "../../🧪️tests/🎞️media-owner-c
 import { agentLaneCarriageOracle, agentLanePreviewVerdictOracle } from "../../🧪️tests/🤖️agent-lane-preview/🟦️.ts";
 import { timeTravelScenarioOracle } from "../../🧪️tests/🧪️time-travel/🟦️.ts";
 import { supersedeLedgerOracle } from "../../🧪️tests/🧪️supersede-ledger/🟦️.ts";
+import { historyAlternativesOracle } from "../../🧪️tests/🧪️history-alternatives/🟦️.ts";
 
 //#region 🎯️Tasks
 class CheckScript extends BundleScript {
@@ -48,6 +49,7 @@ class TestScript extends BundleScript {
     console.log(`agent-lane-carriage-oracle cases=${agentLaneCarriageOracle()}`);
     console.log(`time-travel-scenario-oracle cases=${timeTravelScenarioOracle(this.repoRoot)}`);
     console.log(`supersede-ledger-oracle cases=${supersedeLedgerOracle(this.repoRoot)}`);
+    console.log(`history-alternatives-oracle cases=${historyAlternativesOracle(this.repoRoot)}`);
     if (segments.length === 1 && segments[0] === "--retained-child-close-exact") {
       const receipts = await runExactCargoLaws({
         cwd: this.root,

@@ -1,0 +1,178 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "note": "The alternatives list of the history body (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, follow-up 2 item 4): every alternative in declaration order (the trunk first, with the empty name the history body localizes), current when it is the active one, authored by the first Branch transition naming it (actor and HLC wall time as RFC 3339 UTC, milliseconds only when nonzero), and edited when a Supersede transition is scoped to it. The Rust `history_alternative_views` and its TypeScript twin must reach each expected list.",
+  "cases": [
+    {
+      "id": "the-trunk-an-edited-alternative-and-a-plain-current-one",
+      "alternatives": [
+        {
+          "id": "trunk-doc-1",
+          "name": ""
+        },
+        {
+          "id": "alt-variant",
+          "name": "Variant"
+        },
+        {
+          "id": "alt-original",
+          "name": "Original"
+        }
+      ],
+      "active": "alt-original",
+      "facts": [
+        {
+          "kind": "supersede",
+          "scope": "trunk-doc-1"
+        },
+        {
+          "kind": "branch",
+          "alternative": "alt-variant",
+          "actor": "ada",
+          "at": 1759233600000
+        },
+        {
+          "kind": "supersede",
+          "scope": "alt-variant"
+        },
+        {
+          "kind": "supersede",
+          "scope": null
+        },
+        {
+          "kind": "branch",
+          "alternative": "alt-original",
+          "actor": "bo",
+          "at": 1759233601234
+        }
+      ],
+      "expected": [
+        {
+          "id": "trunk-doc-1",
+          "name": "",
+          "current": false,
+          "author": null,
+          "branchedAt": null,
+          "edited": true
+        },
+        {
+          "id": "alt-variant",
+          "name": "Variant",
+          "current": false,
+          "author": "ada",
+          "branchedAt": "2025-09-30T12:00:00Z",
+          "edited": true
+        },
+        {
+          "id": "alt-original",
+          "name": "Original",
+          "current": true,
+          "author": "bo",
+          "branchedAt": "2025-09-30T12:00:01.234Z",
+          "edited": false
+        }
+      ]
+    },
+    {
+      "id": "an-unscoped-edit-marks-no-alternative-and-a-missing-branch-has-no-author",
+      "alternatives": [
+        {
+          "id": "alt-a",
+          "name": "A"
+        },
+        {
+          "id": "alt-b",
+          "name": "B"
+        }
+      ],
+      "active": null,
+      "facts": [
+        {
+          "kind": "supersede",
+          "scope": null
+        },
+        {
+          "kind": "branch",
+          "alternative": "alt-b",
+          "actor": "cy",
+          "at": 951782400000
+        },
+        {
+          "kind": "supersede",
+          "scope": "alt-unknown"
+        }
+      ],
+      "expected": [
+        {
+          "id": "alt-a",
+          "name": "A",
+          "current": false,
+          "author": null,
+          "branchedAt": null,
+          "edited": false
+        },
+        {
+          "id": "alt-b",
+          "name": "B",
+          "current": false,
+          "author": "cy",
+          "branchedAt": "2000-02-29T00:00:00Z",
+          "edited": false
+        }
+      ]
+    },
+    {
+      "id": "the-first-branch-naming-an-alternative-authors-it",
+      "alternatives": [
+        {
+          "id": "alt-late",
+          "name": "Late"
+        }
+      ],
+      "active": "alt-late",
+      "facts": [
+        {
+          "kind": "branch",
+          "alternative": "alt-late",
+          "actor": "dee",
+          "at": 0
+        },
+        {
+          "kind": "branch",
+          "alternative": "alt-late",
+          "actor": "eve",
+          "at": 4102444799999
+        },
+        {
+          "kind": "supersede",
+          "scope": "alt-late"
+        },
+        {
+          "kind": "supersede",
+          "scope": "alt-late"
+        }
+      ],
+      "expected": [
+        {
+          "id": "alt-late",
+          "name": "Late",
+          "current": true,
+          "author": "dee",
+          "branchedAt": "1970-01-01T00:00:00Z",
+          "edited": true
+        }
+      ]
+    },
+    {
+      "id": "no-alternatives-lists-nothing",
+      "alternatives": [],
+      "active": null,
+      "facts": [
+        {
+          "kind": "supersede",
+          "scope": null
+        }
+      ],
+      "expected": []
+    }
+  ]
+}

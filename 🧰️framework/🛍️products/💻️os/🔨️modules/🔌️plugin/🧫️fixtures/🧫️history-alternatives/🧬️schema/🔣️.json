@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/history-alternatives.fixture.json",
+  "title": "PluginHistoryAlternativesFixture",
+  "description": "The alternatives list of the history body over a document's alternatives, its active alternative and the Branch and Supersede transitions of its event log in HLC order: each alternative in declaration order with its current marker, the author and RFC 3339 UTC time of the first Branch naming it, and whether a Supersede is scoped to it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "note",
+    "cases"
+  ],
+  "$defs": {
+    "alternative": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "description": "The alternative's name; empty for the trunk.",
+          "type": "string"
+        }
+      }
+    },
+    "fact": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "alternative",
+            "actor",
+            "at"
+          ],
+          "properties": {
+            "kind": {
+              "const": "branch"
+            },
+            "alternative": {
+              "type": "string",
+              "minLength": 1
+            },
+            "actor": {
+              "type": "string",
+              "minLength": 1
+            },
+            "at": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 253402300799999
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "scope"
+          ],
+          "properties": {
+            "kind": {
+              "const": "supersede"
+            },
+            "scope": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "current",
+        "author",
+        "branchedAt",
+        "edited"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "description": "The alternative's name; empty for the trunk.",
+          "type": "string"
+        },
+        "current": {
+          "type": "boolean"
+        },
+        "author": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "branchedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z$"
+        },
+        "edited": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "alternatives",
+          "active",
+          "facts",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "alternatives": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/alternative"
+            }
+          },
+          "active": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1
+          },
+          "facts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/fact"
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/row"
+            }
+          }
+        }
+      }
+    }
+  }
+}

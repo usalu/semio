@@ -39,16 +39,16 @@ dyn_enum_close! {
 /// the broker for document write access, because its editors persist mutations back to the open document.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn plugin() -> Result<Plugin<StdioApps>, PluginAssemblyError> {
-    let mut builder = Plugin::builder("stdio").label("Stdio").version("0.1.0").package_id(crate::registry::component_package_id()?).schema_documents(semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS);
-    let assemblies = crate::registry::artifact_assemblies()?;
-    let catalog = crate::registry::artifact_catalog_contribution(&assemblies)?;
+    let mut builder = Plugin::builder("stdio").label("Stdio").version("0.1.0").package_id(crate::catalog::component_package_id()?).schema_documents(semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS);
+    let assemblies = crate::catalog::artifact_assemblies()?;
+    let catalog = crate::catalog::artifact_catalog_contribution(&assemblies)?;
     for assembly in assemblies {
         builder = match assembly {
-            crate::registry::ArtifactAssembly::Definition(definition) => builder.artifact_definition(definition),
-            crate::registry::ArtifactAssembly::Runtime(declaration) => builder.artifact(*declaration),
+            crate::catalog::ArtifactAssembly::Definition(definition) => builder.artifact_definition(definition),
+            crate::catalog::ArtifactAssembly::Runtime(declaration) => builder.artifact(*declaration),
         };
     }
-    for artifact_kind in crate::registry::native_codec_artifact_kinds() {
+    for artifact_kind in crate::catalog::native_codec_artifact_kinds() {
         builder = builder.artifact_kind(artifact_kind);
     }
     builder = register_apps(builder);

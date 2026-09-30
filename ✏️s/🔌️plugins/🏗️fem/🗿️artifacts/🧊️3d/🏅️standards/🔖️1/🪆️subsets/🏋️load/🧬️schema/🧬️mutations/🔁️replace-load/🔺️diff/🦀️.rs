@@ -2,12 +2,12 @@
 //! patches it.
 //!
 //! Guards, in the order they run: `mutation.target-missing` (Error) on `case_id`, the same code on
-//! `load_id`, `mutation.id-mismatch` (Fatal) when the replacement renames the load, the SAME
+//! `load_id`, `mutation.target-mismatch` (Error) when the replacement renames the load, the SAME
 //! per-variant target resolution `add-load` runs (`mutation.target-missing`, Error), the finite
 //! magnitude bound (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceLoad;
 use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dLoadCasesDelta, Fem3dLoadCasesPatchEntry};
-use crate::standards::v1::subsets::any::schema::mutations::{id_mismatch, invariant, load_breach, resolve_load};
+use crate::standards::v1::subsets::any::schema::mutations::{target_mismatch, invariant, load_breach, resolve_load};
 use crate::{load_id, Fem3dSnapshot};
 
 //#region 🔖️Diff
@@ -19,7 +19,7 @@ pub fn diff(payload: &ReplaceLoad, base: &Fem3dSnapshot) -> protocol::MutationOu
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Load \"{}\" does not exist in case \"{}\".", payload.load_id, payload.case_id), [payload.load_id.clone()]);
     };
     if load_id(&payload.new_load) != payload.load_id {
-        return id_mismatch("Load", &payload.load_id, load_id(&payload.new_load));
+        return target_mismatch("Load", &payload.load_id, load_id(&payload.new_load));
     }
     if let Some(refusal) = resolve_load(base, &payload.new_load) {
         return refusal;

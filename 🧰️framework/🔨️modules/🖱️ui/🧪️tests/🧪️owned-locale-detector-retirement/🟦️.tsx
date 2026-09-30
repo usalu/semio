@@ -4342,13 +4342,17 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(onSectionsReorder).toHaveBeenCalledWith(["b", "c", "a"]);
     });
 
-    it("mergeTreeSectionOrder keeps remembered order and appends new sections", () => {
+    it("mergeTreeSectionOrder keeps remembered order and inserts new sections where the source puts them", () => {
       const sections: TreeDataSection[] = [
         { id: "a", label: "A" },
         { id: "b", label: "B" },
         { id: "c", label: "C" },
       ];
       expect(mergeTreeSectionOrder(["c", "a"], sections).map((section) => section.id)).toEqual(["c", "a", "b"]);
+      const history = ["band", "editor", "inputs", "alternatives", "actions", "commands"].map((id): TreeDataSection => ({ id, label: id }));
+      expect(mergeTreeSectionOrder(["actions", "commands"], history).map((section) => section.id)).toEqual(["band", "editor", "inputs", "alternatives", "actions", "commands"]);
+      expect(mergeTreeSectionOrder(["commands", "actions"], history.slice(0, 1).concat(history.slice(4))).map((section) => section.id)).toEqual(["band", "commands", "actions"]);
+      expect(mergeTreeSectionOrder(["band", "editor", "actions", "commands"], history.slice(4)).map((section) => section.id)).toEqual(["actions", "commands"]);
     });
 
     it("stretches every data-tree wrapper and nested row to the full host width", () => {

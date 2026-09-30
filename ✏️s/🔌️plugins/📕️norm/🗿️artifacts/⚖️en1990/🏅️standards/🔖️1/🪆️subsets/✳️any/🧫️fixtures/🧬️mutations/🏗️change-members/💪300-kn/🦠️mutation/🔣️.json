@@ -1,0 +1,20 @@
+{
+  "mutation": "changeMembers",
+  "newMembers": [
+    {
+      "deflectionLimitRatio": 250.0,
+      "deflectionW": 0.018,
+      "id": "beam-B1",
+      "labelDe": "Büroträger B1",
+      "labelEn": "Office beam B1",
+      "rdEquDestab": 180000.0,
+      "rdEquStab": 200000.0,
+      "rdFat": 0.0,
+      "rdGeo": 250000.0,
+      "rdStr": 300000.0,
+      "span": 6.0,
+      "vibrationFrequency": 5.5,
+      "vibrationFrequencyMin": 3.0
+    }
+  ]
+}

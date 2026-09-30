@@ -9,7 +9,7 @@ fn missing_entity_target_is_rejected_before_mutation() {
     let base = IfcSnapshot::default();
     let diff = IfcDiff { entities: Some(IfcEntitiesDiff { removed: vec![1], ..Default::default() }), ..Default::default() };
     let error = diff.apply(&base).expect_err("missing entity target must be rejected");
-    assert_eq!(error.code, "invalid-remove-target");
+    assert_eq!(error.code, "mutation.apply.invalid-remove-target");
     assert_eq!(error.target, vec!["entities", "1"]);
     assert_eq!(base, IfcSnapshot::default());
 }

@@ -1121,6 +1121,34 @@ pub mod standards {
                             mod tests_refuses_to_relabel_a_steel_frame_node_through_a_replace_node;
                         }
                         #[path = "."]
+                        pub mod move_selection {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/🧭️shifts-the-slab-3f8df5/🦀️.rs"]
+                            mod tests_shifts_the_first_floor_slab_and_its_corner_nodes_right_and_up;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/📏️stretches-the-panel-b4f68b/🦀️.rs"]
+                            mod tests_stretches_the_spare_panel_and_the_canopy_tip_to_twice_their_width;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/⛔️rejects-a-missing-f9c98d/🦀️.rs"]
+                            mod tests_rejects_transforming_a_node_and_a_region_the_steel_frame_never_had;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/⏸️moves-nothing-f724d6/🦀️.rs"]
+                            mod tests_an_identity_transform_moves_nothing;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/🫓️denies-a-flat-scale-49b312/🦀️.rs"]
+                            mod tests_refuses_a_scale_that_flattens_the_wall_to_zero_height;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/🔁️denies-a-twice-named-61d178/🦀️.rs"]
+                            mod tests_refuses_a_transform_that_names_a_node_twice;
+                        }
+                        #[path = "."]
                         pub mod replace_load {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🦀️.rs"]
                             mod component;
@@ -1359,6 +1387,9 @@ pub mod editor {
 
         #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs"]
         pub mod session;
+
+        #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🫧️transient/🦀️.rs"]
+        pub mod transient;
 
         #[path = "."]
         pub mod commands {

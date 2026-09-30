@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Theme Geometry Input",
+  "type": "object",
+  "required": [
+    "compact",
+    "rootRemPx",
+    "metrics"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "compact": {
+      "type": "string",
+      "description": "A fully resolvable CSS length: numeric absolute units or rem, calc/min/max/clamp and dimensional arithmetic. rem uses metrics.dom.rootRemPx. Unknown variables, context-dependent units, nonfinite results, negative final lengths and division by zero are refused.",
+      "x-semio-ui": {
+        "label": {
+          "en": "Compact spacing (CSS length)",
+          "de": "Kompakter Abstand (CSS-Länge)"
+        },
+        "description": {
+          "en": "Use px, rem or absolute CSS lengths with calc, min, max or clamp. rem uses the theme root size. Variables and viewport units are unavailable.",
+          "de": "px, rem oder absolute CSS-Längen mit calc, min, max oder clamp verwenden. rem verwendet die Design-Wurzelgröße. Variablen und Viewport-Einheiten sind nicht verfügbar."
+        }
+      },
+      "maxLength": 512,
+      "format": "semio-css-length-expression"
+    },
+    "rootRemPx": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "x-semio-resolution": {
+    "maxTokens": 128,
+    "maxDepth": 16,
+    "maxArguments": 32,
+    "numberPattern": "(?:[0-9]+(?:\\.[0-9]+)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?",
+    "absoluteUnits": {
+      "px": 1,
+      "in": 96,
+      "cm": 37.79527559055118,
+      "mm": 3.7795275590551185,
+      "q": 0.9448818897637796,
+      "pt": 1.3333333333333333,
+      "pc": 16
+    },
+    "functions": [
+      "calc",
+      "min",
+      "max",
+      "clamp"
+    ],
+    "binaryAddWhitespace": true,
+    "finalDimension": "length-or-zero-scalar"
+  }
+}

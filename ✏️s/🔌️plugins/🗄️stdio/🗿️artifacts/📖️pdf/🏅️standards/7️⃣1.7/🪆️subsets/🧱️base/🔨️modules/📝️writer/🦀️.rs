@@ -20,6 +20,10 @@ pub struct WriteOptions {
     pub encryption: Option<PdfEncryption>,
 }
 
+/// 🧮 Trailer keys the writer derives from the file it lays out (ISO 32000-1 §7.5.5, §7.5.8.2) —
+/// never document content, so a reader drops them and a writer states them afresh.
+pub const WRITER_TRAILER_KEYS: [&str; 10] = ["Size", "Prev", "XRefStm", "Encrypt", "Type", "W", "Index", "Filter", "DecodeParms", "Length"];
+
 /// 🧾 The trailer-level identity of a document.
 #[derive(Clone, Debug, PartialEq)]
 pub struct DocumentTrailer {
@@ -111,7 +115,7 @@ impl PdfWriter {
         if let Some([first, second]) = &trailer.id {
             trailer_entries.push(PdfDictEntry::new("ID", PdfObject::Array(vec![PdfObject::Str(first.clone()), PdfObject::Str(second.clone())])));
         }
-        trailer_entries.extend(trailer.extra.iter().filter(|entry| !matches!(entry.key.as_str(), "Root" | "Info" | "ID" | "Encrypt" | "Size" | "Prev" | "XRefStm" | "Type" | "Filter" | "DecodeParms" | "W" | "Index" | "Length")).cloned());
+        trailer_entries.extend(trailer.extra.iter().filter(|entry| !matches!(entry.key.as_str(), "Root" | "Info" | "ID") && !WRITER_TRAILER_KEYS.contains(&entry.key.as_str())).cloned());
         if self.xref_stream {
             self.finish_xref_stream(&mut out, trailer_entries);
         } else {

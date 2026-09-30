@@ -5,7 +5,7 @@ async fn invalid_instance_order_is_rejected_before_mutation() {
     let base = Ifc2x3Snapshot::default();
     let diff = Ifc2x3Diff { instance_order: Some(vec![1]), ..Default::default() };
     let error = diff.apply(&base).expect_err("unknown instance order target must be rejected");
-    assert_eq!(error.code, "invalid-instance-order");
+    assert_eq!(error.code, "mutation.apply.invalid-instance-order");
     assert_eq!(error.target, vec!["instanceOrder", "1"]);
     assert_eq!(base, Ifc2x3Snapshot::default());
 }

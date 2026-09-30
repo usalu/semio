@@ -80,7 +80,7 @@ pub struct SimulationConfig {
     pub run_period_end_day: u8,
     pub tolerances: ConvergenceTolerances,
     pub schedules: ScheduleSet,
-    pub weather: Option<crate::site::EpwWeather>,
+    pub weather: Option<crate::site::WeatherData>,
 }
 
 impl Default for SimulationConfig {

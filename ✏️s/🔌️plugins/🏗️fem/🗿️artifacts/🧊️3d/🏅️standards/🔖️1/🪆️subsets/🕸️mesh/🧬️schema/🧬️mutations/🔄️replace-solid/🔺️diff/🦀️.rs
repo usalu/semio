@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceSolid`.
 use super::ReplaceSolid;
 use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSolidsDelta, Fem3dSolidsPatchEntry};
-use crate::standards::v1::subsets::any::schema::mutations::{id_mismatch, invariant, solid_breach};
+use crate::standards::v1::subsets::any::schema::mutations::{target_mismatch, invariant, solid_breach};
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
@@ -10,7 +10,7 @@ pub fn diff(payload: &ReplaceSolid, base: &Fem3dSnapshot) -> protocol::MutationO
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Solid \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if payload.new_solid.id != payload.id {
-        return id_mismatch("Solid", &payload.id, &payload.new_solid.id);
+        return target_mismatch("Solid", &payload.id, &payload.new_solid.id);
     }
     if existing == &payload.new_solid {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Solid \"{}\" already has that value.", payload.id));

@@ -1,0 +1,14 @@
+{
+  "mutation": "moveSelection",
+  "nodeIds": [
+    "n1"
+  ],
+  "regionIds": [],
+  "pivotX": 3.0,
+  "pivotY": 1.75,
+  "dx": 0.0,
+  "dy": 0.0,
+  "angle": 0.0,
+  "sx": 1.0,
+  "sy": 1.0
+}

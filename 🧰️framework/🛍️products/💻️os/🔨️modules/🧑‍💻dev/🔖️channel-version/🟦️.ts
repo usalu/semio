@@ -71,7 +71,7 @@ export const CHANNEL_VERSION_CONSUMERS: readonly ChannelVersionConsumerV1[] = [
   { path: `${MOD}/🧑‍💻dev/🧫️fixtures/🚀️local-hub.json`, occurrences: 6 },
   { path: `${OS}/🧫️fixtures/📇️directory/🌐️browser-document-open-v1.json`, occurrences: 2, derived: "the document-open catalog encoding and plan digests" },
   { path: `${OS}/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json`, occurrences: 3, derived: "the plan catalog expectedHex and its generation id" },
-  { path: "🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", occurrences: 3, derived: "the lease's catalog generation and its Pack-encoded descriptorHex" },
+  { path: "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", occurrences: 3, derived: "the lease's catalog generation and its Pack-encoded descriptorHex" },
   { path: "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/👥️two-package/🔣️.json", occurrences: 2, derived: "the package trust records" },
   { path: "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧬️stdio-gis-bootstrap/🔣️.json", occurrences: 2, derived: "profile.generationId (trustedBootstrapProfileEncoding)" },
   { path: "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧱️generation-stage/🔣️.json", occurrences: 3, derived: "the staged generation id" },

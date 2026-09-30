@@ -1222,6 +1222,13 @@
         "command": "bun ./📜️script.ts dev-collaboration",
         "forwardAllArgs": true
       }
+    },
+    "test-inference-client-contract": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-inference-client-contract"
+      }
     }
   }
 }

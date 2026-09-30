@@ -16,6 +16,7 @@
 //! pack record body as binary — so every lane rides one codec instead of a hand-rolled one per
 //! field (see `🔖️DiffCodec`).
 
+use crate::standards::v1_7::subsets::base::io::carry_graph_edit;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -2142,6 +2143,21 @@ pub fn diff_remove_trailer_entry(base: &PdfSnapshot, key: &str) -> PdfDiff {
         return PdfDiff::default();
     }
     PdfDiff { trailer: Some(PdfDictDiff { removed: vec![key.to_string()], ..Default::default() }), ..Default::default() }
+}
+/// 🪢 A retained-graph edit together with the typed lanes it moves: `graph` edits only `objects`
+/// and `trailer`, and the result also carries every lane the edited graph reads differently
+/// (@see `io::carry_graph_edit`), so a direct COS edit and the typed model never disagree.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_graph_edit(base: &PdfSnapshot, graph: PdfDiff) -> PdfDiff {
+    let mut next = base.clone();
+    if let Some(objects) = &graph.objects {
+        next.objects = apply_objects_diff(objects, &base.objects);
+    }
+    if let Some(trailer) = &graph.trailer {
+        next.trailer = apply_dict_diff(trailer, &base.trailer);
+    }
+    carry_graph_edit(base, &mut next);
+    PdfDiff { objects: graph.objects, trailer: graph.trailer, ..<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next) }
 }
 
 /// 📐 Which optional page box a mutation addresses.

@@ -27,6 +27,7 @@ export function policyWalkRelFileSources(
     for (const entry of source.entries) {
       const childRel = relDir ? `${relDir}/${entry.name}` : entry.name;
       if (!entry.isFile && isGeneratedDirectoryName(entry.name)) continue;
+      if (entry.isSymbolicLink && (POLICY_SKIP_DIRS.has(entry.name) || entry.name.startsWith("."))) continue;
       if (entry.isSymbolicLink) {
         issues.set(childRel, { path: childRel, state: "symlink" });
         continue;

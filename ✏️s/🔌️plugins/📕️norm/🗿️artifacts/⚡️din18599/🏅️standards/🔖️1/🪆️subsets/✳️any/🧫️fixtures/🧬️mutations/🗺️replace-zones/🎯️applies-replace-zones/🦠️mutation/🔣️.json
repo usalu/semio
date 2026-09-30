@@ -1,0 +1,18 @@
+{
+  "mutation": "replaceZones",
+  "newZones": [
+    {
+      "id": "zone-living",
+      "labelEn": "Living",
+      "labelDe": "Wohnen",
+      "usageProfile": "WFH",
+      "areaM2": 154.0,
+      "volumeM3": 364.0,
+      "thetaIHeatC": 20.0,
+      "thetaICoolC": 26.0,
+      "occupants": 4,
+      "internalGainsWM2": 3.5,
+      "lightingPowerWM2": 6.0
+    }
+  ]
+}

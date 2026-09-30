@@ -5,7 +5,6 @@ use super::PdfXMutation;
 #[cfg(test)]
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
 use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
-use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -24,7 +23,7 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for RemoveTrimBox {
         if let Some(page) = support::page_objects(&next).get(self.page_index).copied() {
             support::remove_entry(&mut next, page, "TrimBox");
         }
-        MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
+        MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfXMutation> {

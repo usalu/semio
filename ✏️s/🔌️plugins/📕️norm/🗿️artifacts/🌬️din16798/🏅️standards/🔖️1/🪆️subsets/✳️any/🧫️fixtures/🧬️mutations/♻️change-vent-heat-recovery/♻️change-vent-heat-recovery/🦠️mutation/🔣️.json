@@ -1,0 +1,6 @@
+{
+  "ChangeVentHeatRecovery": {
+    "ventId": "vent-central",
+    "newHeatRecoveryEta": 0.875
+  }
+}

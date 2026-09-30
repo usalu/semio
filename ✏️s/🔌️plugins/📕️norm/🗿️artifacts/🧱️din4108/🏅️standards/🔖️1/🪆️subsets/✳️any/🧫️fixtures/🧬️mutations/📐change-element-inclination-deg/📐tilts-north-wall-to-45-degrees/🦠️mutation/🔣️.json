@@ -1,0 +1,6 @@
+{
+  "ChangeElementInclinationDeg": {
+    "elementId": "wall-north",
+    "newInclinationDeg": 45.0
+  }
+}

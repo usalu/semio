@@ -56,6 +56,18 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/set-group-isolation/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/drag-layers/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/rotate-layers/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/scale-layers/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/drag-path-points/schema.json"
     }
   ]
 }

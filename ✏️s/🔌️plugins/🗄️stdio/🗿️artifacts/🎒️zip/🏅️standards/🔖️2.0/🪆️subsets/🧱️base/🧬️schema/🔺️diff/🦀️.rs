@@ -186,7 +186,7 @@ impl MutationDiff<ZipSnapshot> for ZipDiff {
             }
         }
         crate::standards::v2_0::subsets::base::io::validate_zip_snapshot_serialization(&next)
-            .map_err(|error| MutationApplyError::new("stdio.zip.serialization.invalid-state", error.to_string()).at(["entries"]))?;
+            .map_err(|error| MutationApplyError::new("mutation.apply.invalid-state", error.to_string()).at(["entries"]))?;
         Ok(next)
     }
 

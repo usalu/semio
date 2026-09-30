@@ -1,0 +1,50 @@
+{
+  "schema": "s.spatial-kernel.command-contributions/v1",
+  "command": "fixture.command",
+  "steps": [
+    {
+      "operation": "inspect",
+      "expect": null
+    },
+    {
+      "operation": "register",
+      "owner": "base",
+      "expect": "base"
+    },
+    {
+      "operation": "register",
+      "owner": "override",
+      "expect": "override"
+    },
+    {
+      "operation": "remove",
+      "owner": "override",
+      "expect": "base"
+    },
+    {
+      "operation": "remove",
+      "owner": "override",
+      "expect": "base"
+    },
+    {
+      "operation": "remove",
+      "owner": "base",
+      "expect": null
+    },
+    {
+      "operation": "register",
+      "owner": "replacement",
+      "expect": "replacement"
+    },
+    {
+      "operation": "remove",
+      "owner": "base",
+      "expect": "replacement"
+    },
+    {
+      "operation": "remove",
+      "owner": "replacement",
+      "expect": null
+    }
+  ]
+}

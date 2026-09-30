@@ -226,7 +226,7 @@ fn the_page_verb_round_trips_text_and_binary() {
     assert_eq!(<HomeTransientMutation as protocol::OpBinary>::decode_op(&bytes).expect("binary round trip"), mutation);
     assert!(mutation.inverse(&HomeTransient::default()).is_empty(), "a derived projection page is never undone");
     let refused = item("{").diff(&HomeTransient::default());
-    assert!(refused.messages().iter().any(|message| format!("{message:?}").contains("s.home.directory-event-page-invalid")));
+    assert!(refused.messages().iter().any(|message| message.code.0 == "mutation.invariant" && message.level == protocol::Severity::Fatal));
     assert_eq!(refused.diff(), &HomeTransient::default());
 }
 

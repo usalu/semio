@@ -1,7 +1,0 @@
-{
-  "ChangeLayerMaterialId": {
-    "elementId": "wall-north",
-    "index": 2,
-    "newMaterialId": "xps"
-  }
-}

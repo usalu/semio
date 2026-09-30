@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeRefrigerationSystemCaseCount, base: &EnergyMo
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Refrigeration system {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if payload.new_case_count == 0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Refrigeration system {} needs at least one display case.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Refrigeration system {} needs at least one display case.", payload.id.0), [payload.id.0.to_string()]);
     }
     if existing.case_count == payload.new_case_count {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Refrigeration system {} already carries this case_count: {}.", payload.id.0, payload.new_case_count));

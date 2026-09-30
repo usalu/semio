@@ -126,7 +126,7 @@ describe("Norm oracle source ownership", () => {
     const built = buildCasePlan(root, discovered, "exhaustive");
     expect(built.feature.errors).toEqual([]);
     expect(built.missingFixtures).toEqual([]);
-    expect(built.plan.scenarios).toHaveLength(65);
+    expect(built.plan.scenarios).toHaveLength(161);
     expect(built.plan.target).toEqual({
       artifact: "s.norm.en1991",
       standard: "1",
@@ -173,7 +173,7 @@ describe("Norm oracle source ownership", () => {
         stderr: "",
         failures: [],
       });
-      expect(results).toHaveLength(65);
+      expect(results).toHaveLength(161);
       expect(results.map((entry) => entry.scenario).sort()).toEqual(built.plan.scenarios.map((entry) => entry.id).sort());
       expect(results.every((entry) => entry.status === "passed" && entry.role === "oracle" && entry.implementation === "python")).toBe(true);
       expect(stdout).toBe("");

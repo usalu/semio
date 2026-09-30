@@ -144,7 +144,7 @@ export function applyZipDiff(base: ZipSnapshot, diff: ZipDiff): ZipSnapshot {
 
 /** ➕️ Addresses insertion by the existing following member so deletion can undo exactly. */
 export function zipInsertionDiff(base: ZipSnapshot, entry: ZipEntry, before?: string): ZipDiff {
-  if (before !== undefined && !base.entries.some((existing) => existing.name === before)) throw new Error("mutation.apply.missing-target");
+  if (before !== undefined && !base.entries.some((existing) => existing.name === before)) throw new Error("mutation.target-missing");
   const order = before === undefined ? undefined : base.entries.flatMap((existing) => existing.name === before ? [entry.name, existing.name] : [existing.name]);
   return { entries: { removed: [], modified: [], added: [structuredClone(entry)], order } };
 }

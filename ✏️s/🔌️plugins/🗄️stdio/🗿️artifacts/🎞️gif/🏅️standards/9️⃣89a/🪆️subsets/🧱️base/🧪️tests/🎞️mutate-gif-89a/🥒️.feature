@@ -81,7 +81,7 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       | set-frame-geometry | {"index":0,"left":5,"top":5,"width":100,"height":100} |
       | set-frame-interlace | {"index":1,"interlace":true} |
 
-  @id-mutate-raster
+  @id-mutate
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to a small animation
@@ -118,7 +118,7 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       | set-frame-geometry | {"index":0,"left":5,"top":5,"width":100,"height":100} |
       | set-frame-interlace | {"index":1,"interlace":true} |
 
-  @id-inverse-raster
+  @id-inverse
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores a small animation

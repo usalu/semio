@@ -78,7 +78,7 @@
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
           "outputName": "semio_s_plugin_stdio.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -558,7 +558,7 @@
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
           "outputName": "semio_s_plugin_stdio.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -663,7 +663,7 @@
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
           "outputName": "semio_s_plugin_stdio.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -744,7 +744,7 @@
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
           "outputName": "semio_s_plugin_stdio.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -811,7 +811,7 @@
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
           "outputName": "semio_s_plugin_stdio.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -876,7 +876,7 @@
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
           "outputName": "semio_s_plugin_stdio.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -948,7 +948,7 @@
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
           "outputName": "semio_s_plugin_stdio.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {
@@ -1018,7 +1018,7 @@
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
           "outputName": "semio_s_plugin_stdio.wasm",
-          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+          "linkedCodecRegistry": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
             "manifest": {

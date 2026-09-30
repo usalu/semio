@@ -6,7 +6,8 @@
     "schemaVersion",
     "policy",
     "cases",
-    "corruptions"
+    "corruptions",
+    "policyCorruptions"
   ],
   "properties": {
     "schemaVersion": {
@@ -71,6 +72,20 @@
           "unclassified-owner"
         ]
       }
+    },
+    "policyCorruptions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "missing-owner-roles",
+          "invalid-owner-pattern",
+          "unknown-owner-role",
+          "duplicate-owner-rule",
+          "empty-owner-pattern"
+        ]
+      }
     }
   },
   "$defs": {
@@ -80,7 +95,8 @@
       "required": [
         "areaLayers",
         "roles",
-        "rules"
+        "rules",
+        "ownerRoles"
       ],
       "properties": {
         "areaLayers": {
@@ -124,6 +140,58 @@
                 }
               },
               "toRoles": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "toOwnerSegments": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^/\\\\]+$",
+                  "not": {
+                    "enum": [
+                      ".",
+                      ".."
+                    ]
+                  }
+                }
+              },
+              "fromOwnerPaths": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        },
+        "ownerRoles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "roles"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "roles": {
                 "type": "array",
                 "minItems": 1,
                 "uniqueItems": true,
@@ -272,7 +340,9 @@
           "enum": [
             "missing-role",
             "unknown-role",
-            "unclassified-owner"
+            "unclassified-owner",
+            "owner-role-mismatch",
+            "unclassified-role-owner"
           ]
         },
         "owner": {

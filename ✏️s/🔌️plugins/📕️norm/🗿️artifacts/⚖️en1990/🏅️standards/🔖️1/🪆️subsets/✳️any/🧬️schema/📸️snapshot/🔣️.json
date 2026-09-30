@@ -170,7 +170,12 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "VariableAction": {
       "title": "VariableAction",
@@ -213,7 +218,12 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "AccidentalAction": {
       "title": "AccidentalAction",
@@ -241,7 +251,12 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "SeismicAction": {
       "title": "SeismicAction",
@@ -279,7 +294,12 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "Member": {
       "title": "Member",
@@ -459,7 +479,12 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "MemberEffect": {
       "title": "MemberEffect",
@@ -514,7 +539,12 @@
             "precision": 3
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "BridgeSls": {
       "title": "BridgeSls",
@@ -624,7 +654,12 @@
             "precision": 1
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "AnnexChoice": {
       "title": "AnnexChoice",
@@ -644,7 +679,11 @@
             "de": "Deutscher Nationaler Anhang (DIN EN)"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql"
+      ]
     },
     "ImportanceClass": {
       "title": "ImportanceClass",
@@ -674,7 +713,11 @@
             "de": "IV — lebenswichtig für den Katastrophenschutz"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🔗️graphql"
+      ]
     }
   }
 }

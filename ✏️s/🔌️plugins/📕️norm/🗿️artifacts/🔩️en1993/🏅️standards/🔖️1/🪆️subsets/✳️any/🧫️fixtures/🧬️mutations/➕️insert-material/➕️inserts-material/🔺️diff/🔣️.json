@@ -1,0 +1,43 @@
+{
+  "artifact": null,
+  "annex": null,
+  "materials": {
+    "values": [
+      {
+        "id": "mat-s460",
+        "grade": "S460",
+        "fy": 460000000.0,
+        "fu": 550000000.0,
+        "eModulus": 210000000000.0,
+        "gModulus": 81000000000.0,
+        "subgrade": "K2",
+        "kind": "carbon"
+      },
+      {
+        "id": "mat-s460-2",
+        "grade": "S460",
+        "fy": 460000000.0,
+        "fu": 550000000.0,
+        "eModulus": 210000000000.0,
+        "gModulus": 81000000000.0,
+        "subgrade": "K2",
+        "kind": "carbon"
+      }
+    ]
+  },
+  "sections": null,
+  "members": null,
+  "loadCases": null,
+  "memberActions": null,
+  "joints": null,
+  "fatigueDetails": null,
+  "fireExposures": null,
+  "coldFormedMembers": null,
+  "platedPanels": null,
+  "siloShells": null,
+  "tensionComponents": null,
+  "bridgeFatigue": null,
+  "towerLegs": null,
+  "piles": null,
+  "craneRunways": null
+}

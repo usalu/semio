@@ -1,0 +1,6 @@
+{
+  "ChangeZoneCo2": {
+    "zoneId": "zone-office",
+    "newCo2Ppm": 800.0
+  }
+}

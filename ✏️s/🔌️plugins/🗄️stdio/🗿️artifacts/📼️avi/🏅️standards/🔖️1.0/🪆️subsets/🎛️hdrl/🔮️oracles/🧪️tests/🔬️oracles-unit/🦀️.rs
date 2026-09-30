@@ -36,6 +36,7 @@ mod tests {
                     rc_frame_top: 0,
                     rc_frame_right: 16,
                     rc_frame_bottom: 16,
+                    rc_frame_width: 16,
                 },
                 strf: OStreamFormat::BitmapInfo { size: 40, width: 16, height: 16, planes: 1, bit_count: 24, compression: "MJPG".into(), size_image: 140, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
                 chunks: vec![OChunk { fourcc: "00dc".into(), data: vec![1, 2, 3, 4], keyframe: true }, OChunk { fourcc: "00dc".into(), data: vec![5, 6, 7], keyframe: false }],
@@ -53,6 +54,18 @@ mod tests {
         assert_eq!(&bytes[8..12], b"AVI ");
         let back = decode(&bytes).expect("decode");
         assert_eq!(back, doc);
+    }
+
+    #[test]
+    fn classic_56_byte_strh_keeps_its_short_rc_frame() {
+        let mut payload = b"vidsMJPG".to_vec();
+        payload.extend_from_slice(&[0u8; 40]);
+        for edge in [0i16, 0, 480, 432] {
+            payload.extend_from_slice(&edge.to_le_bytes());
+        }
+        let header = parse_strh(&payload).expect("parse a classic strh");
+        assert_eq!((header.rc_frame_left, header.rc_frame_top, header.rc_frame_right, header.rc_frame_bottom, header.rc_frame_width), (0, 0, 480, 432, 8));
+        assert_eq!(write_strh(&header), payload);
     }
 
     #[test]

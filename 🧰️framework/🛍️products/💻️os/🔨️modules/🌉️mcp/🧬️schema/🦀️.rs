@@ -1192,37 +1192,18 @@ pub struct ArtifactInferenceResultV1 {
 }
 //#endregion 🔖️ArtifactInferenceWire
 
-//#region 🔖️HubMirror
-/// 🔢️ `^[0-9a-f]{n}$` — the lower-hex pattern `🌎️hub`'s own schemas spell out literally and
-/// `crate::inference::is_lower_hex` enforces in Rust. Built from the length constant so the two can
-/// never drift.
+/// 🔢️ Canonical lower-hex patterns for bounded inference identifiers.
 fn hex_pattern(length: usize) -> String {
     format!("^[0-9a-f]{{{length}}}$")
 }
 
-/// ✅️ The closed approval intent `POST …/spaces/{space}/documents/{doc}/inference/gis-map/jobs/
-/// {job}/approval` accepts, byte for byte — os is a CLIENT of hub here, so this export is an
-/// explicit MIRROR of hub's own authority (decoded in Rust by
-/// `🌎️hub/💡️inference/🧬️schema/✅️approval/🦀️.rs`'s `InferenceApprovalRequestV1::decode`), never a
-/// second authority. `🧪️Tests::os_mirror_of_the_hub_approval_request_is_structurally_identical`
-/// fails the moment hub changes it.
-///
-/// The authority is `🌎️hub/💡️inference/🧬️schema/🔣️.json#/$defs/InferenceApprovalRequestV1`; hub names
-/// its `jobId`/`proposalHash` patterns through `$ref`s, so the test inlines them before comparing.
+//#region 🔖️InferenceApproval
+/// ✅️ The framework-owned closed approval intent for an inference job and proposal digest.
+/// See `✅️approval-request/🔣️.json`; concrete inference hosts consume this contract.
 pub fn hub_inference_approval_request_schema() -> serde_json::Value {
-    serde_json::json!({
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["schema", "version", "jobId", "proposalHash"],
-        "properties": {
-            "schema": { "const": crate::inference::HUB_INFERENCE_APPROVAL_SCHEMA },
-            "version": { "const": 1 },
-            "jobId": { "type": "string", "pattern": hex_pattern(crate::inference::INFERENCE_REQUEST_ID_HEX_LENGTH) },
-            "proposalHash": { "type": "string", "pattern": hex_pattern(crate::inference::INFERENCE_PROPOSAL_HASH_HEX_LENGTH) },
-        },
-    })
+    serde_json::from_str(include_str!("✅️approval-request/🔣️.json")).expect("the authored approval contract parses")
 }
-//#endregion 🔖️HubMirror
+//#endregion 🔖️InferenceApproval
 //#endregion 🔖️ToolSchemas
 
 //#region 🔖️SchemaCatalog

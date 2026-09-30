@@ -85,7 +85,7 @@ pub fn project_package(_input: &[u8]) -> Result<Json, String> {
 
 //#region 🔖️Stamp
 /// 🏅️ Stamps the whole package into (`strict`) or out of the strict conformance class — the reference half of the
-/// `stamp-conformance-class` scenarios, whose subject replaces its whole snapshot with its own stamp (`set-snapshot`).
+/// `mutate-set-snapshot`/`inverse-set-snapshot` scenarios, whose subject replaces its whole snapshot with its own stamp (`set-snapshot`).
 #[cfg(feature = "oracles")]
 pub fn oracle_stamp(input: &[u8], strict: bool) -> Result<Vec<u8>, String> {
     let mut parts = crate::document::ooxml::read_parts(input)?;

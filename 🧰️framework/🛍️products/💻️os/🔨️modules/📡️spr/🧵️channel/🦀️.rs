@@ -2805,7 +2805,7 @@ pub enum AppFrame {
         fingerprint: Vec<u8>,
     },
     /// 🧾 `report` (CHANNEL_VERSION 11 trailing addition) is one packed `DispatchReport` of the
-    /// rejected dispatch, accompanying a `Fault.code == "mutation.rejected"` — see
+    /// rejected dispatch, accompanying a `Fault.code == "app.command.rejected"` — see
     /// contract-freeze.md §C8/C9.
     Error {
         in_reply_to: Option<u64>,

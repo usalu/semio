@@ -382,3 +382,87 @@ Done: the React host now publishes the local user's history edit (and tool run) 
 - `UI/🧱️elements/👥️PresenceBar/🟦️.tsx`
 - `UI/🧱️elements/📚️I18n/🟦️.tsx` and `UI/🎯️targets/⚛️react/🌐️i18n/🟦️.ts`
 - `🧰️framework/🛍️products/💻️os/🧪️tests/{🧪️backbone-envelope-io, 🧪️space-artifact-creation-owner}/🟦️.ts`
+
+## Follow-up 3 — typed rejections, folder re-attach, R2-2/R2-4/R2-6, dev reload and hub-less serve
+
+### F3.1 One typed rejection contract (finding 9)
+- **Before.** `CommandAckOutcome.rejected.messages` had two producers that disagreed. Hub acks carried the JSON bytes of a `MutationMessage` array. Local refusals carried counters: `[envelopes]`, `[count, bytes, limit]` or `[bytes]`. The shell JSON-decoded both, so a local counter such as 69 became the text "E", and `JSON.parse` threw out of `worker.onmessage`.
+- **Now, one contract in both twins.** `rejected = { code, reason, messages: MutationMessage[], detail?: { envelopes?, bytes?, limit? } }`.
+  - The codes are a closed set of 10: `hub.refused`, `hub.unreadable`, `local.read-only`, `local.queue-full`, `local.backbone-capacity`, `local.backbone-duplicate`, `local.backbone-pair-unavailable`, `local.backbone-scope-mismatch`, `local.backbone-malformed`, `local.socket-frame-ceiling`.
+  - Schema: `🏪️store/🔄️sync/🧬️schema/🔣️command-rejection/🔣️.json`, whose `messages` item refers to the kernel's `HistoryMutationMessage`.
+  - Shared fixture: `🏪️store/🧫️fixtures/🧫️command-rejection/🔣️.json` (10 hub rows, 8 local rows).
+- **TypeScript (`💻️os/🟦️.ts`, region `🚫️CommandRejection`).**
+  - Types: `COMMAND_REJECTION_CODES_V1`, `CommandRejectionV1`, `CommandRejectionDetailV1`.
+  - Functions:
+    - `decodeHubRejectionMessagesV1` and `hubCommandRejectionV1` decode the hub bytes exactly once and never throw.
+    - `localCommandRejectionV1` builds a local refusal.
+    - `commandAckOutcomeOfValueV1` reads a `commandOutcome` coming from either actor, including Rust's exact-integer carriers; the batch id `u64::MAX` reads as -1.
+  - `parseArtifactEvent` validates `commandOutcome`.
+  - Every producer in the worker goes through `rejectLocally`.
+- **Rust (`🏪️store/🔄️sync/🦀️.rs`).**
+  - New types: `CommandRejectionCode` and `CommandRejectionDetail`.
+  - `CommandAckOutcome::Rejected{code, reason, messages: Vec<MutationMessage>, detail}` with `hub_rejected` and `local_rejected` constructors.
+  - The `reject_document_backbone` callers in both actors pass the typed outcome, and the retention's `retain` returns it too.
+  - `CommandOutcome.batch_id` now goes on the wire as `batchId`.
+- **Shell.** `commandRejectionNoticeV1(rejection)` is total. It gives a localized notice per code, with the new en/de keys `ui.conflict.local.*`. The suite moved to `🛠️ShellHelpers/🧪️tests/🧪️command-rejection` with fixture `🧫️command-rejection`.
+- **wgpu (W2-C, told).** Line 10974 still compiles because `reason` is kept. The history refusal code is now available in `messages[].code`.
+
+### F3.2 Folder re-attach (e2e finding 7) — root causes fixed
+1. **Every edit refused.** The TypeScript actor refused every document-backbone batch of a folder document ("canonical pair unavailable"), because admission required a hub-verified cold pair. It now asks for one only on hub documents, like the Rust actor.
+2. **Wrong document id (R2-4).** After (1), each batch was refused as `local.backbone-scope-mismatch`. The folder card addressed the document by `syncDocumentId` = `${pluginId}-${instanceId}`, a runtime counter, while the guest stamps its store id (`puzzle.2d.fixture`, read from the Run 2 archive). `openSyncTarget` now addresses the document by the program's own identity, `readAppDocumentIdentity`, which is new on the React plugin handle (`ReadDocumentIdentity`). A program with no document gets the notice `ui.sync.documentUnidentified`. `syncDocumentId` is deleted.
+3. **Own-write echo.** Every PUT was read back by the watch and replaced the document with an older state. The worker now keeps `folderArchive` (the TypeScript twin of Rust's `last_written_hash`), so a read that returns the document's own write replaces nothing.
+4. **No hydration after load.** A loaded archive was never hydrated. `restoreDocumentArchiveV1` (in `🛂️admission/📄️document`) loads the archive, re-reads the program's history and refreshes every surface. ShellHost uses it for the folder read-back and for tutorial restores; the `loadDocument` effect now re-reads history too.
+
+### F3.3 R2-2 (History collapses after reload)
+- **New law.** `a_document_archive_round_trip_lists_every_history_row_of_its_source`, in `🔌️plugin/🧪️tests/🧾️document-archive-load-legs/🦀️.rs`.
+  - Source: three edits, an overwrite Supersede with Revert and Reinstate, two history edits finalized as new alternatives (c, then b), and two edits on b.
+  - Round trip: `document_archive` → a fresh instance that already holds a "Set Active Example" edit → archive load.
+- **What it found.**
+  - The runtime and store keep every edit and supersede row, including both alternatives.
+  - One real defect: the displaced document's own rows survived the load.
+- **Fix.** `retire_displaced_document_rows` (`🔌️plugin/⏪️time-travel/🦀️.rs`) runs after all three whole-document replacements (the archive commit, `load_document_text`, `load_document_pack`). With it, the law passes, along with the other 6 archive tests.
+- **Remaining e2e difference, not reproduced natively (needs a re-probe).**
+  - Run 2's archive for `puzzle-1` holds all 5 edits and 11 transition ids.
+  - After reload, the probe saw only `["Drag 1 item by (70, 70)", "create-node node {…}"]`.
+  - One real, separate gap is labels. A command whose app emits no `description` (Duplicate Selection, Set Active Example) returns as op text after reload, because only the live command log holds its label. Transaction labels survive. This needs the invoking verb persisted with the edit, a store-schema change (W1-G/W2-A).
+  - The probe also compares rows by label and keeps only rows that are expandable or labelled as history edits. For a re-probe, the guest's `readHistory` upserts after reload are the evidence to capture.
+
+### F3.4 R2-6 — check-in fired during Finalize
+- `dispatchCheckpoint` does nothing while the focused program is in time travel. An explicit check-in shows `timeTravel.frozen`; an automatic one waits.
+- The close check-in effect is keyed on the program's identity (`pluginId`/`instanceId`) and the document, no longer on the session object. Every view-state rewrite, including the New-alternative submit, minted a new session object and fired it.
+
+### F3.5 Dev reload `useShellScope called outside a ShellScopeProvider` (e2e finding 4)
+- **Cause.** `FrameworkOsShellInner` has exactly one render site, and it is inside its provider. The error can only arise from a second evaluation of the ShellScope module creating a second context that no mounted provider supplies.
+- **Fix.** `ShellScopeContext` is now page-wide, created once under `Symbol.for("semio.ui.elements.ShellScope.context")`.
+- **Law.** "one shell-scope context per page", in `🐚️ShellScope/🧪️tests/🧩️component`, imports the module a second time under another URL. It fails without the fix (checked) and passes with it.
+- **Not reproduced.** The live reload itself was not reproduced; no dev servers were started.
+
+### F3.6 Hub-less serve requests the trusted catalog (500 ×8)
+- **Cause.** `ensureDevLocalHub` set `process.env.S_HUB_URL` before any hub answered and left it set when it returned `null`. Vite inherited it, so it proxied `/_semio/hub/*` to nothing and got 500. It also defined `VITE_S_HUB_URL`, so the shell built its hub plugin source.
+- **Fix.** `S_HUB_URL` is set only once a hub answers, and cleared on the local-only paths.
+- **Law.** The explicit-hub law in `🧑‍💻dev/🧪️tests/🚀️local-hub` now asserts both outcomes.
+
+### F3.7 Folder binding persistence — not implemented, and why
+1. The playground route (`?plugin=`) has no space and no document in its URL. `resolveDocumentOpeningBindings` returns `[]` without a `spaceId`.
+2. The only persisted local-only store for this is the local catalog (`os.config.local-catalog`). It lives under `${S_DATA_DIR}/os`, and it rehydrates into the landing app (host mode, `applyLocalCatalogDocument`), not into a `?plugin=` program.
+3. Doing it properly needs a route parameter for a local folder document, or an event-sourced config mutation "attach local folder (surface, documentId)" with TS and Rust twins. The document id is now stable (the store id), so either design is viable. It is a design decision for the coordinator.
+
+### Verification (all run, foreground)
+- **framework-os vitest.**
+  - CommandRejection: 4/4.
+  - Folder archive restore: 2/2. It fails with the admission fix reverted (checked).
+  - Worker folder/backbone suites: 108/108.
+  - Full-suite run: killed at the 300 s budget, with one unrelated failure: `🏷️schema-vocabulary` flags `x-semio-fixture` in `🌎️hub/🧫️fixtures/🐳️docker-image-v1`.
+- **Rust.**
+  - `semio-framework-os-kernel --features sync`: `os_store::sync` 87/87, including the 4 new command-rejection tests.
+  - `semio-framework-plugin`: archive tests 7/7, including the new law.
+  - Full plugin lib test (after a peer finished the `APPLY_OUTCOME_CODE_PREFIX` export): 920 passed, 14 failed. None of the failures touches history, archives or document loads. They are `merge_ui_values` (UInt vs Float), `tool_run` fixtures, `window_kits`, fixture projection retirement, activated tool keys, command ingress terminal and the neutral checked diff, all peer areas.
+- **React.** The command-rejection, time-travel and staged-arg-controls suites pass 32/32.
+- **ui-react.** The ShellScope identity law passes. Three popover-contrast tests fail with "no :root { block containing --base", which comes from peer CSS edits, not this work.
+- **dev.** The local-hub explicit-join law passes 1/1.
+- **Typechecks.**
+  - renderer-react: 0 errors. This included fixing the `PluginWasmHandle` fakes that needed `readAppDocumentIdentity`.
+  - ui-react: passed after the identity-law import fix. A later run shows 1 new error, `🔬️translation-totality/🟦️.ts:19` (`trim` on `never`). It comes from a peer's outcome-code keys, not from this work.
+  - framework-os-dev has no `typecheck` target.
+  - framework-os: the same 26 errors as before, none in these files.
+- **Rust check.** `cargo check -p semio-framework-os-kernel --features sync`: clean apart from 4 pre-existing warnings.

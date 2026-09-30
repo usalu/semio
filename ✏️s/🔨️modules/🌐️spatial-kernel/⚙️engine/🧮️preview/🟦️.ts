@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** 🧮️ `@semio-tech/cad-js/spatial-kernel/preview` — kernel-agnostic pure-TS preview math and `Model` diff builders shared by every `SpatialKernel` (`🧠️semio`, `🧱️brepjs` oracle). Moved out of `🧱️brepjs/🟦️.ts` verbatim in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME W4-A so the first-party kernel does not import brepjs to get it. */
+/** 🧮️ Kernel-independent spatial preview mathematics and model diff builders. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters

@@ -27,10 +27,14 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
   cryptographically inaccessible -- this module says so plainly rather than pretending otherwise. The
   derivation script (`dxf-r12-derive`, a standalone scratch crate) and its own smoke-test harness
   (exercising all 19 kinds' mutate AND inverse against the derived fixture before this feature file was
-  written) live in this ticket's folder. The real AC1015 source bytes are committed alongside the
-  derived fixture, under `📷️source-ac1015.dxf`, for provenance; both files were confirmed NOT
-  gitignored with `git check-ignore -v` (the taxonomy's `!**/🔖️*/**` negation rule at `.gitignore:187`
-  un-ignores every `🔖️<standard>/**` subtree, this one included).
+  written) live in ticket 26/08/23/END-TO-END-TESTING-REFACTOR's folder. The derived R12 drawing IS
+  this standard's `🚏️bus-shelter` asset — `asset://🚏️bus-shelter/🖊️.dxf`, 9 358 bytes, identical in
+  all four R12 subsets — because an AC1015 file is not an R12 document and no R12 subset may carry
+  one as its example. A taxonomy move once filed the 445 KB AC1015 source under that very name while
+  the derived drawing stayed behind in a nested example directory, so every row below addressed
+  layers, styles, linetypes, blocks and entities the input did not have: both sides refused the
+  remove/set rows and `remove-header-var` moved nothing. The source is no longer in the R12 tree; its
+  bytes remain in the repository history (git blob `268a3389aadf015e8024df7249e58bbdbcfd1f9e`).
 
   THE FIRST DIFFERENTIAL RUN OF THIS CASE FOUND THREE REAL DEFECTS THAT
   THE SUBJECT PHASE ALONE HAD REPORTED AS 39 GREENS.
@@ -64,9 +68,11 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
   changed.
 
   `dxf` 0.6 reads AND writes DXF, so it is a genuine differential second producer for every
-  `@mode-differential` scenario below, not merely an independent reader. Both the oracle's and the
-  subject's results are read back by the SAME independent `dxf`-backed projection
-  (`project_dxf_r12`) before the `semantic-dxf-r12-v1` profile compares them. `InsertEntity`/
+  `@mode-differential` scenario below, not merely an independent reader. Each side hands the drawing
+  it produced to the `semantic-dxf-r12-v1` profile's `dxf-r12-reader-compare-v1` pipeline — the
+  oracle's as `expected-dxf`, the subject's as `actual-dxf` — whose probes read BOTH files with the
+  standalone `dxf` 0.6 `project` binary and compare what they recovered; that verdict is the parity
+  verdict. `InsertEntity`/
   `RemoveEntity`/`InsertBlock`/`RemoveBlock` are this subset's structural analogue of the page
   operations the wave asked for: `insert-entity`/`remove-entity` add and drop a real `CIRCLE` fixing
   marker from the shelter's own `ENTITIES` list, and `insert-block`/`remove-block` add and drop a
@@ -89,7 +95,7 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
       """
       {"kind": "<id>", "params": <params>}
       """
-    Then the oracle and the subject agree on the semantic projection
+    Then the dxf reader reads the oracle's and the subject's drawings as the same DXF
     Examples:
       | id                 | params                                                                                                                                          |
       | set-snapshot       | {"snapshot": {"schema": "stdio.dxf", "headerVars": [{"name": "$ACADVER", "groupCode": 1, "value": {"kind": "str", "value": "AC1009"}}, {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [5, 5, 0]}}], "tables": {"layers": [{"name": "0", "color": 7, "linetype": "CONTINUOUS", "flags": 0}]}, "otherTables": [], "blocks": [], "entities": [{"circle": {"center": [0, 0, 0], "radius": 42, "layer": "0"}}]}} |
@@ -105,7 +111,7 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
       """
       {"kind": "<id>", "params": <params>}
       """
-    Then the oracle and the subject agree on the semantic projection
+    Then the dxf reader reads the oracle's and the subject's drawings as the same DXF
     Examples:
       | id                 | params                                                                                                                                          |
       | set-snapshot       | {"snapshot": {"schema": "stdio.dxf", "headerVars": [{"name": "$ACADVER", "groupCode": 1, "value": {"kind": "str", "value": "AC1009"}}, {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [5, 5, 0]}}], "tables": {"layers": [{"name": "0", "color": 7, "linetype": "CONTINUOUS", "flags": 0}]}, "otherTables": [], "blocks": [], "entities": [{"circle": {"center": [0, 0, 0], "radius": 42, "layer": "0"}}]}} |
@@ -118,5 +124,5 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
   Scenario: Decode and re-encode the real document without passing bytes through
     Given the real input document asset://🚏️bus-shelter/🖊️.dxf
     When the document is fully parsed into the subset's own snapshot model and re-encoded from it alone
-    Then the oracle and the subject agree on the semantic projection
+    Then the dxf reader reads the oracle's and the subject's drawings as the same DXF
     And the re-encoded bytes are not bit-identical to the input

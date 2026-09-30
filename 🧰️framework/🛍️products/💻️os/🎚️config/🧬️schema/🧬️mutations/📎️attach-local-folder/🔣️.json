@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/📎️attach-local-folder",
+  "semanticKind": "attach-local-folder",
+  "displayName": "Attach Local Folder",
+  "emoji": "📎️",
+  "aggregateVariant": "AttachLocalFolder",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied",
+    "no-op"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "json-schema"
+  ]
+}

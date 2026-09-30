@@ -1,0 +1,97 @@
+{
+  "accidentals": [
+    {
+      "ad": 50000.0,
+      "id": "A-impact"
+    }
+  ],
+  "altitudeM": 120.0,
+  "annex": "De",
+  "betaComputed": 3.8,
+  "bridgeSls": [],
+  "consequenceClass": 2,
+  "designWorkingLifeCategory": 4,
+  "designWorkingLifeYears": 50.0,
+  "effects": [
+    {
+      "actionId": "G-sup",
+      "influence": 1.0,
+      "memberId": "beam-B1"
+    },
+    {
+      "actionId": "G-inf",
+      "influence": 1.0,
+      "memberId": "beam-B1"
+    },
+    {
+      "actionId": "Q-office",
+      "influence": 1.0,
+      "memberId": "beam-B1"
+    },
+    {
+      "actionId": "Q-wind",
+      "influence": 1.0,
+      "memberId": "beam-B1"
+    },
+    {
+      "actionId": "A-impact",
+      "influence": 1.0,
+      "memberId": "beam-B1"
+    },
+    {
+      "actionId": "E-1",
+      "influence": 1.0,
+      "memberId": "beam-B1"
+    }
+  ],
+  "inspectionLevel": "IL2",
+  "kFiDeclared": 1.0,
+  "members": [
+    {
+      "deflectionLimitRatio": 250.0,
+      "deflectionW": 0.018,
+      "id": "beam-B1",
+      "labelDe": "Büroträger B1",
+      "labelEn": "Office beam B1",
+      "rdEquDestab": 180000.0,
+      "rdEquStab": 200000.0,
+      "rdFat": 0.0,
+      "rdGeo": 250000.0,
+      "rdStr": 250000.0,
+      "span": 6.0,
+      "vibrationFrequency": 5.5,
+      "vibrationFrequencyMin": 3.0
+    }
+  ],
+  "permanents": [
+    {
+      "gk": 80000.0,
+      "id": "G-sup",
+      "kind": "g_sup"
+    }
+  ],
+  "projectId": "accidental-seismic-compliant",
+  "referencePeriodYears": 50.0,
+  "reliabilityClass": 2,
+  "seismics": [
+    {
+      "aEk": 60000.0,
+      "id": "E-1",
+      "importanceClass": "II"
+    }
+  ],
+  "structureKind": "building",
+  "supervisionLevel": "DSL2",
+  "variables": [
+    {
+      "category": "office",
+      "id": "Q-office",
+      "qk": 40000.0
+    },
+    {
+      "category": "wind",
+      "id": "Q-wind",
+      "qk": 20000.0
+    }
+  ]
+}

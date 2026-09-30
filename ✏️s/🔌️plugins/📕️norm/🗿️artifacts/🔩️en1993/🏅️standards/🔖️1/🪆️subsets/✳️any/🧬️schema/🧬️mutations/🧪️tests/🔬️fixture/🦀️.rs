@@ -1,35 +1,99 @@
-
-#[path = "../../🌍️change-annex/🧪️tests/🌐️switches-the-national-annex-from-de-to-en/🦀️.rs"]
-mod tests_change_annex_switches_the_national_annex_from_de_to_en;
-#[path = "../../🔩️update-bolt-inputs/🧪️tests/🔩️moves-the-connection-to-four-m24-grade-10-9-bolts/🦀️.rs"]
-mod tests_update_bolt_inputs_moves_the_connection_to_four_m24_grade_10_9_bolts;
-#[path = "../../🌉️update-bridge-inputs/🧪️tests/🌉️raises-the-bridge-damage-equivalence-and-dynamic-factors/🦀️.rs"]
-mod tests_update_bridge_inputs_raises_the_bridge_damage_equivalence_and_dynamic_factors;
-#[path = "../../🥶️update-cold-formed-inputs/🧪️tests/↪️thickens-cold-formed-flange-reverses-stress-gradient/🦀️.rs"]
-mod tests_update_cold_formed_inputs_thickens_the_cold_formed_flange_and_reverses_its_stress_gradient;
-#[path = "../../🏗️update-crane-inputs/🧪️tests/🏋️widens-the-crane-wheel-contact-patch-under-a-heavier-wheel/🦀️.rs"]
-mod tests_update_crane_inputs_widens_the_crane_wheel_contact_patch_under_a_heavier_wheel;
-#[path = "../../🔁️update-fatigue-inputs/🧪️tests/🔁️drops-to-detail-category-56-under-a-safe-life-assessment/🦀️.rs"]
-mod tests_update_fatigue_inputs_drops_to_detail_category_56_under_a_safe_life_assessment;
-#[path = "../../🔥️update-fire-inputs/🧪️tests/🧯️raises-the-fire-protection-to-r90/🦀️.rs"]
-mod tests_update_fire_inputs_raises_the_fire_protection_to_r90;
-#[path = "../../⬜️update-hss-inputs/🧪️tests/⬜️reclassifies-the-hollow-section-to-class-3-in-s355/🦀️.rs"]
-mod tests_update_hss_inputs_reclassifies_the_hollow_section_to_class_3_in_s355;
-#[path = "../../📊️update-member-properties/🧪️tests/🏋️re-grades-the-base-member-to-s460-under-a-heavier-load/🦀️.rs"]
-mod tests_update_member_properties_re_grades_the_base_member_to_s460_under_a_heavier_load;
-#[path = "../../🪵️update-pile-inputs/🧪️tests/🔨️derates-the-driven-pile-for-hard-driving/🦀️.rs"]
-mod tests_update_pile_inputs_derates_the_driven_pile_for_hard_driving;
-#[path = "../../🧱️update-plated-inputs/🧪️tests/📈️makes-the-plate-panel-more-slender-and-more-stressed/🦀️.rs"]
-mod tests_update_plated_inputs_makes_the_plate_panel_more_slender_and_more_stressed;
-#[path = "../../🛢️update-silo-shell-inputs/🧪️tests/🛢️deepens-the-silo-and-thickens-its-shell/🦀️.rs"]
-mod tests_update_silo_shell_inputs_deepens_the_silo_and_thickens_its_shell;
-#[path = "../../✨️update-stainless-inputs/🧪️tests/✨️upsizes-the-stainless-section-to-a-duplex-grade/🦀️.rs"]
-mod tests_update_stainless_inputs_upsizes_the_stainless_section_to_a_duplex_grade;
-#[path = "../../🪢️update-tension-component-inputs/🧪️tests/📉️derates-tension-rod-400-kn-characteristic-strength/🦀️.rs"]
-mod tests_update_tension_component_inputs_derates_the_tension_rod_to_a_400_kn_characteristic_strength;
-#[path = "../../↕️update-through-thickness-inputs/🧪️tests/🥶️upgrades-subgrade-k2-thicker-plate-minus-20c/🦀️.rs"]
-mod tests_update_through_thickness_inputs_upgrades_the_subgrade_to_k2_for_a_thicker_plate_at_minus_20c;
-#[path = "../../🗼️update-tower-inputs/🧪️tests/🌬️raises-the-tower-wind-factor-and-leg-force/🦀️.rs"]
-mod tests_update_tower_inputs_raises_the_tower_wind_factor_and_leg_force;
-#[path = "../../🧲️update-weld-inputs/🧪️tests/🧲️lengthens-the-fillet-weld-and-re-grades-it-to-s460/🦀️.rs"]
-mod tests_update_weld_inputs_lengthens_the_fillet_weld_and_re_grades_it_to_s460;
+//! 🧫️ One canonical test per committed EN 1993 specification vector.
+#[path = "../../🌍️change-annex/🧪️tests/✏️to-en/🦀️.rs"]
+mod vector_change_annex_to_en;
+#[path = "../../📊️update-member-properties/🧪️tests/✏️length-9-m/🦀️.rs"]
+mod vector_update_member_properties_length_9_m;
+#[path = "../../🔥️update-fire-inputs/🧪️tests/✏️r60-to-r90/🦀️.rs"]
+mod vector_update_fire_inputs_r60_to_r90;
+#[path = "../../🥶️update-cold-formed-inputs/🧪️tests/✏️thicker/🦀️.rs"]
+mod vector_update_cold_formed_inputs_thicker;
+#[path = "../../✨️update-stainless-inputs/🧪️tests/➕️adds-s460/🦀️.rs"]
+mod vector_update_stainless_inputs_adds_s460;
+#[path = "../../🧱️update-plated-inputs/🧪️tests/✏️wider-panel/🦀️.rs"]
+mod vector_update_plated_inputs_wider_panel;
+#[path = "../../🛢️update-silo-shell-inputs/🧪️tests/✏️thicker/🦀️.rs"]
+mod vector_update_silo_shell_inputs_thicker;
+#[path = "../../🔩️update-bolt-inputs/🧪️tests/✏️to-class-10-9/🦀️.rs"]
+mod vector_update_bolt_inputs_to_class_10_9;
+#[path = "../../🧲️update-weld-inputs/🧪️tests/✏️raises-my/🦀️.rs"]
+mod vector_update_weld_inputs_raises_my;
+#[path = "../../🔁️update-fatigue-inputs/🧪️tests/✏️category-56/🦀️.rs"]
+mod vector_update_fatigue_inputs_category_56;
+#[path = "../../↕️update-through-thickness-inputs/🧪️tests/✏️300/🦀️.rs"]
+mod vector_update_through_thickness_inputs_300;
+#[path = "../../🪢️update-tension-component-inputs/🧪️tests/✏️fk/🦀️.rs"]
+mod vector_update_tension_component_inputs_fk;
+#[path = "../../⬜️update-hss-inputs/🧪️tests/➕️adds-accidental/🦀️.rs"]
+mod vector_update_hss_inputs_adds_accidental;
+#[path = "../../🌉️update-bridge-inputs/🧪️tests/✏️raises-lambda/🦀️.rs"]
+mod vector_update_bridge_inputs_raises_lambda;
+#[path = "../../🗼️update-tower-inputs/🧪️tests/✏️more-force/🦀️.rs"]
+mod vector_update_tower_inputs_more_force;
+#[path = "../../🪵️update-pile-inputs/🧪️tests/✏️to-500-kn/🦀️.rs"]
+mod vector_update_pile_inputs_to_500_kn;
+#[path = "../../🏗️update-crane-inputs/🧪️tests/✏️longer-contact/🦀️.rs"]
+mod vector_update_crane_inputs_longer_contact;
+#[path = "../../➕️insert-material/🧪️tests/➕️inserts-material/🦀️.rs"]
+mod vector_insert_material_inserts_material;
+#[path = "../../➖️remove-material/🧪️tests/➖️removes-material/🦀️.rs"]
+mod vector_remove_material_removes_material;
+#[path = "../../➕️insert-section/🧪️tests/➕️inserts-section/🦀️.rs"]
+mod vector_insert_section_inserts_section;
+#[path = "../../➖️remove-section/🧪️tests/➖️removes-section/🦀️.rs"]
+mod vector_remove_section_removes_section;
+#[path = "../../➕️insert-member/🧪️tests/➕️inserts-member/🦀️.rs"]
+mod vector_insert_member_inserts_member;
+#[path = "../../➖️remove-member/🧪️tests/➖️removes-member/🦀️.rs"]
+mod vector_remove_member_removes_member;
+#[path = "../../➕️insert-load-case/🧪️tests/➕️inserts-case/🦀️.rs"]
+mod vector_insert_load_case_inserts_case;
+#[path = "../../➖️remove-load-case/🧪️tests/➖️removes-case/🦀️.rs"]
+mod vector_remove_load_case_removes_case;
+#[path = "../../➕️insert-member-action/🧪️tests/➕️inserts-action/🦀️.rs"]
+mod vector_insert_member_action_inserts_action;
+#[path = "../../➖️remove-member-action/🧪️tests/➖️removes-action/🦀️.rs"]
+mod vector_remove_member_action_removes_action;
+#[path = "../../➕️insert-joint/🧪️tests/➕️inserts-joint/🦀️.rs"]
+mod vector_insert_joint_inserts_joint;
+#[path = "../../➖️remove-joint/🧪️tests/➖️removes-joint/🦀️.rs"]
+mod vector_remove_joint_removes_joint;
+#[path = "../../➕️insert-fatigue-detail/🧪️tests/➕️inserts-detail/🦀️.rs"]
+mod vector_insert_fatigue_detail_inserts_detail;
+#[path = "../../➖️remove-fatigue-detail/🧪️tests/➖️removes-detail/🦀️.rs"]
+mod vector_remove_fatigue_detail_removes_detail;
+#[path = "../../➕️insert-fire-exposure/🧪️tests/➕️inserts-fire/🦀️.rs"]
+mod vector_insert_fire_exposure_inserts_fire;
+#[path = "../../➖️remove-fire-exposure/🧪️tests/➖️removes-fire/🦀️.rs"]
+mod vector_remove_fire_exposure_removes_fire;
+#[path = "../../➕️insert-cold-formed-member/🧪️tests/➕️inserts/🦀️.rs"]
+mod vector_insert_cold_formed_member_inserts;
+#[path = "../../➖️remove-cold-formed-member/🧪️tests/➖️removes/🦀️.rs"]
+mod vector_remove_cold_formed_member_removes;
+#[path = "../../➕️insert-plated-panel/🧪️tests/➕️inserts-panel/🦀️.rs"]
+mod vector_insert_plated_panel_inserts_panel;
+#[path = "../../➖️remove-plated-panel/🧪️tests/➖️removes-panel/🦀️.rs"]
+mod vector_remove_plated_panel_removes_panel;
+#[path = "../../➕️insert-silo-shell/🧪️tests/➕️inserts-shell/🦀️.rs"]
+mod vector_insert_silo_shell_inserts_shell;
+#[path = "../../➖️remove-silo-shell/🧪️tests/➖️removes-shell/🦀️.rs"]
+mod vector_remove_silo_shell_removes_shell;
+#[path = "../../➕️insert-tension-component/🧪️tests/➕️inserts/🦀️.rs"]
+mod vector_insert_tension_component_inserts;
+#[path = "../../➖️remove-tension-component/🧪️tests/➖️removes/🦀️.rs"]
+mod vector_remove_tension_component_removes;
+#[path = "../../➕️insert-bridge-fatigue/🧪️tests/➕️inserts/🦀️.rs"]
+mod vector_insert_bridge_fatigue_inserts;
+#[path = "../../➖️remove-bridge-fatigue/🧪️tests/➖️removes/🦀️.rs"]
+mod vector_remove_bridge_fatigue_removes;
+#[path = "../../➕️insert-tower-leg/🧪️tests/➕️inserts-leg/🦀️.rs"]
+mod vector_insert_tower_leg_inserts_leg;
+#[path = "../../➖️remove-tower-leg/🧪️tests/➖️removes-leg/🦀️.rs"]
+mod vector_remove_tower_leg_removes_leg;
+#[path = "../../➕️insert-pile/🧪️tests/➕️inserts-pile/🦀️.rs"]
+mod vector_insert_pile_inserts_pile;
+#[path = "../../➖️remove-pile/🧪️tests/➖️removes-pile/🦀️.rs"]
+mod vector_remove_pile_removes_pile;
+#[path = "../../➕️insert-crane-runway/🧪️tests/➕️inserts-runway/🦀️.rs"]
+mod vector_insert_crane_runway_inserts_runway;
+#[path = "../../➖️remove-crane-runway/🧪️tests/➖️removes-runway/🦀️.rs"]
+mod vector_remove_crane_runway_removes_runway;

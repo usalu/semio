@@ -100,7 +100,7 @@ use super::replace_combination;
 //#region 🛡️Guards
 /// 🚫️ The `mutation.target-referenced` refusal — an `Error`, the same level and empty-diff shape
 /// `mutation.target-missing` carries, addressed at the target FOLLOWED BY every referrer that keeps
-/// it alive so a caller can offer to release them. Sibling of `🔋️energy`'s `mutation.target-in-use`
+/// it alive so a caller can offer to release them. Sibling of `🔋️energy`'s `app.command.target-in-use`
 /// fault, raised here as a mutation message because fem3d refuses inside the diff builder.
 pub fn target_referenced(label: &str, id: &str, referrers: Vec<String>) -> protocol::MutationOutcome<Fem3dDiff> {
     let listed = referrers.iter().map(|referrer| format!("\"{referrer}\"")).collect::<Vec<_>>().join(", ");
@@ -109,12 +109,12 @@ pub fn target_referenced(label: &str, id: &str, referrers: Vec<String>) -> proto
     protocol::MutationOutcome::error("mutation.target-referenced", format!("{label} \"{id}\" is still referenced by {listed}."), target)
 }
 
-/// 🪪️ The `mutation.id-mismatch` refusal — a `replace-` selects its target by `id` and carries a
+/// 🪪️ The `mutation.target-mismatch` refusal — a `replace-` selects its target by `id` and carries a
 /// whole new record; a new record under a DIFFERENT id would silently rename the row and orphan
-/// every reference to it, so it is a `Fatal` identity breach, the level `mutation.duplicate-id`
-/// already uses for the other half of the identity contract.
-pub fn id_mismatch(label: &str, id: &str, new_id: &str) -> protocol::MutationOutcome<Fem3dDiff> {
-    protocol::MutationOutcome::fatal("mutation.id-mismatch", format!("{label} \"{id}\" cannot be renamed to \"{new_id}\" by a replace."), [id.to_string(), new_id.to_string()])
+/// every reference to it, so the payload contradicts the target it selects: an `Error`, the level of
+/// every state-dependent refusal (`mutation.target-missing`, `mutation.target-referenced`).
+pub fn target_mismatch(label: &str, id: &str, new_id: &str) -> protocol::MutationOutcome<Fem3dDiff> {
+    protocol::MutationOutcome::error("mutation.target-mismatch", format!("{label} \"{id}\" cannot be renamed to \"{new_id}\" by a replace."), [id.to_string(), new_id.to_string()])
 }
 
 /// 🧨️ The `mutation.invariant` refusal — the repo-wide code for a value or geometry breach

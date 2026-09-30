@@ -2,7 +2,7 @@
 use super::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_dxf_r12};
 use semio_repo_test_host::parse_json;
 
-const FIXTURE: &[u8] = include_bytes!("../../../📚️examples/🚏️bus-shelter/🖼️assets/🧪️bus-shelter-r12/🖊️.dxf");
+const FIXTURE: &[u8] = include_bytes!("../../../🖼️assets/🚏️bus-shelter/🖊️.dxf");
 
 const ROWS: &[(&str, &str)] = &[
     ("set-snapshot", r#"{"snapshot": {"schema": "stdio.dxf", "headerVars": [{"name": "$ACADVER", "groupCode": 1, "value": {"kind": "str", "value": "AC1009"}}, {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [5, 5, 0]}}], "tables": {"layers": [{"name": "0", "color": 7, "linetype": "CONTINUOUS", "flags": 0}]}, "otherTables": [], "blocks": [], "entities": [{"circle": {"center": [0, 0, 0], "radius": 42, "layer": "0"}}]}}"#),

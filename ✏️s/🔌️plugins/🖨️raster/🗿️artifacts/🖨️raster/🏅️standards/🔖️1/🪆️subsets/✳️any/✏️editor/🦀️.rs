@@ -1070,6 +1070,11 @@ impl ArtifactReservedJob for RasterImportJob {
 pub struct RasterPlayApp;
 
 impl ArtifactEditor for RasterPlayApp {
+    /// ⏳️ The layers panel renders the live operations with their Cancel controls; nothing else shows them.
+    fn operation_progress_scope() -> semio_framework::kernel::UiDirtyScope {
+        semio_framework::kernel::UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: vec![crate::editor::raster::panels::document::RASTER_PLAY_BODY_LAYERS.to_string()], utilities: false, tools: false, engagements: false, measures: false, labels: false }
+    }
+
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
         vec![crate::examples::art_raster_demo::source()]

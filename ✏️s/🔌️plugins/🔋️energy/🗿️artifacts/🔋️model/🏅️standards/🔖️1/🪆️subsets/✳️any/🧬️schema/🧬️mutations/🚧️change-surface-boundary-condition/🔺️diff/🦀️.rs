@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeSurfaceBoundaryCondition, base: &EnergyModelS
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Surface {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     let Some(boundary) = crate::model::OutsideBoundary::from_parts(payload.new_boundary, payload.new_interzone_surface_id) else {
-        return protocol::MutationOutcome::error("mutation.invariant", "An interzone boundary names exactly one partner surface, and every other boundary names none.", [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "An interzone boundary names exactly one partner surface, and every other boundary names none.", [payload.id.0.to_string()]);
     };
     if payload.new_interzone_surface_id.is_some_and(|partner| partner == payload.id || !base.model.surfaces.iter().any(|item| item.id == partner)) {
         return protocol::MutationOutcome::error("mutation.target-missing", "An interzone partner must be another surface that already exists.", [payload.id.0.to_string()]);

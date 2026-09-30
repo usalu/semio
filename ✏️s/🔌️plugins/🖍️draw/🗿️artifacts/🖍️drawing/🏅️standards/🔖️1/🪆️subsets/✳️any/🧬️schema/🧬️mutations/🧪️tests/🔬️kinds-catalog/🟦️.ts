@@ -1,13 +1,13 @@
 /** 🧬️ Canonical mutation fixtures must agree with the public tagged wire schema. */
 import { expect, it } from "bun:test";
-import Ajv from "ajv";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
 import { fileURLToPath } from "node:url";
 import aggregate from "../../🔣️.json";
 import documentSchema from "../../../🔣️.json";
 import fixture from "../../../../../🎨️style/🧬️schema/🧬️mutations/📝️update-text/🧫️fixtures/🔣️.json";
 
 it("validates every canonical tagged mutation through the aggregate schema", async () => {
-  const ajv = new Ajv({strict: false, validateFormats: false}).addSchema(documentSchema);
+  const ajv = semioSchemaAjvV1({allErrors: true}).addSchema(documentSchema);
   const cwd = fileURLToPath(new URL("../../../../../", import.meta.url));
   for await (const path of new Bun.Glob("*/🧬️schema/🧬️mutations/*/🧬️schema/🔣️.json").scan({cwd, absolute: true})) ajv.addSchema(await Bun.file(path).json());
   const validate = ajv.compile(aggregate);
@@ -32,7 +32,7 @@ import {parseDrawingLayerNode} from "../../../🟦️.ts";
 import {parseDrawingLayerPatch} from "../../../🔺️diff/🟦️.ts";
 
 it("refuses invalid blend vocabulary at mutation, patch and nested document boundaries", () => {
-  const ajv = new Ajv({strict:false,validateFormats:false});
+  const ajv = semioSchemaAjvV1({allErrors:true});
   const validateMutation = ajv.compile(blendSchema);
   const validateDocument = ajv.compile(documentSchema);
   ajv.addSchema(diffSchema);
@@ -40,11 +40,12 @@ it("refuses invalid blend vocabulary at mutation, patch and nested document boun
   expect(validatePatch({blendMode:null})).toBe(true);
   expect(parseDrawingLayerPatch({blendMode:null}).blendMode).toBeUndefined();
   for (const {patch,accepted} of fieldCases.filter(({patch}) => patch.field === "blendMode")) {
-    const mutation = {layerId:"shape",blendMode:patch.value};
+    const mutation = {mutation:"setLayerBlendMode",layerId:"shape",blendMode:patch.value};
     const leaf = {kind:"shape",blendMode:patch.value};
     const root = {kind:"group",children:[{kind:"group",children:[leaf]}]};
     const document = {schema:"drawing.document",id:"blend",assets:{},layers:[root]};
     expect(validateMutation(mutation)).toBe(accepted);
+    expect(validateMutation({layerId:"shape",blendMode:patch.value})).toBe(false);
     expect(validatePatch({blendMode:patch.value})).toBe(accepted);
     expect(validateDocument(document)).toBe(accepted);
     if (accepted) {

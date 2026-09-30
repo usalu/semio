@@ -27,6 +27,7 @@ path = "../../🧪️tests/🧩️module-compile/🦀️.rs"
 default = []
 
 [dependencies]
+semio-framework-async = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-pack = { workspace = true }
 semio-framework-schema-derive = { path = "../../✨️derive/📦️packages/🦀️rust", package = "semio-framework-schema-derive" }

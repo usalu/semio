@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceSection`.
 use super::ReplaceSection;
 use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSectionsDelta, Fem3dSectionsPatchEntry};
-use crate::standards::v1::subsets::any::schema::mutations::{id_mismatch, invariant, section_breach};
+use crate::standards::v1::subsets::any::schema::mutations::{target_mismatch, invariant, section_breach};
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
@@ -10,7 +10,7 @@ pub fn diff(payload: &ReplaceSection, base: &Fem3dSnapshot) -> protocol::Mutatio
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Section \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if payload.new_section.id != payload.id {
-        return id_mismatch("Section", &payload.id, &payload.new_section.id);
+        return target_mismatch("Section", &payload.id, &payload.new_section.id);
     }
     if existing == &payload.new_section {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Section \"{}\" already has that value.", payload.id));

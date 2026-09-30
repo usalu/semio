@@ -9,7 +9,22 @@
 //! @see ../../../🗄️a/🧬️schema/🧬️mutations/🦀️.rs — the first of the six vocabularies built on this.
 
 //#region 🏅️ConformanceSupport
+use crate::standards::v1_7::subsets::base::io::carry_graph_edit;
+use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
+use protocol::command::DiffAlgebra;
+
+//#region 🔖️GraphEdit
+/// 🪢 The diff of a graph edit: `next` is `base` after this module's primitives edited its
+/// retained graph; every typed lane the edit moved is carried over before the two are diffed
+/// (@see `io::carry_graph_edit`), so the next write spells the edit instead of re-stating the
+/// stale typed lane over it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn graph_edit_diff(base: &PdfSnapshot, mut next: PdfSnapshot) -> PdfDiff {
+    carry_graph_edit(base, &mut next);
+    <PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next)
+}
+//#endregion 🔖️GraphEdit
 
 //#region 🔖️Objects
 /// 🆕️ The lowest object number no retained object uses — where a fresh indirect object lands.

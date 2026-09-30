@@ -1,0 +1,20 @@
+{
+  "InsertLoadCase": {
+    "wallIndex": 0,
+    "index": 1,
+    "loadCase": {
+      "id": "uls-snow",
+      "designSituation": "persistent",
+      "imposedCategory": "A",
+      "gKSlabN": 120000.0,
+      "qKImposedPa": 2000.0,
+      "tributaryAreaM2": 12.5,
+      "slabSpanM": 4.5,
+      "qKSnowPa": 750.0,
+      "qPWindPa": 800.0,
+      "cPe": 0.8,
+      "hKEarthN": 0.0,
+      "concentrated": []
+    }
+  }
+}

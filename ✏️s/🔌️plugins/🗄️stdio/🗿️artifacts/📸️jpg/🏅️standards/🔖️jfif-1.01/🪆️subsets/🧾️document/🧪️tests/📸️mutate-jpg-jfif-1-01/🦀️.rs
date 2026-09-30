@@ -56,10 +56,10 @@ const JPG_TOLERANCE: f64 = 400_000.0;
 /// does not.
 const UNOBSERVABLE: &[&str] = &["replace-quant-table", "remove-quant-table", "replace-huffman-table", "remove-huffman-table", "change-restart-interval"];
 
-/// 🔲️ The raster outlines run on a 32x24 document: its 768 pixels are fewer than [`JPG_TOLERANCE`], which is sized
-/// for the scan and would excuse ANY change there, so their observability claim is exact — the replacement must
-/// move the histogram at all. The inverse law and the profile comparison keep the profile's slack.
-const RASTER_OBSERVABILITY_SLACK: f64 = 0.0;
+/// 🔲️ The whole-raster kinds, whose rows run on a 32x24 document: its 768 pixels are fewer than [`JPG_TOLERANCE`],
+/// which is sized for the scan and would excuse ANY change there, so their observability claim is exact — the
+/// replacement must move the histogram at all. The inverse law and the profile comparison keep the profile's slack.
+const RASTER_KINDS: &[&str] = &["replace-pixels"];
 //#endregion 🔖️Lossy
 
 //#region 🔖️Oracle
@@ -82,22 +82,14 @@ fn unmutated_baseline(original: &[u8]) -> Result<semio_repo_test_host::Json, Str
 /// exactly as an unchanged round trip does — which is what all eight non-raster kinds did while this case
 /// compared only geometry and a luma histogram.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
-    mutate_oracle_within(ctx, JPG_TOLERANCE)
-}
-
-/// 🔲️ [`mutate_oracle`] for the raster outlines, whose observability claim is exact (see
-/// [`RASTER_OBSERVABILITY_SLACK`]).
-fn mutate_raster_oracle(ctx: &Context) -> Result<Outcome, String> {
-    mutate_oracle_within(ctx, RASTER_OBSERVABILITY_SLACK)
-}
-
-fn mutate_oracle_within(ctx: &Context, slack: f64) -> Result<Outcome, String> {
     let original = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
+    let kind = spec.str("kind");
+    let slack = if RASTER_KINDS.contains(&kind.as_str()) { 0.0 } else { JPG_TOLERANCE };
     let before = unmutated_baseline(&original)?;
     let bytes = oracle_apply_mutation(&original, &spec)?;
     let projection = project_jpg_mutation(&bytes)?;
-    law::mutation_is_observable_within(&spec.str("kind"), &projection, &before, UNOBSERVABLE, &[], slack)?;
+    law::mutation_is_observable_within(&kind, &projection, &before, UNOBSERVABLE, &[], slack)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
@@ -213,11 +205,11 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("mutate-raster", mutate_raster_oracle).oracle("inverse", inverse_oracle).oracle("inverse-raster", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("mutate-raster", subject::mutate).subject("inverse", subject::inverse).subject("inverse-raster", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

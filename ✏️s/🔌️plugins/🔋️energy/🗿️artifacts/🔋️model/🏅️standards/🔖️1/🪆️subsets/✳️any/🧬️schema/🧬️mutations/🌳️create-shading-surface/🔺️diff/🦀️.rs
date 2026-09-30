@@ -7,13 +7,13 @@ use crate::EnergyModelSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateShadingSurface, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
     if base.model.shading_surfaces.iter().any(|item| item.id == payload.id) {
-        return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Shading surface {} already exists.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Shading surface {} already exists.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.name.trim().is_empty() {
-        return protocol::MutationOutcome::error("mutation.invariant", "A shading surface name must not be blank.", [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "A shading surface name must not be blank.", [payload.id.0.to_string()]);
     }
     if payload.vertices_m.len() < 3 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("A shading polygon needs at least three vertices, got {}.", payload.vertices_m.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("A shading polygon needs at least three vertices, got {}.", payload.vertices_m.len()), [payload.id.0.to_string()]);
     }
     if payload.transmittance_schedule_id.is_some_and(|schedule| !base.model.schedules.contains(schedule)) {
         return protocol::MutationOutcome::error("mutation.target-missing", "The named transmittance schedule is not defined by this model.", [payload.id.0.to_string()]);

@@ -51,8 +51,8 @@ fn the_refusal_is_the_declared_diagnostic() {
     assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "replace-support/renames-pin-29f41a: a refused mutation must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "replace-support/renames-pin-29f41a: exactly one diagnostic is expected, got {messages:?}");
-    assert_eq!(messages[0].code.0, "mutation.id-mismatch", "replace-support/renames-pin-29f41a: the refusal is reported as mutation.id-mismatch");
-    assert_eq!(messages[0].level, protocol::Severity::Fatal, "replace-support/renames-pin-29f41a: renaming a record is an identity breach, the same Fatal level a duplicate identity raises");
+    assert_eq!(messages[0].code.0, "mutation.target-mismatch", "replace-support/renames-pin-29f41a: the refusal is reported as mutation.target-mismatch");
+    assert_eq!(messages[0].level, protocol::Severity::Error, "replace-support/renames-pin-29f41a: renaming a record contradicts the target the replace selects, the state-dependent Error");
     assert_eq!(messages[0].target, vec!["sup_ext_a".to_string(), "sup_ext_z".to_string()], "replace-support/renames-pin-29f41a: the diagnostic addresses exactly \"sup_ext_a\", \"sup_ext_z\"");
 }
 

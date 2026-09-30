@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeFenestrationFinDepth, base: &EnergyModelSnaps
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Fenestration {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_fin_depth_m.is_finite() || payload.new_fin_depth_m < 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Fenestration {} needs a non-negative finite fin depth, got {}.", payload.id.0, payload.new_fin_depth_m), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fenestration {} needs a non-negative finite fin depth, got {}.", payload.id.0, payload.new_fin_depth_m), [payload.id.0.to_string()]);
     }
     if existing.fin_depth_m == payload.new_fin_depth_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fenestration {} already has this fin depth.", payload.id.0));

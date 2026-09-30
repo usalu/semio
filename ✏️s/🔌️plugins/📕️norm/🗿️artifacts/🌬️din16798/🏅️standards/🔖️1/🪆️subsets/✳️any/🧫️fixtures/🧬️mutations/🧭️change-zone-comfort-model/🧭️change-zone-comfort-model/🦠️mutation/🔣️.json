@@ -1,0 +1,6 @@
+{
+  "ChangeZoneComfortModel": {
+    "zoneId": "zone-office",
+    "newComfortModel": "adaptive"
+  }
+}

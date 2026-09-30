@@ -7,7 +7,7 @@ use crate::EnergyModelSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateFault, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
     if base.model.faults.iter().any(|item| item.id == payload.id) {
-        return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Fault {} already exists.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Fault {} already exists.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.faults.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} faults.", payload.index, base.model.faults.len()), [payload.id.0.to_string()]);

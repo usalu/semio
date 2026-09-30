@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `DeleteCameraCalibration`. Missing target ⇒ Error; a camera any stream
-//! binds through `camera_id` or any rig extrinsic names ⇒ Error `mutation.referenced` — a calibration
+//! binds through `camera_id` or any rig extrinsic names ⇒ Error `mutation.target-referenced` — a calibration
 //! owns nothing, so it may not be removed while another record still depends on it (the same
 //! ownership rule `delete-stream` and `delete-asset` follow). Refusing rather than cascading keeps
 //! `create-camera-calibration` the exact inverse: the delete never destroys a record it does not own.
@@ -16,7 +16,7 @@ pub fn diff(payload: &super::DeleteCameraCalibration, base: &RemodelingSnapshot)
         referencing.push(format!("calibration.rig.{}", payload.camera_id));
     }
     if !referencing.is_empty() {
-        return protocol::MutationOutcome::error("mutation.referenced", format!("Camera calibration \"{}\" is still referenced by {} record(s); detach them first.", payload.camera_id, referencing.len()), referencing);
+        return protocol::MutationOutcome::error("mutation.target-referenced", format!("Camera calibration \"{}\" is still referenced by {} record(s); detach them first.", payload.camera_id, referencing.len()), referencing);
     }
     let mut calibration = base.calibration.clone();
     calibration.cameras.retain(|camera| camera.id != payload.camera_id);

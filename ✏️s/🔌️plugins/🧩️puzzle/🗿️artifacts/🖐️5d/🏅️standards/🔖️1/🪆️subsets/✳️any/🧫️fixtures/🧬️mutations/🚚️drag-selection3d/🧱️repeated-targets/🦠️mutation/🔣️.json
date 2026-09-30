@@ -1,0 +1,12 @@
+{
+  "mutation": "dragSelection3d",
+  "offset": [
+    1.0,
+    0.0,
+    0.0
+  ],
+  "targets": [
+    "part-a",
+    "part-a"
+  ]
+}

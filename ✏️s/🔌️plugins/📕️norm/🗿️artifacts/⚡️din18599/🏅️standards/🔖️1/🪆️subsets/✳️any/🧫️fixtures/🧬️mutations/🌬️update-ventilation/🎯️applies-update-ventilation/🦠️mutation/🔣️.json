@@ -1,0 +1,8 @@
+{
+  "mutation": "updateVentilation",
+  "newVentilation": {
+    "airflowM3H": 154.0,
+    "heatRecoveryEta": 0.8,
+    "fanPowerW": 60.0
+  }
+}

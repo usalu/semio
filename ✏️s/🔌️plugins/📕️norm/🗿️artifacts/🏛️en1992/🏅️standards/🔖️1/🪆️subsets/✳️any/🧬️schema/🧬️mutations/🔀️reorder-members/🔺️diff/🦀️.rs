@@ -5,7 +5,7 @@ use crate::En1992Snapshot;
 pub fn diff(payload: &ReorderMembers, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     let mut members = base.members.clone();
     if payload.from_index >= members.len() {
-        return protocol::MutationOutcome::fatal("mutation.missing", "from_index out of range", Vec::<String>::new());
+        return protocol::MutationOutcome::error("mutation.target-missing", "from_index out of range", Vec::<String>::new());
     }
     let item = members.remove(payload.from_index);
     let to = payload.to_index.min(members.len());

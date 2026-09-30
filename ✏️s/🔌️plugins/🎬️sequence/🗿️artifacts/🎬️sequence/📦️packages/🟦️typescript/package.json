@@ -18,6 +18,7 @@
   },
   "exports": {
     ".": {
+      "semio-source": "./🟦️.ts",
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
     }

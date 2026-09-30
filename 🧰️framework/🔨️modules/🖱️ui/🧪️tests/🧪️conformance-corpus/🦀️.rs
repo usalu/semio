@@ -110,7 +110,7 @@ fn node_of<'a>(ui: &'a Ui, window: &str, id: u64) -> &'a UiNode {
 #[test]
 fn every_accept_case_of_the_corpus_mounts_every_record() {
     let cases = accept_cases();
-    assert_eq!(cases.len(), 48, "the shape groups hold every accept case of the corpus");
+    assert_eq!(cases.len(), 49, "the shape groups hold every accept case of the corpus");
     for (group, case, snapshot, expectation) in &cases {
         let window = format!("conformance.{case}");
         let (ui, instances) = mount(&window, snapshot);
@@ -120,7 +120,7 @@ fn every_accept_case_of_the_corpus_mounts_every_record() {
             let id = UiNodeId(shape["id"].as_u64().expect("shape id"));
             assert!(tree.document_node(id).is_some(), "{group}/{case}: record {id:?} mounts");
         }
-        if ["slider-with-snaps", "stepper-precision", "vector-input", "color-input", "reference-list", "dialog-choices", "slider", "number-stepper", "dialog"].contains(&case.as_str()) {
+        if ["slider-with-snaps", "stepper-precision", "vector-input", "color-input", "reference-list", "dialog-choices", "tree-row-recipes", "slider", "number-stepper", "dialog"].contains(&case.as_str()) {
             assert!(instances > 0, "{group}/{case}: the mounted document paints");
         }
     }
@@ -148,6 +148,55 @@ fn slider_with_snaps_paints_one_tick_per_detent() {
             let thumb = crate::wgpu::layout::slider_presentation(bounds, *snap, 0.0, 10.0, flow).thumb;
             assert!(((tick.x + tick.w * 0.5) - (thumb.x + thumb.w * 0.5)).abs() < 1e-3, "{flow:?}: the tick of detent {snap} sits under the thumb resting on it");
         }
+    }
+}
+
+/// 🌲️ A tree row whose content is a recipe, or more than one node, renders that content in its value column the way
+/// React's property row does: no placeholder row is made of it, the row grows one line per content leaf and label, and
+/// every leaf lays out on its own line inside the row, in document order, where a pointer finds it and Tab reaches it.
+#[test]
+fn tree_rows_render_recipe_content_in_their_value_column() {
+    let (ui, painted) = mount("conformance.tree-row", &read(&corpus_dir().join("🖥️composite/🌲️tree-row-recipes/📸️snapshot.json")));
+    assert!(painted > 0, "the tree paints");
+    let tree = ui.tree("conformance.tree-row").expect("window tree");
+    let UiNode::Tree(spec) = node_of(&ui, "conformance.tree-row", 0) else { panic!("a tree") };
+    let rows: Vec<(String, Option<u16>, bool, bool)> = spec.sections[0].items.iter().map(|item| (item.id.clone(), item.content_lines, item.control.is_some(), item.items.is_some())).collect();
+    assert_eq!(rows, [("tint.row".to_string(), Some(3), false, false), ("offset.row".to_string(), Some(6), false, false), ("targets.row".to_string(), Some(4), false, false), ("replay.row".to_string(), Some(2), false, false)], "each row's content counts its lines and makes no placeholder row");
+    let rect = |id: u64| tree.document_node(UiNodeId(id)).and_then(|node| tree.absolute_rect(node)).unwrap_or_else(|| panic!("record {id} is laid out"));
+    for (row, leaves) in [(2, vec![4, 5, 6]), (7, vec![10, 12]), (13, vec![16, 17, 19, 20]), (21, vec![22, 23])] {
+        let row_rect = rect(row);
+        let mut previous: Option<crate::wgpu::geometry::Rect> = None;
+        for leaf in leaves {
+            let leaf_rect = rect(leaf);
+            assert!(leaf_rect.w > 0.0 && leaf_rect.h > 0.0, "record {leaf} has a box");
+            assert!(leaf_rect.y >= row_rect.y - 0.5 && leaf_rect.y + leaf_rect.h <= row_rect.y + row_rect.h + 0.5, "record {leaf} lies inside its row {row}");
+            assert!(leaf_rect.x + leaf_rect.w <= row_rect.x + row_rect.w + 0.5 && leaf_rect.x > row_rect.x + row_rect.w * 0.3, "record {leaf} lies in the row's value column");
+            if let Some(previous) = previous {
+                assert!(leaf_rect.y >= previous.y + previous.h - 0.5, "record {leaf} sits below the line before it");
+            }
+            previous = Some(leaf_rect);
+        }
+    }
+    for (upper, lower) in [(2, 7), (7, 13), (13, 21)] {
+        assert!(rect(lower).y >= rect(upper).y + rect(upper).h - 0.5, "row {lower} starts below row {upper}");
+    }
+    let root = tree.root.expect("a mounted root");
+    for id in [4, 5, 6, 10, 12, 16, 17, 19, 20] {
+        let leaf = rect(id);
+        let hit = crate::wgpu::events::hit_test(tree, root, leaf.x + leaf.w * 0.5, leaf.y + leaf.h * 0.5).and_then(|node| tree.document_id(node));
+        assert_eq!(hit, Some(UiNodeId(id)), "a pointer at record {id} finds it");
+    }
+    let mut ui = ui;
+    let mut reached = Vec::new();
+    for _ in 0..16 {
+        ui.dispatch_event("conformance.tree-row", crate::wgpu::events::UiEvent::KeyDown { key: "Tab".into(), modifiers: Default::default() });
+        let tree = ui.tree("conformance.tree-row").expect("window tree");
+        if let Some((focused, _)) = tree.document_bindings().iter().find(|(_, node)| tree.node(*node).is_some_and(|node| node.flags.contains(NodeFlags::FOCUSED))) {
+            reached.push(focused.0);
+        }
+    }
+    for id in [5, 6, 10, 12, 16, 17, 19, 20] {
+        assert!(reached.contains(&id), "Tab reaches record {id}: {reached:?}");
     }
 }
 
@@ -206,6 +255,7 @@ fn the_history_editor_controls_project_their_corpus_accessibility() {
         ("🧩️component/🎯️stepper-precision", "a11y.stepper", vec![(0, "spinbutton")]),
         ("🖥️composite/🧭️vector-input", "a11y.vector", vec![]),
         ("🖥️composite/🎨️color-input", "a11y.color", vec![(3, "slider")]),
+        ("🖥️composite/🌲️tree-row-recipes", "a11y.tree-row", vec![(6, "slider"), (16, "button"), (17, "button"), (19, "button"), (23, "progressbar")]),
         ("🖥️composite/🧷️reference-list", "a11y.references", vec![(2, "button"), (3, "button"), (5, "button")]),
         ("🖥️composite/🔀️dialog-choices", "a11y.choices", vec![(7, "button"), (8, "button"), (9, "button")]),
     ] {
@@ -229,3 +279,29 @@ fn the_history_editor_controls_project_their_corpus_accessibility() {
         }
     }
 }
+
+/// ⚖️ LAW (React's host presence overlay `notes`): a peer's note on a record is announced after that tree row's own
+/// description (joined by ` · `) or as its description when it has none, on every window of the engine, without touching
+/// the document; an unchanged table changes nothing and an empty one restores the rows.
+#[test]
+fn peer_notes_are_announced_after_a_tree_rows_description() {
+    let window = "a11y.tree-row";
+    let (mut ui, _) = mount(window, &read(&corpus_dir().join("🖥️composite/🌲️tree-row-recipes/📸️snapshot.json")));
+    let described = |ui: &Ui, key: &str| crate::wgpu::accessibility::accessibility_projection(ui.tree(window).expect("window tree")).into_iter().find(|node| node.key == key).unwrap_or_else(|| panic!("{key} is projected")).description;
+    let before = [("offset.row", described(&ui, "offset.row")), ("tint.row", described(&ui, "tint.row"))];
+    let notes = vec![("offset.row".to_string(), "Ada is editing this in time travel".to_string()), ("tint.row".to_string(), "Ada is editing this in time travel · Bo is editing this in time travel".to_string())];
+    assert!(ui.set_presence_notes(&notes), "the notes reach the window");
+    assert!(!ui.set_presence_notes(&notes), "an unchanged table changes nothing");
+    for (key, description) in &before {
+        let note = &notes.iter().find(|(noted, _)| noted == key).expect("noted").1;
+        let expected = description.as_ref().map_or_else(|| note.clone(), |description| format!("{description} · {note}"));
+        assert_eq!(described(&ui, key).as_deref(), Some(expected.as_str()), "{key}");
+        assert_eq!(ui.tree(window).expect("window tree").presence_note(key), Some(note.as_str()));
+    }
+    assert_eq!(ui.tree(window).expect("window tree").presence_note("targets.row"), None);
+    assert!(ui.set_presence_notes(&[]));
+    for (key, description) in before {
+        assert_eq!(described(&ui, key), description, "{key}: an empty table restores the row");
+    }
+}
+

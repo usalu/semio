@@ -1,14 +1,14 @@
 {
   "status": "rejected",
-  "code": "mutation.id-mismatch",
+  "code": "mutation.target-mismatch",
   "path": [
     "sec_pur",
     "sec_pur_v2"
   ],
   "messages": [
     {
-      "level": "fatal",
-      "code": "mutation.id-mismatch"
+      "level": "error",
+      "code": "mutation.target-mismatch"
     }
   ]
 }

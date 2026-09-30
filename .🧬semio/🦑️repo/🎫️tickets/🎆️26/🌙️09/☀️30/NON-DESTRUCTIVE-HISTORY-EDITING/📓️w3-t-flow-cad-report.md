@@ -1,0 +1,49 @@
+# 📓️ W3-T-FLOWCAD Report: Flow and CAD Tool-Machine Conversion
+
+Executor W3-T-FLOWCAD. Scope: the flow plugin (`✏️s/🔌️plugins/🌊️flow`) and the CAD plugin (`✏️s/🔌️plugins/📐️cad`), plus the
+hosts that drive their gestures. Brief: `🧭️plan.md` "W3-T brief"; contract: `📋️design.md` §5, §7, §10, §11.
+
+Aliases: `FL` = `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any`,
+`CA` = `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any`,
+`OS` = `🧰️framework/🛍️products/💻️os/🔨️modules`, `RE` = `OS/📺️renderer/🧑‍🎨engine/🧱️elements`.
+
+## 1. Census (before this work)
+
+### 1.1 Flow
+
+Document model: `FlowSnapshot` holds only the coordinate of a composed `s.stdio.semio@v1/flow` CONTENT child; widgets,
+synapses and layout live in that child. Every live flow edit publishes on the CHILD lane as ONE whole-content
+`SemioFlowMutation::SetSnapshot` (`flow_scene_publication`), even where the app first folds its own `FlowMutation`s
+(`flow_content_edit`). The parent `FlowMutation` vocabulary (incl. absolute `move-widgets`) is used as fold vocabulary and
+by the bounded retained artifact recipe (`🧵️retained/🗿️artifact`, supports delete/disconnect/move/replace only).
+
+| # | Gesture | Host → verb | Commit today | Cancel today |
+|---|---|---|---|---|
+| F1 | node drag, React flow canvas (`RE/🕸️NodeGraph` + wasm `OS/🌊️flow/🖥️host`) | host-local drag; at release `hostSnapshotChanged` → `nodeGraphEdit {setHostSnapshot: <whole fixture JSON>}` | guest adopts the fixture → child `SetSnapshot` (whole content, absolute) | `pointerCancelScreen` restores the gesture baseline host-locally: zero trace |
+| F2 | node drag, wgpu (`RE/⚙️EngineCanvas` bounded plan path) | `plan_graph_edits` → `nodeGraphEdit {move: {nodeId, x, y}} × N` (absolute, one row per node, one dispatch) | `host.move_widget` per row → child `SetSnapshot` | host-local, zero trace |
+| F3 | `moveMediaNode {nodeId, x, y}` (palette / MCP; no host sends it) | one verb per tick | child `SetSnapshot`, `coalesce_key: move-<id>` per-tick amend (pattern B) | none |
+| F4 | wire connect / reconnect / cut (both hosts) | `nodeGraphEdit {connect|disconnect}` (narrow intent rows) | `host.connect_ports` / `host.disconnect` → child `SetSnapshot` | host-local |
+| F5 | catalogue drop / spotlight add | `addWidget` / `spotlightCommit` | child `InsertNode`/`InsertEdge` or `SetSnapshot` | – |
+| F6 | inspector field edits | `patchFlowWidgets` | child `SetSnapshot`, `coalesce_key: patch-<field>-<ids>` amend | – |
+| F7 | delete / disconnect verbs | `deleteSelection`, `removeWidget`, `disconnect` | `FlowMutation`s folded, published as child `SetSnapshot` | – |
+| F8 | camera pan / zoom | `nodeGraphViewport` | window config | – |
+
+No flow gesture is a state machine and none carries a transaction; there is no widget resize gesture (`WidgetLayout` is
+`{x, y}` only). The `nodeGraphEdit` row vocabulary (`move` absolute) is shared by 12 guests (dag, sequence, procedural
+2d/3d, mathematical, wfc 2d/3d, space, trinity, architect, flow, …) and by both hosts.
+
+### 1.2 CAD
+
+| # | Gesture | Host → verb | Commit today | Cancel today |
+|---|---|---|---|---|
+| C1 | gumball translate / rotate / scale (React `World3dHost`) | `transformBegin` (HostOnly), ONE delta `translateSelection {objectIds?, dx, dy, dz}` / `rotateSelection {ax, ay, az, angle}` / `scaleSelection {sx, sy, sz}`, `transformEnd` | `Emit::mutations` of ABSOLUTE `move-objects` / `rotate-objects` / `scale-objects` (one per touched pane, per-object final origin / quaternion / scale) | host-local (Escape / pointercancel drop the drag) |
+| C2 | 60 declarative interactions (`CA/📚️examples/🖼️assets/🏗️modelDefinitions/*/🕹️interactions/*.json`, `spatial.interaction`) | engagement REPL: `engagementInput`, `engagementSubmit`, `engagementPossibleSelect`, `engagementRepeatLast`, `engagementAbort`, `worldPointerDown`, `worldPointerMove` | every step republishes the whole `CadEngagementScratch` as a CONFIG snapshot amended under `coalesce_key: "engagement"` (config history); the commit step runs `interaction::commit_session` → `CommitOutcome::{Objects, Move, Copy, Rotate, Scale, Unsupported}` → `create-object` × N or the ABSOLUTE C1 leaves, `Emit::mutations` + config | `engagementAbort` clears the session (a config edit) |
+| C3 | inspector pose edits | `patchObject` / `patchSelection` (`origin.x`, `scale.y`, `orientation.w`, … `value` or `delta`) | absolute `move-objects` / `scale-objects` / `rotate-objects`; whole-value fields as `delete-object` + `create-object` | – |
+| C4 | add / duplicate / delete object | `addObject`, `duplicateObject`, `deleteObject` | `create-object` / `delete-object` | – |
+| C5 | reference overlay edits | `patchCadPlayReference`, `setReferenceHidden/Locked` | absolute `move-reference`, `change-reference-*` | – |
+
+The Rust interaction runtime (`CA/✏️editor/⚙️engine/🕹️interaction/🦀️.rs`) is a hand-rolled interpreter
+(`apply_event_generic`) of the JSON statecharts; the TS twin (`@semio-tech/cad-js`, `CA/✏️editor/⚙️engine/🎰️stately`) compiles
+the same specs onto `@semio-tech/machine`. The TS engine is consumed by stories, TS extension modules and tests only — the
+live React and wgpu hosts run the Rust guest. `openTransaction`/`commitTransaction` effects are declared in the spec type
+and never interpreted.

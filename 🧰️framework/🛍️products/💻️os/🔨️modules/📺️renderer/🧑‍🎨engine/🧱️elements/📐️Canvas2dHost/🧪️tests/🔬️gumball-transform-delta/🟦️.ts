@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canvas2dGumballTransformDelta, canvas2dGumballTransformStep, type Canvas2dGumballTransformPayload } from "../../🟦️GumballOverlay.tsx";
+import { canvas2dGumballIdentity, canvas2dGumballPhased, canvas2dGumballTransformDelta, canvas2dGumballTransformStep, canvas2dGumballVerb, type Canvas2dGumballTransformPayload } from "../../🟦️GumballOverlay.tsx";
 
 const camera = { x: 0, y: 0, zoom: 1 };
 const drag = {
@@ -40,5 +40,23 @@ describe("canvas2dGumballTransformStep", () => {
     const second = canvas2dGumballTransformStep("rotate", rotateDrag, 200, 140, camera, 800, 600, ["n1"], prev);
     expect(Math.abs(second?.dispatch.args.angle as number)).toBeGreaterThan(0);
     expect((second?.total.args.angle as number) - (prev.args.angle as number)).toBeCloseTo(second?.dispatch.args.angle as number, 9);
+  });
+});
+
+describe("canvas2d gumball tool-transaction phases", () => {
+  it("names each handle's verb and its identity delta", () => {
+    expect(canvas2dGumballVerb("moveY")).toBe("translateSelection");
+    expect(canvas2dGumballVerb("rotate")).toBe("rotateSelection");
+    expect(canvas2dGumballVerb("scaleUniform")).toBe("scaleSelection");
+    expect(canvas2dGumballIdentity("moveX", ["n1"])).toEqual({ action: "translateSelection", args: { ids: ["n1"], dx: 0, dy: 0, dz: 0 } });
+    expect(canvas2dGumballIdentity("rotate", ["n1"])).toEqual({ action: "rotateSelection", args: { ids: ["n1"], ax: 0, ay: 0, az: 1, angle: 0 } });
+    expect(canvas2dGumballIdentity("scaleX", ["n1"])).toEqual({ action: "scaleSelection", args: { ids: ["n1"], sx: 1, sy: 1, sz: 1 } });
+  });
+
+  it("stamps stream and commit ticks with their phase and an abort with only its ids and reason", () => {
+    const step = canvas2dGumballTransformStep("moveX", drag, 120, 100, camera, 800, 600, ["n1"], null)!.dispatch;
+    expect(canvas2dGumballPhased(step, { phase: "stream" })).toEqual({ action: "translateSelection", args: { ...step.args, phase: "stream" } });
+    expect(canvas2dGumballPhased(step, { phase: "commit" }).args.phase).toBe("commit");
+    expect(canvas2dGumballPhased(canvas2dGumballIdentity("rotate", ["n1", "n2"]), { phase: "abort", reason: "blur" })).toEqual({ action: "rotateSelection", args: { ids: ["n1", "n2"], phase: "abort", reason: "blur" } });
   });
 });

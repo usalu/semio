@@ -310,12 +310,6 @@ impl En1993Mutation {
 mod tests;
 //#endregion 🧪️Tests
 
-//#region 🧪️FixtureTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-//#endregion 🧪️FixtureTests
-
 //#region 🌉️ExternalCodecBridge
 pub fn decode_en1993_mutation_json(text: &str) -> Result<En1993Mutation, String> {
     pack::json::from_json_str(text).map_err(|error| error.to_string())
@@ -336,3 +330,10 @@ pub fn inverse_en1993_mutation(mutation: &En1993Mutation, base: &En1993Snapshot)
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
 //#endregion 🧪️KindsCatalog
+
+
+//#region 🧫️Vectors
+#[cfg(test)]
+#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
+mod fixture_tests;
+//#endregion 🧫️Vectors

@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** 📽️ React + reveal.js renderer for `@semio-tech/animate-presentation-core` declarative decks. */
+/** 📽️ React + reveal.js renderer for `@semio-tech/presentation` declarative decks. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
@@ -30,7 +30,7 @@ import type {
   TextEmbodiment,
   Thought,
   VideoEmbodiment,
-} from "@semio-tech/animate-presentation-core";
+} from "@semio-tech/presentation";
 import {
   abbreviateAuthorFirstName,
   affiliationLineName,
@@ -54,7 +54,7 @@ import {
   split,
   splitFigureGrid,
   unionDispositionPositions,
-} from "@semio-tech/animate-presentation-core";
+} from "@semio-tech/presentation";
 import {
   applyElementsSurfaceChrome,
   DEFAULT_UI_DRIVER,
@@ -167,7 +167,7 @@ export type {
   Thought,
   Transition,
   VideoEmbodiment,
-} from "@semio-tech/animate-presentation-core";
+} from "@semio-tech/presentation";
 
 export {
   analogy,
@@ -197,8 +197,8 @@ export {
   splitFigureGrid,
   tile,
   unionSourceCrops,
-} from "@semio-tech/animate-presentation-core";
-export type { MorphFromSlot, PresentationLanguageKind, PresentationSlideBookmark, PresentationSlideBookmarkParamKeys, PresentationSlideRef, RenderSlide, Slide, TextMorphRoot } from "@semio-tech/animate-presentation-core";
+} from "@semio-tech/presentation";
+export type { MorphFromSlot, PresentationLanguageKind, PresentationSlideBookmark, PresentationSlideBookmarkParamKeys, PresentationSlideRef, RenderSlide, Slide, TextMorphRoot } from "@semio-tech/presentation";
 
 //#region 🔖️MountOptions
 /** ⚙️ Reveal.js and @semio-tech/ui-react surface chrome options for {@link mountPresentation}. */

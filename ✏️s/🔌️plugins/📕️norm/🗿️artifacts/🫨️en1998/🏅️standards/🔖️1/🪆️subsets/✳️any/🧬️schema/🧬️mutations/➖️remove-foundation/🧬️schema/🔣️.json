@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-foundation/schema.json",
+  "title": "RemoveFoundation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeFoundation"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Foundation",
+          "de": "Gründung"
+        },
+        "description": {
+          "en": "Zero-based position of the foundation in its list.",
+          "de": "Nullbasierte Position der Gründung in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

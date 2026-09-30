@@ -86,136 +86,39 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::export::serializers::{build_minimal_pptx, encode_pptx};
+    use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
     use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
     use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::mutations::apply_pptx_mutation;
-    use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::mutations::{insert_shape, insert_slide, move_slide, remove_shape, remove_slide, set_shape_position, set_shape_text, set_snapshot};
-    use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxParagraph, PptxPresentation, PptxShape, PptxSlide, PptxTransform};
-    use semio_s_artifact_stdio_pptx::{PptxMutation, PptxSnapshot};
+    use semio_s_artifact_stdio_pptx::{from_json_str, to_json_string, DslValue, Mutation, PptxMutation, PptxSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::base::project_pptx_mutation;
+    use semio_s_plugin_stdio_test_oracle::law::params_are_wire;
 
-    //#region 🔖️SpecCodec
-    fn number_field(value: &Json, key: &str) -> f64 {
-        match value.get(key) {
-            Some(Json::Number(number)) => *number,
-            _ => 0.0,
-        }
-    }
-    fn usize_field(value: &Json, key: &str) -> usize {
-        number_field(value, key).max(0.0) as usize
-    }
-    fn i64_field(value: &Json, key: &str) -> i64 {
-        number_field(value, key) as i64
-    }
-
-    /// 🔎️ The same `{"x":...,"y":...,"cx":...,"cy":...}` shape the oracle side's `Transform` speaks,
-    /// decoded into the PRODUCTION `PptxTransform` here instead.
-    fn json_to_transform(value: &Json) -> PptxTransform {
-        match value.get("position") {
-            Some(position) => PptxTransform { x: i64_field(position, "x"), y: i64_field(position, "y"), cx: i64_field(position, "cx"), cy: i64_field(position, "cy") },
-            None => PptxTransform::default(),
-        }
-    }
-
-    /// 🔎️ The same owned shape-spec JSON grammar the oracle side speaks
-    /// (`{"kind":"textBox"|"placeholder"|"picture", ...}`), decoded into the PRODUCTION `PptxShape`
-    /// here instead of the oracle's own independent `PShape` type.
-    fn json_to_shape(value: &Json) -> Result<PptxShape, String> {
-        let position = json_to_transform(value);
-        match value.str("kind").as_str() {
-            "textBox" => Ok(PptxShape::TextBox { text_frame: vec![PptxParagraph::text(value.str("text"))], position }),
-            "placeholder" => Ok(PptxShape::Placeholder { kind: value.str("phKind"), text_frame: vec![PptxParagraph::text(value.str("text"))], position }),
-            "picture" => Ok(PptxShape::Picture { blip_rel_id: value.str("blipRelId"), position }),
-            other => Err(format!("unknown shape kind {other:?}")),
-        }
-    }
-
-    fn json_to_slide(value: &Json) -> Result<PptxSlide, String> {
-        Ok(PptxSlide { shapes: value.array("shapes").iter().map(json_to_shape).collect::<Result<Vec<_>, _>>()? })
-    }
-
-    /// 📄️ The scenario's `<id>`/`<params>` spec turned into the ONE typed `PptxMutation` this subset
-    /// declares for it. `set-snapshot` builds a brand-new, fully valid `PptxSnapshot` through
-    /// `build_minimal_pptx` (real OPC/XML scaffolding synthesis, the same helper this subset's own
-    /// mutation-law tests use), replacing the base snapshot outright.
+    /// 🦠️ The scenario's `{kind, params}` witness decoded generically: `params` IS the leaf's wire
+    /// payload, so the derive-generated `from_payload_value` is the only decoder, and re-emitting the
+    /// decoded payload must give back exactly `params`.
     fn mutation_from_spec(spec: &Json) -> Result<PptxMutation, String> {
+        let kind = spec.str("kind");
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        Ok(match spec.str("kind").as_str() {
-            "set-snapshot" => {
-                let slides = params.array("slides").iter().map(json_to_slide).collect::<Result<Vec<_>, _>>()?;
-                PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: build_minimal_pptx(PptxPresentation { slides }) })
-            }
-            "insert-slide" => PptxMutation::InsertSlide(insert_slide::InsertSlide { index: usize_field(&params, "index"), slide: json_to_slide(params.get("slide").ok_or("insert-slide: missing slide")?)? }),
-            "remove-slide" => PptxMutation::RemoveSlide(remove_slide::RemoveSlide { index: usize_field(&params, "index") }),
-            "move-slide" => PptxMutation::MoveSlide(move_slide::MoveSlide { from: usize_field(&params, "from"), to: usize_field(&params, "to") }),
-            "insert-shape" => PptxMutation::InsertShape(insert_shape::InsertShape { slide_index: usize_field(&params, "slideIndex"), shape_index: usize_field(&params, "shapeIndex"), shape: json_to_shape(params.get("shape").ok_or("insert-shape: missing shape")?)? }),
-            "remove-shape" => PptxMutation::RemoveShape(remove_shape::RemoveShape { slide_index: usize_field(&params, "slideIndex"), shape_index: usize_field(&params, "shapeIndex") }),
-            "set-shape-text" => PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index: usize_field(&params, "slideIndex"), shape_index: usize_field(&params, "shapeIndex"), text_frame: vec![PptxParagraph::text(params.str("text"))] }),
-            "set-shape-position" => PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { slide_index: usize_field(&params, "slideIndex"), shape_index: usize_field(&params, "shapeIndex"), position: json_to_transform(&params) }),
-            other => return Err(format!("mutation kind {other:?} has no subject implementation")),
-        })
+        let payload: DslValue = from_json_str(&params.to_string()).map_err(|error| error.to_string())?;
+        let mutation = <PptxMutation as Mutation<PptxSnapshot>>::from_payload_value(&kind, payload).map_err(|error| error.to_string())?;
+        params_are_wire(&kind, &params, &to_json_string(&<PptxMutation as Mutation<PptxSnapshot>>::payload_value(&mutation)))?;
+        Ok(mutation)
     }
-    //#endregion 🔖️SpecCodec
 
-    //#region 🔖️Inverse
-    /// ↩️ `PptxMutation::inverse` in closed form -- every variant's own `Mutation::inverse` arm,
-    /// transplanted rather than called through the trait, same precedent `🌴️mutate-pdf-1-7`'s own
-    /// `inverse_of` gives: written in closed form so this adapter needs no extra crate dependency
-    /// beyond `semio-s-plugin-stdio` itself.
-    // 🧭️ `NoMutation` was dropped by the mutation-leaf migration (26/08/29/S-END-TO-END); this
-    // adapter's own inverse-of-nothing branches now fall back to `SetShapeText` on an out-of-range
-    // shape, this subset's own documented no-op, mirroring the same replacement made in
-    // `../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs`'s `agg_inverse`.
-    fn inverse_of(mutation: &PptxMutation, base: &PptxSnapshot) -> PptxMutation {
-        let documented_no_op = || PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index: usize::MAX, shape_index: usize::MAX, text_frame: Vec::new() });
-        match mutation {
-            PptxMutation::SetSnapshot(_) => PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-            PptxMutation::InsertSlide(insert_slide::InsertSlide { index, .. }) => PptxMutation::RemoveSlide(remove_slide::RemoveSlide { index: *index }),
-            PptxMutation::RemoveSlide(remove_slide::RemoveSlide { index }) => match base.presentation.slides.get(*index) {
-                Some(slide) => PptxMutation::InsertSlide(insert_slide::InsertSlide { index: *index, slide: slide.clone() }),
-                None => documented_no_op(),
-            },
-            PptxMutation::MoveSlide(move_slide::MoveSlide { from, to }) => {
-                let len = base.presentation.slides.len();
-                let final_pos = (*to).min(len.saturating_sub(1));
-                PptxMutation::MoveSlide(move_slide::MoveSlide { from: final_pos, to: *from })
-            }
-            PptxMutation::InsertShape(insert_shape::InsertShape { slide_index, shape_index, .. }) => PptxMutation::RemoveShape(remove_shape::RemoveShape { slide_index: *slide_index, shape_index: *shape_index }),
-            PptxMutation::RemoveShape(remove_shape::RemoveShape { slide_index, shape_index }) => match base.presentation.slides.get(*slide_index).and_then(|slide| slide.shapes.get(*shape_index)) {
-                Some(shape) => PptxMutation::InsertShape(insert_shape::InsertShape { slide_index: *slide_index, shape_index: *shape_index, shape: shape.clone() }),
-                None => documented_no_op(),
-            },
-            PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index, shape_index, .. }) => {
-                let old = base.presentation.slides.get(*slide_index).and_then(|slide| slide.shapes.get(*shape_index)).and_then(|shape| match shape {
-                    PptxShape::TextBox { text_frame, .. } | PptxShape::Placeholder { text_frame, .. } => Some(text_frame.clone()),
-                    _ => None,
-                });
-                match old {
-                    Some(text_frame) => PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index: *slide_index, shape_index: *shape_index, text_frame }),
-                    None => documented_no_op(),
-                }
-            }
-            PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { slide_index, shape_index, .. }) => {
-                let old = base.presentation.slides.get(*slide_index).and_then(|slide| slide.shapes.get(*shape_index)).and_then(|shape| match shape {
-                    PptxShape::TextBox { position, .. } | PptxShape::Picture { position, .. } | PptxShape::Placeholder { position, .. } => Some(*position),
-                    PptxShape::Other { .. } => None,
-                });
-                match old {
-                    Some(position) => PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { slide_index: *slide_index, shape_index: *shape_index, position }),
-                    None => documented_no_op(),
-                }
-            }
-        }
+    fn decode(input: &[u8]) -> Result<PptxSnapshot, String> {
+        decode_pptx(input).map_err(|error| format!("decode_pptx failed: {error}"))
     }
-    //#endregion 🔖️Inverse
+
+    fn encode(snapshot: &PptxSnapshot) -> Result<Vec<u8>, String> {
+        encode_pptx(snapshot).map_err(|error| format!("encode_pptx failed: {error}"))
+    }
 
     //#region 🔖️Handlers
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
-        let mut snapshot = decode_pptx(&input).map_err(|error| format!("decode_pptx failed: {error}"))?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        apply_pptx_mutation(&mut snapshot, &mutation);
-        let bytes = encode_pptx(&snapshot).map_err(|error| format!("encode_pptx failed: {error}"))?;
+        let mut snapshot = decode(&input)?;
+        apply_pptx_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
+        let bytes = encode(&snapshot)?;
         if bytes == input {
             return Err("byte pass-through: output is bit-identical to the input".into());
         }
@@ -223,26 +126,25 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection))
     }
 
+    /// ↩️ The forward witness is undone by `PptxMutation::inverse` itself — the vocabulary's own
+    /// algebra is the law under test, never a transcription of it.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
-        let input = mutable_input(ctx)?;
-        let base = decode_pptx(&input).map_err(|error| format!("decode_pptx failed: {error}"))?;
+        let base = decode(&mutable_input(ctx)?)?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        let undo = inverse_of(&mutation, &base);
+        let undo = <PptxMutation as Mutation<PptxSnapshot>>::inverse(&mutation, &base);
         let mut snapshot = base;
         apply_pptx_mutation(&mut snapshot, &mutation);
-        apply_pptx_mutation(&mut snapshot, &undo);
-        let bytes = encode_pptx(&snapshot).map_err(|error| format!("encode_pptx failed: {error}"))?;
+        for step in &undo {
+            apply_pptx_mutation(&mut snapshot, step);
+        }
+        let bytes = encode(&snapshot)?;
         let projection = project_pptx_mutation(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
     }
 
-    /// 🔒️ The no-byte-pass-through rule: the subject must fully parse the real presentation into its
-    /// typed snapshot and re-serialize from the model alone -- `decode_pptx`/`encode_pptx` are this
-    /// subset's ONLY channel from input to output.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
-        let snapshot = decode_pptx(&input).map_err(|error| format!("decode_pptx failed: {error}"))?;
-        let output = encode_pptx(&snapshot).map_err(|error| format!("encode_pptx failed: {error}"))?;
+        let output = encode(&decode(&input)?)?;
         if output == input {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
@@ -250,7 +152,6 @@ mod subject {
         Ok(Outcome::with_raw(output, projection))
     }
     //#endregion 🔖️Handlers
-
 }
 //#endregion 🔖️Subject
 
@@ -259,12 +160,10 @@ mod subject {
 /// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("no-mutation-baseline-mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("no-mutation-baseline-inverse", inverse_oracle);
-    built = built.oracle("identity-round-trip", identity_round_trip_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate).subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse);
-        built = built.subject("identity-round-trip", subject::identity_round_trip);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse).subject("identity-round-trip", subject::identity_round_trip);
     }
     built
 }

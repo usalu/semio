@@ -114,10 +114,13 @@ import {
     type WindowStackCorner,
     type ViewTreeWindowRequest,
     EXPORT_ARTIFACT_DOCUMENT_ACTION_ID,
+    HOST_EVENT_ACTION_ID,
     IMPORT_ARTIFACT_DOCUMENT_ACTION_ID,
 } from "@semio-tech/framework";
 import {
     type ArtifactSyncStatus,
+    type CommandRejectionCodeV1,
+    type CommandRejectionV1,
     packValueFromBase64,
     packValueToBase64,
 } from "@semio-tech/framework-os";
@@ -231,13 +234,6 @@ import { WindowMeasureNumber, WindowMeasureSelect, WindowMeasureToggle } from ".
 // #endregion 🔌️Adapters
 
 //#region ShellHelpers
-export function syncDocumentId(session: ActiveSession, panel: SpacePanelState | null, hostMode: boolean): string {
-  if (hostMode && panel?.activeSpawnedId) {
-    const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
-    if (spawned) return `${spawned.pluginId}-${spawned.instanceId}`;
-  }
-  return `${session.pluginId}-${session.instanceId}`;
-}
 
 /** ↔ Shared starting width for every panel anchor, one compact step wider than the former 280px Document panel. */
 export const DEFAULT_PANEL_WIDTH_PX = 300;
@@ -384,6 +380,7 @@ export const FRAMEWORK_RESERVED_ACTION_IDS: ReadonlySet<string> = new Set([
   "setActiveTool",
   EXPORT_ARTIFACT_DOCUMENT_ACTION_ID,
   IMPORT_ARTIFACT_DOCUMENT_ACTION_ID,
+  HOST_EVENT_ACTION_ID,
 ]);
 
 /** 🪟️ The shape `undeclaredActionDiagnostic` reads a session app's window kinds through — the manifest's
@@ -2311,18 +2308,35 @@ export function historyRefusalNoticeV1(code: HistoryRefusalCodeV1, severity: Sev
   return { text: String(shellLabel(HISTORY_REFUSAL_LABEL_KEYS[code])), kind: code.startsWith("history.") ? "error" : severity, code };
 }
 
-/** ⚔️ The notice for a hub's refusal of one of this human's command batches, read from the refusal's own
- * `MutationMessage` codes. A batch refused for a history transition names that refusal
+/** 🚫️ The line and severity each local refusal (`CommandRejectionV1`'s `local.*` codes) is told with: a refusal the human
+ * can wait out or cannot act on here is a warning, one that means this device produced a change it cannot send is an error. */
+export const LOCAL_COMMAND_REJECTION_NOTICES_V1 = {
+  "local.read-only": { key: "ui.conflict.local.readOnly", kind: "warning" },
+  "local.queue-full": { key: "ui.conflict.local.queueFull", kind: "warning" },
+  "local.backbone-capacity": { key: "ui.conflict.local.queueFull", kind: "warning" },
+  "local.backbone-duplicate": { key: "ui.conflict.local.duplicate", kind: "warning" },
+  "local.backbone-pair-unavailable": { key: "ui.conflict.local.notReady", kind: "warning" },
+  "local.backbone-scope-mismatch": { key: "ui.conflict.local.foreignDocument", kind: "error" },
+  "local.backbone-malformed": { key: "ui.conflict.local.unreadable", kind: "error" },
+  "local.socket-frame-ceiling": { key: "ui.conflict.local.tooLarge", kind: "error" },
+} as const satisfies Readonly<Record<Exclude<CommandRejectionCodeV1, `hub.${string}`>, { readonly key: UiTranslationKey; readonly kind: Severity }>>;
+
+/** ⚔️ The notice for one refused command batch, read from the one typed rejection contract — total, whatever the producer.
+ * A local refusal is told by its code ({@link LOCAL_COMMAND_REJECTION_NOTICES_V1}) under that code. A hub refusal is read
+ * from the `MutationMessage` codes it was graded with: a batch refused for a history transition names that refusal
  * ({@link historyRefusalNoticeV1}); otherwise the hub's outcome step graded a region another human's concurrent command
  * also touched as `mutation.clamped` or a structural constraint that command now holds as `mutation.invariant`
- * (`🛢️db/🗿️artifact` `grade_conflict_record`, frozen code set), named after `ui.conflict.hubRejected`; a refusal
- * naming neither (admission, transport) says only that the hub refused the change. The hub's own `reason` text is English
- * diagnostics and never reaches the human (ticket 26/09/23 C10, audit G-P2-3).
+ * (`🛢️db/🗿️artifact` `grade_conflict_record`, frozen code set), named after `ui.conflict.hubRejected`; a refusal naming
+ * neither (admission, transport, unreadable diagnostics) says only that the hub refused the change. No producer's English
+ * `reason` ever reaches the human (ticket 26/09/23 C10, audit G-P2-3; 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING follow-up 3).
+ * @see ../../../../🏪️store/🔄️sync/🧬️schema/🔣️command-rejection/🔣️.json
  * @see ../../../../../../../../🔨️modules/🛢️db/🗿️artifact/🦀️.rs */
-export function hubCommandRejectionNoticeV1(messages: readonly number[]): ShellNoticeV1 {
-  const decoded: unknown = messages.length === 0 ? [] : JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(messages)));
-  if (!Array.isArray(decoded) || decoded.some((message) => message === null || typeof message !== "object" || typeof (message as { code?: unknown }).code !== "string")) throw new Error("hub command rejection: invalid messages");
-  const codes = decoded.map((message) => (message as { code: string }).code);
+export function commandRejectionNoticeV1(rejection: CommandRejectionV1): ShellNoticeV1 {
+  if (rejection.code !== "hub.refused" && rejection.code !== "hub.unreadable") {
+    const notice = LOCAL_COMMAND_REJECTION_NOTICES_V1[rejection.code];
+    return { text: String(shellLabel(notice.key)), kind: notice.kind, code: rejection.code };
+  }
+  const codes = rejection.messages.map((message) => message.code);
   const history = codes.map(historyRefusalCodeV1).find((code) => code !== null);
   if (history !== undefined && history !== null) return historyRefusalNoticeV1(history);
   const reason = codes.includes("mutation.invariant") ? "ui.conflict.hubConcurrentInvariant" : codes.includes("mutation.clamped") ? "ui.conflict.hubConcurrentEdit" : null;

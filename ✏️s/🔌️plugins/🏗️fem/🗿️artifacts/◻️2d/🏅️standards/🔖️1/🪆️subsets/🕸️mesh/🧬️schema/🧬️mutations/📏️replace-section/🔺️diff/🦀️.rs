@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceSection`.
 //!
 //! Guards, in the order they run: `mutation.target-missing` (Error) on the selected id,
-//! `mutation.id-mismatch` (Fatal) when the replacement renames it, the SAME positivity bounds
+//! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME positivity bounds
 //! `create-section` runs (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceSection;
 use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dSectionsDelta, Fem2dSectionsPatchEntry};

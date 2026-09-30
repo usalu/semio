@@ -106,6 +106,15 @@ pub enum DbError {
     },
 }
 
+impl DbError {
+    /// ⏳️ Whether the error says nothing about the batch itself — the engine could not take it now (unavailable, timed out,
+    /// closed, fenced by a newer epoch or generation, an I/O fault) — so its author resends it; every other error is a
+    /// verdict on the batch, final for it. The hub's refusal message and its rebuild decision both read this one predicate.
+    pub fn is_transient(&self) -> bool {
+        matches!(self, Self::Unavailable(_) | Self::Timeout(_) | Self::Closed | Self::Fenced { .. } | Self::StaleGeneration { .. } | Self::Io(_))
+    }
+}
+
 impl std::fmt::Display for DbError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

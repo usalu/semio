@@ -1,0 +1,170 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.bravo",
+  "artifact": "bravo",
+  "directory": "bravo",
+  "dependencies": [],
+  "standards": [
+    {
+      "id": "s.stdio.bravo.standard.raw",
+      "revision": "raw",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.bravo.standard.raw.profile.any",
+      "standard": "s.stdio.bravo.standard.raw",
+      "profile": "any",
+      "status": "unimplemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.bravo.standard.raw.dialect.source",
+      "standard": "s.stdio.bravo.standard.raw",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "unimplemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.bravo.standard.raw.representation.document",
+      "standard": "s.stdio.bravo.standard.raw",
+      "representation": "document",
+      "mimes": [
+        "application/x-alpha"
+      ],
+      "extensions": [
+        ".bravo"
+      ],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
+      "status": "declared"
+    }
+  ],
+  "codecs": [],
+  "mutations": [],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.bravo.resource.external-references",
+      "external_reference_policy": "deny-unless-explicit",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.bravo.localization.en",
+      "locale": "en",
+      "name": "Binary",
+      "description": "Binary artifact definition.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.bravo.localization.de",
+      "locale": "de",
+      "name": "Binärdaten",
+      "description": "Binärdaten-Artefaktdefinition.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.bravo.conformance-suite.public-corpus",
+      "status": "unimplemented",
+      "fixtures": []
+    }
+  ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.bravo.composer.dialect-s-stdio-bravo-raw.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.bravo@raw/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.bravo@raw/*"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bravo.inference.schema-s-stdio-bravo-inference.v1",
+      "category": "inference",
+      "descriptor": "runtime-capability:inference:schema:s.stdio.bravo.inference",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.bravo.inference"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bravo.schema.schema-s-stdio-bravo.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.bravo",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.bravo"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bravo.standard.raw.codec.codec-stdio-bravo-extension-bin.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:12:stdio.bravo:bin|codec:stdio.bravo",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.bravo"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "12:stdio.bravo:bin"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.bravo.standard.raw.representation.mime-application-octet-stream-extension-bin",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:application/x-bravo|extension:.bravo",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "application/x-alpha"
+        },
+        {
+          "namespace": "extension",
+          "value": ".bravo"
+        }
+      ]
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.bravo.standard.raw.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "unimplemented",
+    "write": "unimplemented",
+    "lossless": "unimplemented",
+    "canonical": "unimplemented",
+    "validators": [],
+    "mutations": [],
+    "inferences": [],
+    "fixtures": []
+  }
+}

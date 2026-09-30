@@ -6,7 +6,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { AEC_BUILDING_MODEL_DEFINITION_ID, typologyFromStepLayer } = dependencies;
 
   const { describe, expect, it } = vitest;
-  const { runtime } = await import("@semio-tech/cad-js");
+  const runtime = await import("../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts");
 
   runtime.bootstrapCadModules();
 

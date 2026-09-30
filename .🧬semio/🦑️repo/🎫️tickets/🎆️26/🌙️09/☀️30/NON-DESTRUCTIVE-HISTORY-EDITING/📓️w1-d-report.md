@@ -656,3 +656,32 @@ Catalog staleness: none of the 72 is staleness only.
   - `📺️renderer/…/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`
 - Plugins: the 140 leaf `🦀️.rs` files in `🗑️generated/w1d/phase-enum-files.txt` (marker only).
 - Scratch: `🗑️generated/w1d/{patch_leaf_payload_derive.py,mark_apply_payload.py,patch_nullable_rs.py,nullable_probe.ts,phase-enum-files.txt}`
+
+## 9. Payload law: cold retirement and the plugin sweep
+
+### 9.1 Fix: the law never drops an op
+
+- `mutation_payload_round_trip_failures<P, M>(ops: Vec<M>)` now takes its ops by value. It disposes of every op through `Mutation::retire_cold`, which is the aggregate's `retire_cold = fn` path when the derive declares one:
+  - every op it is given;
+  - every op it rebuilds through `with_payload_value` or `from_payload_value`.
+- This all happens before it returns. The emitted `semio_payload_law_<agg>` computes its count first and asserts only after the law has retired everything, so no failure path drops a live op.
+- Decoded fixture ops and `demo_mutation_cases()` flow into that one vector.
+- Before the fix, the flow crate aborted on the `OrderedMap` drop witness. Its backtrace showed `FlowMutation::retire_cold` as the default plain drop, because the `#[mutations]` attribute had no `retire_cold`. That was crate semantics, routed to W2-S-E. The attribute `retire_cold = retire_flow_mutation` is now on disk, and the flow law passes.
+
+### 9.2 Sweep
+
+- Every crate that holds a `#[derive(Mutations)]` aggregate: 102 crates, found with `cargo metadata` plus a source scan. List: `🗑️generated/w1d/law-crates.txt`.
+- Run with `cargo test -p … --lib --no-fail-fast -- semio_payload_law` in four gated batches (`🗑️generated/w1d/law_batch.sh`), plus the kernel and the plugin crate.
+- Result: 103 test binaries, 199 law tests, 0 failures.
+  - kernel 10, plugin 14.
+  - The crates that hold fail-closed retained values pass: flow (framework and s), imperative procedure, raster, stdio semio 19, energy 4, architect 3, remodel 1.
+- One crate was not rerun: `semio-s-artifact-stdio-gltf`. Its lib tests no longer compile because of a peer file, `🌳️node/🏷️rename/🧪️tests/✏️renames-the-root-f1e002/🦀️.rs:7` (`MutationKind` not in scope). Its law passed earlier today, before that file was mounted.
+- Crate-semantics issues for the coordinator:
+  - none left from the sweep; the FlowMutation `retire_cold` gap is already fixed.
+  - Coverage gap: hand-written aggregates (`impl Mutation` without the derive) and generic aggregates get no emitted law.
+
+### 9.3 Files (section 9)
+
+- `📡️spr/🎮️command/{🦀️.rs,🧪️tests/🧪️mutation-payload/🦀️.rs}`
+- `🗣️dsl/✨️derive/🦀️.rs`
+- Scratch: `🗑️generated/w1d/{law_batch.sh,law-crates.txt,batch*.txt,law-*.log}`

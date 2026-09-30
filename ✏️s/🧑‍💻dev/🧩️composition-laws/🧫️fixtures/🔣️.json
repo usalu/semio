@@ -372,7 +372,7 @@
       "target": "generation3d-app-laws",
       "path": "🧪️tests/🧊️generation3d-app-laws/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
       "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "213435ea96f591c1b51649df2caa433e153d9a40d6ea78d59970bcc88e2d9038",
+      "sha256": "43988064a077198a4a98f056096170fbcaf762da3432041dabdd485ddc72b5ce",
       "laws": [
         "editor_domain::editor_laws::preview_eval_exact_window_transient_isolates_and_resets_in_the_registered_app",
         "editor_domain::editor_laws::generation_preview_is_one_evaluation_shared_by_two_generation_windows",
@@ -444,7 +444,8 @@
         "editor_domain::editor_laws::mesh_component_gumball_rejects_changed_selection_before_and_during_drag",
         "editor_domain::editor_laws::mesh_component_gumball_retains_selection_coalesces_drags_and_round_trips_history",
         "editor_domain::editor_laws::a_document_archive_loads_into_a_fresh_instance_through_the_import_door",
-        "editor_domain::editor_laws::a_hub_genesis_pair_is_produced_and_parses_back_without_trapping"
+        "editor_domain::editor_laws::a_hub_genesis_pair_is_produced_and_parses_back_without_trapping",
+        "editor_domain::editor_laws::geometry_media_export_uses_the_supplied_instance_owner_and_refuses_closed_authority"
       ],
       "targetPath": "🧪️tests/🧊️generation3d-app-laws/🦀️.rs"
     },

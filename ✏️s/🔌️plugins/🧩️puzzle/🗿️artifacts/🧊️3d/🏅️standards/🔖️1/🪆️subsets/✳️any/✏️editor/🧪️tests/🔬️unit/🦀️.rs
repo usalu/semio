@@ -1512,27 +1512,29 @@ fn suggestion_and_precompute_hostile_static_law_rejects_one_grant_reducers_and_m
     }
 }
 
-fn selection_transforms_are_cursorized(source: &str) -> bool {
-    source.contains("\"translateSelection\" | \"rotateSelection\" | \"scaleSelection\" => Box::new(Puzzle3dScaleWork::new(tool_id))")
-        && source.contains("Puzzle3dScaleStage::ObjectSelection")
-        && source.contains("Puzzle3dScaleStage::VolumeSelection")
-        && source.contains("Puzzle3dScaleStage::Objects")
-        && source.contains("Puzzle3dScaleStage::Volumes")
-        && !source.contains("\"translateSelection\" => Box::new(crate::retained_command::BoundedFirstStepCommandWork")
-        && !source.contains("\"rotateSelection\" => Box::new(crate::retained_command::BoundedFirstStepCommandWork")
+fn selection_transforms_run_the_transform_tool(source: &str) -> bool {
+    source.contains(r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(Puzzle3dTransformWork::new(tool_id, request.authoring_seed.clone()))"#)
+        && source.contains("Puzzle3dTransformStage::Read")
+        && source.contains("Puzzle3dTransformStage::Commit")
+        && source.contains("puzzle3d_transform_tool_commit(self.tool_id")
+        && !source.contains(r#""translateSelection" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+        && !source.contains(r#""worldRelocate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
 }
 
+/// 🛠️ Every selection transform — the three gumball verbs, the target-volume relocate and the Relocate
+/// utility — is ONE staged work that states the gesture and commits it through the transform tool: a
+/// one-grant reducer, a missing stage or a bypassed tool fails closed.
 #[test]
-fn selection_transform_hostile_static_law_rejects_one_grant_reducers_and_missing_cursors() {
+fn selection_transform_hostile_static_law_rejects_one_grant_reducers_and_bypassed_tools() {
     let source = include_str!("../../🦀️.rs");
-    assert!(selection_transforms_are_cursorized(source));
+    assert!(selection_transforms_run_the_transform_tool(source));
     let direct = source.replace(
-        "\"translateSelection\" | \"rotateSelection\" | \"scaleSelection\" => Box::new(Puzzle3dScaleWork::new(tool_id))",
-        "\"translateSelection\" | \"rotateSelection\" | \"scaleSelection\" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))",
+        r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(Puzzle3dTransformWork::new(tool_id, request.authoring_seed.clone()))"#,
+        r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
     );
-    assert!(!selection_transforms_are_cursorized(&direct), "hostile old-reducer replacement must fail closed");
-    for marker in ["Puzzle3dScaleStage::ObjectSelection", "Puzzle3dScaleStage::VolumeSelection", "Puzzle3dScaleStage::Objects", "Puzzle3dScaleStage::Volumes"] {
-        assert!(!selection_transforms_are_cursorized(&source.replace(marker, "cursor-removed")), "missing transform cursor was falsely accepted: {marker}");
+    assert!(!selection_transforms_run_the_transform_tool(&direct), "hostile old-reducer replacement must fail closed");
+    for marker in ["Puzzle3dTransformStage::Read", "Puzzle3dTransformStage::Commit", "puzzle3d_transform_tool_commit(self.tool_id"] {
+        assert!(!selection_transforms_run_the_transform_tool(&source.replace(marker, "stage-removed")), "missing transform stage was falsely accepted: {marker}");
     }
 }
 
@@ -1589,35 +1591,6 @@ fn patch_inspector_hostile_static_law_rejects_old_reducer_and_hidden_collection_
     }
 }
 
-fn world_relocate_is_cursorized(source: &str) -> bool {
-    source.contains(r#""worldRelocate" => Box::new(Puzzle3dWorldRelocateWork::default())"#)
-        && source.contains("Puzzle3dWorldRelocateStage::Object")
-        && source.contains("Puzzle3dWorldRelocateStage::ExistingAttractions")
-        && source.contains("Puzzle3dWorldRelocateStage::CandidateObject")
-        && source.contains("Puzzle3dWorldRelocateStage::CandidateVortex")
-        && source.contains("Puzzle3dWorldRelocateStage::PublishAttraction")
-        && source.contains("PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT")
-        && !source.contains(r#""worldRelocate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
-}
-
-#[test]
-fn world_relocate_hostile_static_law_rejects_whole_proximity_scans() {
-    let source = include_str!("../../🦀️.rs");
-    assert!(world_relocate_is_cursorized(source));
-    let direct =
-        source.replace(r#""worldRelocate" => Box::new(Puzzle3dWorldRelocateWork::default())"#, r#""worldRelocate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#);
-    assert!(!world_relocate_is_cursorized(&direct));
-    for marker in [
-        "Puzzle3dWorldRelocateStage::Object",
-        "Puzzle3dWorldRelocateStage::ExistingAttractions",
-        "Puzzle3dWorldRelocateStage::CandidateObject",
-        "Puzzle3dWorldRelocateStage::CandidateVortex",
-        "Puzzle3dWorldRelocateStage::PublishAttraction",
-        "PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT",
-    ] {
-        assert!(!world_relocate_is_cursorized(&source.replace(marker, "cursor-removed")), "missing relocate cursor was falsely accepted: {marker}");
-    }
-}
 
 fn create_attraction_is_cursorized(source: &str) -> bool {
     source.contains(r#""createAttraction" => Box::new(Puzzle3dCreateAttractionWork::default())"#)
@@ -1685,36 +1658,24 @@ fn set_active_example_hostile_static_law_rejects_whole_document_reset() {
     }
 }
 
-/// 🧮️ ticket 26/09/02/PUZZLE-3D-END-TO-END §Y2: `Puzzle3dWorldRelocateWork::extent` used to charge
-/// every object a flat `PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT` (64) regardless of its real vortex
-/// count, so Nakagin's 180 objects (358 real vortex instances) computed `objects * 66 + attractions`
-/// = 11,880 and faulted preflight with "puzzle command exceeds fixed semantic work capacity" before
-/// `step()` ever ran. The rewritten bound counts the document's actual vortices instead.
+/// 🧮️ The Relocate utility's retained work is two bounded steps whatever the document: it states the drop as
+/// ONE selection record and commits it through the transform tool — the proximity scan is the record, not a
+/// cursor walk — so even Nakagin's 180 objects admit it.
 #[test]
 fn world_relocate_extent_fits_within_cap_for_nakagin() {
     use crate::retained_command::PuzzleCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "nonexistent", "position": [0.0, 0.0, 0.0] })), None).expect("worldRelocate command decodes");
-    let work = Puzzle3dWorldRelocateWork::default();
-    let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
-    assert!(extent <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, "worldRelocate extent {extent} must not exceed the fixed cap {}", crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS);
+    let work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
+    assert_eq!(work.extent(&command, &snapshot, &interaction), Some(2), "a relocate reads its gesture, then commits it");
 }
 
-/// 🔁️ ticket 26/09/02/PUZZLE-3D-END-TO-END §Y2 (coordinator follow-up): the extent test above only
-/// proves the bound is REALISTIC (fits under the cap) — it says nothing about whether the bound is
-/// SOUND (real `step()` calls never outrun it). This drives the actual `CandidateVortex ⇄
-/// PublishAttraction` cycle (the genuine ping-pong at editor `🦀️.rs` `Puzzle3dWorldRelocateStage::
-/// CandidateVortex`/`PublishAttraction`) against a real Nakagin joint: object
-/// `25b0dba0-8f81-423a-94a1-b911a6031010` ("Capsule With Balcony Backslash") is "relocated" to its
-/// own current origin — a real, non-degenerate command, not a synthetic no-op — and its one vortex
-/// (`…:link`, kind "door capsule right") sits, by the fixture's own real assembled geometry
-/// (independently recomputed here with the same `quat_rotate_vector` Hamilton-product formula
-/// `step()` uses), within `proximity_radius` (0.75, `default_proximity_radius()`) of four
-/// "door tambour right" vortices already on neighbour object `5f0266bc-…`. That forces the
-/// `PublishAttraction` loop-back more than once, closing the gap a trivial early-exit run leaves
-/// open, and empirically exercises the `candidate_scan_stage`'s `object_vortices * 2` term this
-/// ticket introduced.
+/// 🔁️ A real Nakagin drop: object `25b0dba0-8f81-423a-94a1-b911a6031010` ("Capsule With Balcony
+/// Backslash") moves one centimetre along x, and its one vortex (`…:link`, kind "door capsule right") still
+/// lands within `proximity_radius` (0.75, `default_proximity_radius()`) of the "door tambour right" vortices
+/// on neighbour `5f0266bc-…`. The work finishes inside its own extent and commits ONE transaction: the
+/// `drag-selection` plus at least one `connect-vortices`, all stamped with the ref it minted.
 #[test]
 fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
@@ -1722,29 +1683,21 @@ fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
-    let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "25b0dba0-8f81-423a-94a1-b911a6031010", "position": [-8.85, -2.8499999999999996, 7.7] })), None).expect("worldRelocate command decodes");
-    let mut work = Puzzle3dWorldRelocateWork::default();
-    let extent = work.extent(&command, &snapshot, &interaction).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
-    let guard = extent.saturating_mul(4).saturating_add(1000);
+    let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "25b0dba0-8f81-423a-94a1-b911a6031010", "position": [-8.84, -2.8499999999999996, 7.7] })), None).expect("worldRelocate command decodes");
+    let mut work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
+    let extent = work.extent(&command, &snapshot, &interaction).expect("a relocate always fits the fixed bounded work envelope");
     let mut iterations = 0usize;
     let emit = loop {
-        assert!(iterations <= guard, "worldRelocate step() did not reach Complete within a generous multiple of its own extent {extent}; runaway loop suspected");
+        assert!(iterations <= extent, "worldRelocate step() ran past its own declared extent {extent}");
         match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
             PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
         }
     };
-    assert!(iterations <= extent, "worldRelocate step() ran {iterations} real steps, exceeding its own declared extent {extent} — the bound is unsound");
-    assert!(
-        iterations > 100,
-        "worldRelocate's CandidateObject/CandidateVortex stages unconditionally walk every real object and vortex, so a real Nakagin run must take hundreds of steps, not a trivial early exit; observed only {iterations} iterations"
-    );
-    assert!(
-        emit.artifact_mutations.len() >= 2,
-        "the relocated vortex sits within proximity_radius of a real neighbour already present in the Nakagin fixture, so PublishAttraction must fire at least once beyond the move itself; observed {} mutations",
-        emit.artifact_mutations.len()
-    );
+    assert!(matches!(emit.artifact_mutations.first(), Some(Puzzle3dMutation::DragSelection(_))), "the drop yields its drag first: {:?}", emit.artifact_mutations.first());
+    assert!(emit.artifact_mutations.iter().skip(1).any(|mutation| matches!(mutation, Puzzle3dMutation::ConnectVortices(_))), "the relocated vortex sits within proximity_radius of a real neighbour, so the drop attracts it; observed {:?}", emit.artifact_mutations);
+    assert!(emit.transaction.as_ref().is_some_and(|transaction| transaction.tool.ends_with("#worldRelocate")), "the drop is ONE tool transaction: {:?}", emit.transaction);
 }
 
 /// 🧮️ ticket 26/09/02/PUZZLE-3D-END-TO-END §Y2: `Puzzle3dCreateAttractionWork::extent` doubled the
@@ -1963,31 +1916,18 @@ fn set_active_example_work_advances_through_multiple_bounded_steps_for_nakagin()
     assert_eq!(Puzzle3dConfig { active_example_id: config.active_example_id.clone(), ..published }, config, "example loading leaves shared app preferences untouched");
 }
 
-/// 🧲️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave T: the gumball bracket is an honest `Migrated`
-/// `HostOnly` pair. `World3dHost` (`🧰️framework/…/🌐️World3dHost/🟦️.tsx:4718`) dispatches
-/// `transformBegin` on drag start, ONE absolute start→end `translateSelection`/`rotateSelection`/
-/// `scaleSelection` delta on drag end, then `transformEnd`; mid-drag ticks never leave the host. So
-/// both brackets carry no document or config transition of their own and complete empty on
-/// `NoopPuzzleCommandWork` — but they must still be `Migrated`, or `validate_ui_dispatch_classification`
-/// (`🧰️framework/…/🔌️plugin/🦀️.rs`) rejects every real drag with `interactive-job.not-ui-safe`.
+/// 🧲️ Both hosts paint a gumball drag locally and dispatch ONE pose delta on release, so there is no gesture
+/// bracket left to declare: `transformBegin`/`transformEnd` are neither retained tools, nor manifest actions,
+/// nor publication contracts.
 #[test]
-fn transform_brackets_are_migrated_host_only_routes_that_complete_empty() {
+fn gumball_gestures_declare_no_bracket_verbs() {
     let manifest = create_puzzle3d_app();
     let contracts = <Puzzle3dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
-    let snapshot = Puzzle3dPlayApp::initial_snapshot();
-    let config = Puzzle3dConfig::default();
-    let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
     for action in ["transformBegin", "transformEnd"] {
-        assert!(PUZZLE3D_RETAINED_TOOL_IDS.contains(&action), "{action} must be a retained tool id or no tool job is ever built for it");
-        let declarations = action_declarations(&manifest, action);
-        assert_eq!(declarations.len(), 1, "{action} requires exactly one manifest declaration");
-        assert_eq!(declarations[0].semantics.execution.interactive_job, semio_framework_plugin::InteractiveJobClassification::Migrated, "{action} must pass the UI dispatch gate");
-        let contract = contracts.iter().find(|contract| contract.tool_id == action).unwrap_or_else(|| panic!("{action} needs a publication contract"));
-        assert_eq!(contract.lanes, &[ArtifactToolPublicationLane::HostOnly], "{action} publishes nothing: the drag itself is one absolute delta on another route");
-        let command = Puzzle3dCommand::from_action(action, None, None).expect("command decodes");
-        let emit = puzzle3d_retained_reduce(&command, &snapshot, &config, &interaction, &hover, None).expect("real dispatch");
-        assert!(emit.artifact_mutations.is_empty() && emit.config_mutations.is_empty() && emit.effects.is_empty(), "{action} must stay a true no-op; got {}/{}/{}", emit.artifact_mutations.len(), emit.config_mutations.len(), emit.effects.len());
+        assert!(!PUZZLE3D_RETAINED_TOOL_IDS.contains(&action), "{action} must not be a retained tool id");
+        assert!(action_declarations(&manifest, action).is_empty(), "{action} must not be declared");
+        assert!(!contracts.iter().any(|contract| contract.tool_id == action), "{action} must carry no publication contract");
+        assert!(Puzzle3dCommand::from_action(action, None, None).is_none(), "{action} must not decode as a command");
     }
 }
 
@@ -2132,19 +2072,6 @@ fn window_config_publish_hostile_static_law_rejects_silent_ok_into_iter_drop() {
     assert!(!window_config_publish_does_not_silently_drop(&dropped), "a silent .ok().into_iter() drop must fail the law");
 }
 
-#[test]
-fn transform_lifecycle_is_an_explicit_bounded_retained_boundary() {
-    let source = include_str!("../../🦀️.rs");
-    let route = r#""worldPointerDown" | "transformBegin" | "transformEnd" => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(tool_id))"#;
-    assert!(source.contains(route));
-    let direct = source.replace(
-        route,
-        r#""worldPointerDown" => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),
-            "transformBegin" | "transformEnd" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
-    );
-    assert!(!direct.contains(route));
-    assert!(direct.contains(r#""transformBegin" | "transformEnd" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#));
-}
 
 fn kind_weight_route_is_cursorized(source: &str) -> bool {
     source.contains(r#""setObjectKindWeight" | "setVortexKindWeight" => Box::new(Puzzle3dKindWeightWork::new(tool_id))"#)
@@ -4948,13 +4875,9 @@ async fn selection_scoped_commands_with_no_selection_refuse_with_exactly_one_not
         assert!(result.mutations.is_empty(), "{action} refused, so it must emit no document mutation: {:?}", result.mutations);
         assert!(!matches!(result.ui_scope, UiDirtyScope::Full), "{action} painted nothing, so it must not force a full refresh");
     }
-    // 🧲️ The three gumball verbs carry a `coalesce_key`, so they enter the latest-wins channel whose
-    // accepted invocation answers BEFORE the command runs — their whole outcome (notice, scope) lives on
-    // the completion lane, which `context::settle` now drains into `InvocationResult` instead of
-    // dropping. They also never reach `refuse_without_selection`: `build_tool_job` routes them to
-    // `Puzzle3dScaleWork`, not through `dispatch_step`, which is why they used to complete with an empty
-    // edit, a coalesce key and `UiDirtyScope::Full` — measured 2026-09-09 in-process as
-    // `completion scope=Full, effects=[]` while `duplicateSelection` on the same fixture refused.
+    // 🧲️ The three gumball verbs run the transform tool (`Puzzle3dTransformWork`), whose whole outcome
+    // (notice, scope) lives on the completion lane that `context::settle` drains into `InvocationResult`: a
+    // gesture addressing nothing refuses with one notice and paints nothing.
     for (action, args) in [
         ("translateSelection", json!({ "dx": 1.0, "dy": 0.0, "dz": 0.0 })),
         ("rotateSelection", json!({ "ax": 0.0, "ay": 0.0, "az": 1.0, "angle": 1.0 })),
@@ -5168,23 +5091,6 @@ fn object_origin(app: &Puzzle3dApp, object_id: &str) -> Vec<f64> {
         .unwrap_or_default()
 }
 
-#[semio_framework_async_macros::async_test]
-async fn gumball_translate_drag_coalesces_into_one_edit() {
-    // 🌀️ Repeated translate dispatches coalesce into one undo entry via AmendLast.
-    let mut app = app().await;
-    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
-    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add object");
-    let object_id = first_object_id(&app);
-    let start = object_origin(&app, &object_id);
-    for dx in [1.0, 2.0, 3.0] {
-        dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id.as_str()], "dx": dx, "dy": 0.0, "dz": 0.0 })), None).await.expect("drag tick");
-    }
-    let dragged = object_origin(&app, &object_id);
-    assert!((dragged[0] - start[0] - 6.0).abs() < 1e-9, "three ticks accumulate 1+2+3 on x");
-    dispatch(&mut app, "undo", None, None).await.expect("undo");
-    assert_eq!(object_origin(&app, &object_id), start, "one undo restores the whole coalesced gumball drag");
-}
-
 fn object_orientation(app: &Puzzle3dApp, object_id: &str) -> Vec<f64> {
     projection_of(app)
         .get("objects")
@@ -5203,60 +5109,95 @@ fn object_scale(app: &Puzzle3dApp, object_id: &str) -> Vec<f64> {
         .unwrap_or_default()
 }
 
-#[semio_framework_async_macros::async_test]
-async fn gumball_rotate_drag_coalesces_into_one_edit() {
-    let mut app = app().await;
-    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
-    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add object");
-    let object_id = first_object_id(&app);
-    let start = object_orientation(&app, &object_id);
-    for angle in [0.25, 0.50, 0.75] {
-        dispatch(&mut app, "rotateSelection", Some(&json!({ "ids": [object_id.as_str()], "ax": 0.0, "ay": 0.0, "az": 1.0, "angle": angle })), None).await.expect("rotate tick");
-    }
-    assert_ne!(object_orientation(&app, &object_id), start, "three rotate ticks must move the pose");
-    dispatch(&mut app, "undo", None, None).await.expect("undo");
-    assert_eq!(object_orientation(&app, &object_id), start, "one undo restores the whole coalesced rotate drag");
+/// 🧾️ The applied history rows one settle upserted that carry document ops.
+fn edit_rows(settled: &Puzzle3dSettled) -> Vec<semio_framework::kernel::HistoryEntry> {
+    settled.completions.iter().filter_map(|completion| completion.history_patch.as_ref()).flat_map(|patch| patch.upserts.iter()).filter(|entry| entry.applied && !entry.op_lines.is_empty()).cloned().collect()
 }
 
-#[semio_framework_async_macros::async_test]
-async fn gumball_scale_drag_coalesces_into_one_edit() {
-    let mut app = app().await;
-    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
-    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add object");
-    let object_id = first_object_id(&app);
-    let start = object_scale(&app, &object_id);
-    for sx in [1.1, 1.2, 1.3] {
-        dispatch(&mut app, "scaleSelection", Some(&json!({ "ids": [object_id.as_str()], "sx": sx, "sy": 1.0, "sz": 1.0 })), None).await.expect("scale tick");
-    }
-    assert_ne!(object_scale(&app, &object_id), start, "three scale ticks must change the scale");
-    dispatch(&mut app, "undo", None, None).await.expect("undo");
-    assert_eq!(object_scale(&app, &object_id), start, "one undo restores the whole coalesced scale drag");
+fn english(entry: &semio_framework::kernel::HistoryEntry) -> String {
+    entry.label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string()
 }
 
-/// 🧲️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave T: the real gumball gesture — `transformBegin`, ONE
-/// absolute start→end delta, `transformEnd` — moves the object by exactly that delta and undoes as
-/// one edit. The brackets themselves contribute nothing; a second gesture starts from the pose the
-/// first one left, with no app-side drag session to carry between them.
-#[semio_framework_async_macros::async_test]
-async fn gumball_gesture_commits_one_absolute_delta_between_its_host_brackets() {
+fn german(entry: &semio_framework::kernel::HistoryEntry) -> String {
+    entry.label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_string()
+}
+
+/// 🌱️ An empty scene with one fresh object, the object selected and the Transform utility active.
+async fn gumball_app() -> (Puzzle3dApp, String) {
     let mut app = app().await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add object");
     let object_id = first_object_id(&app);
     dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("transform");
     select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("interactionSelect");
-    let start = object_origin(&app, &object_id);
-    dispatch(&mut app, "transformBegin", None, None).await.expect("begin");
-    dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id.as_str()], "dx": 6.0, "dy": 0.0, "dz": 0.0 })), None).await.expect("drag-end delta");
-    dispatch(&mut app, "transformEnd", None, None).await.expect("end");
-    assert!((object_origin(&app, &object_id)[0] - start[0] - 6.0).abs() < 1e-9, "the one absolute delta lands verbatim on the document");
-    dispatch(&mut app, "undo", None, None).await.expect("undo");
-    assert_eq!(object_origin(&app, &object_id), start, "one undo restores the whole gumball gesture");
-    dispatch(&mut app, "transformBegin", None, None).await.expect("begin again");
-    dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id.as_str()], "dx": 2.0, "dy": 0.0, "dz": 0.0 })), None).await.expect("second gesture delta");
-    dispatch(&mut app, "transformEnd", None, None).await.expect("second end");
-    assert!((object_origin(&app, &object_id)[0] - start[0] - 2.0).abs() < 1e-9, "a second gesture works from the restored pose");
+    (app, object_id)
 }
+
+/// 🛠️ One gumball drag — the ONE pose delta both hosts dispatch on release — is ONE tool transaction: one
+/// edit, one history row stamped with the transform tool's `TransactionRef`, whose op is the parametric
+/// `drag-selection` over the gesture's literal ids and offset, labelled from the leaf in English and German.
+/// One undo restores the pose exactly.
+#[semio_framework_async_macros::async_test]
+async fn one_gumball_translate_is_one_edit_one_row_and_one_transaction() {
+    let (mut app, object_id) = gumball_app().await;
+    let start = object_origin(&app, &object_id);
+    let (result, settled) = dispatch_reporting(&mut app, "translateSelection", Some(&json!({ "ids": [object_id.as_str()], "dx": 6.0, "dy": 0.0, "dz": 0.0 })), None).await;
+    result.expect("the release delta commits");
+    let rows = edit_rows(&settled);
+    assert_eq!(rows.len(), 1, "one gesture, one history row: {}", history_row_labels(&settled).join(" | "));
+    let transaction = rows[0].transaction.as_ref().expect("the row is keyed by its tool transaction");
+    assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.puzzle.puzzle3d@1/*#editor#translateSelection", "the transform tool authored it: {transaction:?}");
+    assert!(rows[0].op_lines.len() == 1 && rows[0].op_lines[0].starts_with("drag-selection"), "the one op is the parametric leaf: {:?}", rows[0].op_lines);
+    assert_eq!((english(&rows[0]), german(&rows[0])), ("Drag 1 item by (6, 0, 0)".to_string(), "1 Element um (6; 0; 0) ziehen".to_string()), "the row is labelled from the leaf");
+    assert!((object_origin(&app, &object_id)[0] - start[0] - 6.0).abs() < 1e-9, "the offset lands verbatim on the document");
+    dispatch(&mut app, "undo", None, None).await.expect("undo");
+    assert_eq!(object_origin(&app, &object_id), start, "one undo restores the whole gesture");
+}
+
+/// 🧮️ Two gestures are two transactions — two rows with distinct refs — and one undo takes back only the
+/// second: gestures never coalesce into one another.
+#[semio_framework_async_macros::async_test]
+async fn two_gumball_gestures_are_two_transactions() {
+    let (mut app, object_id) = gumball_app().await;
+    let start = object_origin(&app, &object_id);
+    let (_, first) = dispatch_reporting(&mut app, "translateSelection", Some(&json!({ "ids": [object_id.as_str()], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), None).await;
+    let (_, second) = dispatch_reporting(&mut app, "translateSelection", Some(&json!({ "ids": [object_id.as_str()], "dx": 2.0, "dy": 0.0, "dz": 0.0 })), None).await;
+    let (first, second) = (edit_rows(&first), edit_rows(&second));
+    assert_eq!((first.len(), second.len()), (1, 1), "each gesture is its own row");
+    assert_ne!(first[0].transaction.as_ref().map(|transaction| transaction.id.clone()), second[0].transaction.as_ref().map(|transaction| transaction.id.clone()), "two gestures mint two transactions");
+    dispatch(&mut app, "undo", None, None).await.expect("undo");
+    assert!((object_origin(&app, &object_id)[0] - start[0] - 1.0).abs() < 1e-9, "one undo takes back only the second gesture");
+}
+
+/// 🔄️ A gumball turn and a gumball scaling are ONE transaction each, yielding `rotate-selection` and
+/// `scale-selection`, and one undo restores the exact base pose (absolute setters, never a negated angle).
+#[semio_framework_async_macros::async_test]
+async fn gumball_rotate_and_scale_are_one_transaction_each() {
+    let (mut app, object_id) = gumball_app().await;
+    let (orientation, scale) = (object_orientation(&app, &object_id), object_scale(&app, &object_id));
+    let (_, turned) = dispatch_reporting(&mut app, "rotateSelection", Some(&json!({ "ids": [object_id.as_str()], "ax": 0.0, "ay": 0.0, "az": 1.0, "angle": 0.75 })), None).await;
+    let rows = edit_rows(&turned);
+    assert!(rows.len() == 1 && rows[0].op_lines[0].starts_with("rotate-selection") && rows[0].transaction.is_some(), "one turn, one transaction: {rows:?}");
+    assert_ne!(object_orientation(&app, &object_id), orientation, "the turn moves the pose");
+    dispatch(&mut app, "undo", None, None).await.expect("undo turn");
+    assert_eq!(object_orientation(&app, &object_id), orientation, "one undo restores the orientation");
+    let (_, grown) = dispatch_reporting(&mut app, "scaleSelection", Some(&json!({ "ids": [object_id.as_str()], "sx": 1.5, "sy": 1.0, "sz": 1.0 })), None).await;
+    let rows = edit_rows(&grown);
+    assert!(rows.len() == 1 && rows[0].op_lines[0].starts_with("scale-selection") && rows[0].transaction.is_some(), "one scaling, one transaction: {rows:?}");
+    dispatch(&mut app, "undo", None, None).await.expect("undo scaling");
+    assert_eq!(object_scale(&app, &object_id), scale, "one undo restores the scale");
+}
+
+/// 🧯️ A motionless release — the drag that went nowhere — leaves zero trace: no edit, no row, no notice.
+#[semio_framework_async_macros::async_test]
+async fn a_motionless_gumball_release_leaves_zero_trace() {
+    let (mut app, object_id) = gumball_app().await;
+    let (result, settled) = dispatch_reporting(&mut app, "translateSelection", Some(&json!({ "ids": [object_id.as_str()], "dx": 0.0, "dy": 0.0, "dz": 0.0 })), None).await;
+    let result = result.expect("a motionless release completes");
+    let noticed = result.requested_effects.iter().any(|effect| matches!(effect, Effect::Notify { .. }));
+    assert!(edit_rows(&settled).is_empty() && result.mutations.is_empty() && !noticed, "nothing moved, nothing recorded: {}", history_row_labels(&settled).join(" | "));
+}
+
 //#endregion 🔖️Gumball
 
 //#region 🔖️KitInPort
@@ -6347,7 +6288,10 @@ async fn relocate_target_volume_undoes_and_redoes_as_one_mutation() {
     dispatch(&mut app, "addTargetVolume", Some(&json!({ "origin": [1.0, 2.0, 3.0] })), None).await.expect("addTargetVolume");
     let volume_id = first_target_volume_id(&app);
     let start = volume_origin(&app, &volume_id);
-    dispatch(&mut app, "relocateTargetVolume", Some(&json!({ "volumeId": volume_id, "after": { "position": [4.0, 5.0, 6.0] } })), None).await.expect("relocate");
+    let pose = |position: [f64; 3]| json!({ "position": position, "quaternion": [0.0, 0.0, 0.0, 1.0], "scale": [1.0, 1.0, 1.0] });
+    let (_, settled) = dispatch_reporting(&mut app, "relocateTargetVolume", Some(&json!({ "volumeId": volume_id, "mode": "translate", "before": pose([1.0, 2.0, 3.0]), "after": pose([4.0, 5.0, 6.0]) })), None).await;
+    let rows = edit_rows(&settled);
+    assert!(rows.len() == 1 && rows[0].op_lines[0].starts_with("drag-selection") && rows[0].transaction.is_some(), "the volume gumball is one relative drag transaction: {rows:?}");
     let moved = volume_origin(&app, &volume_id);
     assert!((moved[0] - 4.0).abs() < 1e-9 && (moved[1] - 5.0).abs() < 1e-9 && (moved[2] - 6.0).abs() < 1e-9, "relocateTargetVolume must write the after pose, got {moved:?} from {start:?}");
     dispatch(&mut app, "undo", None, None).await.expect("undo");

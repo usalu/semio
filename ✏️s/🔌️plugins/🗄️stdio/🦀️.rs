@@ -13,8 +13,8 @@ pub use plugin::plugin;
 #[cfg(feature = "plugin-root")]
 semio_framework_plugin::plugin_exports!(plugin, plugin::StdioApps);
 
-#[path = "📇️registry/🦀️.rs"]
-pub mod registry;
+#[path = "🔌️plugin/📇️catalog/🦀️.rs"]
+pub mod catalog;
 
 #[cfg(feature = "full-artifact-catalog")]
 #[path = "🛂️manifest/🦀️.rs"]

@@ -254,7 +254,7 @@ for (const row of fixture.cases) {
 }
 //#endregion ⚖️IndependentByteOracle
 //#region 🏷️AuthoredSliderLabels
-const labels = await Bun.file(new URL("../../🧫️fixtures/🏷️slider-labels.json", import.meta.url)).json();
+const labels = await Bun.file(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🧫️fixtures/🏷️slider-labels.json", import.meta.url)).json();
 const validateLabels = flowExport("FlowSliderLabels");
 assert(validateLabels(labels), JSON.stringify(validateLabels.errors));
 for (const row of labels.cases) {

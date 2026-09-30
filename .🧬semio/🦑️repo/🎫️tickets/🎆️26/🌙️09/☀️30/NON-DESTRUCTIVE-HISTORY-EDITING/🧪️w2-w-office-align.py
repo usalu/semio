@@ -1,9 +1,12 @@
 """🧮️ W2-W-office: re-aligns every Examples/data table of the given `🥒️.feature` files in place.
 
 Usage: python3 🧪️w2-w-office-align.py <feature> [<feature> ...]
-Cells are split on `|` exactly like the harness does, trimmed, and padded to their column's widest cell.
+Cells are split on `|` exactly like the harness does, trimmed, and padded to their column's widest cell — unless that
+cell is a whole wire payload wider than `WIDE`, whose column is left unpadded rather than blown up to its width.
 """
 import sys
+
+WIDE = 160
 
 
 def align(lines):
@@ -15,6 +18,7 @@ def align(lines):
         indent = block[0][: len(block[0]) - len(block[0].lstrip())]
         rows = [[cell.strip() for cell in line.strip()[1:-1].split("|")] for line in block]
         widths = [max(len(row[i]) for row in rows if i < len(row)) for i in range(max(len(row) for row in rows))]
+        widths = [0 if width > WIDE else width for width in widths]
         for row in rows:
             out.append(indent + "| " + " | ".join(cell.ljust(widths[i]) for i, cell in enumerate(row)) + " |\n")
         block.clear()

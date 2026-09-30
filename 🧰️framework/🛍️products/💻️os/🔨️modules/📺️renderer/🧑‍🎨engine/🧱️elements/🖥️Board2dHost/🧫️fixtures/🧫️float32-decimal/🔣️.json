@@ -1,0 +1,13 @@
+{
+  "schema": "semio.renderer.board2d.float32-decimal.v1",
+  "cases": [
+    { "name": "an 80 px drag read through f32", "value": 80.00003051757813, "expect": 80.00003 },
+    { "name": "f64 addition residue", "value": 0.30000000000000004, "expect": 0.3 },
+    { "name": "a Chromium clientX", "value": 351.3999938964844, "expect": 351.4 },
+    { "name": "a negative offset", "value": -12.5, "expect": -12.5 },
+    { "name": "an exact integer", "value": 80, "expect": 80 },
+    { "name": "zero", "value": 0, "expect": 0 },
+    { "name": "a sub-pixel offset", "value": 0.0625, "expect": 0.0625 },
+    { "name": "a large world offset", "value": 12345.678, "expect": 12345.678 }
+  ]
+}

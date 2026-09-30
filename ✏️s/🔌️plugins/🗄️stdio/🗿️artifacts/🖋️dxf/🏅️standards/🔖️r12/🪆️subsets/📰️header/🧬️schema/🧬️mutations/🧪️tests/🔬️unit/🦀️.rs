@@ -8,7 +8,7 @@ async fn missing_entity_target_is_rejected_before_mutation() {
     let base = DxfSnapshot::default();
     let diff = DxfDiff { entities: Some(DxfEntitiesDiff { removed: vec![0], ..Default::default() }), ..Default::default() };
     let error = diff.apply(&base).expect_err("missing entity target must be rejected");
-    assert_eq!(error.code, "invalid-remove-index");
+    assert_eq!(error.code, "mutation.apply.invalid-remove-index");
     assert_eq!(error.target, vec!["entities", "0"]);
     assert_eq!(base, DxfSnapshot::default());
 }

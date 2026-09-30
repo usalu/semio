@@ -21,7 +21,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertObject {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "object", kind: "insert-object", record: "Insert" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_insert_object(self.id, base.objects.len(), self.value.clone()))
+        MutationOutcome::new(diff::diff_graph_edit(base, diff::diff_insert_object(self.id, base.objects.len(), self.value.clone())))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfMutation> {

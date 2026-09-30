@@ -10,6 +10,10 @@
     ".": "./📚️library/🟦️.ts"
   },
   "scripts": {
+    "test:browser": "bun nx run @semio-tech/framework-renderer-wgpu:test-browser",
+    "check:wasm": "bun nx run @semio-tech/framework-renderer-wgpu:check-wasm",
+    "browser:dock:acceptance": "bun nx run @semio-tech/framework-renderer-wgpu:browser-dock-acceptance",
+    "browser:media:acceptance": "bun nx run @semio-tech/framework-renderer-wgpu:browser-media-acceptance",
     "test": "bun nx run @semio-tech/framework-renderer-wgpu:test",
     "test:browser-worker": "bun nx run @semio-tech/framework-renderer-wgpu:test-browser-worker",
     "wasm": "bun nx run @semio-tech/framework-renderer-wgpu:wasm",

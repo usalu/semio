@@ -2,6 +2,15 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-transform/schema.json",
   "title": "Change Layer Transform",
+  "x-semio-invariant": [
+    {
+      "id": "invertible-transform",
+      "description": {
+        "en": "Every affine placement the payload carries is invertible: its linear part has a non-zero determinant (a·d − b·c ≠ 0).",
+        "de": "Jede affine Platzierung der Nutzlast ist invertierbar: Ihr linearer Anteil hat eine von null verschiedene Determinante (a·d − b·c ≠ 0)."
+      }
+    }
+  ],
   "description": "Replaces the complete invertible affine transform of a pixel or group layer against its exact expected transform.",
   "type": "object",
   "additionalProperties": false,

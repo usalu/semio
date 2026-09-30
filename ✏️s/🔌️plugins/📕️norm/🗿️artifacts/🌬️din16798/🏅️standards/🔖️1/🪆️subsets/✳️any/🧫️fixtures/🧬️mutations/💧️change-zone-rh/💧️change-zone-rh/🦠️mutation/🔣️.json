@@ -1,0 +1,6 @@
+{
+  "ChangeZoneRh": {
+    "zoneId": "zone-office",
+    "newRhPercent": 50.0
+  }
+}

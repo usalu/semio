@@ -11,7 +11,7 @@ pub fn diff(payload: &super::ChangeGlazingMaterialInfraredEmissivity, base: &Ene
     };
     for (label, value) in [("front", payload.new_infrared_emissivity_front), ("back", payload.new_infrared_emissivity_back)] {
         if !value.is_finite() || !(0.0..=1.0).contains(&value) {
-            return protocol::MutationOutcome::error("mutation.invariant", format!("Glazing material {}: the {label} infrared emissivity must be a finite value in 0..=1, got {value}.", payload.id.0), [payload.id.0.to_string()]);
+            return protocol::MutationOutcome::fatal("mutation.invariant", format!("Glazing material {}: the {label} infrared emissivity must be a finite value in 0..=1, got {value}.", payload.id.0), [payload.id.0.to_string()]);
         }
     }
     if existing.infrared_emissivity_front == payload.new_infrared_emissivity_front && existing.infrared_emissivity_back == payload.new_infrared_emissivity_back {

@@ -1,0 +1,185 @@
+{
+  "annex": "De",
+  "title": "Liquid-retaining tank with FEM and anchor",
+  "designWorkingLifeYears": 50.0,
+  "deltaCDev": 0.01,
+  "cementType": "N",
+  "concreteGrades": [
+    {
+      "id": "c35",
+      "name": "C35/45",
+      "fCk": 35000000.0
+    }
+  ],
+  "reinforcementGrades": [
+    {
+      "id": "b500",
+      "name": "B500B",
+      "fYk": 500000000.0,
+      "eS": 200000000000.0,
+      "ductility": "b",
+      "k": 1.08,
+      "epsUk": 0.05
+    },
+    {
+      "id": "b500a",
+      "name": "B500A",
+      "fYk": 500000000.0,
+      "eS": 200000000000.0,
+      "ductility": "a",
+      "k": 1.05,
+      "epsUk": 0.025
+    },
+    {
+      "id": "b500c",
+      "name": "B500C",
+      "fYk": 550000000.0,
+      "eS": 200000000000.0,
+      "ductility": "c",
+      "k": 1.15,
+      "epsUk": 0.075
+    }
+  ],
+  "prestressSteels": [
+    {
+      "id": "yp1860",
+      "name": "Y1860S7",
+      "fPk": 1860000000.0,
+      "fP01k": 1700000000.0
+    },
+    {
+      "id": "yp1860b",
+      "name": "Y1770S7",
+      "fPk": 1770000000.0,
+      "fP01k": 1520000000.0
+    }
+  ],
+  "members": [
+    {
+      "id": "wall-W1",
+      "labelEn": "Tank wall W1",
+      "labelDe": "Behälterwand W1",
+      "kind": "LiquidRetaining",
+      "concreteGradeId": "c35",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "",
+      "exposure": "Xc4",
+      "width": 0.35,
+      "height": 0.5,
+      "effectiveDepth": 0.45,
+      "cover": 0.04,
+      "span": 7.5,
+      "support": "Continuous",
+      "bucklingLength": 0.0,
+      "longitudinal": [
+        {
+          "id": "vert",
+          "diameter": 0.016,
+          "count": 6,
+          "position": "bottom",
+          "anchorageLength": 0.7,
+          "lapLength": 0.85,
+          "bondCondition": "good",
+          "aggregateSize": 0.016
+        }
+      ],
+      "stirrups": {
+        "diameter": 0.008,
+        "spacing": 0.15,
+        "legs": 2
+      },
+      "punching": null,
+      "prestress": null,
+      "fire": {
+        "rating": "R90",
+        "axisDistance": 0.04,
+        "columnMethod": "",
+        "slabSystem": ""
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "permanent",
+          "category": "self",
+          "source": "external",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 125000.0,
+          "nK": 30000.0,
+          "vK": 50000.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        },
+        {
+          "id": "Q-office",
+          "kind": "imposed",
+          "category": "office",
+          "source": "external",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 50000.0,
+          "nK": 15000.0,
+          "vK": 30000.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        }
+      ],
+      "useFem": true,
+      "udl": 24000.0,
+      "deflectionSensitive": false,
+      "tightness": "Tc2",
+      "hdOverH": 8.0,
+      "liquidSigmaS": 280000000.0,
+      "liquidRhoPEff": 0.02,
+      "liquidFCtEff": 3200000.0,
+      "liquidSRMax": 0.22,
+      "bridgeSigmaC": 0.0,
+      "bridgeDeltaSigmaS": 0.0
+    }
+  ],
+  "anchors": [
+    {
+      "id": "anc-1",
+      "hEf": 0.1,
+      "cracked": true,
+      "fUk": 900000000.0,
+      "fYk": 720000000.0,
+      "aS": 0.0001,
+      "d": 0.012,
+      "c1": 0.12,
+      "fCk": 35000000.0,
+      "actions": [
+        {
+          "id": "G",
+          "kind": "permanent",
+          "category": "self",
+          "source": "external",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 8000.0,
+          "vK": 4000.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        },
+        {
+          "id": "Q-office",
+          "kind": "imposed",
+          "category": "office",
+          "source": "external",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 5000.0,
+          "vK": 3000.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        }
+      ]
+    }
+  ]
+}

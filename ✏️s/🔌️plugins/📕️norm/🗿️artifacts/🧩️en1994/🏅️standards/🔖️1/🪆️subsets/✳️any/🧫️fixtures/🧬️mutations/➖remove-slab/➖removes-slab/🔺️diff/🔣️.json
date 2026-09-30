@@ -1,0 +1,14 @@
+{
+  "artifact": null,
+  "annex": null,
+  "structureKind": null,
+  "steelFYPa": null,
+  "beams": null,
+  "columns": null,
+  "slabs": {
+    "values": []
+  },
+  "fireRating": null,
+  "insulationThicknessM": null,
+  "fatigueDetail": null
+}

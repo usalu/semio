@@ -18,5 +18,5 @@
   { "direction": "shell_to_gateway", "kind": "transactionRedone", "payload": {"version":1,"kind":"transactionRedone","groupId":"edit_8"} },
   { "direction": "shell_to_gateway", "kind": "artifact", "payload": {"version":1,"kind":"artifact","pack":"AQIDBA==","spr":"BQY="} },
   { "direction": "shell_to_gateway", "kind": "exported", "payload": {"version":1,"kind":"exported","port":"pdf","descriptor":"AQ==","data":"AgM="} },
-  { "direction": "shell_to_gateway", "kind": "error", "payload": {"version":1,"kind":"error","code":"mutation.rejected","message":"the document is read-only for this actor"} }
+  { "direction": "shell_to_gateway", "kind": "error", "payload": {"version":1,"kind":"error","code":"app.command.rejected","message":"the document is read-only for this actor"} }
 ]

@@ -1,0 +1,5 @@
+type ChangeActionVk {
+  memberId: String!
+  actionId: String!
+  newValue: Float!
+}

@@ -5,6 +5,7 @@ change_reference_hidden::ChangeReferenceHidden, change_reference_locked::ChangeR
     delete_building_model::DeleteBuildingModel, delete_drawing::DeleteDrawing, delete_energy_model::DeleteEnergyModel, delete_node::DeleteNode, delete_shape_model::DeleteShapeModel, delete_structure_classic_model::DeleteStructureClassicModel,
     create_object::CreateObject, delete_object::DeleteObject, move_objects::MoveObjects, move_reference::MoveReference, rename_node::RenameNode, replace_reference_media::ReplaceReferenceMedia,
     replace_references::ReplaceReferences, rotate_objects::RotateObjects, scale_objects::ScaleObjects,
+    drag_selection::DragSelection, rotate_selection::RotateSelection, scale_selection::ScaleSelection,
 };
 use crate::mutations::{CadObjectOrientation, CadObjectOrigin, CadObjectScale, CadObjectSpec};
 use crate::sample_scene_fixture::{sample_model_child, sample_reference, sample_scene};
@@ -42,9 +43,9 @@ pub fn every_mutation() -> Vec<CadMutation> {
             new_opacity: Some(0.5),
         }),
         CadMutation::ReplaceReferences(ReplaceReferences { model_definition_id: "spatial.shape".into(), references: vec![sample_reference()] }),
-        // 🪆️ The five object-lifecycle kinds read the addressed pane child's in-process
+        // 🪆️ The eight object kinds read the addressed pane child's in-process
         // materialization, which `sample_scene`'s handles deliberately do not carry — against THIS
-        // base every one of them is a `mutation.no-op`, which is exactly what the wire/inverse laws
+        // base every one of them changes nothing (a no-op or target-missing), which is what the wire/inverse laws
         // below need from them. Their real apply/inverse behaviour against a materialized pane is
         // asserted by the laws beside each leaf (`🧬️mutations/<kind>/🧪️tests/`).
         CadMutation::CreateObject(CreateObject {
@@ -57,6 +58,9 @@ pub fn every_mutation() -> Vec<CadMutation> {
         CadMutation::MoveObjects(MoveObjects { pane: CadPaneId::Shape, placements: vec![CadObjectOrigin { object_id: "object-1".into(), new_origin: [1.0, 2.0, 3.0] }] }),
         CadMutation::RotateObjects(RotateObjects { pane: CadPaneId::Shape, placements: vec![CadObjectOrientation { object_id: "object-1".into(), new_orientation: [0.0, 0.0, 0.0, 1.0] }] }),
         CadMutation::ScaleObjects(ScaleObjects { pane: CadPaneId::Shape, placements: vec![CadObjectScale { object_id: "object-1".into(), new_scale: [2.0, 2.0, 2.0] }] }),
+        CadMutation::DragSelection(DragSelection { pane: CadPaneId::Shape, targets: vec!["object-1".into()], offset: [1.0, 2.0, 3.0] }),
+        CadMutation::RotateSelection(RotateSelection { pane: CadPaneId::Shape, targets: vec!["object-1".into()], axis: [0.0, 0.0, 1.0], angle: 0.5 }),
+        CadMutation::ScaleSelection(ScaleSelection { pane: CadPaneId::Shape, targets: vec!["object-1".into()], factors: [2.0, 2.0, 2.0] }),
     ]
 }
 
@@ -223,14 +227,17 @@ fn kinds_match_the_enum_and_the_catalog() {
 }
 //#endregion 🧪️KindsCatalog
 //#region 🧾️WireWitnesses
-/// 🧾️ The committed wire witnesses of the five object-lifecycle kinds — whose pane-materialized state no before/after
+/// 🧾️ The committed wire witnesses of the eight object kinds — whose pane-materialized state no before/after
 /// quintet can carry — keyed by semantic kind, in [`every_mutation`]'s object-lifecycle order.
-const OBJECT_WIRE_WITNESSES: [(&str, &str); 5] = [
+const OBJECT_WIRE_WITNESSES: [(&str, &str); 8] = [
     ("create-object", include_str!("../../../../🧫️fixtures/🧬️mutations/🆕create-object/🧾️wire-witness/🦠️mutation/🔣️.json")),
     ("delete-object", include_str!("../../../../🧫️fixtures/🧬️mutations/❌delete-object/🧾️wire-witness/🦠️mutation/🔣️.json")),
     ("move-objects", include_str!("../../../../🧫️fixtures/🧬️mutations/🚚move-objects/🧾️wire-witness/🦠️mutation/🔣️.json")),
     ("rotate-objects", include_str!("../../../../🧫️fixtures/🧬️mutations/🌀rotate-objects/🧾️wire-witness/🦠️mutation/🔣️.json")),
     ("scale-objects", include_str!("../../../../🧫️fixtures/🧬️mutations/⚖️scale-objects/🧾️wire-witness/🦠️mutation/🔣️.json")),
+    ("drag-selection", include_str!("../../../../🧫️fixtures/🧬️mutations/✋️drag-selection/🧾️wire-witness/🦠️mutation/🔣️.json")),
+    ("rotate-selection", include_str!("../../../../🧫️fixtures/🧬️mutations/🔄️rotate-selection/🧾️wire-witness/🦠️mutation/🔣️.json")),
+    ("scale-selection", include_str!("../../../../🧫️fixtures/🧬️mutations/🔍️scale-selection/🧾️wire-witness/🦠️mutation/🔣️.json")),
 ];
 
 /// 🧾️ Each committed object-lifecycle wire witness is the canonical Rust wire (decodes, and re-encodes to exactly the
@@ -246,6 +253,9 @@ fn object_lifecycle_wire_witnesses_are_the_canonical_rust_wire() {
         CadMutation::MoveObjects(MoveObjects { pane: CadPaneId::Shape, placements: vec![CadObjectOrigin { object_id: "object-a".into(), new_origin: [1.5, -2.25, 0.5] }] }),
         CadMutation::RotateObjects(RotateObjects { pane: CadPaneId::Shape, placements: vec![CadObjectOrientation { object_id: "object-a".into(), new_orientation: [0.0, 0.0, 0.6, 0.8] }] }),
         CadMutation::ScaleObjects(ScaleObjects { pane: CadPaneId::Shape, placements: vec![CadObjectScale { object_id: "object-a".into(), new_scale: [2.0, 1.5, 0.5] }] }),
+        CadMutation::DragSelection(DragSelection { pane: CadPaneId::Shape, targets: vec!["object-a".into(), "object-b".into()], offset: [1.5, -2.0, 0.5] }),
+        CadMutation::RotateSelection(RotateSelection { pane: CadPaneId::Shape, targets: vec!["object-a".into()], axis: [0.0, 0.0, 1.0], angle: 0.5 }),
+        CadMutation::ScaleSelection(ScaleSelection { pane: CadPaneId::Shape, targets: vec!["object-a".into()], factors: [2.0, 1.5, 0.5] }),
     ];
     for ((kind, witness), expected) in OBJECT_WIRE_WITNESSES.into_iter().zip(expected) {
         let committed: CadMutation = store::os_store::test_support::assert_wire_witness(witness);

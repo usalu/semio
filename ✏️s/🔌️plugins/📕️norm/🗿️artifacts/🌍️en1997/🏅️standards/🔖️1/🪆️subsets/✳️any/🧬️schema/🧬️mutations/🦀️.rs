@@ -229,3 +229,10 @@ pub fn inverse_en1997_mutation(mutation: &En1997Mutation, base: &En1997Snapshot)
     <En1997Mutation as protocol::Mutation<En1997Snapshot>>::inverse(mutation, base)
 }
 //#endregion 🌉️ExternalCodecBridge
+
+
+//#region 🧫️Vectors
+#[cfg(test)]
+#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
+mod fixture_tests;
+//#endregion 🧫️Vectors

@@ -1,0 +1,37 @@
+{
+  "UpdateBoltInputs": {
+    "joint": {
+      "id": "joint-j1",
+      "kind": "bolted",
+      "memberId": "member-b1",
+      "boltClass": "10.9",
+      "boltDiameter": 0.024,
+      "boltRows": 2,
+      "boltsPerRow": 2,
+      "pitch": 0.06,
+      "endDistance": 0.04,
+      "edgeDistance": 0.04,
+      "shearPlanes": 1,
+      "plateThickness": 0.01,
+      "plateFu": 510000000.0,
+      "weldThroat": 0.0,
+      "weldLength": 0.0,
+      "weldFu": 510000000.0,
+      "weldGrade": "S355",
+      "category": "A",
+      "frictionMu": 0.5,
+      "preloadForce": 0.0,
+      "slipFactorKs": 1.0,
+      "frictionSurfaces": 1,
+      "gauge": 0.06,
+      "actions": [
+        {
+          "id": "jf-1",
+          "loadCaseId": "g-permanent",
+          "shear": 80000.0,
+          "tension": 0.0
+        }
+      ]
+    }
+  }
+}

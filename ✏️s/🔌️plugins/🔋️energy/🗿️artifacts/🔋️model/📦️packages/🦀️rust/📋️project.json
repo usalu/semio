@@ -54,6 +54,15 @@
           "SEMIO_ENERGY_BESTEST_REGENERATE": "1"
         }
       }
+    },
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-architecture",
+        "forwardAllArgs": true
+      }
     }
   }
 }

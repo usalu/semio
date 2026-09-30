@@ -12,7 +12,7 @@ async fn missing_element_target_is_rejected_before_mutation() {
     let base = PlySnapshot::default();
     let diff = PlyDiff { elements: Some(PlyElementsDiff { removed: vec!["missing".into()], ..Default::default() }), ..Default::default() };
     let error = diff.apply(&base).expect_err("missing element target must be rejected");
-    assert_eq!(error.code, "invalid-remove-target");
+    assert_eq!(error.code, "mutation.apply.invalid-remove-target");
     assert_eq!(error.target, vec!["elements", "missing"]);
     assert_eq!(base, PlySnapshot::default());
 }

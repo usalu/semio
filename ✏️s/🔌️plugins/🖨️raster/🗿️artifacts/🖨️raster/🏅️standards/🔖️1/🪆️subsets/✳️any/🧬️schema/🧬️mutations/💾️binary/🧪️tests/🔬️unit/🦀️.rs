@@ -1372,7 +1372,7 @@ fn retained_asset_insertion_at_full_capacity_refuses_without_changing_source() {
 
 #[test]
 fn retained_layer_clone_preserves_protection_during_history_replay() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut base=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();base.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
     let operation=RasterMutation::RenameLayer(rename_layer::RenameLayer {layer_id:"locked-pixel".into(),new_name:"Accepted history".into()});
     let candidate=drive_raster_candidate(&base,&operation,981);

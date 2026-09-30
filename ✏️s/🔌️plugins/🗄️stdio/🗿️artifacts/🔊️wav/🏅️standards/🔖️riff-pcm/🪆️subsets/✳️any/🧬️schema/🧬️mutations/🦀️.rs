@@ -57,7 +57,7 @@ pub fn apply_wav_mutation(snapshot: &mut WavSnapshot, mutation: &WavMutation) ->
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 
@@ -120,7 +120,7 @@ pub(crate) fn agg_diff(this: &WavMutation, base: &WavSnapshot) -> protocol::Muta
     };
     let Ok(candidate) = protocol::MutationDiff::apply(outcome.diff(), base) else { return outcome };
     if let Err(issue) = validate_wav_serialization(&candidate) {
-        return protocol::MutationOutcome::error(issue.code, issue.message, issue.target).absorb_messages(outcome.messages().to_vec());
+        return protocol::MutationOutcome::error("mutation.target-mismatch", format!("{}: {}", issue.code, issue.message), issue.target).absorb_messages(outcome.messages().to_vec());
     }
     outcome
 }

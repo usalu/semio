@@ -43,7 +43,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertPage {
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         if !self.valid(base) {
-            return MutationOutcome::error("stdio.pdf.insert-page.invalid-target", "Page target or geometry is outside the PDF 1.4 domain", self.target());
+            return MutationOutcome::error("mutation.target-missing", "Page target or geometry is outside the PDF 1.4 domain", self.target());
         }
         MutationOutcome::new(PdfDiff { pages: Some(PdfPagesDiff { added: vec![PdfPageAdded { index: self.index, page: self.page.clone() }], ..Default::default() }) })
     }

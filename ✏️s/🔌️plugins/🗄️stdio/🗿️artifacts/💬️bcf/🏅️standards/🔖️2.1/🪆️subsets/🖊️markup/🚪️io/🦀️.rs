@@ -429,6 +429,13 @@ fn visualization_info_bytes(vp: &BcfViewpoint) -> Vec<u8> {
 //#endregion 🔖️VisualizationInfoXml
 
 //#region 🔖️Codec
+/// 🚫️ The refusal for a part the archive names but no well-formed `<root>` document fills. Dropping it instead lost a
+/// viewpoint's camera and components (or a whole topic) without a word, and re-encoding then wrote the loss back.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn malformed(part: &str, root: &str) -> String {
+    format!("{part} is not a well-formed BCF 2.1 <{root}> document")
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
     let mut entries = Vec::new();
@@ -456,7 +463,7 @@ pub fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
     let mut version = String::new();
     let mut consumed: std::collections::HashSet<String> = std::collections::HashSet::new();
     if let Some(e) = zip.entries.iter().find(|e| e.name.eq_ignore_ascii_case("bcf.version")) {
-        version = parse_bcf_version(&e.data).unwrap_or_default();
+        version = parse_bcf_version(&e.data).ok_or_else(|| malformed(&e.name, "Version"))?;
         consumed.insert(e.name.clone());
     }
 
@@ -471,7 +478,7 @@ pub fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
     for (folder, folder_entries) in &folders {
         let markup_name = format!("{folder}/markup.bcf");
         let Some(markup_entry) = folder_entries.iter().find(|e| e.name.eq_ignore_ascii_case(&markup_name)) else { continue };
-        let Some(raw) = parse_markup_bcf(&markup_entry.data) else { continue };
+        let raw = parse_markup_bcf(&markup_entry.data).ok_or_else(|| malformed(&markup_entry.name, "Markup"))?;
         consumed.insert(markup_entry.name.clone());
 
         let mut viewpoints = Vec::new();
@@ -481,10 +488,7 @@ pub fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
             if let Some(vp_file) = &vref.viewpoint_file {
                 let full = format!("{folder}/{vp_file}");
                 if let Some(vp_entry) = folder_entries.iter().find(|e| e.name.eq_ignore_ascii_case(&full)) {
-                    if let Some((c, comp)) = parse_visualization_info(&vp_entry.data) {
-                        camera = c;
-                        components = comp;
-                    }
+                    (camera, components) = parse_visualization_info(&vp_entry.data).ok_or_else(|| malformed(&vp_entry.name, "VisualizationInfo"))?;
                     consumed.insert(vp_entry.name.clone());
                 }
             }

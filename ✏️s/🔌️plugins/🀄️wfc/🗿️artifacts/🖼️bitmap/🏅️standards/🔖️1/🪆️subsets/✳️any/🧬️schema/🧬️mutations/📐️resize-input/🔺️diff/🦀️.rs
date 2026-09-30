@@ -20,7 +20,7 @@ pub fn diff(payload: &super::ResizeInput, base: &BitmapSnapshot) -> protocol::Mu
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("The input is already {}×{}.", payload.width, payload.height));
     }
     let Some(buffer) = base.input.indices() else {
-        return protocol::MutationOutcome::fatal("mutation.malformed-payload", "The base input pixel buffer does not decode.".to_string(), ["input".to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.apply.invalid-base", "The base input pixel buffer does not decode.".to_string(), ["input".to_string()]);
     };
     let resized = resized_buffer(&buffer, base.input.width, base.input.height, payload.width, payload.height);
     protocol::MutationOutcome::new(BitmapDiff { input_width: Some(payload.width), input_height: Some(payload.height), input_pixels: Some(encode_base64(&resized)), ..Default::default() })

@@ -19,8 +19,8 @@ async fn edit_calibration_inserts_then_updates_the_same_camera_entry() {
 #[semio_framework_async_macros::async_test]
 async fn gcps_are_added_observed_and_removed() {
     let mut app = app().await;
-    // 🎯️ An observation names a stream of the document (`add-gcp-observation` is FATAL for an unknown
-    // one), so the observed stream exists first — uncalibrated, the boot document carries no camera.
+    // 🎯️ An observation names a stream of the document (`add-gcp-observation` refuses an unknown one as
+    // `mutation.target-missing`), so the observed stream exists first — uncalibrated, the boot document carries no camera.
     dispatch(&mut app, RemodelingCommand::AddStream(crate::editor::remodeling::commands::add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: String::new() })).await;
     let stream_id = app.snapshot().expect("projection").streams[0].id.clone();
     dispatch(&mut app, RemodelingCommand::AddGcp(add_gcp::AddGcp { name: "Corner".into(), world_x: 1.0, world_y: 2.0, world_z: 3.0 })).await;

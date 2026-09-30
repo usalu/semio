@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceSupport`.
 //!
 //! Guards, in the order they run: `mutation.target-missing` (Error) on the selected id,
-//! `mutation.id-mismatch` (Fatal) when the replacement renames it, the SAME `node_id` resolution
+//! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME `node_id` resolution
 //! `create-support` runs (`mutation.target-missing`, Error), and finally `mutation.no-op`.
 use super::ReplaceSupport;
 use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dSupportsDelta, Fem2dSupportsPatchEntry};

@@ -106,7 +106,7 @@ async fn create_delete_stream_inverse_law() {
     let base = populated_scene_fixture();
     let stream = MediaStream { id: "stream-99".into(), name: "extra".into(), ..MediaStream::default() };
     assert_mutation_inverse_law(&base, &create_stream(stream)).await;
-    // 🔗️ `gcp-1` observes `stream-1`; the delete refuses (`mutation.referenced`) until that
+    // 🔗️ `gcp-1` observes `stream-1`; the delete refuses (`mutation.target-referenced`) until that
     // observation is removed.
     let detached = applied(&base, &remove_gcp_observation("gcp-1".into(), 0));
     assert_mutation_inverse_law(&detached, &delete_stream("stream-1".into())).await;
@@ -241,7 +241,7 @@ async fn dispatch_registers_semantic_descriptors() {
 #[semio_framework_async_macros::async_test]
 async fn concurrent_create_asset_ops_converge_regardless_of_order() {
     let base = populated_scene_fixture();
-    // 🧩️ `ImageAsset.data` is base64 — a non-base64 payload is refused (`mutation.invalid-asset-payload`).
+    // 🧩️ `ImageAsset.data` is base64 — a non-base64 payload is refused (`mutation.invariant`).
     let asset_a = ImageAsset { mime: "image/jpeg".into(), data: base64_codec::base64_standard_encode(b"frame-one"), width: 8, height: 8 };
     let asset_b = ImageAsset { mime: "image/jpeg".into(), data: base64_codec::base64_standard_encode(b"frame-two"), width: 8, height: 8 };
     let op_a = create_asset("frame-a".into(), asset_a.clone());

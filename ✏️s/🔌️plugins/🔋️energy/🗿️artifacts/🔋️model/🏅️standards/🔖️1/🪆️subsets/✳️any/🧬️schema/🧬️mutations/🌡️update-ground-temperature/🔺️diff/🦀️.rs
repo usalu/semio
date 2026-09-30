@@ -7,7 +7,7 @@ use crate::EnergyModelSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &super::UpdateGroundTemperature, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
     if payload.building_surface_c.len() != 12 || payload.shallow_c.len() != 12 {
-        return protocol::MutationOutcome::error(
+        return protocol::MutationOutcome::fatal(
             "mutation.invariant",
             format!("Ground temperatures need twelve monthly values each, got {} building-surface and {} shallow.", payload.building_surface_c.len(), payload.shallow_c.len()),
             Vec::<String>::new(),

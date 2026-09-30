@@ -27,6 +27,15 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 }
 //#endregion 🔖️Input
 
+//#region 🔖️Artifacts
+/// 📦️ The oracle's produced AVI as the `expected-avi` artifact the `avi-1-0-riff-compare-v1` pipeline reads.
+fn expected(ctx: &Context, bytes: Vec<u8>, projection: semio_repo_test_host::Json) -> Result<Outcome, String> {
+    let path = ctx.artifact("expected-avi", "expected.avi")?;
+    std::fs::write(&path, &bytes).map_err(|error| error.to_string())?;
+    Ok(Outcome::with_raw(bytes, projection).artifact("expected-avi", &path, "video/x-msvideo"))
+}
+//#endregion 🔖️Artifacts
+
 //#region 🔖️Oracle
 /// 👁️ One handler shared by every `mutate-<kind>` scenario id -- the scenario's own `<id>`/`<params>`
 /// spec is carried in its doc string, `params` being the leaf's wire payload. It applies the row's
@@ -41,7 +50,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_avi_1_0(&bytes)?;
     law::mutation_is_observable(&spec.str("kind"), &projection, &before, &[])?;
-    Ok(Outcome::with_raw(bytes, projection))
+    expected(ctx, bytes, projection)
 }
 
 /// ↩️ One handler shared by every `inverse-<kind>` scenario id. `oracle_apply_mutation_inverse`
@@ -56,7 +65,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let bytes = oracle_apply_mutation_inverse(&input, &spec)?;
     let projection = project_avi_1_0(&bytes)?;
     law::inverse_restores(&spec.str("kind"), &projection, &before)?;
-    Ok(Outcome::with_raw(bytes, projection))
+    expected(ctx, bytes, projection)
 }
 
 /// 🔒️ The ORACLE side of the no-byte-pass-through law, ASSERTED here and not merely described: the
@@ -70,7 +79,7 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let before = project_avi_1_0(&input)?;
     let projection = project_avi_1_0(&bytes)?;
     law::round_trip_preserves(&projection, &before)?;
-    Ok(Outcome::with_raw(bytes, projection))
+    expected(ctx, bytes, projection)
 }
 //#endregion 🔖️Oracle
 
@@ -92,12 +101,19 @@ mod subject {
     //#endregion 🔖️SpecCodec
 
     //#region 🔖️Handlers
+    /// 📤️ The subject's produced AVI as the `actual-avi` artifact the `avi-1-0-riff-compare-v1` pipeline reads.
+    fn actual(ctx: &Context, bytes: Vec<u8>, projection: Json) -> Result<Outcome, String> {
+        let path = ctx.artifact("actual-avi", "actual.avi")?;
+        std::fs::write(&path, &bytes).map_err(|error| error.to_string())?;
+        Ok(Outcome::with_raw(bytes, projection).artifact("actual-avi", &path, "video/x-msvideo"))
+    }
+
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode_avi(&mutable_input(ctx)?).map_err(|error| format!("decode_avi failed: {error}"))?;
         apply_avi_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
         let bytes = encode_avi(&snapshot);
         let projection = project_avi_1_0(&bytes)?;
-        Ok(Outcome::with_raw(bytes, projection))
+        actual(ctx, bytes, projection)
     }
 
     /// ↩️ Applies the row's mutation, then every mutation the vocabulary's own inverse returns against the
@@ -112,7 +128,7 @@ mod subject {
         }
         let bytes = encode_avi(&snapshot);
         let projection = project_avi_1_0(&bytes)?;
-        Ok(Outcome::with_raw(bytes, projection))
+        actual(ctx, bytes, projection)
     }
 
     /// 🔒️ The no-byte-pass-through rule: the subject must fully parse the real artifact into its
@@ -126,7 +142,7 @@ mod subject {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
         let projection = project_avi_1_0(&output)?;
-        Ok(Outcome::with_raw(output, projection))
+        actual(ctx, output, projection)
     }
     //#endregion 🔖️Handlers
 }

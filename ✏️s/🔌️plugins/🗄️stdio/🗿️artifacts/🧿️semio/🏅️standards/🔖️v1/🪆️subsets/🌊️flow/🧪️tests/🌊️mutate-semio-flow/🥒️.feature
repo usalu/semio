@@ -6,7 +6,7 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
   `stdio.semio.flow` is a semio-NATIVE format: no third party in any ecosystem reads or writes
   `.dsl.semio` or `.pack.semio`, so the second producer a differential comparison needs is a second
   IMPLEMENTATION. `🐍️component.py` beside this file is that implementation — the envelope, the DSL
-  grammar, the LEB128 pack frame with its little-endian `f64` coordinates, and all thirteen verbs
+  grammar, the LEB128 pack frame with its little-endian `f64` coordinates, and all fourteen verbs
   with their inverses, written in Python from the committed specification documents alone
   (`../../🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`,
   `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, `…/🧬️mutations/📝️text/📖️component.grammar.semio`,
@@ -90,6 +90,7 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
       | remove-edge        | {"mutation":"removeEdge","id":"3NLh69tTrEpfV9iDbwoXYL"} |
       | set-edge-endpoints | {"mutation":"setEdgeEndpoints","id":"2jGlFQA9H2mvmjiNpnYG5Q","from":{"node":"0IEifuk9T5eR2vbWao4vJp","port":"0DFWl3CFjFrhgWeoJyVitG"},"to":{"node":"0POPlhUSnC1REPvcqnensi","port":"28MKF16un8NBtKsWfORP5Y"}} |
       | set-edge-kind      | {"mutation":"setEdgeKind","id":"2jGlFQA9H2mvmjiNpnYG5Q","kind":"Die Mitte des östlichen Rechteckkerns."} |
+      | drag-nodes         | {"mutation":"dragNodes","targets":["1OS4$rPqz9cOn2s4ojb1k3","3GOXMcqS9E287ioto$RIXo"],"dx":12.5,"dy":-40.25} |
 
   @id-no-mutation-baseline-mutate
   @level-exhaustive
@@ -126,6 +127,7 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
       | remove-edge        | {"mutation":"removeEdge","id":"3NLh69tTrEpfV9iDbwoXYL"} |
       | set-edge-endpoints | {"mutation":"setEdgeEndpoints","id":"2jGlFQA9H2mvmjiNpnYG5Q","from":{"node":"0IEifuk9T5eR2vbWao4vJp","port":"0DFWl3CFjFrhgWeoJyVitG"},"to":{"node":"0POPlhUSnC1REPvcqnensi","port":"28MKF16un8NBtKsWfORP5Y"}} |
       | set-edge-kind      | {"mutation":"setEdgeKind","id":"2jGlFQA9H2mvmjiNpnYG5Q","kind":"Die Mitte des östlichen Rechteckkerns."} |
+      | drag-nodes         | {"mutation":"dragNodes","targets":["1OS4$rPqz9cOn2s4ojb1k3","3GOXMcqS9E287ioto$RIXo"],"dx":12.5,"dy":-40.25} |
 
   @id-no-mutation-baseline-inverse
   @level-exhaustive
@@ -160,6 +162,7 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
       | remove-edge | ✂️remove-edge |
       | set-edge-endpoints | 🔌️set-edge-endpoints |
       | set-edge-kind | 🎨️set-edge-kind |
+      | drag-nodes | ✋️drag-nodes |
 
   @id-identity-round-trip
   @level-long

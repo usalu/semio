@@ -42,7 +42,8 @@ export type SemioFlowMutation =
   | { mutation: "insertEdge"; edge: FlowEdge }
   | { mutation: "removeEdge"; id: string }
   | { mutation: "setEdgeEndpoints"; id: string; from: PortRef; to: PortRef }
-  | { mutation: "setEdgeKind"; id: string; kind: string };
+  | { mutation: "setEdgeKind"; id: string; kind: string }
+  | { mutation: "dragNodes"; targets: string[]; dx: number; dy: number };
 
 //#region 🚪️Parsers
 /** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
@@ -92,7 +93,7 @@ export const stdioSemioV1FlowMutationsTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export interface SemioFlowMutationText {
-  readonly mutation: "setSnapshot" | "insertNode" | "removeNode" | "setNodeKind" | "setNodeLabel" | "setNodePosition" | "setNodeParam" | "removeNodeParam" | "insertEdge" | "removeEdge" | "setEdgeEndpoints" | "setEdgeKind";
+  readonly mutation: "setSnapshot" | "insertNode" | "removeNode" | "setNodeKind" | "setNodeLabel" | "setNodePosition" | "setNodeParam" | "removeNodeParam" | "insertEdge" | "removeEdge" | "setEdgeEndpoints" | "setEdgeKind" | "dragNodes";
   readonly snapshot?: SemioFlowSnapshot;
   readonly node?: FlowNode;
   readonly edge?: FlowEdge;
@@ -104,4 +105,7 @@ export interface SemioFlowMutationText {
   readonly value?: string;
   readonly from?: PortRef;
   readonly to?: PortRef;
+  readonly targets?: readonly string[];
+  readonly dx?: number;
+  readonly dy?: number;
 }

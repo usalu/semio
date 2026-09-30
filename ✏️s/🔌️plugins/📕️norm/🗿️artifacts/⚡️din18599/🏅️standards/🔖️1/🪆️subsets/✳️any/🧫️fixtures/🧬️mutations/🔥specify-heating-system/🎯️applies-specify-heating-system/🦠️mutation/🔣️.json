@@ -1,0 +1,10 @@
+{
+  "mutation": "specifyHeatingSystem",
+  "newHeating": {
+    "generationEfficiency": 1.078,
+    "distributionEfficiency": 0.96,
+    "storageEfficiency": 0.98,
+    "transferEfficiency": 0.96,
+    "energyCarrier": "natural_gas"
+  }
+}

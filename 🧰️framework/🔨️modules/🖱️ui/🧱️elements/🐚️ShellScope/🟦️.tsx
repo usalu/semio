@@ -91,7 +91,20 @@ export function createShellScope(options: { readonly shellId?: string; readonly 
   };
 }
 
-export const ShellScopeContext = React.createContext<ShellScope | null>(null);
+/** 🪪️ The page's one shell-scope context, held in the global symbol registry so every evaluation of this module shares it.
+ * A second evaluation — the module served again under another URL while a page keeps its mounted providers, as a dev serve
+ * does across its reloads — otherwise created a second context that no mounted `ShellScopeProvider` provides, and its hooks
+ * threw `useShellScope called outside a ShellScopeProvider` at `FrameworkOsShellInner`, whose one render site is inside its
+ * provider (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING follow-up 3, e2e finding 4). Each shell still provides its own
+ * scope value; only the context identity is page-wide. */
+const SHELL_SCOPE_CONTEXT_KEY = Symbol.for("semio.ui.elements.ShellScope.context");
+
+function pageShellScopeContext(): React.Context<ShellScope | null> {
+  const registry = globalThis as unknown as Record<symbol, React.Context<ShellScope | null> | undefined>;
+  return (registry[SHELL_SCOPE_CONTEXT_KEY] ??= React.createContext<ShellScope | null>(null));
+}
+
+export const ShellScopeContext = pageShellScopeContext();
 
 /** 🐚️ Also wraps `children` in an `I18nextProvider` bound to `scope.i18n` — the only wiring
  * `useUiTranslation`/`useLabel` (which call plain `useTranslation()`) need to resolve this shell's own

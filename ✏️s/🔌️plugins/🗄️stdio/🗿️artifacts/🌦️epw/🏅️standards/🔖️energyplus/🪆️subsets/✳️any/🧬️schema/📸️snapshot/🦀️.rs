@@ -2,9 +2,8 @@
 //! LOSSLESS by construction: all 8 EPW header lines are retained (LOCATION fully typed + the
 //! remaining 6 header blocks + DATA PERIODS structured) and every data record carries all 35
 //! EPW columns (https://bigladdersoftware.com/epx/docs/9-6/auxiliary-programs/energyplus-weather-file-epw-data-dictionary.html) —
-//! unlike energy's plugin-side `EpwWeather::parse` (`✏️s/🔌️plugins/🔋️energy/⚙️engine/site/🦀️.rs`),
-//! which reads a handful of columns with `unwrap_or(..)` silent defaults for its own derived
-//! `WeatherRecord` view.
+//! consumed by energy's specific `🧩️extensions/🌦️epw` mapper to derive format-independent
+//! simulation weather records.
 //!
 //! 🔒 Every numeric-looking column (temperatures, radiation, LOCATION's lat/lon/elevation, …) is
 //! stored as `String`, not `f64`/`u16`. This is a deliberate retention choice, not laziness: EPW

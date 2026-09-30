@@ -1,17 +1,8 @@
-//! 🌤️ Site, weather, EPW ingest, design days, solar position, ground temperatures.
-//!
-//! 🔗 EPW text decoding is delegated in-process to stdio's real, lossless `stdio.epw` artifact
-//! codec (`semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::io::decode_epw`,
-//! all 35 spec columns, no silent defaults) — see [`EpwWeather::parse`]/[`EpwWeather::from_snapshot`].
-//! Energy's own [`WeatherRecord`]/psychrometrics stay energy-side, computed FROM stdio's
-//! `EpwSnapshot` rather than populated by an ad-hoc energy-side parse.
+//! 🌤️ Format-independent weather records, design days, solar position and ground temperatures.
 
-use crate::error::Error;
 use crate::props::{humidity_ratio_from_rh, moist_air_density};
 use crate::units::{deg_to_rad, rad_to_deg};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
-use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::snapshot::EpwRecord;
-use semio_s_artifact_stdio_epw::EpwSnapshot;
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️WeatherRecord
@@ -46,47 +37,12 @@ impl WeatherRecord {
     }
 }
 
-/// 🔢️ Parses one EPW wire field (always a `String` in stdio's lossless `EpwRecord`) into a
-/// numeric type. A hard error on malformed content — no `unwrap_or` silent defaulting.
-fn parse_epw_field<T: std::str::FromStr>(value: &str, field: &str) -> Result<T, Error> {
-    value.trim().parse::<T>().map_err(|_| Error::fatal(format!("EPW: invalid numeric value for {field}: {value:?}")))
-}
-
-impl TryFrom<&EpwRecord> for WeatherRecord {
-    type Error = Error;
-
-    /// 🔁️ Derives energy's own per-timestep view from one of stdio's fully-labeled, 35-column
-    /// `EpwRecord`s (https://bigladdersoftware.com/epx/docs/9-6/auxiliary-programs/energyplus-weather-file-epw-data-dictionary.html#field-list-locations-of-the-data-in-the-epw-file).
-    /// EPW's `hour` column is 1..24 (hour-ending); converted here to a 0..23 index.
-    fn try_from(r: &EpwRecord) -> Result<Self, Error> {
-        let hour_1_24: u8 = parse_epw_field(&r.hour, "hour")?;
-        let relative_humidity: f64 = parse_epw_field::<f64>(&r.relative_humidity, "relativeHumidity")? / 100.0;
-        Ok(WeatherRecord {
-            year: parse_epw_field(&r.year, "year")?,
-            month: parse_epw_field(&r.month, "month")?,
-            day: parse_epw_field(&r.day, "day")?,
-            hour: hour_1_24.saturating_sub(1),
-            minute: parse_epw_field(&r.minute, "minute")?,
-            dry_bulb_c: parse_epw_field(&r.dry_bulb_temp, "dryBulbTemp")?,
-            dew_point_c: parse_epw_field(&r.dew_point_temp, "dewPointTemp")?,
-            relative_humidity,
-            atmospheric_pressure_pa: parse_epw_field(&r.atmospheric_pressure, "atmosphericPressure")?,
-            wind_speed_m_s: parse_epw_field(&r.wind_speed, "windSpeed")?,
-            wind_direction_deg: parse_epw_field(&r.wind_direction, "windDirection")?,
-            direct_normal_irradiance_w_m2: parse_epw_field(&r.direct_normal_radiation, "directNormalRadiation")?,
-            diffuse_horizontal_irradiance_w_m2: parse_epw_field(&r.diffuse_horizontal_radiation, "diffuseHorizontalRadiation")?,
-            horizontal_infrared_w_m2: parse_epw_field(&r.horizontal_infrared_radiation, "horizontalInfraredRadiation")?,
-            precipitation_mm: parse_epw_field(&r.liquid_precip_depth, "liquidPrecipDepth")?,
-            snow_depth_mm: parse_epw_field(&r.snow_depth, "snowDepth")?,
-        })
-    }
-}
 // #endregion 🔖️WeatherRecord
 
-// #region 🔖️Epw
-/// 📄️ EPW weather file parsed into typed records.
+// #region 🔖️WeatherData
+/// 📄️ Site metadata and typed weather records consumed by the simulation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
-pub struct EpwWeather {
+pub struct WeatherData {
     pub location: String,
     pub latitude_deg: f64,
     pub longitude_deg: f64,
@@ -95,38 +51,12 @@ pub struct EpwWeather {
     pub records: Vec<WeatherRecord>,
 }
 
-impl EpwWeather {
-    /// 📥️ Parse EPW text content (EnergyPlus Weather format) via stdio's real, lossless
-    /// `stdio.epw` codec (all 8 header lines + all 35 record columns, hard errors on malformed
-    /// input — no silent per-field defaulting), then derive energy's own `WeatherRecord` view.
-    pub fn parse(content: &str) -> Result<Self, Error> {
-        let snapshot = semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::io::decode_epw(content).map_err(Error::fatal)?;
-        Self::from_snapshot(&snapshot)
-    }
-
-    /// 🔁️ Builds energy's derived weather view from stdio's already-decoded, lossless
-    /// `EpwSnapshot` (e.g. when the snapshot was obtained via `io_dispatch`/`io_compose_via`
-    /// rather than from raw text).
-    pub fn from_snapshot(snapshot: &EpwSnapshot) -> Result<Self, Error> {
-        let latitude_deg = parse_epw_field(&snapshot.location.latitude, "LOCATION.latitude")?;
-        let longitude_deg = parse_epw_field(&snapshot.location.longitude, "LOCATION.longitude")?;
-        let time_zone_hours = parse_epw_field(&snapshot.location.time_zone, "LOCATION.timeZone")?;
-        let elevation_m = parse_epw_field(&snapshot.location.elevation, "LOCATION.elevation")?;
-        let location = snapshot.location.city.clone();
-
-        let records = snapshot.records.iter().map(WeatherRecord::try_from).collect::<Result<Vec<_>, Error>>()?;
-        if records.is_empty() {
-            return Err(Error::fatal("EPW: no data records"));
-        }
-
-        Ok(Self { location, latitude_deg, longitude_deg, elevation_m, time_zone_hours, records })
-    }
-
+impl WeatherData {
     pub fn record_at_index(&self, idx: usize) -> Option<&WeatherRecord> {
         self.records.get(idx)
     }
 }
-// #endregion 🔖️Epw
+// #endregion 🔖️WeatherData
 
 // #region 🔖️DesignDay
 /// 🌡️ Sizing design day specification.

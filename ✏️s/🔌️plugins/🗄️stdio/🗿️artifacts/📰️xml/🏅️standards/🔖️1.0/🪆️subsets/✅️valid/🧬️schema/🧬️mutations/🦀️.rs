@@ -147,7 +147,7 @@ pub fn kind_of(mutation: &XmlValidMutation) -> &'static str {
 
 //#region 🔖️Gate
 /// 🚫 The fault code every rejected `✳️valid` mutation reports under.
-pub const CODE_REJECTED: &str = "stdio.xml.valid.mutation-outside-subset";
+pub const CODE_REJECTED: &str = "mutation.target-mismatch";
 
 /// 🌳️ The document element's tag name, when the document has one at all.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -185,7 +185,7 @@ pub fn apply_xml_valid_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlValidM
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 

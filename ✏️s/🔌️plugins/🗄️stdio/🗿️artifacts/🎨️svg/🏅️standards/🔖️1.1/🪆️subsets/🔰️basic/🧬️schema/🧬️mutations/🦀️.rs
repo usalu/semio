@@ -116,7 +116,7 @@ const BLOCKED_FILTER_PRIMITIVES: &[&str] = &["feConvolveMatrix", "feDisplacement
 /// ✍️ The SVG text element kinds — a clip path containing one clips to text.
 const TEXT_ELEMENTS: &[&str] = &["text", "tspan", "tref", "textPath"];
 
-const CODE_REJECTED: &str = "stdio.svg.basic.mutation-outside-profile";
+const CODE_REJECTED: &str = "mutation.target-mismatch";
 
 fn local_name(name: &str) -> &str {
     name.rsplit(':').next().unwrap_or(name)
@@ -245,7 +245,7 @@ pub fn apply_svg_basic_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgBasicM
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 

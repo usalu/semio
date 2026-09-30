@@ -220,7 +220,26 @@ mod tests {
         (placements, previews, result)
     }
 
-    fn take_first_fill_checkpoint(job: BoardFillJob) -> crate::editor::puzzle2d::engine::BoardFillCheckpoint {
+    /// 💾️ Runs `job` to its first checkpoint and claims the placement that checkpoint published — the owner's
+    /// hand-off every resume requires — answering the resumable checkpoint and the claimed placement's witness.
+    fn take_first_fill_checkpoint(job: BoardFillJob) -> (crate::editor::puzzle2d::engine::BoardFillCheckpoint, FillPlacementWitness) {
+        let mut checkpoint = first_fill_checkpoint(job);
+        let mut placement = checkpoint.take_pending_placement().expect("a checkpoint publishes its placement");
+        let witness = FillPlacementWitness {
+            node_kind: placement.node_kind.as_str().to_string(),
+            edge_kind: placement.edge_kind.as_str().to_string(),
+            source: placement.source_handle_id.as_str().to_string(),
+            target: placement.target_handle_id.as_str().to_string(),
+            x: placement.x,
+            y: placement.y,
+        };
+        while !placement.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {}
+        assert!(placement.terminal_is_empty());
+        (checkpoint, witness)
+    }
+
+    /// 💾️ Runs `job` to its first checkpoint, the placement it published still inside.
+    fn first_fill_checkpoint(job: BoardFillJob) -> crate::editor::puzzle2d::engine::BoardFillCheckpoint {
         let operation = job.operation();
         let params = BatchJobParams {
             operation: operation.operation,
@@ -613,7 +632,7 @@ mod tests {
         .unwrap();
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
         let operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(7), semio_framework_job::Generation(3), 77);
-        let checkpoint = take_first_fill_checkpoint(BoardFillJob::with_operation(capture_fill_snapshot(&h), 12, operation));
+        let (checkpoint, first) = take_first_fill_checkpoint(BoardFillJob::with_operation(capture_fill_snapshot(&h), 12, operation));
         let stale_operation = Operation::new(operation.operation, operation.base_revision, semio_framework_job::Generation(4), operation.seed);
         let checkpoint = match BoardFillJob::restore(checkpoint, stale_operation) {
             Ok(job) => {
@@ -629,10 +648,44 @@ mod tests {
                 panic!("exact checkpoint restore rejected");
             }
         };
-        let (actual, previews, _) = run_mounted_fill_job(resumed, 1);
+        let (resumed_placements, previews, _) = run_mounted_fill_job(resumed, 1);
         let (expected, _, _) = run_fill_job(&h, 12, operation, 1);
-        assert_eq!(actual, expected);
+        let actual: Vec<FillPlacementWitness> = std::iter::once(first).chain(resumed_placements).collect();
+        assert_eq!(actual, expected, "the claimed first placement plus the resumed run replay the uninterrupted run");
         assert!(!previews.is_empty());
+    }
+
+    /// 🙅️ A checkpoint still carrying the placement it published never resumes: restore refuses it with the exact
+    /// checkpoint back, so the placement can be claimed and the resume retried — a resumed job never holds, and never
+    /// overwrites, a placement nobody claimed.
+    #[test]
+    fn a_checkpoint_with_an_unclaimed_placement_never_resumes() {
+        let mut h = BoardHost::new();
+        h.set_size(800, 600, 1.0);
+        h.set_suggestion_offset(40.0);
+        h.set_brush_node_size(40.0);
+        h.set_board_kind_catalogs_from_json(&serde_json::json!({ "handleKinds": [{ "id": "child", "name": "Child", "color": "#888888" }], "nodeKinds": [{ "id": "brush.kind", "name": "Brush Kind", "handles": [{ "handleKind": "child", "angle": 0.0 }] }] }).to_string()).unwrap();
+        h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+        let operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(9), semio_framework_job::Generation(2), 9);
+        let checkpoint = first_fill_checkpoint(BoardFillJob::with_operation(capture_fill_snapshot(&h), 4, operation));
+        assert!(checkpoint.pending_placement().is_some(), "the checkpoint publishes its placement");
+        let mut checkpoint = match BoardFillJob::restore(checkpoint, operation) {
+            Ok(job) => {
+                close_fill_job(job);
+                panic!("a checkpoint with an unclaimed placement resumed");
+            }
+            Err(checkpoint) => checkpoint,
+        };
+        let mut placement = checkpoint.take_pending_placement().expect("the refused checkpoint still owns its placement");
+        while !placement.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {}
+        assert!(placement.terminal_is_empty());
+        match BoardFillJob::restore(checkpoint, operation) {
+            Ok(job) => close_fill_job(job),
+            Err(checkpoint) => {
+                close_fill_job(checkpoint.into_closing_job());
+                panic!("a claimed checkpoint must resume");
+            }
+        }
     }
 
     #[test]
@@ -953,7 +1006,7 @@ mod tests {
             config: BatchDriveConfig { site: "puzzle2d.fill.field-cursors", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 7000 },
             now_us: semio_framework_job::default_now_us,
         };
-        let mut session = mount_fill_session(BoardFillJob::with_operation(capture_fill_snapshot(&host), 1, operation), params);
+        let mut session = mount_fill_session(BoardFillJob::with_operation(capture_fill_snapshot(&host), 2, operation), params);
         let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
         let mut seen = [false; 13];
         let mut checkpointed = false;

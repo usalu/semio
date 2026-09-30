@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/✂️detach-local-folder",
+  "semanticKind": "detach-local-folder",
+  "displayName": "Detach Local Folder",
+  "emoji": "✂️",
+  "aggregateVariant": "DetachLocalFolder",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied",
+    "no-op"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "json-schema"
+  ]
+}

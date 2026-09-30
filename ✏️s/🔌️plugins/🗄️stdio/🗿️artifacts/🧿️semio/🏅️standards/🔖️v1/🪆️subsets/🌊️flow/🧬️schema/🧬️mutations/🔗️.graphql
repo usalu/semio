@@ -42,6 +42,7 @@ enum SemioFlowMutationKind {
   REMOVE_EDGE
   SET_EDGE_ENDPOINTS
   SET_EDGE_KIND
+  DRAG_NODES
 }
 type SemioFlowMutation {
   mutation: SemioFlowMutationKind!
@@ -56,4 +57,7 @@ type SemioFlowMutation {
   value: String
   from: PortRef
   to: PortRef
+  targets: [String!]
+  dx: Float
+  dy: Float
 }

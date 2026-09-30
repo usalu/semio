@@ -498,6 +498,114 @@
               "directoryName": "🚫️rejects-scaling-a-volume-the-model-never-held"
             }
           ]
+        },
+        {
+          "mutationId": "drag-selection2d",
+          "sourceMutationDirectoryName": "✋️drag-selection2d",
+          "mutationDirectoryName": "✋️drag-selection2d",
+          "scenarios": [
+            {
+              "id": "drags-two-parts",
+              "directoryName": "✋️drags-two-parts"
+            },
+            {
+              "id": "skips-locked-volume-ghost",
+              "directoryName": "⚠️skips-locked-volume-ghost"
+            },
+            {
+              "id": "rejects-ghosts",
+              "directoryName": "🚫️rejects-ghosts"
+            },
+            {
+              "id": "keeps-a-zero-offset",
+              "directoryName": "⏸️keeps-a-zero-offset"
+            },
+            {
+              "id": "no-targets",
+              "directoryName": "🧱️no-targets"
+            }
+          ]
+        },
+        {
+          "mutationId": "drag-selection3d",
+          "sourceMutationDirectoryName": "🚚️drag-selection3d",
+          "mutationDirectoryName": "🚚️drag-selection3d",
+          "scenarios": [
+            {
+              "id": "drags-part-and-volume",
+              "directoryName": "🚚️drags-part-and-volume"
+            },
+            {
+              "id": "skips-locked-ghost",
+              "directoryName": "⚠️skips-locked-ghost"
+            },
+            {
+              "id": "rejects-ghosts",
+              "directoryName": "🚫️rejects-ghosts"
+            },
+            {
+              "id": "keeps-a-zero-offset",
+              "directoryName": "⏸️keeps-a-zero-offset"
+            },
+            {
+              "id": "repeated-targets",
+              "directoryName": "🧱️repeated-targets"
+            }
+          ]
+        },
+        {
+          "mutationId": "rotate-selection3d",
+          "sourceMutationDirectoryName": "🔄️rotate-selection3d",
+          "mutationDirectoryName": "🔄️rotate-selection3d",
+          "scenarios": [
+            {
+              "id": "turns-part-and-volume",
+              "directoryName": "🔄️turns-part-and-volume"
+            },
+            {
+              "id": "skips-locked-ghost",
+              "directoryName": "⚠️skips-locked-ghost"
+            },
+            {
+              "id": "rejects-ghosts",
+              "directoryName": "🚫️rejects-ghosts"
+            },
+            {
+              "id": "keeps-a-zero-angle",
+              "directoryName": "⏸️keeps-a-zero-angle"
+            },
+            {
+              "id": "no-targets",
+              "directoryName": "🧱️no-targets"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale-selection3d",
+          "sourceMutationDirectoryName": "🔍️scale-selection3d",
+          "mutationDirectoryName": "🔍️scale-selection3d",
+          "scenarios": [
+            {
+              "id": "scales-parts-and-volume",
+              "directoryName": "🔍️scales-parts-and-volume"
+            },
+            {
+              "id": "skips-locked-ghost",
+              "directoryName": "⚠️skips-locked-ghost"
+            },
+            {
+              "id": "rejects-ghosts",
+              "directoryName": "🚫️rejects-ghosts"
+            },
+            {
+              "id": "keeps-unit-factors",
+              "directoryName": "⏸️keeps-unit-factors"
+            },
+            {
+              "id": "zero-factor",
+              "directoryName": "🧱️zero-factor"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -535,7 +643,11 @@
         "rotate-target-volume",
         "scale-target-volume",
         "change-target-volume-hidden",
-        "change-target-volume-locked"
+        "change-target-volume-locked",
+        "drag-selection2d",
+        "drag-selection3d",
+        "rotate-selection3d",
+        "scale-selection3d"
       ]
     }
   ],
@@ -1262,6 +1374,90 @@
             "operation": "scale-target-volume",
             "bridgeVersion": 1,
             "variant": "ScaleTargetVolume"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "drag-selection2d",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "drag-selection2d",
+            "bridgeVersion": 1,
+            "variant": "DragSelection2d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "drag-selection3d",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "drag-selection3d",
+            "bridgeVersion": 1,
+            "variant": "DragSelection3d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rotate-selection3d",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-selection3d",
+            "bridgeVersion": 1,
+            "variant": "RotateSelection3d"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "puzzle-5d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "scale-selection3d",
+          "capability": "puzzle-5d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "scale-selection3d",
+            "bridgeVersion": 1,
+            "variant": "ScaleSelection3d"
           },
           "oracleRequirements": [
             {

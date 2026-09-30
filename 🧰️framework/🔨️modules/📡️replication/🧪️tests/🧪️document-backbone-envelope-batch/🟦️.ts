@@ -2,8 +2,8 @@ import Ajv from "ajv";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "DOCUMENT_BACKBONE_RETENTION_LIMITS" | "DocumentBackboneBatchError" | "decodeDocumentBackboneEnvelopeBatchExact" | "encodeDocumentBackboneEnvelopeBatchExact">, source: TestSource): Promise<void> {
-  const { DOCUMENT_BACKBONE_RETENTION_LIMITS, DocumentBackboneBatchError, decodeDocumentBackboneEnvelopeBatchExact, encodeDocumentBackboneEnvelopeBatchExact } = dependencies;
+export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "DOCUMENT_BACKBONE_RETENTION_LIMITS" | "DocumentBackboneBatchError" | "decodeDocumentBackboneEnvelopeBatchExact" | "encodeDocumentBackboneEnvelopeBatchExact" | "encodeClientCommandsFrameExact" | "encodeClientFrame">, source: TestSource): Promise<void> {
+  const { DOCUMENT_BACKBONE_RETENTION_LIMITS, DocumentBackboneBatchError, decodeDocumentBackboneEnvelopeBatchExact, encodeDocumentBackboneEnvelopeBatchExact, encodeClientCommandsFrameExact, encodeClientFrame } = dependencies;
   const { describe, expect, it } = vitest;
 
   type Limits = Readonly<{
@@ -91,6 +91,25 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
           expect((error as InstanceType<typeof DocumentBackboneBatchError>).reason, row.id).toBe(row.expect.reason);
         }
       }
+    });
+
+    it("sends exact envelopes as a Commands frame keeping every HLC field exact", () => {
+      const envelope = {
+        mutation_id: "transition-1",
+        document_id: "document-1",
+        actor: "actor-1",
+        dependencies: ["op-1"],
+        observed: null,
+        target: ["title"],
+        diff: { schema: "semio.history-transition.v1", payload: Uint8Array.of(1, 2, 3) },
+        inverse: { schema: "semio.history-transition.v1", payload: new Uint8Array() },
+        timestamp: { actor: 0xfedc_ba98_7654_3210n, physical_ms: (1n << 53n) + 1n, logical: 1n << 60n },
+        transaction: null,
+      } as const;
+      expect(toHex(encodeClientCommandsFrameExact(7, [envelope], "command")), "the Rust and Python oracle vector").toBe("000107010c7472616e736974696f6e2d310a646f63756d656e742d31076163746f722d3101046f702d310001057469746c651b73656d696f2e686973746f72792d7472616e736974696f6e2e7631030102031b73656d696f2e686973746f72792d7472616e736974696f6e2e76310090e4d0b287d3aeeefe01818080808080801080808080808080801000");
+      const small = { ...envelope, timestamp: { actor: 9n, physical_ms: 1_700_000_000_000n, logical: 3n } };
+      const numbers = { ...small, diff: { schema: small.diff.schema, payload: [1, 2, 3] }, inverse: { schema: small.inverse.schema, payload: [] }, timestamp: { actor: 9, physical_ms: 1_700_000_000_000, logical: 3 } };
+      expect(encodeClientCommandsFrameExact(7, [small], "command"), "within 2^53 both encoders agree").toEqual(encodeClientFrame({ Commands: { batch_id: 7, envelopes: [numbers] } }, "command"));
     });
   });
 }

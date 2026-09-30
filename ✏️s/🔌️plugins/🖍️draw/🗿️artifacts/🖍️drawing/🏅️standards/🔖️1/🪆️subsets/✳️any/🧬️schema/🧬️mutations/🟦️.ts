@@ -21,6 +21,10 @@ import type { ReorderLayer } from "../../../🧱️structure/🧬️schema/🧬�
 import type { DrawingLayerNode } from "../🟦️.ts";
 import type { UpdatePathGeometry } from "../../../🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🦠️mutation/🟦️.ts";
 import type { UpdateText } from "../../../🎨️style/🧬️schema/🧬️mutations/📝️update-text/🦠️mutation/🟦️.ts";
+import type { DragLayers } from "../../../🔀️transform/🧬️schema/🧬️mutations/✋️drag-layers/🦠️mutation/🟦️.ts";
+import type { RotateLayers } from "../../../🔀️transform/🧬️schema/🧬️mutations/🧭️rotate-layers/🦠️mutation/🟦️.ts";
+import type { ScaleLayers } from "../../../🔀️transform/🧬️schema/🧬️mutations/📐️scale-layers/🦠️mutation/🟦️.ts";
+import type { DragPathPoints } from "../../../🔀️transform/🧬️schema/🧬️mutations/📍️drag-path-points/🦠️mutation/🟦️.ts";
 
 /** ✏️ Mirrors Rust `RenameLayer` (`✏️rename-layer/🦠️mutation/🦀️.rs`). */
 export interface RenameLayer {
@@ -126,4 +130,8 @@ export type DrawingMutation =
   | ({ mutation: "updatePathGeometry" } & UpdatePathGeometry)
   | ({ mutation: "updateText" } & UpdateText)
   | ({ mutation: "setLayerFillRule" } & SetLayerFillRule)
-  | ({ mutation: "setGroupIsolation" } & SetGroupIsolation);
+  | ({ mutation: "setGroupIsolation" } & SetGroupIsolation)
+  | ({ mutation: "dragLayers" } & DragLayers)
+  | ({ mutation: "rotateLayers" } & RotateLayers)
+  | ({ mutation: "scaleLayers" } & ScaleLayers)
+  | ({ mutation: "dragPathPoints" } & DragPathPoints);

@@ -104,6 +104,21 @@ function registerStructureImportProfile(modelDefinitionId: string): void {
 
 /** 📦️ Registers structure stat, transformation, and STEP import profiles on the core engine. */
 export function register(): void {
+  core.registerSpatialKernelCommand("structure.linefem.constructLineElementFrom2PointsAndHeight", core.constructBoxFromPoints);
+  core.registerSpatialKernelCommand("structure.linefem.constructLineElementFromCurveAndHeight", core.constructPrismFromCurve);
+  core.registerSpatialKernelCommand("structure.solidfem.constructSolidElementFrom2PointsAndHeight", core.constructBoxFromPoints);
+  core.registerSpatialKernelCommand("structure.solidfem.constructSolidElementFromCurveAndHeight", core.constructPrismFromCurve);
+  core.registerSpatialKernelCommand("structure.structure.constructOneWayReinforcedConcreteSlabFrom2PointsAndHeight", core.constructBoxFromPoints);
+  core.registerSpatialKernelCommand("structure.structure.constructOneWayReinforcedConcreteSlabFromCurveAndHeight", core.constructPrismFromCurve);
+  core.registerSpatialKernelCommand("structure.structure.constructReinforcedConcreteColumnFrom2PointsAndHeight", core.constructBoxFromPoints);
+  core.registerSpatialKernelCommand("structure.structure.constructReinforcedConcreteColumnFromCurveAndHeight", core.constructPrismFromCurve);
+  core.registerSpatialKernelCommand("structure.structure.constructReinforcedConcreteExternalWallFrom2PointsAndHeight", core.constructLinearPrism);
+  core.registerSpatialKernelCommand("structure.structure.constructReinforcedConcreteExternalWallFromCurveAndHeight", core.constructPrismFromCurve);
+  core.registerSpatialKernelCommand("structure.structure.constructReinforcedConcreteInternalWallFrom2PointsAndHeight", core.constructLinearPrism);
+  core.registerSpatialKernelCommand("structure.structure.constructReinforcedConcreteInternalWallFromCurveAndHeight", core.constructPrismFromCurve);
+  core.registerSpatialKernelCommand("structure.surfacefem.constructSurfaceElementFrom2PointsAndHeight", core.constructBoxFromPoints);
+  core.registerSpatialKernelCommand("structure.surfacefem.constructSurfaceElementFromCurveAndHeight", core.constructPrismFromCurve);
+
   registerStatComputer(STRUCTURE_STABILITY_STAT_ID, computeStructureStabilityStat);
   registerTransformationApplier(qualifiedTransformationId(AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID, STRUCTURE_FROM_BUILDING_TRANSFORMATION_ID), applyBuildingToStructureTransformation);
   registerStructureImportProfile(AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID);

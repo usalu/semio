@@ -13,7 +13,7 @@ pub fn diff(payload: &super::InsertAnnualScheduleRule, base: &EnergyModelSnapsho
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of annual schedule {}'s {} rules.", payload.index, payload.id.0, existing.rules.len()), [payload.id.0.to_string()]);
     }
     if !(1..=12).contains(&payload.start_month) || !(1..=12).contains(&payload.end_month) || !(1..=31).contains(&payload.start_day) || !(1..=31).contains(&payload.end_day) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Rule {}-{} .. {}-{} is not a calendar interval.", payload.start_month, payload.start_day, payload.end_month, payload.end_day), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Rule {}-{} .. {}-{} is not a calendar interval.", payload.start_month, payload.start_day, payload.end_month, payload.end_day), [payload.id.0.to_string()]);
     }
     if !base.model.schedules.daily.iter().any(|row| row.id == payload.daily_schedule_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Daily schedule {} does not exist.", payload.daily_schedule_id.0), [payload.daily_schedule_id.0.to_string()]);

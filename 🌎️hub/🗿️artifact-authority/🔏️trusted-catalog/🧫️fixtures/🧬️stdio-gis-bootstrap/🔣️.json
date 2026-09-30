@@ -109,7 +109,7 @@
     "generationId": "aa17c878184a5aa832f9766c9e30b25e914c53aa83afe619cd7a0968a4dec227"
   },
   "sources": {
-    "stdioReceipts": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
+    "stdioReceipts": "✏️s/🔌️plugins/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
     "gisReceipts": "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json"
   },
   "limits": {

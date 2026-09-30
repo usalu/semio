@@ -3,7 +3,7 @@ import type { AnchorRef, EdgeRef, FaceRef, ShellRef, SolidRef, VertexRef, WireRe
 import type { InteractionReplEngagementInputs, RendererTestDependencies, SpatialInteractionSelectionByState, SpatialPickTarget, SpatialRendererSelectionByModel } from "../../🟦️.tsx";
 import type { DisplayModel } from "../../../🎬️actions/🟦️.ts";
 import type { InteractionSnapshot } from "../../../🗿️artifact/🟦️.ts";
-import type { MeshTransfer, Vec3 } from "../../../📔️registry/🟦️.ts";
+import type { MeshTransfer, Vec3 } from "../../../../../../../../../../../⚙️engine/📔️registry/🟦️.ts";
 import type { ModelDiff } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import type { ObjectRef, ResolvedTypologyStyle, TypologyRef } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
 

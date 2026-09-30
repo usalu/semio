@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMaterialDesignation",
+  "materialId": "mat-6082",
+  "newDesignation": "EN AW-6082 T6"
+}

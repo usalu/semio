@@ -5,11 +5,12 @@ from `mutation.invariant` to the state codes, in the Rust diffs and in the Pytho
 
 - a delete refused while another entity still names the target → `mutation.target-referenced` (fem precedent);
 - an index/position past the end of the current list → `mutation.target-missing`;
-- a reorder whose ids are not a permutation of the held ones → `mutation.id-mismatch`;
-- an aperture polygon that does not lie in its host surface's plane → `mutation.target-mismatch`.
+- a payload inconsistent with the target's current state (a reorder that is not a permutation of the held ids, an aperture
+  polygon off its host surface's plane) → `mutation.target-mismatch`.
 
 Payload-intrinsic invariants the leaf schema cannot state name their `x-semio-invariant` id in the Python refusal and the
-committed outcome. Idempotent: a second run changes nothing."""
+committed outcome. `mutation.invariant` and `mutation.duplicate-id` refusals are raised at `Fatal`, the level the frozen
+vocabulary (`🏪️store` `expected_mutation_message_level`) persists them at. Idempotent: a second run changes nothing."""
 import glob
 import json
 import os
@@ -21,12 +22,12 @@ SUBSET = "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/�
 MUTATIONS = f"{SUBSET}/🧬️schema/🧬️mutations"
 FIXTURES = f"{SUBSET}/🧫️fixtures/🧬️mutations"
 PYTHON = f"{SUBSET}/🧪️tests/🏛️mutate-energy-model-1/🐍️.py"
-REFERENCED, MISSING, MISMATCH, TARGET_MISMATCH = "mutation.target-referenced", "mutation.target-missing", "mutation.id-mismatch", "mutation.target-mismatch"
+REFERENCED, MISSING, MISMATCH = "mutation.target-referenced", "mutation.target-missing", "mutation.target-mismatch"
 
 
 def rust_code(condition):
     if "polygon_lies_on_plane" in condition:
-        return TARGET_MISMATCH
+        return MISMATCH
     if "wanted != held" in condition:
         return MISMATCH
     if re.search(r"payload\.(index|from) as usize|\.get\(payload\.index as usize\)", condition):
@@ -38,7 +39,7 @@ def rust_code(condition):
 
 def python_code(condition):
     if "_on_plane(" in condition:
-        return TARGET_MISMATCH
+        return MISMATCH
     if "sorted(wanted) != sorted(" in condition:
         return MISMATCH
     if re.search(r'payload\["(index|from)"\] >=? len\(', condition):
@@ -94,6 +95,23 @@ def recode_rust(check):
     return changed
 
 
+FATAL_CODES = ("mutation.invariant", "mutation.duplicate-id")
+
+
+def level_rust(check):
+    changed = []
+    for path in sorted(glob.glob(f"{MUTATIONS}/**/🦀️.rs", root_dir=REPO, recursive=True)):
+        source = open(os.path.join(REPO, path), encoding="utf-8").read()
+        result = source
+        for code in FATAL_CODES:
+            result = result.replace(f'MutationOutcome::error("{code}"', f'MutationOutcome::fatal("{code}"')
+        if result != source:
+            changed.append(path)
+            if not check:
+                open(os.path.join(REPO, path), "w", encoding="utf-8").write(result)
+    return changed
+
+
 def recode_python(check):
     lines = open(os.path.join(REPO, PYTHON), encoding="utf-8").read().split("\n")
     function = None
@@ -145,13 +163,14 @@ def recode_outcomes(check):
 def main():
     check = "--check" in sys.argv
     rust = recode_rust(check)
+    levels = level_rust(check)
     python = recode_python(check)
     outcomes = recode_outcomes(check)
     for path in rust:
         print("rust", path.split("/🧬️mutations/")[1])
     for path in outcomes:
         print("outcome", path.split("/🧬️mutations/")[1])
-    print(f"rust={len(rust)} python-edits={python} outcomes={len(outcomes)}{' (check only)' if check else ''}")
+    print(f"rust={len(rust)} fatal-levels={len(levels)} python-edits={python} outcomes={len(outcomes)}{' (check only)' if check else ''}")
 
 
 if __name__ == "__main__":

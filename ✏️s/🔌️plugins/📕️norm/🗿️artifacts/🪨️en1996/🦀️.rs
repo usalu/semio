@@ -1231,9 +1231,3 @@ pub mod multi_fail_masonry;
 mod example_multi_fail;
 //#endregion 🪢️TaxonomyMounts
 
-//#region 🧪LanguageAgnosticTests
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪨️mutate-en1996-1/🦀️.rs"]
-mod mutate_en1996_1;
-//#endregion 🧪LanguageAgnosticTests
-

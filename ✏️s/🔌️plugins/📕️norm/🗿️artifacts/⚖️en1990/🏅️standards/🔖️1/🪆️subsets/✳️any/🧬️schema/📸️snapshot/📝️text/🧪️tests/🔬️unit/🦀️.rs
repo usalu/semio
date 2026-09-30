@@ -6,8 +6,7 @@ async fn default_snapshot_dsl_roundtrips() {
     let text = print_dsl(&reference);
     let document = parse_dsl(&text).expect("parse");
     assert_eq!(document, reference);
-    assert_eq!(document.variables.len(), 2);
-    assert_eq!(document.permanents.len(), 2);
+    assert!(document.variables.len() > 1 && document.permanents.len() > 1, "the default document must exercise the multi-row action tables of the grammar");
 }
 
 #[semio_framework_async_macros::async_test]

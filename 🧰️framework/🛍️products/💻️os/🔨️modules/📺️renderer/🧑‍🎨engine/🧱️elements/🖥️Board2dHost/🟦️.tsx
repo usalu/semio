@@ -131,6 +131,19 @@ export function board2dStatusJson(status: Board2dStatus): string {
   return JSON.stringify(status);
 }
 
+/** ✂️ `value` as the shortest decimal that round-trips its f32. Browsers report pointer coordinates in f32, so the
+ * digits below that precision are representation noise a recorded drag offset must never inherit; the board engine
+ * records offsets in the same form (`board_pointer_offset`), both replaying the `🧫️float32-decimal` corpus. */
+export function board2dFloat32Decimal(value: number): number {
+  const narrowed = Math.fround(value);
+  if (!Number.isFinite(narrowed)) return value;
+  for (let digits = 1; digits <= 9; digits += 1) {
+    const candidate = Number(narrowed.toPrecision(digits));
+    if (Math.fround(candidate) === narrowed) return candidate;
+  }
+  return narrowed;
+}
+
 function parseBoardCamera(json: string): BoardCamera | null {
   try {
     const parsed = JSON.parse(json) as Partial<BoardCamera>;
@@ -1317,7 +1330,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
 
     const clientToLocal = (clientX: number, clientY: number): { x: number; y: number } => {
       const rect = canvas.getBoundingClientRect();
-      return { x: clientX - rect.left, y: clientY - rect.top };
+      return { x: board2dFloat32Decimal(clientX) - rect.left, y: board2dFloat32Decimal(clientY) - rect.top };
     };
 
     /** 🤏️ Abandons the single-pointer lane the moment a SECOND contact lands: the marquee/pick

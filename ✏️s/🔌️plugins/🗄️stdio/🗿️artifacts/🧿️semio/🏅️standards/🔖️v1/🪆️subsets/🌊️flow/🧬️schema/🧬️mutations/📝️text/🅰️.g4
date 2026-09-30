@@ -4,7 +4,7 @@ grammar Semio_flow_mutations;
 
 op: (setSnapshot | insertNode | removeNode | setNodeKind | setNodeLabel
     | setNodePosition | setNodeParam | removeNodeParam | insertEdge | removeEdge
-    | setEdgeEndpoints | setEdgeKind) EOF;
+    | setEdgeEndpoints | setEdgeKind | dragNodes) EOF;
 
 setSnapshot: 'set-snapshot' 'snapshot' '=' snapshotLit;
 insertNode: 'insert-node' 'node' '=' node;
@@ -18,6 +18,8 @@ insertEdge: 'insert-edge' 'edge' '=' edge;
 removeEdge: 'remove-edge' 'id' '=' HEX;
 setEdgeEndpoints: 'set-edge-endpoints' 'id' '=' HEX 'from' '=' port 'to' '=' port;
 setEdgeKind: 'set-edge-kind' 'id' '=' HEX 'kind' '=' HEX;
+dragNodes: 'drag-nodes' 'targets' '=' '[' hexList? ']' 'dx' '=' number 'dy' '=' number;
+hexList: HEX (',' HEX)*;
 
 snapshotLit: '[' HEX ',' '[' nodeList? ']' ',' '[' edgeList? ']' ']';
 nodeList: node (',' node)*;

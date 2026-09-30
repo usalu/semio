@@ -1689,14 +1689,17 @@ pub(crate) fn snapshot_b() -> SemioPresentationSnapshot {
 }
 
 /// 🌱 Representative `SemioPresentationDiff` cases (empty/no-op, a full masters+layouts+slides
-/// sweep both directions, reusing `snapshot_a`/`snapshot_b`) — single source of truth for
-/// `grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️.rs`.
+/// sweep both directions, reusing `snapshot_a`/`snapshot_b`, and a slide reorder whose slots carry
+/// their new identities) — single source of truth for `grammar_conformance_law`/`protocol_walk_law`
+/// in `🎹️composer/🦀️.rs`.
 #[cfg(all(test, feature = "conversion-presentation"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioPresentationDiff> {
     let a = snapshot_a();
     let b = snapshot_b();
-    vec![SemioPresentationDiff::default(), SemioPresentationDiff::between(&a, &b), SemioPresentationDiff::between(&b, &a), SemioPresentationDiff::between(&a, &a)]
+    let mut reordered = a.clone();
+    reordered.slides.reverse();
+    vec![SemioPresentationDiff::default(), SemioPresentationDiff::between(&a, &b), SemioPresentationDiff::between(&b, &a), SemioPresentationDiff::between(&a, &a), SemioPresentationDiff::between(&a, &reordered)]
 }
 //#endregion 🔖️Demo
 

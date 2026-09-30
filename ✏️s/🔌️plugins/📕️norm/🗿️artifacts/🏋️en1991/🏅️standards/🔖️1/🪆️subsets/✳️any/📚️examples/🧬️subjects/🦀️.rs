@@ -165,7 +165,7 @@ pub fn multi_fail_noncompliant() -> En1991Snapshot {
     s.wind_faces = vec![WindFace {
         id: "facade-d".into(),
         zone: "D".into(),
-        z: 12.0,
+        z: 8.0,
         c_pe10: 0.8,
         c_pe1: 1.0,
         c_pi: 0.2,

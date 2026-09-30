@@ -251,7 +251,13 @@
         "kind": {
           "type": "string"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "SteelSection": {
       "title": "SteelSection",
@@ -538,7 +544,13 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "SteelMember": {
       "title": "SteelMember",
@@ -730,7 +742,13 @@
             "widget": "text"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "LoadCase": {
       "title": "LoadCase",
@@ -762,7 +780,13 @@
             "widget": "text"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "DesignAction": {
       "title": "DesignAction",
@@ -861,7 +885,13 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "MemberAction": {
       "title": "MemberAction",
@@ -907,7 +937,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "SteelJoint": {
       "title": "SteelJoint",
@@ -1227,7 +1263,13 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "FatigueDetail": {
       "title": "FatigueDetail",
@@ -1290,7 +1332,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "FireExposure": {
       "title": "FireExposure",
@@ -1414,7 +1462,13 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "ColdFormedMember": {
       "title": "ColdFormedMember",
@@ -1524,7 +1578,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "PlatedPanel": {
       "title": "PlatedPanel",
@@ -1622,7 +1682,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "SiloShell": {
       "title": "SiloShell",
@@ -1709,7 +1775,13 @@
             "precision": 1
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "TensionComponent": {
       "title": "TensionComponent",
@@ -1765,7 +1837,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "BridgeFatigue": {
       "title": "BridgeFatigue",
@@ -1850,7 +1928,13 @@
             "widget": "text"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "TowerLeg": {
       "title": "TowerLeg",
@@ -1904,7 +1988,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "SteelPile": {
       "title": "SteelPile",
@@ -2001,7 +2091,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "CraneRunway": {
       "title": "CraneRunway",
@@ -2103,7 +2199,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "ForceAction": {
       "title": "ForceAction",
@@ -2146,7 +2248,13 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "JointForceAction": {
       "title": "JointForceAction",
@@ -2204,7 +2312,13 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "FatigueBand": {
       "title": "FatigueBand",
@@ -2244,7 +2358,13 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "AnnexChoice": {
       "title": "AnnexChoice",
@@ -2264,7 +2384,10 @@
             "de": "Deutscher Nationaler Anhang (DIN EN)"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

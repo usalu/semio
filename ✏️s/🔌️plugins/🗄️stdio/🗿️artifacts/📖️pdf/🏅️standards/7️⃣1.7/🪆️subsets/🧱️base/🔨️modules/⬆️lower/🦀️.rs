@@ -202,6 +202,18 @@ pub fn lower_acro_form_standalone(snapshot: &PdfSnapshot, first_number: u32, opt
     Ok(Some((lowering.objects, reference)))
 }
 
+/// ⬆️ Lowers the catalog against an existing graph: `refs` resolve every page and resource the
+/// catalog lanes name (so destinations and actions point into that graph), `pages_ref` is its page
+/// tree root. Returns the catalog entries and the objects they introduce, numbered from
+/// `first_number` — the raw material a reconciling write grafts the moved catalog lanes from.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn lower_catalog_standalone(snapshot: &PdfSnapshot, first_number: u32, options: LowerOptions, refs: &HashMap<(Category, String), ObjRef>, pages_ref: ObjRef) -> PResult<(Vec<PdfDictEntry>, Vec<PdfIndirectObject>)> {
+    let mut lowering = Lowering::new(snapshot, first_number, options);
+    lowering.refs = refs.clone();
+    let catalog = lowering.lower_catalog(pages_ref, false)?;
+    Ok((catalog, lowering.objects))
+}
+
 /// ⬆️ Lowers everything but the pages, reserving `expected_pages` page references (so
 /// destinations and outlines resolve) — the first half of a streamed write.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -230,7 +242,7 @@ pub fn lower_document_headless(snapshot: &PdfSnapshot, expected_pages: usize, op
     let catalog = lowering.lower_catalog(pages_ref, false)?;
     lowering.set(catalog_ref, PdfObject::Dict(catalog));
     if let Some(info_ref) = info_ref {
-        let info = lowering.lower_info();
+        let info = lower_info(&snapshot.info);
         lowering.set(info_ref, PdfObject::Dict(info));
     }
     let root_resources = lowering.all_resources();
@@ -347,7 +359,7 @@ pub fn lower_document(snapshot: &PdfSnapshot, first_number: u32, options: LowerO
     let catalog = lowering.lower_catalog(pages_ref, true)?;
     lowering.set(catalog_ref, PdfObject::Dict(catalog));
     if let Some(info_ref) = info_ref {
-        let info = lowering.lower_info();
+        let info = lower_info(&snapshot.info);
         lowering.set(info_ref, PdfObject::Dict(info));
     }
     lowering.objects.sort_by_key(|object| object.id.num);
@@ -1201,24 +1213,6 @@ impl Lowering<'_> {
 //#region 🔖️Catalog
 impl Lowering<'_> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn lower_info(&mut self) -> Vec<PdfDictEntry> {
-        let info = &self.snapshot.info;
-        let text = |value: &Option<String>| value.as_ref().map(|v| PdfObject::Str(encode_text_string(v)));
-        let mut dict = Vec::new();
-        push_opt(&mut dict, "Title", text(&info.title));
-        push_opt(&mut dict, "Author", text(&info.author));
-        push_opt(&mut dict, "Subject", text(&info.subject));
-        push_opt(&mut dict, "Keywords", text(&info.keywords));
-        push_opt(&mut dict, "Creator", text(&info.creator));
-        push_opt(&mut dict, "Producer", text(&info.producer));
-        push_opt(&mut dict, "CreationDate", info.creation_date.as_ref().map(|d| PdfObject::Str(d.to_string().into_bytes())));
-        push_opt(&mut dict, "ModDate", info.modification_date.as_ref().map(|d| PdfObject::Str(d.to_string().into_bytes())));
-        push_opt(&mut dict, "Trapped", info.trapped.as_ref().map(PdfObject::name));
-        dict.extend(info.extra.iter().cloned());
-        dict
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn lower_catalog(&mut self, pages_ref: ObjRef, include_acro_form: bool) -> PResult<Vec<PdfDictEntry>> {
         let snapshot = self.snapshot;
         let mut dict = vec![entry("Type", PdfObject::name("Catalog")), entry("Pages", PdfObject::Ref(pages_ref))];
@@ -1466,6 +1460,24 @@ impl Lowering<'_> {
         self.set(reference, PdfObject::Dict(dict));
         reference
     }
+}
+
+/// ℹ️ The document information dictionary (ISO 32000-1 §14.3.3) `info` spells.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn lower_info(info: &PdfInfo) -> Vec<PdfDictEntry> {
+    let text = |value: &Option<String>| value.as_ref().map(|v| PdfObject::Str(encode_text_string(v)));
+    let mut dict = Vec::new();
+    push_opt(&mut dict, "Title", text(&info.title));
+    push_opt(&mut dict, "Author", text(&info.author));
+    push_opt(&mut dict, "Subject", text(&info.subject));
+    push_opt(&mut dict, "Keywords", text(&info.keywords));
+    push_opt(&mut dict, "Creator", text(&info.creator));
+    push_opt(&mut dict, "Producer", text(&info.producer));
+    push_opt(&mut dict, "CreationDate", info.creation_date.as_ref().map(|d| PdfObject::Str(d.to_string().into_bytes())));
+    push_opt(&mut dict, "ModDate", info.modification_date.as_ref().map(|d| PdfObject::Str(d.to_string().into_bytes())));
+    push_opt(&mut dict, "Trapped", info.trapped.as_ref().map(PdfObject::name));
+    dict.extend(info.extra.iter().cloned());
+    dict
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -33,15 +33,16 @@ test("world rotation remains exact inside a nonuniformly scaled parent", () => {
 });
 
 
-import Ajv from "ajv";
+import {semioSchemaAjvV1} from "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
 import mutationSchema from "../../../../../../🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/🧬️schema/🔣️.json";
 
 test("transform mutation schema requires shear and accepts exact affine components", () => {
-  const validate=new Ajv({strict:false}).compile(mutationSchema);
+  const validate=semioSchemaAjvV1({allErrors:true}).compile(mutationSchema);
   for (const sample of cases) {
     const transform=drawingMatrixToTransform(sample.matrix as [number,number,number,number,number,number]);
-    expect(validate({layerId:"shape",transform})).toBe(true);
+    expect(validate({mutation:"updateLayerTransform",layerId:"shape",transform})).toBe(true);
+    expect(validate({layerId:"shape",transform})).toBe(false);
     const {shear,...incomplete}=transform;
-    expect(validate({layerId:"shape",transform:incomplete})).toBe(false);
+    expect(validate({mutation:"updateLayerTransform",layerId:"shape",transform:incomplete})).toBe(false);
   }
 });

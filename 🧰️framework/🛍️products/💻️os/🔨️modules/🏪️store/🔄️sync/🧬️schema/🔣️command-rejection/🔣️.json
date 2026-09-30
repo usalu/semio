@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/command-rejection/v1.json",
+  "title": "Command Rejection V1",
+  "description": "The one contract every producer of a refused command batch answers with (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, follow-up 3): the hub's `ApplyOutcome::Rejected`, decoded once by the actor that receives it, and every local refusal an actor answers before any frame leaves it. `code` classifies the refusal, `reason` is the producer's English diagnostic (never shown to a human), `messages` are the structured diagnostics the hub graded the batch with (always empty for a local refusal) and `detail` carries a local refusal's typed counters. Rust owner `🏪️store/🔄️sync/🦀️.rs` `CommandAckOutcome`, TypeScript twin `💻️os/🟦️.ts` region `🚫️CommandRejection`.",
+  "$defs": {
+    "Code": {
+      "title": "Command Rejection Code",
+      "description": "`hub.refused`: the hub refused the batch and its messages decoded; `hub.unreadable`: the hub refused it and its messages did not decode; `local.read-only`: the verified execution target admits no edit; `local.queue-full`: the pending mutation queue is full; `local.backbone-capacity`: the document backbone's pending retention is full or the message breaks its hot limit; `local.backbone-duplicate`: a mutation of the batch is already retained, unsent; `local.backbone-pair-unavailable`: the document has no verified canonical pair to admit mutations against; `local.backbone-scope-mismatch`: an envelope names another document than the actor's; `local.backbone-malformed`: the backbone message does not decode; `local.socket-frame-ceiling`: one envelope's frame alone exceeds the socket's ceiling.",
+      "enum": ["hub.refused", "hub.unreadable", "local.read-only", "local.queue-full", "local.backbone-capacity", "local.backbone-duplicate", "local.backbone-pair-unavailable", "local.backbone-scope-mismatch", "local.backbone-malformed", "local.socket-frame-ceiling"]
+    },
+    "Count": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "Detail": {
+      "title": "Command Rejection Detail",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "envelopes": { "$ref": "#/$defs/Count", "description": "The refused batch's envelope count." },
+        "bytes": { "$ref": "#/$defs/Count", "description": "The bytes the refused message or the pending queue holds." },
+        "limit": { "$ref": "#/$defs/Count", "description": "The limit the refusal met, in the unit of `bytes` or of the queue." }
+      }
+    },
+    "Rejection": {
+      "title": "Command Rejection",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "code", "reason", "messages"],
+      "properties": {
+        "kind": { "const": "rejected" },
+        "code": { "$ref": "#/$defs/Code" },
+        "reason": { "type": "string" },
+        "messages": { "type": "array", "items": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/kernel/history-patch/schema.json#/definitions/HistoryMutationMessage" } },
+        "detail": { "$ref": "#/$defs/Detail" }
+      },
+      "if": { "properties": { "code": { "pattern": "^local\\." } } },
+      "then": { "properties": { "messages": { "maxItems": 0 } } },
+      "else": { "not": { "required": ["detail"] } }
+    },
+    "Outcome": {
+      "title": "Command Ack Outcome",
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "accepted" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "transformed" } } },
+        { "$ref": "#/$defs/Rejection" }
+      ]
+    }
+  }
+}

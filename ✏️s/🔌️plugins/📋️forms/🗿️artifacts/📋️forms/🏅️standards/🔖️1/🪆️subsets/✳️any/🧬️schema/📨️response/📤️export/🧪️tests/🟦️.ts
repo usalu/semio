@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
-import Ajv from "ajv";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
 import fixture from "../🧫️fixtures/🔣️.json";
 import responseSchema from "../../🔣️.json";
 import { exportResponses, exportResponseChunks, responseRows } from "../🟦️.ts";
 
 /** 📤️ Exports retain typed answer values and the labels captured at submission. */
 export function testFormsResponseExport(): void {
-  const validate = new Ajv().compile({ type: "array", items: responseSchema });
+  const validate = semioSchemaAjvV1().compile({ type: "array", items: responseSchema });
   for (const test of fixture.cases) {
     assert.deepEqual(responseRows(test.responses), test.rows, test.name);
     assert.equal(exportResponses(test.responses, "csv"), test.csv, test.name);

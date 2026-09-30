@@ -1,0 +1,41 @@
+{
+  "artifact": null,
+  "catalogue": null,
+  "dictionary": null,
+  "geometry": {
+    "objects": {
+      "geom.pr600": {
+        "id": "geom.pr600",
+        "shape": {
+          "node": "primitive",
+          "kind": "box",
+          "parameters": {
+            "depth": 0.1,
+            "height": 0.9,
+            "width": 0.6
+          }
+        },
+        "symbolic": null,
+        "spaces": [],
+        "surfaces": [],
+        "ports": [],
+        "parameterBindings": {}
+      }
+    },
+    "primitiveRegistry": [
+      {
+        "id": "box",
+        "parameters": [
+          "width",
+          "height",
+          "depth"
+        ]
+      }
+    ]
+  },
+  "selection": null,
+  "partNumberRule": null,
+  "partNumberInputs": null,
+  "scriptLimits": null,
+  "exchangeProcess": null
+}

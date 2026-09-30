@@ -6022,6 +6022,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-plugin-host",
  "semio-framework-replication",
+ "semio-framework-schema",
  "semio-framework-surface",
  "semio-framework-time-travel",
  "semio-framework-trace",
@@ -6130,6 +6131,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-schema",
  "semio-framework-time-travel",
+ "semio-framework-tool-machine",
  "semio-framework-tool-run",
  "semio-framework-trace",
  "semio-framework-ui",
@@ -6505,6 +6507,7 @@ dependencies = [
 name = "semio-framework-schema"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -6791,6 +6794,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-db",
+ "semio-framework-os-mcp",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
  "semio-framework-replication",
@@ -6953,10 +6957,12 @@ dependencies = [
  "semio-framework-graph",
  "semio-framework-io-base64",
  "semio-framework-job",
+ "semio-framework-machine",
  "semio-framework-math",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-tool-machine",
  "semio-framework-ui",
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",
@@ -7036,10 +7042,12 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-job",
+ "semio-framework-machine",
  "semio-framework-os-kernel",
  "semio-framework-pixels",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-tool-machine",
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
@@ -7049,7 +7057,6 @@ dependencies = [
  "semio-s-artifact-stdio-semio",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-xml",
- "semio-s-plugin-draw-fsm",
  "serde",
  "serde_json",
 ]
@@ -7058,6 +7065,7 @@ dependencies = [
 name = "semio-s-artifact-energy-model"
 version = "0.1.0"
 dependencies = [
+ "csv",
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
@@ -7091,11 +7099,13 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-job",
+ "semio-framework-machine",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-replication",
  "semio-framework-schema",
+ "semio-framework-tool-machine",
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
@@ -7883,10 +7893,12 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-job",
+ "semio-framework-machine",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-tool-machine",
  "semio-framework-tool-run",
  "semio-framework-trace",
  "semio-framework-ui-contract",
@@ -8072,10 +8084,12 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-job",
+ "semio-framework-machine",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-tool-machine",
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
@@ -9489,30 +9503,8 @@ dependencies = [
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-semio",
  "semio-s-artifact-stdio-svg",
- "semio-s-plugin-draw-fsm",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "semio-s-plugin-draw-fsm"
-version = "0.1.0"
-dependencies = [
- "semio-framework-async-macros",
- "semio-framework-dispatch-macros",
- "semio-framework-os-kernel",
- "semio-framework-value-derive",
- "semio-s-plugin-draw-fsm-macros",
-]
-
-[[package]]
-name = "semio-s-plugin-draw-fsm-macros"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "semio-framework-async-macros",
- "syn 2.0.117",
 ]
 
 [[package]]
@@ -9730,6 +9722,7 @@ dependencies = [
  "geo",
  "semio-framework",
  "semio-framework-actor",
+ "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-hash",
@@ -9737,6 +9730,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
+ "semio-framework-schema",
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",
  "semio-s-artifact-gis-gismap",

@@ -587,8 +587,8 @@ fn drain_rejected_edit_message_ledger(mut rejected: ArtifactEditMessageLedgerRej
 #[test]
 fn fixed_edit_message_ledger_rejects_duplicate_and_capacity_plus_one_with_exact_retained_owners() {
     let duplicate = vec![
-        crate::os_spr::EditMessages { edit_id: "duplicate".into(), messages: vec![crate::os_spr::MutationMessage::info("mutation.duplicate", "first")] },
-        crate::os_spr::EditMessages { edit_id: "duplicate".into(), messages: vec![crate::os_spr::MutationMessage::info("mutation.duplicate", "second")] },
+        crate::os_spr::EditMessages { edit_id: "duplicate".into(), messages: vec![crate::os_spr::MutationMessage::info("mutation.cascade", "first")] },
+        crate::os_spr::EditMessages { edit_id: "duplicate".into(), messages: vec![crate::os_spr::MutationMessage::info("mutation.cascade", "second")] },
     ];
     let duplicate = match ArtifactEditMessageLedger::try_from_entries(duplicate) {
         Err(rejected) => rejected,
@@ -4425,6 +4425,7 @@ fn group_read_fixture_envelope(snapshot: GroupReadTriggerSnapshot) -> ArtifactEn
         edit_messages: ArtifactEditMessageLedger::new(),
         conflicts: Vec::new(),
         transitions: Vec::new(),
+        history_shape: crate::os_spr::HistoryShape::Document,
     })
 }
 
@@ -5184,7 +5185,7 @@ async fn conflict_retirement_cursors_quarantined_payloads_messages_actors_and_id
         id: crate::os_spr::ConflictId::new(&kind, &ArtifactId("conflict-document".repeat(64)), &[MutationId("conflict-mutation".repeat(64))], &timestamp).await,
         kind,
         status: crate::os_spr::ConflictStatus::Open,
-        messages: vec![crate::os_spr::MutationMessage::fatal("mutation.conflict", "message".repeat(256)).at(["target".repeat(256)])],
+        messages: vec![crate::os_spr::MutationMessage::fatal("mutation.invariant", "message".repeat(256)).at(["target".repeat(256)])],
         actors: vec![ActorId("actor".repeat(256))],
         timestamp,
     };
@@ -5615,7 +5616,7 @@ async fn alternatives_switch_restores_checkpoint_chain() {
     let mut store = ArtifactStore::new(envelope).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], description: None, transaction: None }).await.expect("apply");
     store.dispatch(ArtifactCommand::CreateAlternative { name: "branch-a".into() }).await.expect("create alternative");
-    let alt_id = store.envelope().vcs.alternatives[0].id.clone();
+    let alt_id = store.envelope().vcs.alternatives.last().expect("the branched alternative follows the trunk").id.clone();
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], description: None, transaction: None }).await.expect("apply on branch");
     store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: alt_id }).await.expect("switch");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1));
@@ -5647,7 +5648,8 @@ async fn create_alternative_appends_commits_to_its_own_checkpoint_chain() {
     store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-a".into() }).await.expect("create alternative");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], description: None, transaction: None }).await.expect("apply");
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("branch commit".into()), authors: Vec::new() }).await.expect("commit on branch");
-    assert_eq!(store.envelope().vcs.alternatives[0].checkpoint_ids.len(), 2);
+    assert_eq!(store.envelope().vcs.alternatives.last().expect("the branched alternative").checkpoint_ids.len(), 2);
+    assert_eq!(store.envelope().vcs.alternatives.first().expect("the trunk").checkpoint_ids.len(), 1, "the branch commit never grows the trunk");
     assert_eq!(store.envelope().vcs.checkpoints.len(), 2);
 }
 
@@ -5719,6 +5721,12 @@ async fn backbone_message_binary_round_trips_every_variant() {
 
     let empty_ack = BackboneMessage::Ack { op_ids: Vec::new() };
     assert_eq!(BackboneMessage::decode_op(&empty_ack.encode_op().unwrap()).unwrap(), empty_ack);
+
+    for (retract, hex) in [(BackboneMessage::Retract { mutation_ids: Vec::new() }, "01040001000c00"), (BackboneMessage::Retract { mutation_ids: vec!["a".into()] }, "010401016101000c010600")] {
+        let encoded = retract.encode_op().unwrap();
+        assert_eq!(encoded.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), hex, "the retraction vector the TypeScript twin writes");
+        assert_eq!(decode_hot_backbone_message_exact(&encoded).unwrap(), retract);
+    }
 }
 
 async fn sample_envelope_for_backbone_test() -> crate::os_spr::MutationEnvelope {
@@ -6829,7 +6837,7 @@ async fn space_history_op_round_trips() {
 
 //#region 🔖️PreviewWireTests
 /// 🧪️ Fixture producing one message per non-clean variant, each using one of the frozen
-/// seven `mutation.*` codes (`📋️contract-freeze.md` §C2's table) — `preview_wire`'s and
+/// nine `mutation.*` codes (`📋️contract-freeze.md` §C2's table) — `preview_wire`'s and
 /// `CompositionCoordinator` phase 1's shared dry-run fixture. `WarnN` ⇒ `mutation.clamped`
 /// (Warning, non-empty diff), `ErrorN` ⇒ `mutation.target-missing` (Error, empty diff — LAW 2),
 /// `FatalN` ⇒ `mutation.invariant` (Fatal, empty diff — LAW 1), `CleanN` ⇒ silent.
@@ -7230,6 +7238,65 @@ async fn spr_round_trip_preserves_edit_messages_and_conflicts() {
     assert_eq!(restored.conflicts(), store.conflicts());
 }
 
+/// 🧾️ The two state-dependent `Error` codes of the outcome vocabulary — `mutation.target-referenced` (the target is still
+/// referenced) and `mutation.target-mismatch` (the payload contradicts the target's current state) — survive the persisted
+/// `.spr` history round trip, and the persisted-message gate refuses either one at any other level.
+#[semio_framework_async_macros::async_test]
+async fn spr_round_trip_preserves_state_dependent_error_codes() {
+    let initial = DemoSnapshot { n: Some(0) };
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "state-dependent-codes", initial.clone(), None)).await;
+    store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
+    let receipt = store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 2 })], description: None, transaction: None }).await.expect("warning is accepted");
+    let edit_id = receipt.edit_ids.first().expect("one durable edit").clone();
+    let edit = store.envelope().vcs.edits.iter().find(|edit| edit.id == edit_id).expect("durable edit");
+    let mutation_ids = stable_mutation_ids_for_edit(edit).await.expect("durable edit carries operation identity");
+    let actors = vec![ActorId(edit.actor.clone().expect("durable edit has an actor"))];
+    let timestamp = edit.mutation_meta.first().expect("durable edit carries timestamp").timestamp;
+    let kind = crate::os_spr::ConflictKind::Degraded { edit_ids: vec![edit_id.clone()] };
+    let conflict_id = crate::os_spr::ConflictId::new(&kind, &ArtifactId(store.envelope().id.clone()), &mutation_ids, &timestamp).await;
+    let messages: Vec<crate::os_spr::MutationMessage> = ["mutation.target-referenced", "mutation.target-mismatch"].into_iter().map(|code| crate::os_spr::MutationMessage::error(code, format!("{code} persisted")).at(["node-1"]).at_op(0)).collect();
+    store.0.envelope.conflicts.push(crate::os_spr::Conflict { id: conflict_id, kind, status: crate::os_spr::ConflictStatus::Open, messages, actors, timestamp });
+
+    let pack = initial.encode_pack();
+    let spr = print_document_spr(store.envelope()).await.expect("state-dependent codes encode");
+    let parsed = parse_document_spr::<DemoSnapshot, SeverityMutation>(&pack, &spr).await.expect("state-dependent codes decode");
+    assert_eq!(parsed.envelope.conflicts, store.envelope().conflicts);
+    let restored = ArtifactStore::new(parsed.envelope).await;
+    assert_eq!(restored.conflicts(), store.conflicts());
+    let codes: Vec<&str> = restored.conflicts().last().expect("the conflict survives").messages.iter().map(|message| message.code.0.as_str()).collect();
+    assert_eq!(codes, ["mutation.target-referenced", "mutation.target-mismatch"]);
+
+    for message in &mut store.0.envelope.conflicts.last_mut().expect("the conflict").messages {
+        message.level = crate::os_dsl::Severity::Fatal;
+    }
+    let error = print_document_spr(store.envelope()).await.expect_err("a state-dependent code is an Error, never Fatal");
+    assert!(matches!(&error, VcsError::ValidationFailed(detail) if detail.contains("malformed mutation message")), "{error:?}");
+}
+
+/// 📖️ The persisted-message gate walks the language-agnostic outcome vocabulary (`📡️replication/🎮️mutation/🧫️fixtures/
+/// 🧫️outcome-code`): every code persists at exactly its level and at no other, the apply family persists `Fatal`, and every
+/// code the vocabulary rejects is refused as unknown.
+#[semio_framework_async_macros::async_test]
+async fn persisted_messages_admit_exactly_the_outcome_vocabulary() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🧫️outcome-code/🔣️.json")).expect("outcome code fixture parses");
+    let levels = [("info", crate::os_dsl::Severity::Info), ("warning", crate::os_dsl::Severity::Warning), ("error", crate::os_dsl::Severity::Error), ("fatal", crate::os_dsl::Severity::Fatal)];
+    let level_of = |name: &str| levels.iter().find(|(known, _)| *known == name).map(|(_, level)| *level).expect("fixture level");
+    let persisted = |code: &str, level: crate::os_dsl::Severity| crate::os_spr::MutationMessage { level, code: crate::os_dsl::FaultCode::new(code), message: format!("{code} persisted"), target: vec!["node-1".to_string()], op_index: Some(0) };
+    let mut admitted: Vec<(String, crate::os_dsl::Severity)> = fixture["codes"].as_array().expect("codes").iter().map(|row| (row["code"].as_str().expect("code").to_string(), level_of(row["level"].as_str().expect("level")))).collect();
+    admitted.extend(fixture["apply"]["accepted"].as_array().expect("apply codes").iter().map(|code| (code.as_str().expect("apply code").to_string(), level_of(fixture["apply"]["level"].as_str().expect("apply level")))));
+    for (code, level) in &admitted {
+        assert_eq!(expected_mutation_message_level(code).await, Some(*level), "{code}");
+        validate_persisted_message(&persisted(code, *level), Some(1)).await.unwrap_or_else(|error| panic!("{code} persists at its level: {error:?}"));
+        for (_, other) in levels.iter().filter(|(_, other)| other != level) {
+            assert!(validate_persisted_message(&persisted(code, *other), Some(1)).await.is_err(), "{code} is refused at {other:?}");
+        }
+    }
+    for code in fixture["rejected"].as_array().expect("rejected codes").iter().map(|code| code.as_str().expect("rejected code")) {
+        assert_eq!(expected_mutation_message_level(code).await, None, "{code}");
+        assert!(validate_persisted_message(&persisted(code, crate::os_dsl::Severity::Error), Some(1)).await.is_err(), "{code} is refused");
+    }
+}
+
 #[semio_framework_async_macros::async_test]
 async fn spr_parse_rejects_history_without_authoritative_operation_metadata() {
     let initial = DemoSnapshot { n: Some(0) };
@@ -7522,7 +7589,7 @@ async fn dispatch_text_applies_a_command_block_and_snapshot_json_reflects_it() {
 async fn dispatch_binary_applies_an_encoded_command_and_rejects_wrong_format() {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let mut store = ArtifactStore::new(envelope).await;
-    let command_bytes = ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], description: None, transaction: None }.encode_op().expect("encode command");
+    let command_bytes = ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], description: None, transaction: None }.encode_command().expect("encode command");
     store.dispatch_binary(&command_bytes).await.expect("dispatch binary");
     assert_eq!(store.snapshot_json().expect("snapshot json"), serde_json::to_string(&DemoSnapshot { n: Some(7) }).unwrap());
 
@@ -7555,7 +7622,7 @@ async fn command_text_binary_equivalence_holds_for_every_document_command_varian
         ArtifactCommand::RedoInLane { lane: HistoryLane::Interaction },
     ];
     for command in &commands {
-        test_support::assert_command_text_binary_equivalence(command).await;
+        test_support::assert_command_text_binary_equivalence::<DemoSnapshot, _>(command).await;
     }
 }
 
@@ -7774,8 +7841,8 @@ async fn space_member_checkout_switches_at_the_alternative_tip_and_falls_back_to
     let mut store = ArtifactStore::new(envelope).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], description: None, transaction: None }).await.expect("apply");
     store.dispatch(ArtifactCommand::CreateAlternative { name: "feature".into() }).await.expect("create alternative (auto-commits since no checkpoint existed yet)");
-    let alt_id = store.envelope().vcs.alternatives[0].id.clone();
-    let tip = store.envelope().vcs.alternatives[0].checkpoint_ids.last().expect("alt has a tip").clone();
+    let alt_id = store.envelope().vcs.alternatives.last().expect("the branched alternative").id.clone();
+    let tip = store.envelope().vcs.alternatives.last().expect("the branched alternative").checkpoint_ids.last().expect("alt has a tip").clone();
 
     SpaceMember::checkout(&mut store, &tip, &alt_id).await.expect("checkout at the tip routes through SwitchAlternative");
     assert_eq!(store.envelope().active_alternative_id, Some(alt_id.clone()), "switching to the tip keeps it active");

@@ -1,0 +1,14 @@
+{
+  "mutation": "moveSelection",
+  "nodeIds": [],
+  "regionIds": [
+    "wall1"
+  ],
+  "pivotX": 3.0,
+  "pivotY": 0.0,
+  "dx": 0.0,
+  "dy": 0.0,
+  "angle": 0.0,
+  "sx": 1.0,
+  "sy": 0.0
+}

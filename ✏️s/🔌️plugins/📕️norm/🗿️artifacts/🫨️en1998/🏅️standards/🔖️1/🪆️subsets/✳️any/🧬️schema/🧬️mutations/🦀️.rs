@@ -7,14 +7,14 @@ use super::change_annex;
 use super::update_site;
 use super::insert_building;
 use super::remove_building;
-use super::change_system_base_shear_resistance_n;
+use super::change_system_v_rd_n;
 use super::change_storey_permanent_gk_n;
 use super::change_storey_stiffness_x;
 use super::change_storey_drift_xm;
 use super::change_building_plan_regular;
-use super::change_building_elevation_regular;
-use super::change_member_detailing_compatible;
-use super::change_building_masonry_wall_area_ratio;
+use super::change_elevation_regular;
+use super::change_member_detailing;
+use super::change_masonry_wall_ratio;
 use super::insert_bridge;
 use super::change_bridge_v_rd_n;
 use super::insert_assessment;
@@ -25,6 +25,13 @@ use super::insert_foundation;
 use super::insert_retaining_wall;
 use super::insert_tower;
 use super::change_tower_m_rd_nm;
+use super::remove_bridge;
+use super::remove_assessment;
+use super::remove_silo;
+use super::remove_tank;
+use super::remove_foundation;
+use super::remove_retaining_wall;
+use super::remove_tower;
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -36,14 +43,14 @@ pub enum En1998Mutation {
     UpdateSite(update_site::UpdateSite),
     InsertBuilding(insert_building::InsertBuilding),
     RemoveBuilding(remove_building::RemoveBuilding),
-    ChangeSystemBaseShearResistanceN(change_system_base_shear_resistance_n::ChangeSystemBaseShearResistanceN),
+    ChangeSystemVRdN(change_system_v_rd_n::ChangeSystemVRdN),
     ChangeStoreyPermanentGkN(change_storey_permanent_gk_n::ChangeStoreyPermanentGkN),
     ChangeStoreyStiffnessX(change_storey_stiffness_x::ChangeStoreyStiffnessX),
     ChangeStoreyDriftXM(change_storey_drift_xm::ChangeStoreyDriftXM),
     ChangeBuildingPlanRegular(change_building_plan_regular::ChangeBuildingPlanRegular),
-    ChangeBuildingElevationRegular(change_building_elevation_regular::ChangeBuildingElevationRegular),
-    ChangeMemberDetailingCompatible(change_member_detailing_compatible::ChangeMemberDetailingCompatible),
-    ChangeBuildingMasonryWallAreaRatio(change_building_masonry_wall_area_ratio::ChangeBuildingMasonryWallAreaRatio),
+    ChangeElevationRegular(change_elevation_regular::ChangeElevationRegular),
+    ChangeMemberDetailing(change_member_detailing::ChangeMemberDetailing),
+    ChangeMasonryWallRatio(change_masonry_wall_ratio::ChangeMasonryWallRatio),
     InsertBridge(insert_bridge::InsertBridge),
     ChangeBridgeVRdN(change_bridge_v_rd_n::ChangeBridgeVRdN),
     InsertAssessment(insert_assessment::InsertAssessment),
@@ -54,6 +61,13 @@ pub enum En1998Mutation {
     InsertRetainingWall(insert_retaining_wall::InsertRetainingWall),
     InsertTower(insert_tower::InsertTower),
     ChangeTowerMRdNm(change_tower_m_rd_nm::ChangeTowerMRdNm),
+    RemoveBridge(remove_bridge::RemoveBridge),
+    RemoveAssessment(remove_assessment::RemoveAssessment),
+    RemoveSilo(remove_silo::RemoveSilo),
+    RemoveTank(remove_tank::RemoveTank),
+    RemoveFoundation(remove_foundation::RemoveFoundation),
+    RemoveRetainingWall(remove_retaining_wall::RemoveRetainingWall),
+    RemoveTower(remove_tower::RemoveTower),
 }
 
 pub const KINDS: &[&str] = &[
@@ -61,14 +75,14 @@ pub const KINDS: &[&str] = &[
     "update-site",
     "insert-building",
     "remove-building",
-    "change-system-base-shear-resistance-n",
+    "change-system-v-rd-n",
     "change-storey-permanent-gk-n",
     "change-storey-stiffness-x",
     "change-storey-drift-xm",
     "change-building-plan-regular",
-    "change-building-elevation-regular",
-    "change-member-detailing-compatible",
-    "change-building-masonry-wall-area-ratio",
+    "change-elevation-regular",
+    "change-member-detailing",
+    "change-masonry-wall-ratio",
     "insert-bridge",
     "change-bridge-v-rd-n",
     "insert-assessment",
@@ -79,6 +93,13 @@ pub const KINDS: &[&str] = &[
     "insert-retaining-wall",
     "insert-tower",
     "change-tower-m-rd-nm",
+    "remove-bridge",
+    "remove-assessment",
+    "remove-silo",
+    "remove-tank",
+    "remove-foundation",
+    "remove-retaining-wall",
+    "remove-tower",
 ];
 
 impl En1998Mutation {
@@ -107,20 +128,20 @@ impl En1998Mutation {
                     }));
                 }
                 if bb.elevation_regular != tb.elevation_regular {
-                    mutations.push(En1998Mutation::ChangeBuildingElevationRegular(change_building_elevation_regular::ChangeBuildingElevationRegular {
+                    mutations.push(En1998Mutation::ChangeElevationRegular(change_elevation_regular::ChangeElevationRegular {
                         building_index: bi,
                         new_elevation_regular: tb.elevation_regular,
                     }));
                 }
                 if bb.masonry_wall_area_ratio.to_bits() != tb.masonry_wall_area_ratio.to_bits() {
-                    mutations.push(En1998Mutation::ChangeBuildingMasonryWallAreaRatio(change_building_masonry_wall_area_ratio::ChangeBuildingMasonryWallAreaRatio {
+                    mutations.push(En1998Mutation::ChangeMasonryWallRatio(change_masonry_wall_ratio::ChangeMasonryWallRatio {
                         building_index: bi,
                         new_masonry_wall_area_ratio: tb.masonry_wall_area_ratio,
                     }));
                 }
                 for (si, (bs, ts)) in bb.systems.iter().zip(tb.systems.iter()).enumerate() {
                     if bs.base_shear_resistance_n.to_bits() != ts.base_shear_resistance_n.to_bits() {
-                        mutations.push(En1998Mutation::ChangeSystemBaseShearResistanceN(change_system_base_shear_resistance_n::ChangeSystemBaseShearResistanceN {
+                        mutations.push(En1998Mutation::ChangeSystemVRdN(change_system_v_rd_n::ChangeSystemVRdN {
                             building_index: bi,
                             system_index: si,
                             new_base_shear_resistance_n: ts.base_shear_resistance_n,
@@ -152,7 +173,7 @@ impl En1998Mutation {
                 }
                 for (mi, (bm, tm)) in bb.members.iter().zip(tb.members.iter()).enumerate() {
                     if bm.detailing_compatible_with_q != tm.detailing_compatible_with_q {
-                        mutations.push(En1998Mutation::ChangeMemberDetailingCompatible(change_member_detailing_compatible::ChangeMemberDetailingCompatible {
+                        mutations.push(En1998Mutation::ChangeMemberDetailing(change_member_detailing::ChangeMemberDetailing {
                             building_index: bi,
                             member_index: mi,
                             new_detailing_compatible_with_q: tm.detailing_compatible_with_q,
@@ -162,74 +183,57 @@ impl En1998Mutation {
             }
         }
         if base.bridges != target.bridges {
-            if base.bridges.len() == target.bridges.len() {
-                for (i, (b, tbridge)) in base.bridges.iter().zip(target.bridges.iter()).enumerate() {
-                    if b.v_rd_n.to_bits() != tbridge.v_rd_n.to_bits() {
-                        mutations.push(En1998Mutation::ChangeBridgeVRdN(change_bridge_v_rd_n::ChangeBridgeVRdN { index: i, new_v_rd_n: tbridge.v_rd_n }));
+            if base.bridges.len() == target.bridges.len() && base.bridges.iter().zip(&target.bridges).all(|(b, t)| crate::En1998Bridge { v_rd_n: t.v_rd_n, ..b.clone() } == *t) {
+                for (index, (b, t)) in base.bridges.iter().zip(&target.bridges).enumerate() {
+                    if b.v_rd_n.to_bits() != t.v_rd_n.to_bits() {
+                        mutations.push(change_bridge_v_rd_n::ChangeBridgeVRdN { index, new_v_rd_n: t.v_rd_n }.into());
                     }
                 }
             } else {
-                for (index, bridge) in target.bridges.iter().enumerate() {
-                    mutations.push(En1998Mutation::InsertBridge(insert_bridge::InsertBridge { index, bridge: bridge.clone() }));
-                }
+                mutations.extend(replace_all(&base.bridges, &target.bridges, |index| remove_bridge::RemoveBridge { index }.into(), |index, bridge| insert_bridge::InsertBridge { index, bridge }.into()));
             }
         }
         if base.assessments != target.assessments {
-            if base.assessments.len() == target.assessments.len() {
-                for (i, (b, a)) in base.assessments.iter().zip(target.assessments.iter()).enumerate() {
-                    if b.r_k_n.to_bits() != a.r_k_n.to_bits() {
-                        mutations.push(En1998Mutation::ChangeAssessmentRKN(change_assessment_rkn::ChangeAssessmentRKN { index: i, new_r_k_n: a.r_k_n }));
+            if base.assessments.len() == target.assessments.len() && base.assessments.iter().zip(&target.assessments).all(|(b, t)| crate::En1998Assessment { r_k_n: t.r_k_n, ..b.clone() } == *t) {
+                for (index, (b, t)) in base.assessments.iter().zip(&target.assessments).enumerate() {
+                    if b.r_k_n.to_bits() != t.r_k_n.to_bits() {
+                        mutations.push(change_assessment_rkn::ChangeAssessmentRKN { index, new_r_k_n: t.r_k_n }.into());
                     }
                 }
             } else {
-                for (index, assessment) in target.assessments.iter().enumerate() {
-                    mutations.push(En1998Mutation::InsertAssessment(insert_assessment::InsertAssessment { index, assessment: assessment.clone() }));
-                }
+                mutations.extend(replace_all(&base.assessments, &target.assessments, |index| remove_assessment::RemoveAssessment { index }.into(), |index, assessment| insert_assessment::InsertAssessment { index, assessment }.into()));
             }
         }
         if base.silos != target.silos {
-            for (index, silo) in target.silos.iter().enumerate() {
-                if base.silos.get(index) != Some(silo) {
-                    mutations.push(En1998Mutation::InsertSilo(insert_silo::InsertSilo { index, silo: silo.clone() }));
-                }
-            }
+            mutations.extend(replace_all(&base.silos, &target.silos, |index| remove_silo::RemoveSilo { index }.into(), |index, silo| insert_silo::InsertSilo { index, silo }.into()));
         }
         if base.tanks != target.tanks {
-            for (index, tank) in target.tanks.iter().enumerate() {
-                if base.tanks.get(index) != Some(tank) {
-                    mutations.push(En1998Mutation::InsertTank(insert_tank::InsertTank { index, tank: tank.clone() }));
-                }
-            }
+            mutations.extend(replace_all(&base.tanks, &target.tanks, |index| remove_tank::RemoveTank { index }.into(), |index, tank| insert_tank::InsertTank { index, tank }.into()));
         }
         if base.foundations != target.foundations {
-            for (index, foundation) in target.foundations.iter().enumerate() {
-                if base.foundations.get(index) != Some(foundation) {
-                    mutations.push(En1998Mutation::InsertFoundation(insert_foundation::InsertFoundation { index, foundation: foundation.clone() }));
-                }
-            }
+            mutations.extend(replace_all(&base.foundations, &target.foundations, |index| remove_foundation::RemoveFoundation { index }.into(), |index, foundation| insert_foundation::InsertFoundation { index, foundation }.into()));
         }
         if base.retaining_walls != target.retaining_walls {
-            for (index, wall) in target.retaining_walls.iter().enumerate() {
-                if base.retaining_walls.get(index) != Some(wall) {
-                    mutations.push(En1998Mutation::InsertRetainingWall(insert_retaining_wall::InsertRetainingWall { index, wall: wall.clone() }));
-                }
-            }
+            mutations.extend(replace_all(&base.retaining_walls, &target.retaining_walls, |index| remove_retaining_wall::RemoveRetainingWall { index }.into(), |index, wall| insert_retaining_wall::InsertRetainingWall { index, wall }.into()));
         }
         if base.towers != target.towers {
-            if base.towers.len() == target.towers.len() {
-                for (i, (b, tw)) in base.towers.iter().zip(target.towers.iter()).enumerate() {
-                    if b.m_rd_nm.to_bits() != tw.m_rd_nm.to_bits() {
-                        mutations.push(En1998Mutation::ChangeTowerMRdNm(change_tower_m_rd_nm::ChangeTowerMRdNm { index: i, new_m_rd_nm: tw.m_rd_nm }));
+            if base.towers.len() == target.towers.len() && base.towers.iter().zip(&target.towers).all(|(b, t)| crate::En1998Tower { m_rd_nm: t.m_rd_nm, ..b.clone() } == *t) {
+                for (index, (b, t)) in base.towers.iter().zip(&target.towers).enumerate() {
+                    if b.m_rd_nm.to_bits() != t.m_rd_nm.to_bits() {
+                        mutations.push(change_tower_m_rd_nm::ChangeTowerMRdNm { index, new_m_rd_nm: t.m_rd_nm }.into());
                     }
                 }
             } else {
-                for (index, tower) in target.towers.iter().enumerate() {
-                    mutations.push(En1998Mutation::InsertTower(insert_tower::InsertTower { index, tower: tower.clone() }));
-                }
+                mutations.extend(replace_all(&base.towers, &target.towers, |index| remove_tower::RemoveTower { index }.into(), |index, tower| insert_tower::InsertTower { index, tower }.into()));
             }
         }
         mutations
     }
+}
+
+/// 🔁 Replaces a whole collection through the closed vocabulary: every base record removed back to front, then every target record inserted in order.
+fn replace_all<T: Clone>(base: &[T], target: &[T], remove: impl Fn(usize) -> En1998Mutation, insert: impl Fn(usize, T) -> En1998Mutation) -> Vec<En1998Mutation> {
+    (0..base.len()).rev().map(&remove).chain(target.iter().cloned().enumerate().map(|(index, item)| insert(index, item))).collect()
 }
 
 //#region 🌉️ExternalCodecBridge
@@ -249,3 +253,17 @@ pub fn inverse_en1998_mutation(mutation: &En1998Mutation, base: &En1998Snapshot)
     <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(mutation, base)
 }
 //#endregion 🌉️ExternalCodecBridge
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
+mod fixture_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
+mod kinds_catalog;
+//#endregion 🧪️Tests

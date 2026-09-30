@@ -5,8 +5,9 @@
 2. Every `x-semio-ui` node in those schemas validates against the manifest `$defs/InputUi` meta-schema.
 3. Every committed `🦠️mutation/🔣️.json` fixture validates against its leaf payload schema, cut out of the aggregate wire the
    way `payload_value()` does (an externally tagged aggregate's one-key wrapper is removed; an internally tagged wire is
-   validated whole, because every leaf declares the tag `const`), and the whole wire validates against the aggregate
-   `🧬️mutations/🔣️.json` document next to the leaf directory.
+   validated whole, because every leaf declares the tag `const`; an adjacently tagged wire yields its content member), and
+   the whole wire validates against the aggregate `🧬️mutations/🔣️.json` document next to the leaf directory. A negative
+   witness (outcome `mutation.invariant`) must instead be rejected by its leaf schema or name a declared `invariant`.
 
 Run: .venv/bin/python 🧪️w2-s-e-check.py
 """
@@ -67,7 +68,7 @@ def main():
     store = registry()
     manifest = load(os.path.join(REPO, "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json"))
     input_ui = Draft7Validator({"$ref": f"{manifest['$id']}#/$defs/InputUi"}, registry=store)
-    leaves, uis, bad_ui, bad_schema, fixtures, bad_fixture = 0, 0, [], [], 0, []
+    leaves, uis, bad_ui, bad_schema, fixtures, bad_fixture, negatives = 0, 0, [], [], 0, [], 0
     for root in ROOTS:
         for directory, files in walk(root):
             if "🔣️.json" not in files or "/🧬️mutations/" not in directory or any(part.endswith("fixtures") for part in directory.split("/")):
@@ -97,12 +98,22 @@ def main():
                         continue
                     fixtures += 1
                     wire = load(os.path.join(case, "🔣️.json"))
+                    outcome_path = os.path.join(os.path.dirname(case), "🎯️outcome", "🔣️.json")
+                    outcome = load(outcome_path) if os.path.exists(outcome_path) else {}
+                    negative = outcome.get("status") == "rejected" and outcome.get("code") == "mutation.invariant"
                     variant = descriptor.get("aggregateVariant")
-                    payload = wire[variant] if isinstance(wire, dict) and list(wire) == [variant] else wire
+                    content = next((key for branch in (aggregate or {}).get("oneOf", []) for key, node in branch.get("properties", {}).items() if isinstance(node, dict) and "$ref" in node and len(branch.get("required", [])) == 2), None)
+                    payload = wire[variant] if isinstance(wire, dict) and list(wire) == [variant] else wire[content] if content is not None and isinstance(wire, dict) and content in wire else wire
+                    leaf_errors = [error.message for error in Draft7Validator(schema, registry=store).iter_errors(payload)]
+                    if negative:
+                        negatives += 1
+                        if not leaf_errors and not outcome.get("invariant"):
+                            bad_fixture.append((os.path.relpath(case, REPO), "leaf (negative accepted)", "the schema accepts a payload the domain refuses as mutation.invariant"))
+                        continue
                     for label, target, instance in (("leaf", schema, payload), ("aggregate", aggregate, wire)):
                         if target is None:
                             continue
-                        errors = [error.message for error in Draft7Validator(target, registry=store).iter_errors(instance)]
+                        errors = leaf_errors if label == "leaf" else [error.message for error in Draft7Validator(target, registry=store).iter_errors(instance)]
                         if errors:
                             bad_fixture.append((os.path.relpath(case, REPO), label, errors[0][:200]))
     for path, error in bad_schema:
@@ -111,7 +122,7 @@ def main():
         print(f"[w2-s-e] x-semio-ui invalid {path}#{pointer}: {error}")
     for path, label, error in bad_fixture:
         print(f"[w2-s-e] fixture rejected by {label} {path}: {error}")
-    print(f"[w2-s-e] {leaves} leaves, {uis} x-semio-ui nodes ({len(bad_ui)} invalid), {len(bad_schema)} invalid schemas, {fixtures} fixture wires ({len(bad_fixture)} rejections)")
+    print(f"[w2-s-e] {leaves} leaves, {uis} x-semio-ui nodes ({len(bad_ui)} invalid), {len(bad_schema)} invalid schemas, {fixtures} fixture wires ({negatives} negative, {len(bad_fixture)} rejections)")
     raise SystemExit(1 if bad_ui or bad_schema or bad_fixture else 0)
 
 

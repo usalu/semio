@@ -2,6 +2,15 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/mutation/connect-slots/schema.json",
   "title": "ConnectSlots",
+  "x-semio-invariant": [
+    {
+      "id": "no-self-loop",
+      "description": {
+        "en": "An adjacency edge connects two different slots, so fromSlotId differs from toSlotId.",
+        "de": "Eine Nachbarschaftskante verbindet zwei verschiedene Slots, fromSlotId unterscheidet sich also von toSlotId."
+      }
+    }
+  ],
   "type": "object",
   "additionalProperties": false,
   "required": [

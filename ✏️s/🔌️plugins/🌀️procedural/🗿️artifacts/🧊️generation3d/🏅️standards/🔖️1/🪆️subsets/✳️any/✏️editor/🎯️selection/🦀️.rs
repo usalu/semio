@@ -171,6 +171,7 @@ impl ComponentSelection {
         value.insert("activeObjectId", active.map_or(dsl::json::Value::Null, |id| dsl::json::Value::String(id.into())));
         value.insert("ids", dsl::json::Value::Array(selected.iter().map(|target| target.instance).collect::<BTreeSet<_>>().into_iter().map(|id| dsl::json::Value::String(id.into())).collect()));
         value.insert("componentIds", dsl::json::Value::Array(selected.iter().filter(|target| Some(target.instance) == active).map(|target| target.component).collect::<BTreeSet<_>>().into_iter().map(dsl::json::Value::from).collect()));
+        value.insert("gumballSelectionIds", dsl::json::Value::Array(selected.iter().map(|target| format!("{}.{}.{}", target.instance, target.granularity, target.component)).collect::<BTreeSet<_>>().into_iter().map(dsl::json::Value::String).collect()));
         let mut targets = dsl::json::Object::new();
         for mode in ["mesh", "vertex", "edge", "face"] { targets.insert(mode, dsl::json::Value::Bool(mode == self.granularity)); }
         value.insert("targets", dsl::json::Value::Object(targets));

@@ -126,7 +126,7 @@ pub mod derived_construction {
             let outcome = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation, &self.snapshot);
             match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("mutation.apply", dsl::TextSpan::at(1, 1), error.to_string())),
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error("build.apply", dsl::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
@@ -321,7 +321,7 @@ pub fn wires_canvas_layers(board: &DslValue, wires: &DslValue) -> Vec<Value> {
 /// the real graph (regenerated with this crate's own `ArtifactDsl::print_dsl`).
 pub fn metabolism_wires_example_snapshot() -> protocol::MutationApplyResult<crate::WiresSnapshot> {
     <crate::WiresSnapshot as store::ArtifactDsl>::parse_dsl(crate::document_dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT)
-        .map_err(|error| protocol::MutationApplyError::new("example.unparsable", format!("the committed metabolism example must parse: {error:?}")))
+        .map_err(|error| protocol::MutationApplyError::new("mutation.apply.unparsable-example", format!("the committed metabolism example must parse: {error:?}")))
 }
 
 //#endregion 🔖️ExampleFixture

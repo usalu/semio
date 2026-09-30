@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeThermostatCoolingThrottleRange, base: &Energy
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Thermostat {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_cooling_throttle_range_k.is_finite() || payload.new_cooling_throttle_range_k <= 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("A cooling throttle range must be a positive finite number, got {}.", payload.new_cooling_throttle_range_k), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("A cooling throttle range must be a positive finite number, got {}.", payload.new_cooling_throttle_range_k), [payload.id.0.to_string()]);
     }
     if existing.cooling_throttle_range_k == payload.new_cooling_throttle_range_k {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Thermostat {} already has that cooling throttle range.", payload.id.0));

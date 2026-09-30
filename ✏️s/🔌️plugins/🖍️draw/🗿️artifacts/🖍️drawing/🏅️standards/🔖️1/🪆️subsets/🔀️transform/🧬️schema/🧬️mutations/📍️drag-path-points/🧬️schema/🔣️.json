@@ -1,0 +1,166 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/drag-path-points/schema.json",
+  "title": "DragPathPoints",
+  "description": "The `drag-path-points` mutation record — a relative, parametric drag of path anchors and handles by one world-space offset, applied through each path's own world transform; an anchor carries its attached tangents. Internally tagged `\"mutation\": \"dragPathPoints\"`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targets",
+    "dx",
+    "dy"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "dragPathPoints",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/DrawingPathPointTarget"
+      },
+      "x-semio-ui": {
+        "role": "target",
+        "label": {
+          "en": "Path points",
+          "de": "Pfadpunkte"
+        },
+        "description": {
+          "en": "The anchors and handles to drag; points of locked, hidden or missing paths are skipped.",
+          "de": "Die zu ziehenden Anker und Griffe; Punkte gesperrter, ausgeblendeter oder fehlender Pfade werden übersprungen."
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "dx": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset X",
+          "de": "Versatz X"
+        },
+        "description": {
+          "en": "Horizontal offset in drawing coordinates.",
+          "de": "Horizontaler Versatz in Zeichnungskoordinaten."
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "offset",
+        "order": 20
+      }
+    },
+    "dy": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset Y",
+          "de": "Versatz Y"
+        },
+        "description": {
+          "en": "Vertical offset in drawing coordinates.",
+          "de": "Vertikaler Versatz in Zeichnungskoordinaten."
+        },
+        "step": 1,
+        "precision": 2,
+        "group": "offset",
+        "order": 30
+      }
+    }
+  },
+  "$defs": {
+    "DrawingPathPointTarget": {
+      "title": "DrawingPathPointTarget",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layerId",
+        "index",
+        "point"
+      ],
+      "properties": {
+        "layerId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Path",
+              "de": "Pfad"
+            },
+            "ref": {
+              "kind": "layer",
+              "domain": "strokes",
+              "granularity": "stroke"
+            },
+            "order": 10
+          }
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Segment",
+              "de": "Segment"
+            },
+            "description": {
+              "en": "Zero-based index of the path segment that owns the point.",
+              "de": "Nullbasierter Index des Pfadsegments, dem der Punkt gehört."
+            },
+            "step": 1,
+            "precision": 0,
+            "order": 20
+          }
+        },
+        "point": {
+          "enum": [
+            "anchor",
+            "control1",
+            "control2"
+          ],
+          "x-semio-ui": {
+            "widget": "segmented",
+            "role": "value",
+            "label": {
+              "en": "Point",
+              "de": "Punkt"
+            },
+            "options": {
+              "anchor": {
+                "en": "Anchor",
+                "de": "Anker"
+              },
+              "control1": {
+                "en": "Incoming handle",
+                "de": "Eingehender Griff"
+              },
+              "control2": {
+                "en": "Outgoing handle",
+                "de": "Ausgehender Griff"
+              }
+            },
+            "order": 30
+          }
+        }
+      }
+    }
+  }
+}

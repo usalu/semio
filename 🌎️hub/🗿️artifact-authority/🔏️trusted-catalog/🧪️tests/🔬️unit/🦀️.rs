@@ -970,8 +970,8 @@ async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> Fi
     semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_s_plugin_gis::plugin().expect("GIS assembly"));
     let emitted = semio_framework_plugin::describe::describe_plugin(&runtime).await;
     let mut descriptor = decode_package_descriptor(&emitted).expect("actual native GIS descriptor");
-    semio_s_plugin_stdio::registry::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).expect("actual GIS compiled Stdio dependency");
-    semio_s_plugin_stdio::registry::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).expect("actual GIS compiled Stdio catalog");
+    semio_s_plugin_stdio::catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).expect("actual GIS compiled Stdio dependency");
+    semio_s_plugin_stdio::catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).expect("actual GIS compiled Stdio catalog");
     let component = b"synthetic-gis-component-for-catalog-binding-test";
     let component_sha256 = hex_lower(&Sha256::digest(component));
     let mut component_blake3 = Hasher::new();
@@ -2152,7 +2152,7 @@ fn linked_codec_registries() -> std::collections::BTreeMap<&'static str, BTreeSe
         let registry: serde_json::Value = serde_json::from_slice(&std::fs::read(root.join(path)).expect("committed linked codec registry")).expect("linked codec registry JSON");
         registry["receipts"].as_array().expect("linked codec receipts").iter().map(|row| (row[kind].as_str().expect("receipt kind").to_owned(), row[schema].as_str().expect("receipt schema").to_owned())).collect()
     };
-    std::collections::BTreeMap::from([("stdio", pairs("🗄️stdio/📇️registry/📜️native-codec-factories.json", "artifact_kind", "artifact_schema")), ("gis", pairs("🌍️gis/📇️native-codecs/🔣️.json", "kind", "schema"))])
+    std::collections::BTreeMap::from([("stdio", pairs("🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json", "artifact_kind", "artifact_schema")), ("gis", pairs("🌍️gis/📇️native-codecs/🔣️.json", "kind", "schema"))])
 }
 
 /// 🗺️ LAW (census): every editor surface of every committed, isolated package descriptor opens at least one artifact

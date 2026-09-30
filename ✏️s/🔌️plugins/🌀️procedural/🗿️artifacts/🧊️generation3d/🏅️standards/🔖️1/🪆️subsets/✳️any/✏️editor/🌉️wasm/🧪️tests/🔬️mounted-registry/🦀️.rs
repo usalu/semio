@@ -490,7 +490,7 @@ mod mounted_laws {
         let owner_fixture = include_str!("../../../../🧫️fixtures/👑️p8yz-b-owner-catalog-laws.json");
         let oracle_fixture = include_str!("../../../../🧫️fixtures/🔬️p8yz-b-third-party-oracle-laws.json");
 
-        assert!(owner_source.contains("mutation.delete-widget-position.3d-only"));
+        assert!(owner_source.contains("mutations.delete-widget-position.3d-only"));
         assert!(owner_source.contains("GENERATION3D_RETAINED_SCHEMA_DISCRIMINATOR"));
         let mounted_snapshot = snapshot_source.split_once("//#region 🔖️MountedCanonicalPackSession").expect("P3 mounted snapshot region").1.split_once("//#endregion 🔖️MountedCanonicalPackSession").expect("P3 mounted production boundary").0;
         let forbidden_whole_routes = [

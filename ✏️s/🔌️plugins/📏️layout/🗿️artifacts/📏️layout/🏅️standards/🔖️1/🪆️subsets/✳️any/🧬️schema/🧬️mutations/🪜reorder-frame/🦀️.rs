@@ -40,7 +40,7 @@ pub fn diff_reorder_frame(payload: &ReorderFrame, base: &LayoutSnapshot) -> prot
     };
     let frame = &page.frames[index];
     if frame.locked() || crate::layer_locked(base, page, frame.layer_id()) {
-        return protocol::MutationOutcome::error("mutation.invariant", "A locked frame stays in its stack position.", [payload.frame_id.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-mismatch", "A locked frame stays in its stack position.", [payload.frame_id.clone()]);
     }
     let Some(target) = neighbor(index, page.frames.len(), payload.forward) else {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "The frame is already at that end of the stack.");

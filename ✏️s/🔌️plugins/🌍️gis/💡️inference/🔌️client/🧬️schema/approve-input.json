@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gis:document-http/approve-input",
+  "$ref": "#/$defs/InferenceApprovalRequestV1",
+  "$defs": {
+    "InferenceApprovalRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "jobId",
+        "proposalHash"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.inference-approval/v1"
+        },
+        "version": {
+          "const": 1
+        },
+        "jobId": {
+          "$ref": "#/$defs/id"
+        },
+        "proposalHash": {
+          "$ref": "#/$defs/hash"
+        }
+      }
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    }
+  }
+}

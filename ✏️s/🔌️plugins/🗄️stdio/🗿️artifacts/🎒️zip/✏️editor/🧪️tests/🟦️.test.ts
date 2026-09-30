@@ -80,7 +80,7 @@ describe("guarded archive text editing", () => {
       const restored = applyZipDiff(removed, zipInsertionDiff(removed, entry, fixture.snapshot.entries[index + 1]?.name));
       expect(restored).toEqual(fixture.snapshot);
     }
-    expect(() => zipInsertionDiff(fixture.snapshot, edit.entry, "missing.txt")).toThrow("mutation.apply.missing-target");
+    expect(() => zipInsertionDiff(fixture.snapshot, edit.entry, "missing.txt")).toThrow("mutation.target-missing");
   });
   it("preserves authored member order with the JSON Patch oracle", () => {
     const diff = { entries: { order: fixture.entryOrdering.reversedNames } };

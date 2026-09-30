@@ -10,10 +10,10 @@ pub fn diff(payload: &super::AddPlantLoopEquipment, base: &EnergyModelSnapshot) 
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Plant loop {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if payload.equipment_id.0 == 0 {
-        return protocol::MutationOutcome::error("mutation.invariant", "Plant equipment zero is the unset id, not a reference.".to_string(), [payload.equipment_id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "Plant equipment zero is the unset id, not a reference.".to_string(), [payload.equipment_id.0.to_string()]);
     }
     if existing.equipment_ids.contains(&payload.equipment_id) {
-        return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Plant loop {} already lists plant equipment {}.", payload.id.0, payload.equipment_id.0), [payload.equipment_id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Plant loop {} already lists plant equipment {}.", payload.id.0, payload.equipment_id.0), [payload.equipment_id.0.to_string()]);
     }
     let mut model = base.model.clone();
     if let Some(item) = model.plant_loops.iter_mut().find(|item| item.id == payload.id) {

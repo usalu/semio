@@ -467,6 +467,7 @@
   ],
   "descriptorBudget": {
     "labelBytes": 512,
-    "expectedAcceptedSlots": 8
+    "expectedAcceptedSlots": 7,
+    "nodeKeyBytes": 512
   }
 }

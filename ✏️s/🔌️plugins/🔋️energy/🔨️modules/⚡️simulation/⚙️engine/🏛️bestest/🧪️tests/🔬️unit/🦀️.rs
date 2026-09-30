@@ -147,7 +147,7 @@ fn synthetic_annual_epw() -> String {
 }
 
 fn annual_results(case: &str) -> Results {
-    run(case, &synthetic_annual_epw(), 3).unwrap_or_else(|diagnostics| panic!("case {case} must run: {:?}", diagnostics.messages))
+    run(case, crate::epw::parse(&synthetic_annual_epw()).expect("synthetic weather"), 3).unwrap_or_else(|diagnostics| panic!("case {case} must run: {:?}", diagnostics.messages))
 }
 
 /// 🌦️ The synthetic file must actually reach the engine through the real `🌦️epw` codec, with
@@ -155,7 +155,7 @@ fn annual_results(case: &str) -> Results {
 /// vacuous.
 #[test]
 fn synthetic_annual_weather_decodes_to_a_full_year() {
-    let weather = EpwWeather::parse(&synthetic_annual_epw()).expect("the synthetic EPW parses through the stdio codec");
+    let weather = crate::epw::parse(&synthetic_annual_epw()).expect("the synthetic EPW parses through the stdio codec");
     assert_eq!(weather.records.len(), 8760);
 }
 

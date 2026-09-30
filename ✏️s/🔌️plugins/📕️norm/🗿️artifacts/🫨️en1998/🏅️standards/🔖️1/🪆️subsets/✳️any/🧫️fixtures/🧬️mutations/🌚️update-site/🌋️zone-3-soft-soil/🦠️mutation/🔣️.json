@@ -1,0 +1,9 @@
+{
+  "mutation": "updateSite",
+  "site": {
+    "seismicZone": "zone3",
+    "aGr": 0.8,
+    "deGroundCombo": "C-S",
+    "importanceClass": "II"
+  }
+}

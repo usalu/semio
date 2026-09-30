@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWeldThroat",
+  "connectionId": "support-weld",
+  "newThroat": 0.006
+}

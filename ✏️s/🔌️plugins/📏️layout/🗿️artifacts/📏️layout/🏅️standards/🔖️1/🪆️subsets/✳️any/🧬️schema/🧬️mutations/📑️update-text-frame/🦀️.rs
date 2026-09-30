@@ -46,7 +46,7 @@ pub fn diff_update_text_frame(payload: &UpdateTextFrame, base: &LayoutSnapshot) 
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame \"{}\" does not exist on page \"{}\".", payload.frame_id, payload.page_id), [payload.frame_id.clone()]);
     };
     let Frame::Text { story_id, thread_next, inset, .. } = frame else {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Frame \"{}\" is not a text frame.", payload.frame_id), [payload.frame_id.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-mismatch", format!("Frame \"{}\" is not a text frame.", payload.frame_id), [payload.frame_id.clone()]);
     };
     if !base.stories.iter().any(|story| story.id == payload.story_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Story \"{}\" does not exist.", payload.story_id), [payload.story_id.clone()]);

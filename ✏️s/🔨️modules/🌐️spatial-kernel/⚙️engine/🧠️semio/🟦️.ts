@@ -1,14 +1,9 @@
 // #region 🧲️Header
-/** 🧠️ `@semio-tech/cad-js/spatial-kernel/semio` — first-party `SpatialKernel` backed by the
- * Rust `BrepKernel` (`Brep`, `semio-s-plugin-stdio`'s `🧊️brep` subset) over the existing
- * explicit Semio session wasm JS→Rust bridge (`invokeBrep`/`brep_invoke`, see
- * `🌊️session/🟦️.ts` and `🌊️session/🦀️.rs`).
- * THE production CAD runtime kernel (`id = "semio-brep"`); `🧱️brepjs` (OpenCascade) stays only as
- * the vitest differential oracle. Pure preview math lives in the kernel-agnostic `🧮️preview/🟦️.ts`,
- * which this kernel extends. See `🎫️tickets/…/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME/📓️w4a-spatial-kernel-first-party.md`. */
+/** 🧠️ First-party spatial kernel over the owned Semio geometry session and shared preview mathematics. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { spatialKernelCommandFor } from "../🗺️spatial/🟦️.ts";
 import { SemioGeometrySession } from "./🌊️session/🟦️.ts";
 import { kernelGeometry, type EdgeCurve, type EdgeGroup, type FaceGroup, type MeshTransfer, type Vec3, solidRef } from "@semio-tech/s-3d-js";
 import { Model } from "../📐️geometry/🟦️.ts";
@@ -336,10 +331,10 @@ class SemioBrepEngine {
   }
 
   async extrudeWire(input: { wireId: string; distance: number; direction: Vec3; model: Model }): Promise<SolidRef> {
-    const wireHandle = await polylineWireHandle(this.invokeBrep, input.model, input.wireId as WireRef);
-    if (!wireHandle) throw new Error(`Cannot extrude wire ${input.wireId}`);
-    const vector = [input.direction[0] * input.distance, input.direction[1] * input.distance, input.direction[2] * input.distance] as Vec3;
-    const { handle } = await this.invokeBrep<{ readonly handle: string }>("extrudeWire", { wire: wireHandle, vector });
+    const points = wirePolylinePoints(input.model, input.wireId as WireRef);
+    if (points.length < 4 || vec3Distance(points[0]!, points.at(-1)!) > 1e-9) throw new Error(`Cannot extrude open wire ${input.wireId} to a solid`);
+    const { handle: face } = await this.invokeBrep<{ readonly handle: string }>("planarFaceFromPoints", { points: points.slice(0, -1) });
+    const { handle } = await this.invokeBrep<{ readonly handle: string }>("extrude", { face, direction: input.direction, distance: input.distance });
     const ref = this.nextRef("extrude");
     this.solids.set(ref, handle);
     return ref;
@@ -609,21 +604,6 @@ class SemioBrepEngine {
       this.solids.set(ref, handle);
       return { diff: { solids: { added: [{ id: ref, shellIds: [] }], removed: [...firstRefs, ...secondRefs] } } };
     }
-    if (commandId.endsWith("From2PointsAndHeight")) {
-      const p0 = asVec3(params.pointA, asVec3(params.p0, [0, 0, 0]));
-      const p1 = asVec3(params.pointB, asVec3(params.p1, [1, 1, 0]));
-      const height = typeof params.height === "number" && Number.isFinite(params.height) ? params.height : 2.7;
-      const cornerA: Vec3 = [Math.min(p0[0], p1[0]), Math.min(p0[1], p1[1]), Math.min(p0[2], p1[2])];
-      const cornerB: Vec3 = [Math.max(p0[0], p1[0]), Math.max(p0[1], p1[1]), Math.max(p0[2], p1[2])];
-      return this.createBoxFromCornersDiff({ cornerA, cornerB, height });
-    }
-    if (commandId.endsWith("FromCurveAndHeight")) {
-      const wireId = String(params.wireId ?? "");
-      const distance = typeof params.height === "number" && Number.isFinite(params.height) ? params.height : 2.7;
-      const model = params.model instanceof Model ? params.model : null;
-      if (wireId && model) return this.extrudeWireDiff({ wireId, distance, direction: [0, 0, 1], model });
-      return { diff: {} };
-    }
     if (commandId === "surface.extrudeCrv") {
       const model = params.model instanceof Model ? params.model : null;
       if (!model) return { diff: {} };
@@ -703,9 +683,7 @@ class SemioBrepEngine {
 // #endregion 🧠️SemioBrepEngine
 
 // #region 🔌️SemioBrepKernel
-/** 🧠️ THE production CAD `SpatialKernel`: OCCT-backed methods route through the Rust
- * `BrepKernel` via `this.invokeBrep`; every preview-math method is inherited unchanged from
- * `PreciseSpatialKernelMath`. */
+/** 🧠️ Spatial construction and measurement through the owned geometry session. */
 export class SemioBrepKernel extends PreciseSpatialKernelMath implements SpatialKernel {
   async close(): Promise<void> { await this.engine.close(); }
   readonly id = "semio-brep";
@@ -729,7 +707,8 @@ export class SemioBrepKernel extends PreciseSpatialKernelMath implements Spatial
     this.engine.disposeSolid(solid);
   }
   async executeCommandDiff(commandId: string, params: Record<string, unknown>): Promise<{ readonly diff: ModelDiff }> {
-    return this.engine.executeCommandDiff(commandId, params);
+    const command = spatialKernelCommandFor(commandId);
+    return command ? command(this, params) : this.engine.executeCommandDiff(commandId, params);
   }
   async createBoxFromCornersDiff(input: { cornerA: Vec3; cornerB: Vec3; height: number }): Promise<{ readonly diff: ModelDiff; readonly solid: SolidRef }> {
     return this.engine.createBoxFromCornersDiff(input);
@@ -776,15 +755,3 @@ export class SemioBrepKernel extends PreciseSpatialKernelMath implements Spatial
 }
 
 // #endregion 🔌️SemioBrepKernel
-
-// #region 🧪️Tests
-/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-spatial-kernel-semio/🟦️.ts`. */
-export type SemioTestDependencies = {
-  readonly SemioBrepKernel: typeof SemioBrepKernel;
-};
-
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-spatial-kernel-semio/🟦️.ts");
-  await registerTests1(import.meta.vitest, { SemioBrepKernel }, { url: import.meta.url });
-}
-// #endregion 🧪️Tests

@@ -11,6 +11,10 @@
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "🔀️transform",
       "kinds": [
+        "drag-layers",
+        "drag-path-points",
+        "rotate-layers",
+        "scale-layers",
         "set-layer-boolean-operation",
         "update-layer-trace-params",
         "update-layer-transform",
@@ -58,6 +62,50 @@
             {
               "id": "reshape-curve",
               "directoryName": "✏️reshape-curve"
+            }
+          ]
+        },
+        {
+          "mutationId": "drag-layers",
+          "sourceMutationDirectoryName": "✋️drag-layers",
+          "mutationDirectoryName": "✋️drag-layers",
+          "scenarios": [
+            {
+              "id": "drags-a-child",
+              "directoryName": "✋️drags-a-child"
+            }
+          ]
+        },
+        {
+          "mutationId": "rotate-layers",
+          "sourceMutationDirectoryName": "🧭️rotate-layers",
+          "mutationDirectoryName": "🧭️rotate-layers",
+          "scenarios": [
+            {
+              "id": "quarter-turn",
+              "directoryName": "🧭️quarter-turn"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale-layers",
+          "sourceMutationDirectoryName": "📐️scale-layers",
+          "mutationDirectoryName": "📐️scale-layers",
+          "scenarios": [
+            {
+              "id": "doubles-a-rect",
+              "directoryName": "📐️doubles-a-rect"
+            }
+          ]
+        },
+        {
+          "mutationId": "drag-path-points",
+          "sourceMutationDirectoryName": "📍️drag-path-points",
+          "mutationDirectoryName": "📍️drag-path-points",
+          "scenarios": [
+            {
+              "id": "drags-two-anchors",
+              "directoryName": "📍️drags-two-anchors"
             }
           ]
         }
@@ -210,6 +258,142 @@
               "node-order-preserved-except-where-the-mutation-changes-it"
             ]
           }
+        },
+        {
+          "id": "drag-layers",
+          "capability": "drawing-1-transform-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "drag-layers",
+            "bridgeVersion": 1,
+            "variant": "DragLayers"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "drawing-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          },
+          "notes": "A relative, parametric selection-transform leaf yielded by the draw tool machine's gestures; its committed vector is computed by an independent Python implementation. The moved layers are witnessed through the exported `<g transform>` wrapper."
+        },
+        {
+          "id": "rotate-layers",
+          "capability": "drawing-1-transform-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-layers",
+            "bridgeVersion": 1,
+            "variant": "RotateLayers"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "drawing-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          },
+          "notes": "A relative, parametric selection-transform leaf yielded by the draw tool machine's gestures; its committed vector is computed by an independent Python implementation. The moved layers are witnessed through the exported `<g transform>` wrapper."
+        },
+        {
+          "id": "scale-layers",
+          "capability": "drawing-1-transform-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "scale-layers",
+            "bridgeVersion": 1,
+            "variant": "ScaleLayers"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "drawing-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          },
+          "notes": "A relative, parametric selection-transform leaf yielded by the draw tool machine's gestures; its committed vector is computed by an independent Python implementation. The moved layers are witnessed through the exported `<g transform>` wrapper."
+        },
+        {
+          "id": "drag-path-points",
+          "capability": "drawing-1-transform-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "drag-path-points",
+            "bridgeVersion": 1,
+            "variant": "DragPathPoints"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "drawing-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          },
+          "notes": "A relative, parametric selection-transform leaf yielded by the draw tool machine's gestures; its committed vector is computed by an independent Python implementation. The moved path geometry is witnessed through the exported `d` attribute."
         }
       ]
     }

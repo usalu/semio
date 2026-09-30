@@ -406,7 +406,7 @@ fn app_frame_fault_summary(fault: &[u8]) -> String {
 }
 
 /// 🧾 Formats an `AppFrame::Error`'s trailing `report` (a packed `protocol::DispatchReport`, present
-/// whenever `fault.code == "mutation.rejected"` — contract-freeze.md §C8/C9) into a short
+/// whenever `fault.code == "app.command.rejected"` — contract-freeze.md §C8/C9) into a short
 /// human-readable `code: message [target]` list, so a rejected dispatch's REAL `mutation.*` messages
 /// reach `RunError`'s own text (and, through it, `sink.record(RunMutation::AppendRunLog(..))`'s sealed
 /// diagnostics — see `bin.rs::run`'s `Err` branch) instead of only the generic
@@ -425,7 +425,7 @@ fn dispatch_report_summary(report: &[u8]) -> String {
 /// whenever the frame's trailing `report` carries real `mutation.*` messages — `` — code: text
 /// [target]; ...`` appended (`dispatch_report_summary`). The single call site every
 /// `compute_node` `AppFrame::Error` arm shares, so a node's REAL rejection reason (not just the
-/// generic `mutation.rejected` fault) reaches `RunError`'s text everywhere a dispatch can be rejected.
+/// generic `app.command.rejected` fault) reaches `RunError`'s text everywhere a dispatch can be rejected.
 fn dispatch_error_message(app_id: &str, verb: &str, fault: &[u8], report: &[u8]) -> String {
     let mut message = format!("`{app_id}` {verb} ({})", app_frame_fault_summary(fault));
     let summary = dispatch_report_summary(report);

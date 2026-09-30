@@ -52,7 +52,7 @@ import type {
   DocumentSocketGrantReceiptV1,
   SocketGrantReceiptV1,
 } from "../../../🟦️";
-import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, DOCUMENT_BACKBONE_BATCH_LIMITS, DOCUMENT_BACKBONE_RETENTION_LIMITS, HISTORY_TRANSITION_DIFF_SCHEMA, decodeClientFrame, decodePresenceHistoryEdit, decodePresenceInteraction, decodePresencePeer, decodePresenceToolRun, decodeServerFrame, decodeDocumentBackboneEnvelopeBatchExact, encodeClientFrame, encodeDocumentBackboneEnvelopeBatchExact, encodePresencePeer, encodeServerFrame, extractServerCommandsDocumentBackboneBatchExact } from "@semio-tech/framework-replication";
+import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, DOCUMENT_BACKBONE_BATCH_LIMITS, DOCUMENT_BACKBONE_RETENTION_LIMITS, HISTORY_TRANSITION_DIFF_SCHEMA, decodeClientFrame, encodeClientCommandsFrameExact, decodePresenceHistoryEdit, decodePresenceInteraction, decodePresencePeer, decodePresenceToolRun, decodeServerFrame, decodeDocumentBackboneEnvelopeBatchExact, encodeClientFrame, encodeDocumentBackboneEnvelopeBatchExact, encodePresencePeer, encodeServerFrame, extractServerCommandsDocumentBackboneBatchExact } from "@semio-tech/framework-replication";
 import {
   DEV_STREAM_ROUTES,
   DirectoryClient,
@@ -61,7 +61,9 @@ import {
   DOCUMENT_LINK_ACCESS_REFUSED_STATUSES,
   admitRemoteEnvelopes,
   noteAuthoredEnvelopeIds,
+  hubCommandRejectionV1,
   hubTransientApplyRefusalV1,
+  localCommandRejectionV1,
   HUB_RECONNECT_MAX_MS,
   HUB_RECONNECT_MIN_MS,
   createSocketGrantIssuerV1,
@@ -603,6 +605,11 @@ export type ArtifactState = {
    * tick, and an `externalChanged` local message all share the SAME in-flight guard and can never
    * stack overlapping reads. A no-op placeholder until {@link openArtifact} sees a folder binding. */
   revalidateFolder: () => Promise<void>;
+  /** 🪞️ The archive bytes this document last wrote to, or applied from, its folder — the TypeScript twin of the Rust actor's
+   * `last_written_hash`: a read that returns them is this document's own write echoing back through the watch, never an
+   * external change, so it replaces nothing (a replace would reload the guest from a state older than every edit made
+   * since the write). */
+  folderArchive: Uint8Array | null;
   reconnectDelayMs: number;
   /** 🗃️ Outbound mutations not yet sent on a LIVE hub socket (finding 5) — distinct from
    * `pendingBatches`, which holds the one batch already sent and awaiting its `Ack`. Every relay
@@ -3952,7 +3959,9 @@ async function pollFolderOnce(state: ArtifactState, binding: Extract<Persistence
     if (!response.ok) throw new Error(`folder backbone read failed (${response.status})`);
     const archive = new Uint8Array(await response.arrayBuffer());
     decodeDocumentArchiveBytes(archive);
-    emitEvent(state, { kind: "documentArchiveReplaced", archive: Array.from(archive) });
+    const echo = state.folderArchive !== null && equalByteArrays(state.folderArchive, archive);
+    state.folderArchive = archive;
+    if (!echo) emitEvent(state, { kind: "documentArchiveReplaced", archive: Array.from(archive) });
     setStatus(state, { persisted: true });
   } catch (error) {
     if (state.docAbort.signal.aborted) return; // 🛑 closed mid-flight — not a real failure.
@@ -4025,6 +4034,7 @@ async function writeFolder(state: ArtifactState, binding: Extract<PersistenceBin
     { timeoutMs: FOLDER_FETCH_TIMEOUT_MS, signal: state.docAbort.signal },
   );
   if (!response.ok) throw new Error(`folder backbone write failed (${response.status})`);
+  state.folderArchive = bytes;
   setStatus(state, { persisted: true });
 }
 //#endregion 🔖️Folder
@@ -4211,7 +4221,7 @@ function flushMutationsToHubIfReady(state: ArtifactState): void {
   if (!documentBackboneRelayReady(state) || state.outbox.length === 0 || state.pendingBatches.size > 0 || state.transientRefusal?.timer != null) return;
   const limit = state.transientRefusal?.batchLimit ?? HUB_OUTBOX_BATCH_ENVELOPES;
   const envelopes: MutationEnvelope[] = [];
-  const wireEnvelopes: WireMutationEnvelope[] = [];
+  const wireEnvelopes: ExactWireMutationEnvelope[] = [];
   let bytes = 0;
   for (const envelope of state.outbox) {
     if (envelopes.length === limit) break;
@@ -4226,27 +4236,16 @@ function flushMutationsToHubIfReady(state: ArtifactState): void {
   const batchId = state.nextBatchId;
   state.nextBatchId += 1;
   state.pendingBatches.set(batchId, envelopes);
-  sendWireFrame(state, { Commands: { batch_id: batchId, envelopes: wireEnvelopes } }, "command");
+  if (state.socket?.readyState === WebSocket.OPEN) state.socket.send(encodeClientCommandsFrameExact(batchId, wireEnvelopes, "command"));
 }
 
-/** 🌉️ One outbound envelope as this socket's actor sends it: the exact causal envelope a bound port authored, re-stamped, or the TS
- * twin's {@link toWireEnvelope}. */
-function hubWireEnvelope(state: ArtifactState, envelope: MutationEnvelope): WireMutationEnvelope {
+/** 🌉️ One outbound envelope as this socket's actor sends it: the exact causal envelope a bound port authored — its authored
+ * `(hlc, id)` kept, only the actor rewritten to the socket's subject, the TS twin of the Rust actors' relay — or the TS twin's
+ * {@link toWireEnvelope} stamped on this worker's clock. */
+function hubWireEnvelope(state: ArtifactState, envelope: MutationEnvelope): ExactWireMutationEnvelope {
   const exact = state.exactLocalEnvelopes.get(envelope)?.envelope;
-  const timestamp = nextWireTimestamp(state);
-  if (exact === undefined) return toWireEnvelope(envelope, timestamp, state.actor);
-  return {
-    mutation_id: exact.mutation_id,
-    document_id: exact.document_id,
-    actor: state.actor,
-    dependencies: [...exact.dependencies],
-    observed: exact.observed,
-    target: [...exact.target],
-    diff: { schema: exact.diff.schema, payload: Array.from(exact.diff.payload) },
-    inverse: { schema: exact.inverse.schema, payload: Array.from(exact.inverse.payload) },
-    timestamp,
-    transaction: exact.transaction,
-  };
+  if (exact === undefined) return exactWireEnvelope(toWireEnvelope(envelope, nextWireTimestamp(state), state.actor));
+  return { ...exact, actor: state.actor };
 }
 
 /** ⏮️ Puts envelopes that were sent but never applied back at the FRONT of the outbox, in their send order: they precede everything
@@ -4304,47 +4303,30 @@ function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationE
  * id spaces never collide. */
 let nextLocalOverflowBatchId = -1;
 
-/** 🚫️ Terminal local rejection for a verified viewer-only execution target — the same
- * {@link CommandAckOutcome} vocabulary, emitted before any queue, socket frame or retry exists. */
-function rejectReadOnlyExecutionTarget(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
+/** 🚫️ Emits one local refusal — answered before any queue, socket frame or retry exists — in the one
+ * {@link CommandAckOutcome} rejection contract a hub refusal also arrives in. */
+function rejectLocally(state: ArtifactState, outcome: CommandAckOutcome): void {
   const batchId = nextLocalOverflowBatchId;
   nextLocalOverflowBatchId -= 1;
-  emitEvent(state, {
-    kind: "commandOutcome",
-    batchId,
-    outcome: { kind: "rejected", reason: "execution target is read-only", messages: [envelopes.length] },
-  });
+  if (outcome.kind === "rejected") console.error("[backbone-worker] refused a local batch", state.config.documentId, outcome.code, outcome.detail ?? {});
+  emitEvent(state, { kind: "commandOutcome", batchId, outcome });
+}
+
+/** 🚫️ Terminal local rejection for a verified viewer-only execution target. */
+function rejectReadOnlyExecutionTarget(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
+  rejectLocally(state, localCommandRejectionV1("local.read-only", "execution target is read-only", { envelopes: envelopes.length }));
 }
 
 function rejectMutationQueueOverflow(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
-  const batchId = nextLocalOverflowBatchId;
-  nextLocalOverflowBatchId -= 1;
-  console.error("[backbone-worker] pending mutation queue full, rejecting batch", state.config.documentId, envelopes.length);
-  emitEvent(state, {
-    kind: "commandOutcome",
-    batchId,
-    outcome: { kind: "rejected", reason: "pending mutation queue full", messages: [envelopes.length, PENDING_MUTATIONS_QUEUE_LIMIT] },
-  });
+  rejectLocally(state, localCommandRejectionV1("local.queue-full", "pending mutation queue full", { envelopes: envelopes.length, limit: PENDING_MUTATIONS_QUEUE_LIMIT }));
 }
 
 function rejectDocumentBackboneCapacity(state: ArtifactState, envelopes: readonly MutationEnvelope[], bytes: number): void {
-  const batchId = nextLocalOverflowBatchId;
-  nextLocalOverflowBatchId -= 1;
-  emitEvent(state, {
-    kind: "commandOutcome",
-    batchId,
-    outcome: { kind: "rejected", reason: "document backbone pending capacity", messages: [envelopes.length, bytes, DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes] },
-  });
+  rejectLocally(state, localCommandRejectionV1("local.backbone-capacity", "document backbone pending capacity", { envelopes: envelopes.length, bytes, limit: DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes }));
 }
 
 function rejectDocumentBackboneBootstrapAdmission(state: ArtifactState, bytes: number): void {
-  const batchId = nextLocalOverflowBatchId;
-  nextLocalOverflowBatchId -= 1;
-  emitEvent(state, {
-    kind: "commandOutcome",
-    batchId,
-    outcome: { kind: "rejected", reason: "document backbone canonical pair unavailable", messages: [bytes] },
-  });
+  rejectLocally(state, localCommandRejectionV1("local.backbone-pair-unavailable", "document backbone canonical pair unavailable", { bytes }));
 }
 
 function releaseDocumentBackboneOwnership(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
@@ -4369,9 +4351,26 @@ function releaseDocumentBackboneOwnership(state: ArtifactState, envelopes: reado
  * edit the hub never accepted (ticket 26/09/23 C10, G-P2-3). The actor's speculative state is discarded instead: the
  * document rebootstraps from the hub's authoritative pair (which lacks the refused edit or already holds the transformed
  * one), and the batches queued behind it replay on top. */
-async function applyAckCorrection(state: ArtifactState, rollback: readonly MutationEnvelope[], replacement: MutationEnvelope | null): Promise<void> {
-  if (state.browserActorReservation === null) emitMutationEvent(state, replacement === null ? rollback : [...rollback, replacement]);
-  else await requireArtifactRebootstrap(state);
+async function applyAckCorrection(state: ArtifactState, sent: readonly MutationEnvelope[], replacement: MutationEnvelope | null): Promise<void> {
+  if (state.browserActorReservation !== null) {
+    await requireArtifactRebootstrap(state);
+    return;
+  }
+  const { rollbacks, retracted } = refusedBatchCorrection(state, sent);
+  emitMutationEvent(state, replacement === null ? rollbacks : [...rollbacks, replacement]);
+  if (retracted.length > 0 && hubBinding(state.config)) emitEvent(state, { kind: "documentBackbone", message: encodeBackboneMessage({ kind: "retract", mutationIds: retracted }) });
+}
+
+/** 🔙️ What a batch the hub did not take as sent corrects: each operation rolls back by its own inverse, newest first, and
+ * each history transition — which no inverse rolls back — is retracted from the store by its exact id (the store drops
+ * every local transition depending on it too). The TS twin of the Rust actor's `rollback_envelope` and
+ * `retract_refused_transitions`. */
+function refusedBatchCorrection(state: ArtifactState, sent: readonly MutationEnvelope[]): Readonly<{ rollbacks: readonly MutationEnvelope[]; retracted: readonly string[] }> {
+  const transition = (envelope: MutationEnvelope) => envelope.diff.schemaId === HISTORY_TRANSITION_DIFF_SCHEMA;
+  return {
+    rollbacks: [...sent].reverse().filter((envelope) => !transition(envelope)).map(rollbackEnvelope),
+    retracted: sent.filter(transition).map((envelope) => state.exactLocalEnvelopes.get(envelope)?.envelope.mutation_id ?? envelope.id),
+  };
 }
 
 /** 📮️ Resolves one outbound `Commands` batch's terminal `Applied` stage — mirrors the Rust actor's
@@ -4400,11 +4399,11 @@ async function handleAck(state: ArtifactState, batchId: number, stages: readonly
       ackOutcome = { kind: "accepted" };
       reorder = state.remoteFoldedOverLocal && state.pendingMutations.length === 0 && documentAwaitsBrowserActor(state);
     } else if ("Transformed" in outcome) {
-      await applyAckCorrection(state, [...sent].reverse().map(rollbackEnvelope), fromWireEnvelope(outcome.Transformed.envelope));
+      await applyAckCorrection(state, sent, fromWireEnvelope(outcome.Transformed.envelope));
       ackOutcome = { kind: "transformed" };
     } else {
-      await applyAckCorrection(state, [...sent].reverse().map(rollbackEnvelope), null);
-      ackOutcome = { kind: "rejected", reason: outcome.Rejected.reason, messages: outcome.Rejected.messages };
+      await applyAckCorrection(state, sent, null);
+      ackOutcome = hubCommandRejectionV1(outcome.Rejected);
     }
     setStatus(state, { pendingMutations: state.pendingMutations.length });
     emitEvent(state, { kind: "commandOutcome", batchId, outcome: ackOutcome });
@@ -7341,6 +7340,7 @@ function newArtifactState(config: ArtifactActorConfig, runtimeKey: string, chann
     sanityPollTimer: null,
     watchHealthy: false,
     revalidateFolder: async () => {},
+    folderArchive: null,
     reconnectDelayMs: HUB_RECONNECT_MIN_MS,
     outbox: [],
     pendingMutations: [],
@@ -7490,15 +7490,13 @@ function admitLocalMutations(
 async function handleLocalMsg(state: ArtifactState, message: ArtifactActorMsg): Promise<void> {
   switch (message.kind) {
     case "documentBackbone": {
-      if (!documentBackboneAdmissionReady(state)) {
+      if (hubBinding(state.config) !== null && !documentBackboneAdmissionReady(state)) {
         rejectDocumentBackboneBootstrapAdmission(state, message.message.byteLength);
         break;
       }
       const parsed = parseDocumentBackboneMessage(message.message);
       if (parsed.envelopes.some((envelope) => envelope.document_id !== state.config.documentId)) {
-        const batchId = nextLocalOverflowBatchId;
-        nextLocalOverflowBatchId -= 1;
-        emitEvent(state, { kind: "commandOutcome", batchId, outcome: { kind: "rejected", reason: "document backbone scope mismatch", messages: [parsed.envelopes.length] } });
+        rejectLocally(state, localCommandRejectionV1("local.backbone-scope-mismatch", "document backbone scope mismatch", { envelopes: parsed.envelopes.length }));
         break;
       }
       admitLocalMutations(state, parsed.envelopes.map(opaqueEnvelopeFromWire), { kind: "documentBackbone", message: parsed.message }, parsed.envelopes, parsed.message.byteLength);
@@ -7732,6 +7730,8 @@ if (import.meta.vitest) {
     set workerPostTestSink(value: typeof workerPostTestSink) { workerPostTestSink = value; },
   };
   await registerTests1(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, documentCatchingUpV1, newArtifactState, requestDocumentActorRecoveryV1, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, hubSessionFetch, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, { directory: import.meta.dir, url: import.meta.url });
+  const { registerFolderArchiveRestoreTests } = await import("../../../🧪️tests/🧪️folder-archive-restore/🟦️.ts");
+  await registerFolderArchiveRestoreTests(import.meta.vitest, { testSeams, artifactState, closeArtifact, handleTsRequest, installStreamMuxEndpoint });
   const { registerBackboneParityTests } = await import("../🔄️sync/🧪️tests/🔬️backbone-parity/🟦️.ts");
   await registerBackboneParityTests(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, hubSessionFetch, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, documentCatchingUpV1, newArtifactState, requestDocumentActorRecoveryV1, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, import.meta.url);
 

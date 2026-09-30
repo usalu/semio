@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gis:document-http/events-input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "jobId",
+    "after"
+  ],
+  "properties": {
+    "jobId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "after": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16
+    }
+  }
+}

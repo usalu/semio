@@ -8,7 +8,7 @@ import { cargoDirectionInventory, cargoDirectionMetadata, cargoDependencyDirecti
 
 const library = resolve(import.meta.dir, "../.."), repo = resolve(library, "../../../../..");
 const read = (path: string): any => JSON.parse(readFileSync(join(library, path), "utf8"));
-const fixture = read("🧫️fixtures/🧱️cargo-dependency-direction/🔣️.json") as { schemaVersion: number; policy: CargoDirectionPolicy; cases: readonly { id: string; packages: readonly CargoDirectionPackage[]; violations: readonly CargoDirectionViolation[]; problems: readonly CargoDirectionProblem[] }[]; corruptions: readonly string[] };
+const fixture = read("🧫️fixtures/🧱️cargo-dependency-direction/🔣️.json") as { schemaVersion: number; policy: CargoDirectionPolicy; cases: readonly { id: string; packages: readonly CargoDirectionPackage[]; violations: readonly CargoDirectionViolation[]; problems: readonly CargoDirectionProblem[] }[]; corruptions: readonly string[]; policyCorruptions: readonly string[] };
 const schema = read("🧬️schema/🧱️cargo-dependency-direction/🔣️.json");
 const write = (root: string, path: string, text: string): void => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), text); };
 
@@ -87,5 +87,37 @@ test("authored Cargo role vocabulary satisfies the same portable policy contract
   const policy = { areaLayers: taxonomy.areaLayers, ...taxonomy.cargoDependencyDirections };
   expect(validate(policy), JSON.stringify(validate.errors)).toBe(true);
   expect(policy.roles).toEqual(fixture.policy.roles);
-  expect(policy.rules).toEqual(fixture.policy.rules);
+  expect(taxonomy.roles).toEqual(policy.roles);
+  expect(Object.keys(policy.rules)).toEqual(Object.keys(fixture.policy.rules));
+  for (const [name, rule] of Object.entries(policy.rules) as [string, CargoDirectionPolicy["rules"][string]][]) {
+    const witness = fixture.policy.rules[name]!;
+    expect(rule.fromRoles, name).toEqual(witness.fromRoles);
+    expect(rule.toRoles, name).toEqual(witness.toRoles);
+    expect(rule.toOwnerSegments, name).toEqual(witness.toOwnerSegments);
+    expect(rule.fromOwnerPaths?.length ?? 0, name).toBe(witness.fromOwnerPaths?.length ?? 0);
+  }
+});
+
+test("owner classification rejects omitted, malformed and contradictory authority", () => {
+  const packages = fixture.cases[0]!.packages;
+  for (const id of fixture.policyCorruptions) {
+    const policy: any = structuredClone(fixture.policy);
+    if (id === "missing-owner-roles") delete policy.ownerRoles;
+    if (id === "invalid-owner-pattern") policy.ownerRoles[0].path = "[";
+    if (id === "unknown-owner-role") policy.ownerRoles[0].roles = ["unclassified"];
+    if (id === "duplicate-owner-rule") policy.ownerRoles.push(policy.ownerRoles[0]);
+    if (id === "empty-owner-pattern") policy.ownerRoles[0].path = "";
+    expect(() => cargoDependencyDirectionReport(packages, packages, policy), id).toThrow();
+  }
+});
+
+test("production extension classification preserves the portable ownership verdict", () => {
+  const taxonomy = JSON.parse(readFileSync(join(library, "🔣️taxonomy.json"), "utf8"));
+  const policy = { areaLayers: taxonomy.areaLayers, ...taxonomy.cargoDependencyDirections };
+  const witness = fixture.cases.find((row) => row.id === "physical-extension-cannot-declare-plugin")!;
+  const owner = "✏️s/🔌️plugins/neutral/🧩️extensions/independent/📦️packages/🦀️rust";
+  const packages = witness.packages.map((pkg) => ({ ...pkg, owner }));
+  const report = cargoDependencyDirectionReport(packages, packages, policy);
+  expect(report.violations).toEqual(witness.violations);
+  expect(report.problems).toEqual(witness.problems.map((problem) => ({ ...problem, owner })));
 });

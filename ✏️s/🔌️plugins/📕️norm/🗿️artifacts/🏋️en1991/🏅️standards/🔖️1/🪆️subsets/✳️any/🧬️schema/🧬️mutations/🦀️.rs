@@ -506,6 +506,10 @@ impl En1991Mutation {
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog_tests;
 
+#[cfg(test)]
+#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
+mod fixture_tests;
+
 //#region 🌉️ExternalCodecBridge
 /// 📥️ Decodes one committed mutation JSON document into [`En1991Mutation`] — the bridge the repository test host reaches, since it links no codec of its own.
 pub fn decode_en1991_mutation_json(text: &str) -> Result<En1991Mutation, String> {

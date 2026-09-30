@@ -1,4 +1,4 @@
-"""🐍️ Independent Python implementation of the `stdio.semio.flow` carrier and its thirteen-verb
+"""🐍️ Independent Python implementation of the `stdio.semio.flow` carrier and its fourteen-verb
 mutation vocabulary — the differential ORACLE this case is measured against.
 
 Ticket 26/08/23/END-TO-END-TESTING-REFACTOR. `.dsl.semio`/`.pack.semio` is a semio-native carrier
@@ -21,7 +21,7 @@ a second IMPLEMENTATION, written in another language from the format's own commi
   writer below by taking the field ORDER from the DSL grammar, and the derivation is PINNED against
   the committed `🎒️.pack.semio`: `pack_bytes` re-encodes that file byte for byte, which a
   misreading could not do;
-* the thirteen verbs and their argument lists are the committed grammar
+* the fourteen verbs and their argument lists are the committed grammar
   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and what each verb MEANS is the
   committed `(before, mutation, after)` specification vector per kind in this case's own
   `🧫️fixtures/` — including the two facts a name alone does not settle: `insert-node`/`insert-edge`
@@ -395,6 +395,7 @@ KINDS = (
     "remove-edge",
     "set-edge-endpoints",
     "set-edge-kind",
+    "drag-nodes",
 )
 
 #: 🏷️ The internally tagged JSON name of each kebab-case kind, as the committed specification
@@ -497,6 +498,16 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
         edge["from"] = clone(args["from"])
         edge["to"] = clone(args["to"])
         return result
+    if tag == "dragNodes":
+        targets = args["targets"]
+        if not targets or len(set(targets)) != len(targets):
+            raise AssertionError("dragNodes needs at least one node and never one twice, got %r" % (targets,))
+        present = [node for node in result["nodes"] if node["id"] in targets]
+        if not present:
+            raise AssertionError("dragNodes addresses none of this flow's nodes: %r" % (targets,))
+        for node in present:
+            node["position"] = {"x": float(node["position"]["x"]) + float(args["dx"]), "y": float(node["position"]["y"]) + float(args["dy"])}
+        return result
     result["edges"][edge_at(result, args["id"], tag)]["kind"] = args["kind"]
     return result
 
@@ -543,6 +554,10 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     if tag == "setEdgeEndpoints":
         edge = document["edges"][edge_at(document, args["id"], tag)]
         return [{"mutation": "setEdgeEndpoints", "id": args["id"], "from": clone(edge["from"]), "to": clone(edge["to"])}]
+    if tag == "dragNodes":
+        if float(args["dx"]) == 0.0 and float(args["dy"]) == 0.0:
+            return []
+        return [{"mutation": "setNodePosition", "id": node_id, "position": clone(document["nodes"][node_at(document, node_id, tag)]["position"])} for node_id in args["targets"] if any(node["id"] == node_id for node in document["nodes"])]
     return [{"mutation": "setEdgeKind", "id": args["id"], "kind": document["edges"][edge_at(document, args["id"], tag)]["kind"]}]
 
 

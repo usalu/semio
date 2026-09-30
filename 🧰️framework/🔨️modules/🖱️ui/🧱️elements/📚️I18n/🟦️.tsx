@@ -592,6 +592,8 @@ export type UiTranslationSchema = {
       readonly backboneFile: UiLabelValue;
       readonly backboneFolder: UiLabelValue;
       readonly backboneRemote: UiLabelValue;
+      /** 🪪️ The focused program has no document of its own, so there is nothing to attach to a folder, a file or a hub. */
+      readonly documentUnidentified: UiLabelValue;
     };
     readonly ink: {
       readonly link: UiLabelValue;
@@ -636,7 +638,7 @@ export type UiTranslationSchema = {
     };
     /** ⚖️ Mutation-outcome vocabulary (contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-
      * AND-FIRST-CLASS-CONFLICTS` §C2/§C3/§C9) — `level.*` mirrors `Severity`, `code.*` the frozen
-     * seven `mutation.*` codes (UI localizes by code, never by parsing the English `message` prose),
+     * nine `mutation.*` codes (UI localizes by code, never by parsing the English `message` prose),
      * `policy.*` the three `MergePolicy` choices plus the settings row's own label, `rejected.*` the
      * `ShellHost` toast for a rejected local dispatch. */
     readonly mutation: {
@@ -648,12 +650,15 @@ export type UiTranslationSchema = {
       };
       readonly code: {
         readonly targetMissing: UiLabelValue;
+        readonly targetReferenced: UiLabelValue;
+        readonly targetMismatch: UiLabelValue;
         readonly noOp: UiLabelValue;
         readonly partial: UiLabelValue;
         readonly clamped: UiLabelValue;
         readonly duplicateId: UiLabelValue;
         readonly invariant: UiLabelValue;
         readonly cascade: UiLabelValue;
+        readonly apply: UiLabelValue;
       };
       /** 🪪️ `history.*` refusals of the event log: `foreignTransition` = an undo or redo naming another author's edit. */
       readonly history: {
@@ -686,6 +691,23 @@ export type UiTranslationSchema = {
       readonly hubConcurrentEdit: UiLabelValue;
       /** 🌐️ Why the hub refused a batch: it breaks a structural rule a concurrent change by another human now holds. */
       readonly hubConcurrentInvariant: UiLabelValue;
+      /** 🚫️ A batch this device refused before sending it (`CommandRejectionV1`'s `local.*` codes), one line per reason. */
+      readonly local: {
+        /** 🔒️ `local.read-only`: the verified execution target admits no edit. */
+        readonly readOnly: UiLabelValue;
+        /** 📦️ `local.queue-full` and `local.backbone-capacity`: too many changes are still waiting to be saved. */
+        readonly queueFull: UiLabelValue;
+        /** 🪞️ `local.backbone-duplicate`: the change is already waiting to be saved. */
+        readonly duplicate: UiLabelValue;
+        /** ⏳️ `local.backbone-pair-unavailable`: the document has no verified state to admit changes against yet. */
+        readonly notReady: UiLabelValue;
+        /** 🧭️ `local.backbone-scope-mismatch`: the change names another document. */
+        readonly foreignDocument: UiLabelValue;
+        /** 🧩️ `local.backbone-malformed`: the change does not decode. */
+        readonly unreadable: UiLabelValue;
+        /** 📏️ `local.socket-frame-ceiling`: one change alone exceeds what the connection carries. */
+        readonly tooLarge: UiLabelValue;
+      };
     };
     /** 👥️ `PresenceBar` roster chrome (ticket `26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS`
      * lane 2-F) — the `(space, document, surface)` peer list's own aria strings; per-peer display names are

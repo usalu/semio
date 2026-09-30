@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceSupport`.
 use super::ReplaceSupport;
 use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSupportsDelta, Fem3dSupportsPatchEntry};
-use crate::standards::v1::subsets::any::schema::mutations::id_mismatch;
+use crate::standards::v1::subsets::any::schema::mutations::target_mismatch;
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
@@ -10,7 +10,7 @@ pub fn diff(payload: &ReplaceSupport, base: &Fem3dSnapshot) -> protocol::Mutatio
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Support \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if payload.new_support.id != payload.id {
-        return id_mismatch("Support", &payload.id, &payload.new_support.id);
+        return target_mismatch("Support", &payload.id, &payload.new_support.id);
     }
     if existing == &payload.new_support {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Support \"{}\" already has that value.", payload.id));

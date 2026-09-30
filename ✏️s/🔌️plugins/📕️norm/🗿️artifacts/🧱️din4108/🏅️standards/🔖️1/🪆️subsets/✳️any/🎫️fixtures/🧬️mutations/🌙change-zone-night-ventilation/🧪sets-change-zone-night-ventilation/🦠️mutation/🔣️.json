@@ -1,6 +1,0 @@
-{
-  "ChangeZoneNightVentilation": {
-    "zoneId": "zone-living",
-    "newNightVentilation": "high"
-  }
-}

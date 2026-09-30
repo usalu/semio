@@ -1839,6 +1839,13 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Ok(())
     }
 
+    /// 🏷️ The history row label of a transaction a finalized run published (`<appId>#<toolId>` of a declared tool
+    /// run): the tool's own label in every locale, so the row reads the same after a reload.
+    pub(crate) fn tool_run_transaction_label(&self, app_id: &str, transaction: &protocol::TransactionRef) -> Option<LocalizedLabel> {
+        let tool_id = transaction.tool.strip_prefix(app_id)?.strip_prefix('#')?;
+        self.registry.tool_run(tool_id).map(|(label, _)| label.clone())
+    }
+
     /// ♻️ Each folded op leaves the root it was prepared against returned to the Store; reclaim it before the
     /// next fold, or a large finalize keeps one whole document per op (see `reclaim_document_snapshot_read_returns`).
     async fn publish_tool_run(&mut self, deadline: u64) -> Result<(), Fault> {
@@ -1849,7 +1856,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             return Ok(());
         }
         if entry.finalize.as_ref().is_some_and(|finalize| finalize.publication.is_none()) {
-            let description = self.registry.tool_run(&entry.tool_id).map(|(label, _)| label.resolve(Terminology::Native, Locale::En).to_string()).unwrap_or_else(|| entry.tool_id.clone());
+            let transaction = tool_run_transaction(self.app.instance_id().await, &entry.tool_id, &entry.actor, run);
             self.store.set_local_actor_id(Some(entry.actor.clone())).map_err(|error| error.into_fault())?;
             match self.store.begin_outbound_apply_batch(
                 semio_framework_job::allocate_operation_id(),
@@ -1857,9 +1864,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 self.store.content_revision(),
                 entry.actor.clone(),
                 entry.provisional.clone(),
-                Some(description),
-                self.artifact_one_item_factory.as_ref(),
                 None,
+                self.artifact_one_item_factory.as_ref(),
+                Some(transaction),
             ) {
                 Ok(publication) => entry.finalize.as_mut().expect("finalize owner").publication = Some(publication),
                 Err(_) => return self.reject_tool_run_publication(run, generation),
@@ -1932,6 +1939,13 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         self.mark_tool_run_document_dirty();
         Ok(())
     }
+}
+
+/// 🧾️ The transaction a finalized run publishes as: tool `<appId>#<toolId>`, id minted from the run's actor, the host
+/// clock and the run counter, so every op of the run's one edit is one history row that time travel can open.
+pub(crate) fn tool_run_transaction(app_id: &str, tool_id: &str, actor: &str, run: u64) -> protocol::TransactionRef {
+    let clock = HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: run };
+    protocol::TransactionRef::mint(&ActorId(actor.to_string()), &clock, format!("{app_id}#{tool_id}"))
 }
 //#endregion 🔖️Driver
 

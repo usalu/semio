@@ -1,0 +1,85 @@
+{
+  "artifact": null,
+  "nodes": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "rc0",
+        "item": {
+          "id": "rc0",
+          "x": 10.5,
+          "y": 3.0
+        }
+      },
+      {
+        "id": "rc1",
+        "item": {
+          "id": "rc1",
+          "x": 12.5,
+          "y": 3.0
+        }
+      },
+      {
+        "id": "rc2",
+        "item": {
+          "id": "rc2",
+          "x": 12.5,
+          "y": 3.1
+        }
+      },
+      {
+        "id": "rc3",
+        "item": {
+          "id": "rc3",
+          "x": 10.5,
+          "y": 3.1
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "elements": null,
+  "regions": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "r1",
+        "item": {
+          "id": "r1",
+          "name": "First Floor Slab",
+          "outline": [
+            [
+              10.5,
+              3.0
+            ],
+            [
+              12.5,
+              3.0
+            ],
+            [
+              12.5,
+              3.1
+            ],
+            [
+              10.5,
+              3.1
+            ]
+          ],
+          "holes": [],
+          "thickness": 0.2,
+          "materialId": "concrete",
+          "meshSize": 1.0
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null
+}

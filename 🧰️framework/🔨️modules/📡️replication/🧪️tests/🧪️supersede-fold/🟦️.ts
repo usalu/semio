@@ -11,7 +11,7 @@ export async function registerSupersedeFoldTests(vitest: NonNullable<ImportMeta[
   const { describe, expect, it } = vitest;
 
   type Json = Readonly<Record<string, any>>;
-  type Event = Parameters<typeof foldSupersessions>[1][number];
+  type Event = Parameters<typeof foldSupersessions>[2][number];
 
   const hex = (value: string): number[] => Array.from({ length: value.length / 2 }, (_, index) => Number.parseInt(value.slice(index * 2, index * 2 + 2), 16));
   const replacement = (value: Json) => (value.kind === "input" ? { kind: "input" as const, schema: value.schema as string, payload: hex(value.payloadHex) } : { kind: "withdrawn" as const });
@@ -51,12 +51,14 @@ export async function registerSupersedeFoldTests(vitest: NonNullable<ImportMeta[
       const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
       expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
       const operations = new Set<string>((fixture.edits as Json[]).flatMap((edit) => edit.mutationIds as string[]));
+      const document = fixture.documentId as string;
+      expect(foldSupersessions(document, operations, []).trunk).toBe(fixture.trunkAlternativeId);
       const events: Event[] = [];
       for (const step of fixture.steps as Json[]) {
         if (step.kind === "transition") events.push(event(step));
-        else if (step.kind === "expect") expect(project(foldSupersessions(operations, events)), step.label).toEqual(expected(step.expect));
-        else if (step.kind === "reload") expect(project(foldSupersessions(operations, events)), step.label).toEqual(project(foldSupersessions(operations, events)));
-        else if (step.kind === "refuse") expect(() => foldSupersessions(operations, [...events, event(step.transition)]), step.label).toThrow(step.detail);
+        else if (step.kind === "expect") expect(project(foldSupersessions(document, operations, events)), step.label).toEqual(expected(step.expect));
+        else if (step.kind === "reload") expect(project(foldSupersessions(document, operations, events)), step.label).toEqual(project(foldSupersessions(document, operations, events)));
+        else if (step.kind === "refuse") expect(() => foldSupersessions(document, operations, [...events, event(step.transition)]), step.label).toThrow(step.detail);
         else throw new Error(`unknown step kind ${step.kind}`);
       }
     });
@@ -64,11 +66,12 @@ export async function registerSupersedeFoldTests(vitest: NonNullable<ImportMeta[
     it("resolves the same supersessions for every arrival order", async () => {
       const { fixture } = await load();
       const operations = new Set<string>((fixture.edits as Json[]).flatMap((edit) => edit.mutationIds as string[]));
+      const document = fixture.documentId as string;
       const events = (fixture.steps as Json[]).filter((step) => step.kind === "transition").map(event);
-      const reference = project(foldSupersessions(operations, events));
+      const reference = project(foldSupersessions(document, operations, events));
       expect(reference.supersessions.length).toBeGreaterThan(0);
       fc.assert(fc.property(fc.shuffledSubarray(events, { minLength: events.length, maxLength: events.length }), (shuffled) => {
-        expect(project(foldSupersessions(operations, shuffled))).toEqual(reference);
+        expect(project(foldSupersessions(document, operations, shuffled))).toEqual(reference);
       }));
     });
   });

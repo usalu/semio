@@ -7,7 +7,6 @@ use crate::standards::v1_7::subsets::base::schema::{
     diff::PdfDiff,
     snapshot::{PdfObject, PdfSnapshot},
 };
-use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -23,7 +22,7 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetStructTreeRoot {
         let mut next = base.clone();
         let id = support::insert_object(&mut next, support::struct_tree_root_object());
         support::set_catalog_entry(&mut next, "StructTreeRoot", PdfObject::Ref(id));
-        MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
+        MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
     fn inverse(&self, _base: &PdfSnapshot) -> Vec<PdfUaMutation> {

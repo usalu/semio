@@ -1,0 +1,10 @@
+{
+  "mutation": "attachLocalFolder",
+  "documentId": "cad.drawing.fixture",
+  "pluginId": "cad",
+  "appId": "s.cad.drawing@1/*#editor",
+  "folder": {
+    "kind": "path",
+    "path": "/Users/ada/Documents/drawings"
+  }
+}

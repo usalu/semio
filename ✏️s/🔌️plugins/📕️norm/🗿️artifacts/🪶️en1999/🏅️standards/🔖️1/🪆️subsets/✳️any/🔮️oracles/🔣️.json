@@ -1,10 +1,270 @@
 {
-  "family": "en1999",
-  "capabilities": [
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution. A mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the oracle registration and the catalog live here rather than in a shared manifest. `en1999-1-any` is generated from each triad leaf's own `SemanticDescriptor.kind`, in `#[derive(dsl::Mutations)]`'s declaration order, and `kinds_match_the_enum_and_the_catalog` in `../🧬️schema/🧬️mutations/🦀️.rs` fails the moment this list and the enum part company.",
+  "oracles": [
     {
       "id": "en1999-1-python-independent",
-      "kind": "mutations",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "en1999-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.en1999` — checked against PyPI, which serves no `en1999`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is the shared norm reference engine `✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🐍️.py` fed by `../🧪️tests/🪶️mutate-en1999-1/🐍️.py`, all 18 kinds of `En1998Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `en1999-1-mutate`'s external-oracle requirement for its 18-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 18 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "kind": "verified-native-second-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "nativeSecondImplementation": {
+        "format": "s.norm.en1999",
+        "noThirdPartySurvey": {
+          "ecosystemsSearched": [
+            "python/pypi"
+          ],
+          "candidatesConsidered": [
+            {
+              "package": "structuralcodes",
+              "reason": "implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
+            },
+            {
+              "package": "concreteproperties",
+              "reason": "implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
+            },
+            {
+              "package": "anastruct",
+              "reason": "implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution."
+            }
+          ]
+        },
+        "subjectImplementationLanguage": "rust",
+        "secondImplementationLanguage": "python",
+        "specificationSource": "📓️taxonomy.md; 📓️derivation-rules.md; .dsl.semio",
+        "fixtureCoverage": {
+          "vectors": 18,
+          "capabilitiesCovered": [
+            "en1999-1-mutate"
+          ]
+        }
+      }
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "en1999-1-any",
+      "capability": "en1999-1-mutate",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
       "vectors": [
+        {
+          "mutationId": "change-annex",
+          "sourceMutationDirectoryName": "🌍️change-annex",
+          "mutationDirectoryName": "🌍️change-annex",
+          "scenarios": [
+            {
+              "id": "to-en",
+              "directoryName": "✏️to-en"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-materials",
+          "sourceMutationDirectoryName": "🧱change-materials",
+          "mutationDirectoryName": "🧱change-materials",
+          "scenarios": [
+            {
+              "id": "sets-materials",
+              "directoryName": "✏️sets-materials"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sections",
+          "sourceMutationDirectoryName": "📐️change-sections",
+          "mutationDirectoryName": "📐️change-sections",
+          "scenarios": [
+            {
+              "id": "sets-sections",
+              "directoryName": "✏️sets-sections"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-members",
+          "sourceMutationDirectoryName": "🏗️change-members",
+          "mutationDirectoryName": "🏗️change-members",
+          "scenarios": [
+            {
+              "id": "sets-members",
+              "directoryName": "✏️sets-members"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-connections",
+          "sourceMutationDirectoryName": "🔗change-connections",
+          "mutationDirectoryName": "🔗change-connections",
+          "scenarios": [
+            {
+              "id": "larger-weld-throat",
+              "directoryName": "✏️larger-weld-throat"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fire-scenarios",
+          "sourceMutationDirectoryName": "🔥️change-fire-scenarios",
+          "mutationDirectoryName": "🔥️change-fire-scenarios",
+          "scenarios": [
+            {
+              "id": "hotter-fire",
+              "directoryName": "🔥️hotter-fire"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fatigue-details",
+          "sourceMutationDirectoryName": "🔄️change-fatigue-details",
+          "mutationDirectoryName": "🔄️change-fatigue-details",
+          "scenarios": [
+            {
+              "id": "more-stress",
+              "directoryName": "✏️more-stress"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-cold-formed",
+          "sourceMutationDirectoryName": "❄️change-cold-formed",
+          "mutationDirectoryName": "❄️change-cold-formed",
+          "scenarios": [
+            {
+              "id": "thinner-sheet",
+              "directoryName": "✏️thinner-sheet"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-shells",
+          "sourceMutationDirectoryName": "🫙change-shells",
+          "mutationDirectoryName": "🫙change-shells",
+          "scenarios": [
+            {
+              "id": "thicker-shell",
+              "directoryName": "✏️thicker-shell"
+            }
+          ]
+        },
+        {
+          "mutationId": "add-member",
+          "sourceMutationDirectoryName": "➕add-member",
+          "mutationDirectoryName": "➕add-member",
+          "scenarios": [
+            {
+              "id": "adds-member",
+              "directoryName": "➕️adds-member"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-member",
+          "sourceMutationDirectoryName": "➖remove-member",
+          "mutationDirectoryName": "➖remove-member",
+          "scenarios": [
+            {
+              "id": "removes-member",
+              "directoryName": "➖️removes-member"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-n-ed",
+          "sourceMutationDirectoryName": "🏋️change-member-n-ed",
+          "mutationDirectoryName": "🏋️change-member-n-ed",
+          "scenarios": [
+            {
+              "id": "to-2500",
+              "directoryName": "✏️to-2500"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-my-ed",
+          "sourceMutationDirectoryName": "⤴️change-member-my-ed",
+          "mutationDirectoryName": "⤴️change-member-my-ed",
+          "scenarios": [
+            {
+              "id": "to-5000",
+              "directoryName": "✏️to-5000"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-buckling-length",
+          "sourceMutationDirectoryName": "📏️change-member-buckling-length",
+          "mutationDirectoryName": "📏️change-member-buckling-length",
+          "scenarios": [
+            {
+              "id": "to-0",
+              "directoryName": "✏️to-0"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-material-designation",
+          "sourceMutationDirectoryName": "⚗️change-material-designation",
+          "mutationDirectoryName": "⚗️change-material-designation",
+          "scenarios": [
+            {
+              "id": "to-en-aw",
+              "directoryName": "✏️to-en-aw"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-plate-thickness",
+          "sourceMutationDirectoryName": "🧱change-plate-thickness",
+          "mutationDirectoryName": "🧱change-plate-thickness",
+          "scenarios": [
+            {
+              "id": "to-0-0125",
+              "directoryName": "✏️to-0-0125"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-weld-throat",
+          "sourceMutationDirectoryName": "🔥️change-weld-throat",
+          "mutationDirectoryName": "🔥️change-weld-throat",
+          "scenarios": [
+            {
+              "id": "to-0-006",
+              "directoryName": "✏️to-0-006"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bolt-count",
+          "sourceMutationDirectoryName": "🔩change-bolt-count",
+          "mutationDirectoryName": "🔩change-bolt-count",
+          "scenarios": [
+            {
+              "id": "to-3",
+              "directoryName": "✏️to-3"
+            }
+          ]
+        }
+      ],
+      "kinds": [
         "change-annex",
         "change-materials",
         "change-sections",
@@ -12,8 +272,8 @@
         "change-connections",
         "change-fire-scenarios",
         "change-fatigue-details",
-        "change-shells",
         "change-cold-formed",
+        "change-shells",
         "add-member",
         "remove-member",
         "change-member-n-ed",
@@ -24,32 +284,378 @@
         "change-weld-throat",
         "change-bolt-count"
       ]
-    },
-    {
-      "id": "en1999-evaluate-python",
-      "kind": "evaluate",
-      "vectors": [
-        "compliant-roof-purlin",
-        "noncompliant-multi-fail"
-      ]
     }
   ],
-  "mutationKinds": [
-    "change-annex",
-    "change-materials",
-    "change-sections",
-    "change-members",
-    "change-connections",
-    "change-fire-scenarios",
-    "change-fatigue-details",
-    "add-member",
-    "remove-member",
-    "change-member-n-ed",
-    "change-member-my-ed",
-    "change-member-buckling-length",
-    "change-material-designation",
-    "change-plate-thickness",
-    "change-weld-throat",
-    "change-bolt-count"
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.norm.en1999",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-annex",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-annex",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnnex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-materials",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-materials",
+            "bridgeVersion": 1,
+            "variant": "ChangeMaterials"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-sections",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-sections",
+            "bridgeVersion": 1,
+            "variant": "ChangeSections"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-members",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-members",
+            "bridgeVersion": 1,
+            "variant": "ChangeMembers"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-connections",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-connections",
+            "bridgeVersion": 1,
+            "variant": "ChangeConnections"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-fire-scenarios",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-fire-scenarios",
+            "bridgeVersion": 1,
+            "variant": "ChangeFireScenarios"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-fatigue-details",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-fatigue-details",
+            "bridgeVersion": 1,
+            "variant": "ChangeFatigueDetails"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-cold-formed",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-cold-formed",
+            "bridgeVersion": 1,
+            "variant": "ChangeColdFormed"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-shells",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-shells",
+            "bridgeVersion": 1,
+            "variant": "ChangeShells"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "add-member",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "add-member",
+            "bridgeVersion": 1,
+            "variant": "AddMember"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-member",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "remove-member",
+            "bridgeVersion": 1,
+            "variant": "RemoveMember"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-n-ed",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-n-ed",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberNEd"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-my-ed",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-my-ed",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberMYEd"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-buckling-length",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-buckling-length",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberBucklingLength"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-material-designation",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-material-designation",
+            "bridgeVersion": 1,
+            "variant": "ChangeMaterialDesignation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-plate-thickness",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-plate-thickness",
+            "bridgeVersion": 1,
+            "variant": "ChangePlateThickness"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-weld-throat",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-weld-throat",
+            "bridgeVersion": 1,
+            "variant": "ChangeWeldThroat"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bolt-count",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bolt-count",
+            "bridgeVersion": 1,
+            "variant": "ChangeBoltCount"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

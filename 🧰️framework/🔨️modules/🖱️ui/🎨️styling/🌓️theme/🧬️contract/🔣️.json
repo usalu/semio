@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/styling/theme/schema.json",
+  "title": "Ui Theme",
+  "type": "object",
+  "required": [
+    "id",
+    "label",
+    "colors",
+    "spacing",
+    "fontStacks",
+    "canvasFonts",
+    "strokes",
+    "radii",
+    "opacities",
+    "metrics",
+    "appearances"
+  ],
+  "properties": {
+    "colors": {
+      "type": "object"
+    },
+    "fontStacks": {
+      "type": "object"
+    },
+    "canvasFonts": {
+      "type": "object"
+    },
+    "strokes": {
+      "type": "object"
+    },
+    "radii": {
+      "type": "object"
+    },
+    "opacities": {
+      "type": "object"
+    },
+    "appearances": {
+      "type": "object"
+    },
+    "id": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "spacing": {
+      "type": "object",
+      "properties": {
+        "compact": {
+          "$ref": "../📐️geometry/🧬️contract/🔣️.json#/properties/compact"
+        }
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "dom": {
+          "type": "object",
+          "properties": {
+            "rootRemPx": {
+              "$ref": "../📐️geometry/🧬️contract/🔣️.json#/properties/rootRemPx"
+            }
+          }
+        }
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "icons": {
+      "type": "object"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-retaining-wall/schema.json",
+  "title": "RemoveRetainingWall",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeRetainingWall"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Retaining wall",
+          "de": "Stützwand"
+        },
+        "description": {
+          "en": "Zero-based position of the retaining wall in its list.",
+          "de": "Nullbasierte Position der Stützwand in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

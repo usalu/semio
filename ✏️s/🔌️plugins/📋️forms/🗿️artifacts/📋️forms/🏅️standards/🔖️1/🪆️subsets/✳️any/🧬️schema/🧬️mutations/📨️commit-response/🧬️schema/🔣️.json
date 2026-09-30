@@ -1,6 +1,15 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/commit-response/schema.json",
+  "x-semio-invariant": [
+    {
+      "id": "unique-answer-questions",
+      "description": {
+        "en": "A response answers each question at most once: every answer names a distinct, non-empty questionId.",
+        "de": "Eine Antwort beantwortet jede Frage höchstens einmal: Jede Antwort nennt eine eigene, nicht leere questionId."
+      }
+    }
+  ],
   "type": "object",
   "additionalProperties": false,
   "required": [

@@ -107,6 +107,15 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/mutation/replace-kind-catalogs/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/mutation/drag-selection/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/mutation/rotate-selection/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/mutation/scale-selection/schema.json"
     }
   ]
 }

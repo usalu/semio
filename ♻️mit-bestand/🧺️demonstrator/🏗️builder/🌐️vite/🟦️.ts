@@ -52,6 +52,7 @@ export default defineConfig(({ command }) => {
   define: { "import.meta.vitest": "undefined" },
   resolve: {
     alias: [
+      { find: "@semio-tech/presentation", replacement: resolve(repoRoot, "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts") },
       ...playgroundSceneHostResolveAliases(repoRoot),
       { find: "@semio-tech/ui-react/test", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖌️render/🟦️.ts") },
       { find: "@semio-tech/ui-react/runtime", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎠️runtime/🟦️.ts") },

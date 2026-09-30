@@ -5,7 +5,7 @@
  * trace; the host can always cancel (`abort`, `reset`). Schema of record: `🧬️schema/🔣️.json`; contract:
  * `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5.
  */
-import { ActorId, init, macrostep, NullInspector, ROOT, routeCommand, timerElapsed, type Command, type Host, type Machine, type MachineSpec, type Snapshot, type TimerId } from "@semio-tech/machine";
+import { ActionId, ActorId, EventId, GuardId, init, macrostep, NodeId, NullInspector, persist, restore, ROOT, routeCommand, timerElapsed, type ActionFn, type Command, type Host, type InvokeId, type Machine, type MachineSpec, type NodeDef, type Snapshot, type TimerId, type TransitionDef } from "@semio-tech/machine";
 import { mintTransactionRef, type TransactionRef } from "@semio-tech/framework-replication";
 
 //#region 🔖️Yield
@@ -242,3 +242,214 @@ export class ToolMachineRunner<S extends ToolMachineSpec> {
   }
 }
 //#endregion 🔖️Machine
+
+//#region 🔖️Scrub
+/** 🎚️ The scrub protocol every continuous control speaks: `gesture` names the press (`"<control>:<ms>"`), `commit: true` marks the release, `abort: "<reason>"` a host cancel (no value). A dispatch without `gesture` is a plain one-shot edit. */
+export const SCRUB_GESTURE_ARG = "gesture";
+export const SCRUB_COMMIT_ARG = "commit";
+export const SCRUB_ABORT_ARG = "abort";
+
+/** 🎚️ Where one dispatch of a continuous control sits in its press. */
+export type ScrubPhase = { readonly kind: "tick"; readonly gesture: string } | { readonly kind: "commit"; readonly gesture: string } | { readonly kind: "abort"; readonly gesture: string; readonly reason: ToolAbortReason };
+
+/** 🧩️ Reads the scrub arguments: `undefined` without a non-empty `gesture` or with an unknown abort reason; `abort` wins over `commit`. */
+export function parseScrubPhase(gesture: unknown, commit: unknown, abort: unknown): ScrubPhase | undefined {
+  if (typeof gesture !== "string" || gesture === "") return undefined;
+  if (abort !== undefined) return typeof abort === "string" && (TOOL_ABORT_REASONS as readonly string[]).includes(abort) ? { kind: "abort", gesture, reason: abort as ToolAbortReason } : undefined;
+  return commit === true ? { kind: "commit", gesture } : { kind: "tick", gesture };
+}
+
+/** 📨️ What reaches a scrub: a live value's absolute leaves, the release's leaves, or a host cancel. */
+export type ScrubInput<M> = { readonly kind: "tick"; readonly gesture: string; readonly leaves: readonly M[] } | { readonly kind: "commit"; readonly gesture: string; readonly leaves: readonly M[] } | { readonly kind: "abort"; readonly reason: ToolAbortReason };
+
+/** 🧰️ A scrub's tool state: the press it follows and how many keyed leaves (`"0"`, `"1"`, …) its transaction holds. */
+export type ScrubContext = { gesture: string | undefined; keys: number };
+
+const SCRUB_EVENT_NAMES = ["Tick", "Commit"] as const;
+/** 📨️ The scrub statechart's events; the host cancel is the runner's `abort`, never an event. */
+export type ScrubEvent<M> = { readonly type: (typeof SCRUB_EVENT_NAMES)[number]; readonly gesture: string; readonly leaves: readonly M[]; readonly eventCount: number; eventId(): EventId; eventName(id: EventId): string };
+
+export function scrubEvent<M>(type: ScrubEvent<M>["type"], gesture: string, leaves: readonly M[]): ScrubEvent<M> {
+  return { type, gesture, leaves, eventCount: SCRUB_EVENT_NAMES.length, eventId: () => EventId(SCRUB_EVENT_NAMES.indexOf(type)), eventName: (id) => SCRUB_EVENT_NAMES[id] ?? "?" };
+}
+
+export interface ScrubSpec<M> extends MachineSpec {
+  Context: ScrubContext;
+  Event: ScrubEvent<M>;
+  Input: ScrubContext;
+  Output: never;
+  Effect: ToolYield<M>;
+}
+
+/** 🔏️ Twin of Rust `SCRUB_FINGERPRINT` (the `statechart!` fingerprint of the chart). */
+export const SCRUB_FINGERPRINT = 16240238296638685209n;
+/** 🗺️ Twin of Rust `SCRUB_MANIFEST_JSON`. */
+export const SCRUB_MANIFEST_JSON = '{"id":"scrub","states":[{"id":"root","parent":null},{"id":"idle","parent":0},{"id":"scrubbing","parent":0}],"events":["Tick","Commit"],"transitionCount":4}';
+
+function scrubNode(stableId: string, docIndex: number): NodeDef {
+  return { stableId, kind: "atomic", parent: ROOT, children: [], entryActions: [], exitActions: [], invokes: [], timers: [], docIndex };
+}
+
+const SCRUB_NODES: readonly NodeDef[] = [{ stableId: "root", kind: "compound", initial: NodeId(1), children: [NodeId(1), NodeId(2)], entryActions: [], exitActions: [], invokes: [], timers: [], docIndex: 0 }, scrubNode("idle", 1), scrubNode("scrubbing", 2)];
+
+const SCRUB_TRANSITIONS: readonly TransitionDef[] = [
+  { source: NodeId(1), trigger: { kind: "event", event: EventId(0) }, targets: [NodeId(2)], kind: "external", actions: [ActionId(0)], docIndex: 0 },
+  { source: NodeId(1), trigger: { kind: "event", event: EventId(1) }, targets: [NodeId(1)], kind: "external", actions: [ActionId(1)], docIndex: 1 },
+  { source: NodeId(2), trigger: { kind: "event", event: EventId(0) }, guard: GuardId(0), targets: [NodeId(2)], kind: "external", actions: [ActionId(0)], docIndex: 2 },
+  { source: NodeId(2), trigger: { kind: "event", event: EventId(1) }, guard: GuardId(0), targets: [NodeId(1)], kind: "external", actions: [ActionId(1)], docIndex: 3 },
+];
+
+function scrubReplace<M>(context: ScrubContext, leaves: readonly M[], sink: Command<ScrubSpec<M>>[]): void {
+  leaves.forEach((leaf, index) => sink.push({ kind: "effect", effect: { kind: "upsert", key: String(index), mutation: leaf } }));
+  for (let index = leaves.length; index < context.keys; index += 1) sink.push({ kind: "effect", effect: { kind: "retract", key: String(index) } });
+  context.keys = leaves.length;
+}
+
+/** 🎚️ The ONE continuous-control tool (twin of Rust `ScrubMachine<M>`): `idle → scrubbing` on a tick, ticks of the same press stay, the release of the same press returns to `idle` (a release from `idle` is a one-shot press); every tick replaces the entries with its absolute leaves, the release commits ONE edit, a host abort leaves zero trace. */
+export function scrubMachine<M>(): Machine<ScrubSpec<M>> {
+  const follow: ActionFn<ScrubSpec<M>> = (context, event, sink) => {
+    if (event?.type !== "Tick") return;
+    context.gesture = event.gesture;
+    scrubReplace(context, event.leaves, sink as Command<ScrubSpec<M>>[]);
+  };
+  const settle: ActionFn<ScrubSpec<M>> = (context, event, sink) => {
+    if (event?.type !== "Commit") return;
+    scrubReplace(context, event.leaves, sink as Command<ScrubSpec<M>>[]);
+    sink.push({ kind: "effect", effect: { kind: "commit" } });
+    context.gesture = undefined;
+    context.keys = 0;
+  };
+  return {
+    definition: {
+      id: "scrub",
+      nodes: SCRUB_NODES,
+      transitions: SCRUB_TRANSITIONS,
+      contextFromInput: (input) => ({ ...input }),
+      guards: [(context, event) => event !== undefined && context.gesture === event.gesture],
+      actions: [follow, settle],
+      fingerprint: SCRUB_FINGERPRINT,
+      manifestJson: SCRUB_MANIFEST_JSON,
+    },
+  };
+}
+
+/** 🧷️ The scrub's host: no timer, no invoke, no foreign effect. */
+export class ScrubHost<M> implements Host<ScrubSpec<M>> {
+  executeEffect(): void {}
+  schedule(): void {}
+  cancelTimer(): void {}
+  startTask(_actor: ActorId, _invoke: InvokeId): void {}
+  cancelTask(_actor: ActorId, _invoke: InvokeId): void {}
+  nowMs(): number {
+    return 0;
+  }
+}
+
+/** 💾️ One window's open scrub between dispatches (window transient, never history). */
+export type ScrubState<M> = { readonly states: readonly string[]; readonly tool: string; readonly actor: ToolActor; readonly gesture: string; readonly baseRevision: string; readonly transaction: TransactionRef; readonly entries: ReadonlyArray<readonly [string, M]> };
+
+/** 🎚️ One press of a continuous control on one document revision (twin of Rust `Scrub<M>`); a tick or release of another press first host-aborts the open one (`captureLost`). */
+export class Scrub<M> {
+  private constructor(
+    readonly runner: ToolMachineRunner<ScrubSpec<M>>,
+    readonly baseRevision: string,
+  ) {}
+
+  static start<M>(tool: string, actor: ToolActor, baseRevision: string): Scrub<M> {
+    const started = ToolMachineRunner.start(scrubMachine<M>(), tool, actor, { gesture: undefined, keys: 0 }, new ScrubHost<M>());
+    if (!started.ok) throw new Error(started.refusal);
+    return new Scrub(started.runner, baseRevision);
+  }
+
+  /** ⏯️ The scrub a window persisted; a state the chart cannot restore is refused (`closed`). */
+  static resume<M>(state: ScrubState<M>): { readonly ok: true; readonly scrub: Scrub<M> } | { readonly ok: false; readonly refusal: ToolRefusal } {
+    const machine = scrubMachine<M>();
+    const restored = restore(machine, { version: 1, fingerprint: SCRUB_FINGERPRINT, states: state.states, history: [], done: false }, { gesture: state.gesture, keys: state.entries.length }, []);
+    if (!restored.ok) return { ok: false, refusal: "toolTransaction.closed" };
+    const resumed = ToolMachineRunner.resume(machine, state.tool, state.actor, { gesture: undefined, keys: 0 }, restored.snapshot, ToolTransaction.resume(state.transaction, state.entries), new ScrubHost<M>());
+    return resumed.ok ? { ok: true, scrub: new Scrub(resumed.runner, state.baseRevision) } : resumed;
+  }
+
+  get gesture(): string | undefined {
+    return this.runner.snapshot.context.gesture;
+  }
+
+  transaction(): ToolTransaction<M> | undefined {
+    return this.runner.transaction();
+  }
+
+  send(input: ScrubInput<M>, clock: ToolClock): ToolStepResult<M> {
+    if (input.kind === "abort") return { ok: true, step: this.runner.abort(input.reason) };
+    if (this.gesture !== undefined && this.gesture !== input.gesture) this.runner.abort("captureLost");
+    return this.runner.send(scrubEvent<M>(input.kind === "tick" ? "Tick" : "Commit", input.gesture, input.leaves), clock);
+  }
+
+  /** 💾️ The state to persist: defined only while a transaction is open. */
+  persist(): ScrubState<M> | undefined {
+    const [snapshot, transaction] = this.runner.intoParts();
+    const gesture = snapshot.context.gesture;
+    if (transaction?.state !== "open" || gesture === undefined) return undefined;
+    return { states: persist(scrubMachine<M>(), snapshot).states, tool: this.runner.tool, actor: this.runner.actor, gesture, baseRevision: this.baseRevision, transaction: transaction.reference, entries: transaction.entries().map(([key, mutation]) => [key, mutation] as const) };
+  }
+}
+
+/** 🗂️ Every window's open scrub plus the press each window last closed (twin of Rust `ScrubLedger<M>`). */
+export class ScrubLedger<M> {
+  readonly #windows = new Map<string, ScrubState<M>>();
+  readonly #closed = new Map<string, string>();
+
+  isEmpty(): boolean {
+    return this.#windows.size === 0;
+  }
+
+  open(window: string): ScrubState<M> | undefined {
+    return this.#windows.get(window);
+  }
+
+  /** 🪟️ The windows holding an open scrub, in window id order. */
+  windows(): string[] {
+    return [...this.#windows.keys()].sort();
+  }
+
+  /** 👁️ Every open scrub's provisional leaves, window by window in window id order — the render overlay. */
+  provisional(): M[] {
+    return this.windows().flatMap((window) => this.#windows.get(window)!.entries.map(([, leaf]) => leaf));
+  }
+
+  /** 📨️ Runs one input of `window`'s press: a late tick of the closed press is silent; another tool or document revision reopens on the current one. */
+  send(window: string, tool: string, actor: ToolActor, baseRevision: string, input: ScrubInput<M>, clock: ToolClock): ToolStepResult<M> {
+    if (input.kind === "abort") return { ok: true, step: this.abort(window, undefined, input.reason) };
+    if (this.#closed.get(window) === input.gesture) return { ok: true, step: { kind: "idle" } };
+    const state = this.#windows.get(window);
+    this.#windows.delete(window);
+    const resumed = state && state.tool === tool && state.baseRevision === baseRevision ? Scrub.resume(state) : undefined;
+    const scrub = resumed?.ok ? resumed.scrub : Scrub.start<M>(tool, actor, baseRevision);
+    const step = scrub.send(input, clock);
+    if (input.kind === "commit") this.#closed.set(window, input.gesture);
+    const persisted = scrub.persist();
+    if (persisted) this.#windows.set(window, persisted);
+    return step;
+  }
+
+  /** 🧯️ Host cancel of `window`'s open scrub (only of `gesture` when named): zero trace; the press is closed. */
+  abort(window: string, gesture: string | undefined, reason: ToolAbortReason): ToolStep<M> {
+    if (gesture !== undefined) this.#closed.set(window, gesture);
+    const state = this.#windows.get(window);
+    if (!state || (gesture !== undefined && gesture !== state.gesture)) return { kind: "idle" };
+    this.#windows.delete(window);
+    this.#closed.set(window, state.gesture);
+    return { kind: "aborted", transaction: state.transaction, reason };
+  }
+
+  abortAll(reason: ToolAbortReason): ToolStep<M>[] {
+    return this.windows().map((window) => this.abort(window, undefined, reason));
+  }
+
+  /** 🪦️ Host cancel (`retired`) of every window `keep` refuses; their closed presses are forgotten. */
+  retainWindows(keep: (window: string) => boolean): ToolStep<M>[] {
+    const dropped = this.windows().filter((window) => !keep(window)).map((window) => this.abort(window, undefined, "retired"));
+    for (const window of [...this.#closed.keys()]) if (!keep(window)) this.#closed.delete(window);
+    return dropped;
+  }
+}
+//#endregion 🔖️Scrub

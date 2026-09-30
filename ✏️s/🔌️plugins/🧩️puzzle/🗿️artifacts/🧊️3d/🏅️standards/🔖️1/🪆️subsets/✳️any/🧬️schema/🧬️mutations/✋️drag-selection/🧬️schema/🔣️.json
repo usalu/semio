@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/mutation/drag-selection/schema.json",
+  "title": "DragSelection",
+  "description": "The `drag-selection` mutation record — a relative drag of objects and target volumes by one world offset; internally tagged `\"mutation\": \"dragSelection\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targets",
+    "offset"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "dragSelection",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Targets",
+          "de": "Ziele"
+        },
+        "description": {
+          "en": "Objects and target volumes to drag; locked or missing ones are skipped.",
+          "de": "Zu ziehende Objekte und Zielvolumen; gesperrte oder fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": [
+            "object",
+            "targetVolume"
+          ],
+          "domain": "vortex",
+          "granularity": "object"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "offset": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Offset",
+          "de": "Versatz"
+        },
+        "description": {
+          "en": "World offset (x, y, z) every target moves by.",
+          "de": "Weltversatz (x, y, z), um den sich jedes Ziel verschiebt."
+        },
+        "unit": "m",
+        "step": 0.1,
+        "precision": 3,
+        "snapSource": {
+          "config": "gridSpacing"
+        },
+        "group": "offset",
+        "order": 20
+      }
+    }
+  }
+}

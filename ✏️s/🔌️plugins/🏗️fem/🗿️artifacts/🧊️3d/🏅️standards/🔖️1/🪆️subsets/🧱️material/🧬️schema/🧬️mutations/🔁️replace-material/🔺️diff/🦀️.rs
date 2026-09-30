@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceMaterial`.
 use super::ReplaceMaterial;
 use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dMaterialsDelta, Fem3dMaterialsPatchEntry};
-use crate::standards::v1::subsets::any::schema::mutations::{id_mismatch, invariant, material_breach};
+use crate::standards::v1::subsets::any::schema::mutations::{target_mismatch, invariant, material_breach};
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
@@ -10,7 +10,7 @@ pub fn diff(payload: &ReplaceMaterial, base: &Fem3dSnapshot) -> protocol::Mutati
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Material \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if payload.new_material.id != payload.id {
-        return id_mismatch("Material", &payload.id, &payload.new_material.id);
+        return target_mismatch("Material", &payload.id, &payload.new_material.id);
     }
     if existing == &payload.new_material {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Material \"{}\" already has that value.", payload.id));

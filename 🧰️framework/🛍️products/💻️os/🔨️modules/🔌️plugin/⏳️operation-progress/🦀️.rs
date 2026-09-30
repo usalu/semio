@@ -24,6 +24,12 @@ pub fn cancellation_action_definition()->ActionDefinition {
     ActionDefinition::resumable_framework(CANCEL_TYPED_OPERATION_ACTION_ID,LocalizedLabel::native("Cancel Operation","Vorgang abbrechen"),ActionKind::View,"square").with_in_palette(false)
 }
 
+/// 🎯️ The scope an operation-progress change dirties: the app's declared scope (read only when something changed), never
+/// wider, and nothing when it declares none.
+pub fn operation_progress_dirty_scope(changed:bool,declared:impl FnOnce()->UiDirtyScope)->Option<UiDirtyScope> {
+    changed.then(declared).filter(|scope|*scope!=UiDirtyScope::None)
+}
+
 pub fn cancellation_result_lane(user_requested:bool,worker_fault:bool)->TypedOperationResultLane {
     if user_requested&&!worker_fault {TypedOperationResultLane::Terminal}else{TypedOperationResultLane::Fault}
 }
@@ -60,10 +66,12 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M> {
         result
     }
 
+    /// ⏳️ The app's declared operation-progress scope ([`ArtifactApp::operation_progress_scope`]) once an operation's
+    /// progress changed or it retired; `None` when nothing changed or the app renders no progress.
     pub(super) fn take_operation_progress_scope(&mut self)->Option<UiDirtyScope> {
         let mut changed=std::mem::take(&mut self.operation_progress_retired);
         for index in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {if let Some((_,operation))=self.tool_operations.entry_mut(index){changed|=std::mem::take(&mut operation.progress_pending);}}
-        changed.then_some(UiDirtyScope::Full)
+        operation_progress_dirty_scope(changed,A::operation_progress_scope)
     }
 
     pub(super) async fn dispatch_operation_cancellation(&mut self,args:Option<&DslValue>,meta:&ActionMeta)->Result<InvocationResult,Fault> {
@@ -72,7 +80,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M> {
             if operation.meta.instance_id!=meta.instance_id||operation.meta.actor!=meta.actor||operation.operation.generation.0!=generation {return Err(plugin_sdk_fault("operation cancellation authority does not match"));}
             if !operation.terminal_seen {if let Some(lease)=operation.cancellation_lease.as_ref(){operation.user_cancel_requested=true;lease.cancel();operation.progress_pending=true;}}
         }
-        Ok(Self::empty_result(CANCEL_TYPED_OPERATION_ACTION_ID,meta,Vec::new(),Vec::new(),UiDirtyScope::Full).await)
+        Ok(Self::empty_result(CANCEL_TYPED_OPERATION_ACTION_ID,meta,Vec::new(),Vec::new(),A::operation_progress_scope()).await)
     }
 }
 

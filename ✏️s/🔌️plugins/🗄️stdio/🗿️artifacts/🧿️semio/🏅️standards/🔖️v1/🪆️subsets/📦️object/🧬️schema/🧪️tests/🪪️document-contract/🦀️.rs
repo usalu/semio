@@ -64,7 +64,7 @@ async fn stdio_document_contract_object_rejects_invalid_typed_mutations() {
     assert_eq!(snapshot, before);
     assert!(mutation.inverse(&before).is_empty(), "rejected creation has no inverse effect");
     assert_eq!(outcome.messages().len(), 1);
-    assert_eq!(outcome.messages()[0].code.0.as_str(), "mutation.child-identity");
+    assert_eq!(outcome.messages()[0].code.0.as_str(), "mutation.invariant");
     let foreign = serde_json::json!({"CreateMesh": {"child_id": "mesh-1", "target": {"artifactId": "mesh-1", "dialect": {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "mesh"}}, "locale": "de"}});
     assert!(dsl::json::from_json_str::<SemioObjectMutation>(&foreign.to_string()).is_err(), "closed mutation payload rejects OS settings");
 }

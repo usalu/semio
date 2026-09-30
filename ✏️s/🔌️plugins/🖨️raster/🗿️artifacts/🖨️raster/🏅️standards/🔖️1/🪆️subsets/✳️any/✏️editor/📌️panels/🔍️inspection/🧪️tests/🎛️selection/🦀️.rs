@@ -108,7 +108,7 @@ fn inspector_offers_localized_merge_only_for_supported_sibling_selection() {
 
 #[test]
 fn inspector_protection_controls_follow_the_neutral_capabilities() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
     for labels in [&RasterPlayLabels::NATIVE_EN,&RasterPlayLabels::NATIVE_DE] {
         for case in fixture["cases"].as_array().unwrap() {
@@ -136,7 +136,7 @@ fn inspector_protection_controls_follow_the_neutral_capabilities() {
 #[test]
 fn inspector_layer_actions_are_localized_and_protection_aware() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
-    let protection:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let protection:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=dsl::json::from_json_str(&protection["layers"].to_string()).unwrap();
     for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
         for case in protection["cases"].as_array().unwrap() {

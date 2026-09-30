@@ -5285,8 +5285,8 @@ const HUB_CATCH_UP_ORIGIN: &str = "hub.catch-up";
 /// from: a receipt that does not advance `commit_seq` is the engine's idempotent replay of an
 /// already-committed `command_id` — acknowledged again for the resending client, never relayed as new.
 /// An accepted batch's operations join `gate`'s replay guard; a refused one's never do, so its resend
-/// is admitted again. The third answer says whether a refusal is for good: only `db::DbError::Unavailable` is
-/// transient, and its author resends the batch.
+/// is admitted again. The third answer says whether a refusal is for good: a transient error (`db::DbError::is_transient`)
+/// is not, and its author resends the batch — the refusal's messages say so with the transient code.
 async fn submit_commands(handle: &db::ArtifactHandle, gate: &db::security::SecurityGate, actor: &ActorId, batch_id: u64, envelopes: Vec<MutationEnvelope>, policy: protocol::MergePolicy) -> (ServerFrame, Option<ServerFrame>, bool) {
     let committed_before = handle.frontier().await.map(|frontier| frontier.commit_seq).ok();
     let batch = match db::document::CommandBatch::new(envelopes.clone()).await {
@@ -5307,7 +5307,7 @@ async fn submit_commands(handle: &db::ArtifactHandle, gate: &db::security::Secur
         Ok(Err(error)) | Err(error) => {
             let frontier = best_effort_frontier(handle).await;
             let messages = messages_for_error(&error);
-            let for_good = !matches!(error, db::DbError::Unavailable(_));
+            let for_good = !error.is_transient();
             (ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string(), messages }) }], frontier }, None, for_good)
         }
     }
@@ -6230,6 +6230,7 @@ fn messages_for_error(error: &db::DbError) -> Vec<u8> {
     match error {
         db::DbError::Rejected { messages, .. } => encode_messages(messages),
         db::DbError::Unavailable(reason) => transient_apply_refusal_messages(reason),
+        error if error.is_transient() => transient_apply_refusal_messages(&error.to_string()),
         db::DbError::LimitExceeded(limit) => batch_limit_refusal_messages(&format!("limit exceeded: {limit}")),
         _ => Vec::new(),
     }

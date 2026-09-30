@@ -1,0 +1,98 @@
+{
+  "contract": "retained-extrusion-input-is-immutable",
+  "cases": [
+    {
+      "profile": "rectangle-wire",
+      "width": 2.0,
+      "height": 1.5,
+      "area": 3.0,
+      "distances": [
+        6.0,
+        10.0,
+        0.1,
+        3.0
+      ]
+    },
+    {
+      "profile": "hexagon-wire",
+      "radius": 1.0,
+      "sides": 6,
+      "area": 2.598076211353316,
+      "distances": [
+        8.0,
+        10.0,
+        3.5
+      ]
+    },
+    {
+      "profile": "rectangle-face",
+      "width": 2.0,
+      "height": 1.5,
+      "area": 3.0,
+      "distances": [
+        7.0,
+        10.0,
+        0.5,
+        3.5
+      ]
+    }
+  ],
+  "expect": {
+    "boundaryEdges": 0,
+    "orientationDefects": 0,
+    "volumeTolerance": 1e-05,
+    "registeredProfileCount": 1
+  },
+  "caseSchema": {
+    "type": "object",
+    "required": [
+      "profile",
+      "area",
+      "distances"
+    ],
+    "properties": {
+      "profile": {
+        "enum": [
+          "rectangle-wire",
+          "hexagon-wire",
+          "rectangle-face"
+        ]
+      },
+      "width": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "height": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "radius": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "sides": {
+        "type": "integer",
+        "minimum": 3
+      },
+      "area": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "distances": {
+        "type": "array",
+        "minItems": 3,
+        "items": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "additionalProperties": false,
+    "x-semio-formats": [
+      "json"
+    ]
+  },
+  "x-semio-formats": [
+    "json"
+  ]
+}

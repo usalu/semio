@@ -7,7 +7,6 @@ use crate::standards::v1_7::subsets::base::schema::{
     diff::PdfDiff,
     snapshot::{PdfObject, PdfSnapshot},
 };
-use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -24,7 +23,7 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetDisplayDocTitle {
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         let mut next = base.clone();
         support::set_catalog_entry(&mut next, "ViewerPreferences", support::single_entry_dict("DisplayDocTitle", PdfObject::Bool(self.display)));
-        MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
+        MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<PdfUaMutation> {

@@ -151,11 +151,9 @@ async fn authenticated_hub_catalog_hydrates_exact_selected_descriptor_and_revoca
     let seed_binding = HubRemoteBinding::new("http://hub.invalid", "space-a").unwrap();
     let seed = seed_binding.refresh(&directory_client, &context(Some(20_000)), 1_000, 10_000).await.unwrap();
 
-    let repo_root = crate::workspace::find_repo_root().expect("repo root");
-    let corpus: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(repo_root.join("🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus")).expect("execution-target corpus json");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus json");
     let mut manifest: DocumentExecutionTargetLeaseFieldsV1 = semio_framework_os_kernel::os_pack::json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap()).expect("manifest");
-    let descriptor = crate::workspace::load_package_descriptor(&repo_root.join("✏️s/🔌️plugins/🌍️gis")).expect("installed GIS descriptor test input");
-    let descriptor_bytes = semio_framework_os_kernel::os_store::pack_rt::encode_wire_value(&descriptor.to_value());
+    let (descriptor, descriptor_bytes) = crate::source_builders::catalog_contract_descriptor();
     let descriptor_sha256 = framework_hash::sha256_hex(&descriptor_bytes);
     manifest.package.plugin_id = descriptor.manifest.plugin_id.clone();
     manifest.package.package_id = descriptor.package_id.clone();
@@ -198,7 +196,7 @@ async fn authenticated_hub_catalog_hydrates_exact_selected_descriptor_and_revoca
     let selected = binding.refresh_catalog(&client, &Arc::new(snapshot), &context(Some(20_000))).await.unwrap();
     assert_eq!(selected.selections.len(), 1);
     assert_eq!(selected.selections[0].lease.package, manifest.package);
-    assert_eq!(selected.selections[0].descriptor.manifest.plugin_id, "gis");
+    assert_eq!(selected.selections[0].descriptor.manifest.plugin_id, "contract-test");
     let paths: Vec<_> = requests.lock().unwrap().iter().map(|(_, url, _)| url.clone()).collect();
     assert_eq!(paths, ["http://hub.invalid/spaces/raum%3A%C3%A4/documents/karte%3A%E6%9D%B1%E4%BA%AC/execution-target/manifest", "http://hub.invalid/spaces/raum%3A%C3%A4/documents/karte%3A%E6%9D%B1%E4%BA%AC/execution-target/descriptor",],);
     binding.invalidate_stream();
@@ -463,12 +461,10 @@ fn a_directory_dial_refusal_names_its_cause_and_stays_retryable() {
 
 /// 🧾️ A GIS selection whose authenticated lease names `document_id` in the fixture's space: the manifest, the document view
 /// the snapshot holds for it, and the canonical descriptor bytes both name.
-fn gis_selection(seed: &AuthorizedDocumentView, document_id: &str) -> (DocumentExecutionTargetLeaseFieldsV1, AuthorizedDocumentView, Vec<u8>) {
-    let repo_root = crate::workspace::find_repo_root().expect("repo root");
-    let corpus: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(repo_root.join("🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus")).expect("execution-target corpus json");
+fn catalog_selection(seed: &AuthorizedDocumentView, document_id: &str) -> (DocumentExecutionTargetLeaseFieldsV1, AuthorizedDocumentView, Vec<u8>) {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus json");
     let mut manifest: DocumentExecutionTargetLeaseFieldsV1 = semio_framework_os_kernel::os_pack::json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap()).expect("manifest");
-    let descriptor = crate::workspace::load_package_descriptor(&repo_root.join("✏️s/🔌️plugins/🌍️gis")).expect("installed GIS descriptor test input");
-    let descriptor_bytes = semio_framework_os_kernel::os_store::pack_rt::encode_wire_value(&descriptor.to_value());
+    let (descriptor, descriptor_bytes) = crate::source_builders::catalog_contract_descriptor();
     let descriptor_sha256 = framework_hash::sha256_hex(&descriptor_bytes);
     manifest.scope.document_id = document_id.to_string();
     manifest.checkpoint.baseline_frontier.document_id = document_id.to_string();
@@ -511,8 +507,8 @@ async fn a_catalog_refresh_fetches_each_descriptor_once_and_the_next_refresh_non
         seed_binding.refresh(&directory_client, &context(Some(20_000)), 1_000, 10_000).await.unwrap().as_ref().clone()
     };
     let seed = snapshot.documents.values().next().expect("seed document").clone();
-    let (first, first_document, descriptor_bytes) = gis_selection(&seed, "karte:berlin");
-    let (second, second_document, _) = gis_selection(&seed, "karte:rom");
+    let (first, first_document, descriptor_bytes) = catalog_selection(&seed, "karte:berlin");
+    let (second, second_document, _) = catalog_selection(&seed, "karte:rom");
     snapshot.space.id = first.scope.space_id.clone();
     snapshot.documents = HashMap::from([(first.scope.clone(), first_document), (second.scope.clone(), second_document)]);
     let binding = HubRemoteBinding::new("http://hub.invalid", first.scope.space_id.clone()).unwrap();

@@ -1,0 +1,43 @@
+{
+  "artifact": null,
+  "annex": null,
+  "title": null,
+  "designWorkingLifeYears": null,
+  "deltaCDev": null,
+  "cementType": null,
+  "concreteGrades": null,
+  "reinforcementGrades": {
+    "values": [
+      {
+        "id": "b500",
+        "name": "B500B",
+        "fYk": 550000000.0,
+        "eS": 200000000000.0,
+        "ductility": "b",
+        "k": 1.08,
+        "epsUk": 0.05
+      },
+      {
+        "id": "b500a",
+        "name": "B500A",
+        "fYk": 500000000.0,
+        "eS": 200000000000.0,
+        "ductility": "a",
+        "k": 1.05,
+        "epsUk": 0.025
+      },
+      {
+        "id": "b500c",
+        "name": "B500C",
+        "fYk": 550000000.0,
+        "eS": 200000000000.0,
+        "ductility": "c",
+        "k": 1.15,
+        "epsUk": 0.075
+      }
+    ]
+  },
+  "prestressSteels": null,
+  "members": null,
+  "anchors": null
+}

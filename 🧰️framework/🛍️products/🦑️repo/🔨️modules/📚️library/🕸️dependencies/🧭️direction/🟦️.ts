@@ -1,7 +1,7 @@
-import { readdirSync, statSync } from "node:fs";
+import { lstatSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-export type DependencyDirectionRule = Readonly<{ name: string; severity: string; from: { path: readonly string[] }; to: { path: readonly string[] } }>;
+export type DependencyDirectionRule = Readonly<{ name: string; severity: string; from: { path: readonly string[]; pathNot?: readonly string[] }; to: { path: readonly string[]; pathNot?: readonly string[] } }>;
 export type DependencyDirectionEdge = Readonly<{ rule: string; from: string; to: string }>;
 export type DependencyDirectionGraphScope = Readonly<{ workspaceRoots: readonly string[]; workspacePackages: readonly Readonly<{ name: string; owner: string; exports: readonly string[] }>[]; excludedPaths: readonly string[]; nonFollowedPaths: readonly string[]; expectedSources: readonly string[] }>;
 
@@ -31,10 +31,25 @@ function validateScope(scope: DependencyDirectionGraphScope): void {
   }
 }
 
+/** 📦️ Reads present authored workspace owners; deleted owners contribute no packages. */
+export function dependencyDirectionWorkspacePackages(root: string, excludedPaths: readonly string[]): DependencyDirectionGraphScope["workspacePackages"] {
+  const workspaces = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).workspaces as unknown;
+  if (!Array.isArray(workspaces) || workspaces.some((path) => typeof path !== "string" || !path || path.includes("\\") || path.startsWith("/") || path.split("/").some((part) => !part || part === "." || part === ".."))) throw new Error("Dependency direction requires authored workspace paths");
+  return workspaces.filter((path) => !pathMatches(excludedPaths, path)).flatMap((owner) => {
+    let directory;
+    try { directory = lstatSync(join(root, owner)); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return []; throw error; }
+    if (!directory.isDirectory()) throw new Error(`Dependency direction workspace owner must be a directory: ${owner}`);
+    const manifest = JSON.parse(readFileSync(join(root, owner, "package.json"), "utf8"));
+    if (typeof manifest.name !== "string" || !manifest.name) throw new Error(`Dependency direction requires an authored package name: ${owner}`);
+    const exports = manifest.exports && typeof manifest.exports === "object" && !Array.isArray(manifest.exports) && Object.keys(manifest.exports).some((key) => key.startsWith(".")) ? Object.keys(manifest.exports).filter((key) => manifest.exports[key] !== null) : ["."];
+    return [{ name: manifest.name, owner, exports }];
+  });
+}
+
 /** 🗂️ Inventories every followed TypeScript/JavaScript root independently of resolver graph output. */
 export function dependencyDirectionSourceInventory(root: string, roots: readonly string[], scope: DependencyDirectionGraphScope): readonly string[] {
   validateScope(scope);
-  if (!roots.length || roots.some((path) => !workspacePath(scope, path))) throw new Error("Dependency direction inventory requires declared workspace roots");
+  if (!roots.length || roots.some((path) => !workspacePath(scope, path) && (path.includes("/") || !sourceExtension.test(path)))) throw new Error("Dependency direction inventory requires declared workspace roots");
   const found = new Set<string>();
   const walk = (path: string): void => {
     if (terminalPath(scope, path)) return;
@@ -49,7 +64,13 @@ export function dependencyDirectionSourceInventory(root: string, roots: readonly
       else if (entry.isFile() && sourceExtension.test(child)) found.add(child);
     }
   };
-  roots.forEach(walk);
+  roots.forEach((path) => {
+    const entry = lstatSync(join(root, path));
+    if (entry.isSymbolicLink()) throw new Error(`Dependency direction cannot inventory a linked root: ${path}`);
+    if (entry.isDirectory()) walk(path);
+    else if (entry.isFile() && sourceExtension.test(path) && !terminalPath(scope, path)) found.add(path);
+    else throw new Error(`Dependency direction inventory requires a source root: ${path}`);
+  });
   return [...found].sort();
 }
 
@@ -76,7 +97,7 @@ export function dependencyDirectionEdges(report: unknown, rules: readonly Depend
   const usedRules = array(record(summary.ruleSetUsed).forbidden).map((value) => text(record(value).name));
   if (JSON.stringify([...usedRules].sort()) !== JSON.stringify([...names].sort())) throw new Error("Dependency direction graph used a different policy");
   if (!modules.length || summary.totalCruised !== modules.length) throw new Error("Dependency direction graph is empty or incomplete");
-  const edges: DependencyDirectionEdge[] = [], sources = new Map<string, string>();
+  const edges: DependencyDirectionEdge[] = [], problems: string[] = [], sources = new Map<string, string>();
   let dependencyCount = 0;
   for (const value of modules) {
     const module = record(value), from = text(module.source), dependencies = array(module.dependencies);
@@ -84,7 +105,7 @@ export function dependencyDirectionEdges(report: unknown, rules: readonly Depend
     if (previous !== undefined && previous !== signature) throw new Error("Dependency direction graph repeats a source with different dependencies");
     sources.set(from, signature);
     dependencyCount += dependencies.length;
-    const applicable = rules.filter((rule) => matches(rule.from.path, from));
+    const applicable = rules.filter((rule) => matches(rule.from.path, from) && !matches(rule.from.pathNot ?? [], from));
     for (const value of dependencies) {
       const dependency = record(value), to = text(dependency.resolved);
       const specifier = text(dependency.module), pkg = scope.workspacePackages.find((pkg) => specifier === pkg.name || specifier.startsWith(`${pkg.name}/`));
@@ -92,9 +113,9 @@ export function dependencyDirectionEdges(report: unknown, rules: readonly Depend
         const subpath = specifier === pkg.name ? "." : `.${specifier.slice(pkg.name.length)}`;
         if (subpath !== "." && subpath.slice(2).split(/[\\/]/u).some((segment) => !segment || segment === "." || segment === "..")) throw new Error(`Dependency direction graph uses an invalid authored package subpath: ${from} → ${specifier}`);
         const exported = pkg.exports.some((path) => new RegExp(`^${path.split("*").map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`, "u").test(subpath));
-        if (!exported) throw new Error(`Dependency direction graph uses an undeclared authored package export: ${from} → ${specifier}`);
+        if (!exported) problems.push(`Dependency direction graph uses an undeclared authored package export: ${from} → ${specifier}`);
       }
-      for (const rule of applicable) if (matches(rule.to.path, to) || (pkg && (matches(rule.to.path, specifier) || matches(rule.to.path, `${pkg.owner}/`)))) edges.push({ rule: rule.name, from, to });
+      for (const rule of applicable) if (!matches(rule.to.pathNot ?? [], to) && (matches(rule.to.path, to) || (pkg && (matches(rule.to.path, specifier) || matches(rule.to.path, `${pkg.owner}/`))))) edges.push({ rule: rule.name, from, to });
     }
   }
   if (summary.totalDependenciesCruised !== dependencyCount) throw new Error("Dependency direction graph omits framework sources or dependencies");
@@ -106,11 +127,13 @@ export function dependencyDirectionEdges(report: unknown, rules: readonly Depend
       const dependency = record(value), target = text(dependency.resolved);
       if (terminalPath(scope, target)) continue;
       const specifier = text(dependency.module);
+      const authored = scope.workspacePackages.some((pkg) => specifier === pkg.name || specifier.startsWith(`${pkg.name}/`)) || specifier.startsWith("@semio-tech/");
       const local = /^(?:\.{1,2}(?:\/|$)|\/|[A-Za-z]:[\\/])/u.test(specifier) || workspacePath(scope, target);
-      if (dependency.couldNotResolve === true && local) throw new Error(`Dependency direction graph has an unresolved workspace dependency: ${module.source} → ${specifier}`);
-      if (workspacePath(scope, target) && (sourceExtension.test(target) || dependency.followable === true) && !sources.has(target)) throw new Error(`Dependency direction graph omits followed workspace source: ${module.source} → ${target}`);
+      if (dependency.couldNotResolve === true && (local || authored)) problems.push(`Dependency direction graph has an unresolved workspace dependency: ${module.source} → ${specifier}`);
+      if (workspacePath(scope, target) && (sourceExtension.test(target) || dependency.followable === true) && !sources.has(target)) problems.push(`Dependency direction graph omits followed workspace source: ${module.source} → ${target}`);
     }
   }
+  if (problems.length) throw new Error([...new Set(problems)].join("\n"));
   const key = (edge: DependencyDirectionEdge): string => JSON.stringify([edge.rule, edge.from, edge.to]);
   const actual = [...new Set(edges.map(key))].sort();
   const reported = [...new Set(array(summary.violations).map((value) => {

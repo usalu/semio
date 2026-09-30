@@ -1,0 +1,6 @@
+{
+  "ChangeZoneFloorArea": {
+    "zoneId": "zone-office",
+    "newFloorAreaM2": 240.0
+  }
+}

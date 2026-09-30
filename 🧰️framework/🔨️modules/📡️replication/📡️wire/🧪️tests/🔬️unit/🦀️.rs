@@ -141,6 +141,28 @@ async fn client_frame_commands_round_trips() {
     assert_client_round_trips(&ClientFrame::Commands { batch_id: 42, envelopes: vec![sample_envelope("op-1").await, sample_envelope("op-2").await] }, Lane::Command).await;
 }
 
+/// 🎞️ The exact `Commands` vector every relay speaks: HLC fields past 2^53 cross the wire exactly — the same hex an
+/// independent Python oracle (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING, `🧪️w1-g/client-commands-exact-oracle.py`)
+/// derives and the TypeScript `encodeClientCommandsFrameExact` writes.
+#[semio_framework_async_macros::async_test]
+async fn client_frame_commands_keep_exact_hlc_fields() {
+    let envelope = crate::causal::MutationEnvelope {
+        mutation_id: crate::ids::MutationId("transition-1".into()),
+        document_id: crate::ids::ArtifactId("document-1".into()),
+        actor: crate::ids::ActorId("actor-1".into()),
+        dependencies: vec![crate::ids::MutationId("op-1".into())],
+        observed: None,
+        target: vec!["title".into()],
+        diff: crate::causal::ArtifactDiff { schema: crate::ids::SchemaId("semio.history-transition.v1".into()), payload: vec![1, 2, 3] },
+        inverse: crate::causal::InverseMutation { schema: crate::ids::SchemaId("semio.history-transition.v1".into()), payload: Vec::new() },
+        timestamp: crate::ids::HybridLogicalTimestamp { actor: 0xfedc_ba98_7654_3210, physical_ms: (1 << 53) + 1, logical: 1 << 60 },
+        transaction: None,
+    };
+    let frame = ClientFrame::Commands { batch_id: 7, envelopes: vec![envelope] };
+    assert_eq!(encode_client_frame(&frame, Lane::Command).await, bytes_from_hex("000107010c7472616e736974696f6e2d310a646f63756d656e742d31076163746f722d3101046f702d310001057469746c651b73656d696f2e686973746f72792d7472616e736974696f6e2e7631030102031b73656d696f2e686973746f72792d7472616e736974696f6e2e76310090e4d0b287d3aeeefe01818080808080801080808080808080801000"));
+    assert_client_round_trips(&frame, Lane::Command).await;
+}
+
 #[semio_framework_async_macros::async_test]
 async fn client_frame_frontier_advertise_round_trips() {
     assert_client_round_trips(&ClientFrame::FrontierAdvertise { frontier: sample_frontier().await }, Lane::Command).await;

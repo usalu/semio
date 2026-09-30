@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeShwSystemHeaterCapacity, base: &EnergyModelSn
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Service hot water system {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_heater_capacity_w.is_finite() || payload.new_heater_capacity_w <= 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Service hot water system {}: heater capacity (W) must be a positive finite value, got {}.", payload.id.0, payload.new_heater_capacity_w), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Service hot water system {}: heater capacity (W) must be a positive finite value, got {}.", payload.id.0, payload.new_heater_capacity_w), [payload.id.0.to_string()]);
     }
     if existing.heater_capacity_w == payload.new_heater_capacity_w {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Service hot water system {} already carries this heater capacity (W): {}.", payload.id.0, payload.new_heater_capacity_w));

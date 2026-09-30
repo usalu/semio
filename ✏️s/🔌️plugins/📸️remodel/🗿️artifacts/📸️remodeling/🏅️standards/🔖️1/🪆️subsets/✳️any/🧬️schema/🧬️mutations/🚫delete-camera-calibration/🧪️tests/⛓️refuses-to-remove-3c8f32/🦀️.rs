@@ -51,7 +51,7 @@ async fn declared_refusal_holds() {
     assert_eq!(produced.diff(), &RemodelingDiff::default(), "delete-camera-calibration/refuses-to-remove-3c8f32: a refusing leaf must carry an empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "delete-camera-calibration/refuses-to-remove-3c8f32: exactly one diagnostic is expected, got {messages:?}");
-    assert_eq!(messages[0].code.0, "mutation.referenced", "delete-camera-calibration/refuses-to-remove-3c8f32: the declared code must be the emitted one");
+    assert_eq!(messages[0].code.0, "mutation.target-referenced", "delete-camera-calibration/refuses-to-remove-3c8f32: the declared code must be the emitted one");
     assert_eq!(messages[0].level, protocol::Severity::Error, "delete-camera-calibration/refuses-to-remove-3c8f32: the declared level must be the emitted one");
     assert_eq!(declared.get("code").and_then(|code| code.as_str()), Some(messages[0].code.0.as_str()), "the committed outcome must name the emitted code");
     let declared_path: Vec<String> = match declared.get("path") {

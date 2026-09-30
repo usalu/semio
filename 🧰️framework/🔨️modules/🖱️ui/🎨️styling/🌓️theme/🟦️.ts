@@ -28,7 +28,7 @@ import { STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_SEMIO_THEME, STYLING_T
 
 //#region 🔖️ThemeModel
 export * from "./🏛️model/🟦️.ts";
-import { parseUiTheme, resolveThemeAppearancePalettes, resolveThemeMetrics, resolveThemePaint, serializeUiTheme, type Rgba8, type UiTheme } from "./🏛️model/🟦️.ts";
+import { parseUiTheme, resolveThemeGeometry, resolveThemeAppearancePalettes, resolveThemeMetrics, resolveThemePaint, serializeUiTheme, type Rgba8, type UiTheme } from "./🏛️model/🟦️.ts";
 
 //#region 🧪️ThemeModelTests
 if (import.meta.vitest) {
@@ -79,26 +79,22 @@ export const STYLING_DOM = STYLING_METRICS.dom;
 /** 🔑️ Compact-mode reference root (px) for headless layout math. */
 export const STYLING_COMPACT_ROOT_PX = STYLING_DOM.rootRemPx;
 
-const COMPACT_UI_SPACING_REM = 0.2;
-
-/** 📐️ Converts a ui-spacing multiplier to rem length. */
-export function uiSpacingRem(multiplier: number): string {
-  return `${multiplier * COMPACT_UI_SPACING_REM}rem`;
-}
-
 /** 📏️ A ui-spacing multiplier as a CSS length that follows the live `--ui-spacing` (compact or touch). */
 export function uiSpacingLen(multiplier: number): string {
   return `calc(${multiplier} * var(--ui-spacing))`;
 }
 
 /** 📐️ Converts a ui-spacing multiplier to px at the compact reference root. */
-export function uiSpacingPx(multiplier: number, rootPx = STYLING_COMPACT_ROOT_PX): number {
-  return multiplier * COMPACT_UI_SPACING_REM * rootPx;
+export function uiSpacingPx(multiplier: number, rootPx?: number): number {
+  const geometry = resolveThemeGeometry(activeUiTheme());
+  return multiplier * geometry.spacingPx * (rootPx === undefined ? 1 : rootPx / geometry.rootRemPx);
 }
 
 /** 📐️ Resolves a DOM metric key to px at the compact reference root. */
-export function domSizePx(key: Exclude<keyof typeof STYLING_DOM, "rootRemPx">, rootPx = STYLING_COMPACT_ROOT_PX): number {
-  return uiSpacingPx(STYLING_DOM[key], rootPx);
+export function domSizePx(key: Exclude<keyof typeof STYLING_DOM, "rootRemPx">, rootPx?: number): number {
+  const value = activeUiTheme().metrics.dom?.[key] ?? STYLING_DOM[key];
+  if (typeof value !== "number") throw new Error(`theme DOM metric ${key} must be scalar`);
+  return uiSpacingPx(value, rootPx);
 }
 
 /** 📐️ Reads a resolved CSS size variable from the document (browser only). */
@@ -681,6 +677,7 @@ export function applyUiThemeToRoot(root: HTMLElement, theme: UiTheme): void {
   for (const [key, value] of Object.entries(theme.spacing)) {
     setCssVar(root, appliedNames, `--spacing-${key.replaceAll("_", "-")}`, value);
   }
+  for (const [name, value] of Object.entries(resolveThemeGeometry(theme).cssVars)) setCssVar(root, appliedNames, name, value);
   if (theme.fontStacks.sans) setCssVar(root, appliedNames, "--font-sans", theme.fontStacks.sans);
   if (theme.fontStacks.serif) setCssVar(root, appliedNames, "--font-serif", theme.fontStacks.serif);
   if (theme.fontStacks.mono) setCssVar(root, appliedNames, "--font-mono", theme.fontStacks.mono);

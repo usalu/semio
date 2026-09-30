@@ -666,7 +666,11 @@ pub enum ArtifactEvent {
     /// concurrent history (the transformed envelope is already delivered as a
     /// {@link ArtifactEvent::RemoteMutations} replacing the speculative local one), or rejected
     /// (the speculative local head is rolled back via {@link rollback_envelope} before this fires).
-    CommandOutcome { batch_id: u64, outcome: CommandAckOutcome },
+    CommandOutcome {
+        #[value(rename = "batchId")]
+        batch_id: u64,
+        outcome: CommandAckOutcome,
+    },
     /// ⚠️ A structural conflict (external divergence with local pending operations / semio_hub
     /// protocol-level reject), on the frozen diagnostic-bag vocabulary (contract freeze `26/08/16/
     /// MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C10) rather than the deleted
@@ -680,7 +684,7 @@ pub enum ArtifactEvent {
 fn decode_document_backbone_message_exact(message: &[u8]) -> Result<Vec<MutationEnvelope>, String> {
     match decode_hot_backbone_message_exact(message).map_err(|error| error.to_string())? {
         BackboneMessage::Mutations { envelopes } => decode_document_backbone_envelopes_exact(&envelopes).map_err(|error| error.to_string()),
-        BackboneMessage::Genesis { .. } | BackboneMessage::Ack { .. } | BackboneMessage::Member { .. } => Err("document backbone requires a canonical mutation message".into()),
+        BackboneMessage::Genesis { .. } | BackboneMessage::Ack { .. } | BackboneMessage::Member { .. } | BackboneMessage::Retract { .. } => Err("document backbone requires a canonical mutation message".into()),
     }
 }
 
@@ -692,20 +696,23 @@ struct DocumentBackboneRetentionV1 {
 }
 
 impl DocumentBackboneRetentionV1 {
-    fn retain(&mut self, message_bytes: usize, envelopes: &[MutationEnvelope]) -> Result<(), &'static str> {
+    fn retain(&mut self, message_bytes: usize, envelopes: &[MutationEnvelope]) -> Result<(), CommandAckOutcome> {
         if envelopes.is_empty() {
             return Ok(());
         }
+        let refused = |code, reason: &str, limit: usize| CommandAckOutcome::local_rejected(code, reason, CommandRejectionDetail { envelopes: Some(envelopes.len() as u64), bytes: Some(message_bytes as u64), limit: Some(limit as u64) });
         if message_bytes == 0 || message_bytes > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES {
-            return Err("document backbone message exceeds its hot byte limit");
+            return Err(refused(CommandRejectionCode::LocalBackboneCapacity, "document backbone message exceeds its hot byte limit", BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES));
         }
-        let next_bytes = self.bytes.checked_add(message_bytes).ok_or("document backbone byte accounting overflow")?;
+        let Some(next_bytes) = self.bytes.checked_add(message_bytes) else {
+            return Err(refused(CommandRejectionCode::LocalBackboneCapacity, "document backbone byte accounting overflow", BACKBONE_CHANNEL_MAXIMUM_BYTES));
+        };
         if self.messages >= BACKBONE_CHANNEL_MAXIMUM_MESSAGES || next_bytes > BACKBONE_CHANNEL_MAXIMUM_BYTES {
-            return Err("document backbone pending capacity");
+            return Err(refused(CommandRejectionCode::LocalBackboneCapacity, "document backbone pending capacity", BACKBONE_CHANNEL_MAXIMUM_BYTES));
         }
         let mut admitted = std::collections::HashSet::with_capacity(envelopes.len());
         if envelopes.iter().any(|envelope| !admitted.insert(envelope.mutation_id.0.as_str()) || self.entries.contains_key(&envelope.mutation_id.0)) {
-            return Err("document backbone mutation identity is already retained");
+            return Err(CommandAckOutcome::local_rejected(CommandRejectionCode::LocalBackboneDuplicate, "document backbone mutation identity is already retained", CommandRejectionDetail { envelopes: Some(envelopes.len() as u64), ..CommandRejectionDetail::default() }));
         }
         for (index, envelope) in envelopes.iter().enumerate() {
             self.entries.insert(envelope.mutation_id.0.clone(), if index == 0 { (message_bytes, 1) } else { (0, 0) });
@@ -763,15 +770,82 @@ fn frontier_reaches(actual: &RuntimeFrontierSummary, required: &RuntimeFrontierS
     actual == required
 }
 
+/// 🧾️ Every class of refused command batch, one closed set for every producer: the hub (`hub.refused`, or `hub.unreadable`
+/// when its diagnostics do not decode) and an actor's own refusals before any frame leaves it. Schema
+/// `🧬️schema/🔣️command-rejection/🔣️.json`, TypeScript twin `COMMAND_REJECTION_CODES_V1` (`💻️os/🟦️.ts`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+pub enum CommandRejectionCode {
+    #[value(rename = "hub.refused")]
+    HubRefused,
+    #[value(rename = "hub.unreadable")]
+    HubUnreadable,
+    #[value(rename = "local.read-only")]
+    LocalReadOnly,
+    #[value(rename = "local.queue-full")]
+    LocalQueueFull,
+    #[value(rename = "local.backbone-capacity")]
+    LocalBackboneCapacity,
+    #[value(rename = "local.backbone-duplicate")]
+    LocalBackboneDuplicate,
+    #[value(rename = "local.backbone-pair-unavailable")]
+    LocalBackbonePairUnavailable,
+    #[value(rename = "local.backbone-scope-mismatch")]
+    LocalBackboneScopeMismatch,
+    #[value(rename = "local.backbone-malformed")]
+    LocalBackboneMalformed,
+    #[value(rename = "local.socket-frame-ceiling")]
+    LocalSocketFrameCeiling,
+}
+
+/// 🔢️ The typed counters a local refusal reports: the refused batch's envelopes, the bytes it or its queue holds, and the
+/// limit it met — TypeScript twin `CommandRejectionDetailV1`.
+#[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+pub struct CommandRejectionDetail {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub envelopes: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub bytes: Option<u64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<u64>,
+}
+
 /// ⚖️ The client-side twin of `crate::os_spr::wire::ApplyOutcome`, minus the `Transformed`
 /// envelope payload (already delivered separately as {@link ArtifactEvent::RemoteMutations} by
-/// the time this fires — see {@link ArtifactEvent::CommandOutcome}).
+/// the time this fires — see {@link ArtifactEvent::CommandOutcome}). `Rejected` is the one rejection contract every
+/// producer answers (`🧬️schema/🔣️command-rejection/🔣️.json`): its class, the producer's English diagnostic `reason` (never
+/// shown to a human), the structured `MutationMessage`s the hub graded the batch with (decoded once, empty for a local
+/// refusal) and a local refusal's counters.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum CommandAckOutcome {
     Accepted,
     Transformed,
-    Rejected { reason: String, messages: Vec<u8> },
+    Rejected {
+        code: CommandRejectionCode,
+        reason: String,
+        messages: Vec<MutationMessage>,
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        detail: Option<CommandRejectionDetail>,
+    },
+}
+
+impl CommandAckOutcome {
+    /// 🧾️ The hub's `ApplyOutcome::Rejected`, decoded exactly once: its `messages` bytes are the UTF-8 JSON of one
+    /// `MutationMessage` array (`🌎️hub` `encode_messages`; empty for an admission or transport refusal), read into
+    /// `hub.refused`, or `hub.unreadable` with no messages when they are not that array.
+    pub fn hub_rejected(reason: String, messages: &[u8]) -> Self {
+        let decoded = if messages.is_empty() { Some(Vec::new()) } else { std::str::from_utf8(messages).ok().and_then(|text| crate::os_pack::json::from_json_str::<Vec<MutationMessage>>(text).ok()) };
+        match decoded {
+            Some(messages) => Self::Rejected { code: CommandRejectionCode::HubRefused, reason, messages, detail: None },
+            None => Self::Rejected { code: CommandRejectionCode::HubUnreadable, reason, messages: Vec::new(), detail: None },
+        }
+    }
+
+    /// 🚫️ A refusal an actor answers before any frame leaves it: no hub messages, only its typed counters (none when all
+    /// are absent).
+    pub fn local_rejected(code: CommandRejectionCode, reason: &str, detail: CommandRejectionDetail) -> Self {
+        Self::Rejected { code, reason: reason.to_string(), messages: Vec::new(), detail: (detail != CommandRejectionDetail::default()).then_some(detail) }
+    }
 }
 //#endregion 🔖️Protocol
 
@@ -1422,17 +1496,18 @@ async fn rollback_envelope(envelope: &MutationEnvelope) -> Option<MutationEnvelo
 /// 🛟️ The code of the typed refusal an actor raises when the hub refused a batch holding history transitions.
 pub const HISTORY_TRANSITION_REFUSED_CODE: &str = "history.transition-refused";
 
-/// 🛟️ The typed refusal of `refused`, a batch the hub refused for `reason`, when it holds history transitions (a refused
-/// `Supersede`, a foreign undo): no inverse rolls a transition back ([`rollback_envelope`]), so the document stays ahead
-/// of the hub until the hub's `RebootstrapRequired` rebuilds it from the canonical checkpoint pair, which holds no refused
-/// transition, and the unacknowledged work replays on top. The message targets every refused transition, so the runtime
-/// can say which history step the hub did not take (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING).
-fn irreversible_refusal(refused: &[MutationEnvelope], reason: &str) -> Option<MutationMessage> {
+/// 🪧️ The typed refusal of `refused`, a batch the hub did not take as sent (`reason`), when it holds history transitions
+/// (a refused `Supersede`, a foreign undo): no inverse rolls a transition back ([`rollback_envelope`]), so the actor
+/// retracts them from its store (`BackboneMessage::Retract`, which drops every local transition depending on them too)
+/// and from its persisted log, and the author converges with the hub, which never took them. The message targets every
+/// refused transition, so the runtime can say which history step the hub did not take (ticket 26/09/30
+/// NON-DESTRUCTIVE-HISTORY-EDITING).
+fn transition_refusal(refused: &[MutationEnvelope], reason: &str) -> Option<MutationMessage> {
     let transitions: Vec<String> = refused.iter().filter(|envelope| crate::os_spr::is_history_transition(envelope)).map(|envelope| envelope.mutation_id.0.clone()).collect();
     (!transitions.is_empty()).then(|| MutationMessage {
         level: crate::os_dsl::Severity::Error,
         code: crate::os_dsl::FaultCode::new(HISTORY_TRANSITION_REFUSED_CODE),
-        message: format!("the hub refused {} history step(s) no inverse rolls back ({reason}); the document rebuilds from the hub's canonical checkpoint", transitions.len()),
+        message: format!("the hub refused {} history step(s) ({reason}); they are withdrawn", transitions.len()),
         target: transitions,
         op_index: None,
     })
@@ -2576,16 +2651,16 @@ mod native_actor {
                     let envelopes = match decode_document_backbone_message_exact(&message) {
                         Ok(envelopes) if envelopes.iter().all(|envelope| envelope.document_id.0 == self.document_id) => envelopes,
                         Ok(envelopes) => {
-                            self.reject_document_backbone("document backbone scope mismatch", vec![envelopes.len().min(u8::MAX as usize) as u8]);
+                            self.reject_document_backbone(CommandAckOutcome::local_rejected(CommandRejectionCode::LocalBackboneScopeMismatch, "document backbone scope mismatch", CommandRejectionDetail { envelopes: Some(envelopes.len() as u64), ..CommandRejectionDetail::default() }));
                             return false;
                         }
                         Err(_) => {
-                            self.reject_document_backbone("document backbone malformed", Vec::new());
+                            self.reject_document_backbone(CommandAckOutcome::local_rejected(CommandRejectionCode::LocalBackboneMalformed, "document backbone malformed", CommandRejectionDetail { bytes: Some(message.len() as u64), ..CommandRejectionDetail::default() }));
                             return false;
                         }
                     };
-                    if let Err(reason) = self.document_backbone_retention.retain(message.len(), &envelopes) {
-                        self.reject_document_backbone(reason, vec![envelopes.len().min(u8::MAX as usize) as u8]);
+                    if let Err(refusal) = self.document_backbone_retention.retain(message.len(), &envelopes) {
+                        self.reject_document_backbone(refusal);
                         return false;
                     }
                     self.persist_operations(&envelopes).await;
@@ -2623,10 +2698,10 @@ mod native_actor {
             }
         }
 
-        fn reject_document_backbone(&mut self, reason: impl Into<String>, messages: Vec<u8>) {
+        fn reject_document_backbone(&mut self, outcome: CommandAckOutcome) {
             let batch_id = self.next_local_rejection_batch_id;
             self.next_local_rejection_batch_id = self.next_local_rejection_batch_id.wrapping_sub(1);
-            self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason: reason.into(), messages } });
+            self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome });
         }
 
         /// 📤️ Pops and advances exactly one store-to-actor FIFO owner.
@@ -2641,6 +2716,7 @@ mod native_actor {
                 BackboneMessage::Genesis { pack } => self.persist_genesis(pack).await,
                 BackboneMessage::Ack { .. } => {}
                 BackboneMessage::Member { .. } => return Err(vcs::VcsError::Backbone("a composed member requires its exact member transport lane".into())),
+                BackboneMessage::Retract { .. } => return Err(vcs::VcsError::Backbone("a retraction flows from the actor to its store, never back".into())),
             }
             Ok(true)
         }
@@ -2713,18 +2789,37 @@ mod native_actor {
                 return;
             }
             let Ok(new_spr) = crate::os_store::append_history_events_to_spr(&spr, &new_edits, &new_transitions).await else { return };
+            self.persist_spr(pack, new_spr).await;
+        }
+
+        /// 🔙️ Drops from the persisted log the transitions `refused` retracts — the same ones the store drops
+        /// ([`crate::os_store::transition_retraction_closure`]) — so a reload never resurrects what the hub refused.
+        async fn persist_retraction(&mut self, refused: &[String]) {
+            if self.folder.is_none() {
+                return;
+            }
+            let (Some(pack), Some(spr)) = (self.current_pack.clone(), self.current_spr.clone()) else { return };
+            let Ok((spr, retracted)) = crate::os_store::retract_history_transitions_from_spr(&spr, refused).await else { return };
+            for id in &retracted {
+                self.known_op_ids.remove(id);
+            }
+            self.persist_spr(pack, spr).await;
+        }
+
+        /// 💾️ Persists `spr` as the recursive archive's parent log beside `pack`.
+        async fn persist_spr(&mut self, pack: Vec<u8>, spr: Vec<u8>) {
             let mut archive = match self.current_archive.as_deref() {
                 Some(bytes) => crate::os_spr::decode_document_archive_bytes(bytes).await.ok(),
                 None => None,
             }
-            .unwrap_or(crate::os_spr::DocumentArchivePack { parent_pack: pack.clone(), parent_spr: spr, members: Vec::new() });
-            archive.parent_spr = new_spr.clone();
+            .unwrap_or(crate::os_spr::DocumentArchivePack { parent_pack: pack.clone(), parent_spr: spr.clone(), members: Vec::new() });
+            archive.parent_spr = spr.clone();
             if let Ok(bytes) = crate::os_spr::encode_document_archive_bytes(&archive) {
                 self.persist_write_archive(&bytes).await;
                 self.current_archive = Some(bytes);
             }
             self.current_pack = Some(pack);
-            self.current_spr = Some(new_spr);
+            self.current_spr = Some(spr);
         }
 
         /// 👁️ Re-reads the folder binding and classifies the change: append-only → `RemoteMutations`,
@@ -3418,10 +3513,14 @@ mod native_actor {
                         }
                         self.persist_operations(&rollbacks).await;
                         let _ = self.deliver_remote_operations(rollbacks).await;
+                        let refusal = self.retract_refused_transitions(&sent, "transformed").await;
                         let converted = *envelope;
                         self.persist_operations(std::slice::from_ref(&converted)).await;
                         let _ = self.deliver_remote_operations(vec![converted]).await;
                         self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
+                        if let Some(refusal) = refusal {
+                            self.emit(ArtifactEvent::Conflict(refusal));
+                        }
                     }
                     ApplyOutcome::Rejected { reason, messages } => {
                         let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
@@ -3430,15 +3529,24 @@ mod native_actor {
                         }
                         self.persist_operations(&rollbacks).await;
                         let _ = self.deliver_remote_operations(rollbacks).await;
-                        let irreversible = irreversible_refusal(&sent, &reason);
-                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason, messages } });
-                        if let Some(refusal) = irreversible {
+                        let refusal = self.retract_refused_transitions(&sent, &reason).await;
+                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::hub_rejected(reason, &messages) });
+                        if let Some(refusal) = refusal {
                             self.emit(ArtifactEvent::Conflict(refusal));
                         }
                     }
                 }
             }
             self.emit_status_if_changed().await;
+        }
+
+        /// 🔙️ Retracts the history transitions of `refused`, a batch the hub did not take as sent: the persisted log and
+        /// the store drop them ([`transition_refusal`]); answers the typed refusal naming them.
+        async fn retract_refused_transitions(&mut self, refused: &[MutationEnvelope], reason: &str) -> Option<MutationMessage> {
+            let refusal = transition_refusal(refused, reason)?;
+            self.persist_retraction(&refusal.target).await;
+            let _ = self.deliver_retraction(refusal.target.clone()).await;
+            Some(refusal)
         }
 
         async fn relay_operations_to_hub(&mut self, envelopes: &[MutationEnvelope]) {
@@ -3501,6 +3609,21 @@ mod native_actor {
                 self.emit(ArtifactEvent::DocumentBackbone { message });
             } else {
                 self.emit(ArtifactEvent::RemoteMutations { envelopes });
+            }
+            true
+        }
+
+        /// 🔙️ Asks the store to retract `mutation_ids` (`BackboneMessage::Retract`), through the document backbone too when
+        /// a hub space binds this document.
+        async fn deliver_retraction(&mut self, mutation_ids: Vec<String>) -> bool {
+            let message = BackboneMessage::Retract { mutation_ids };
+            let encoded = message.encode_op();
+            if self.remote.push(message).await.is_err() {
+                return false;
+            }
+            if self.hub_space_id.is_some() {
+                let Ok(message) = encoded else { return false };
+                self.emit(ArtifactEvent::DocumentBackbone { message });
             }
             true
         }
@@ -4567,7 +4690,11 @@ mod wasm_actor {
                 rollbacks.extend(rollback_envelope(envelope).await);
             }
             let _ = self.deliver_remote_operations(rollbacks).await;
-            self.reject_document_backbone("document socket frame exceeds the socket's ceiling", vec![local.len().min(u8::MAX as usize) as u8]);
+            let refusal = self.retract_refused_transitions(&local, "document socket frame exceeds the socket's ceiling").await;
+            self.reject_document_backbone(CommandAckOutcome::local_rejected(CommandRejectionCode::LocalSocketFrameCeiling, "document socket frame exceeds the socket's ceiling", CommandRejectionDetail { envelopes: Some(local.len() as u64), ..CommandRejectionDetail::default() }));
+            if let Some(refusal) = refusal {
+                let _ = self.events.send(ArtifactEvent::Conflict(refusal));
+            }
         }
 
         async fn relay_one_backbone(&mut self) -> Result<bool, vcs::VcsError> {
@@ -4579,6 +4706,7 @@ mod wasm_actor {
                 }
                 BackboneMessage::Genesis { .. } | BackboneMessage::Ack { .. } => {}
                 BackboneMessage::Member { .. } => return Err(vcs::VcsError::Backbone("a composed member requires its exact member transport lane".into())),
+                BackboneMessage::Retract { .. } => return Err(vcs::VcsError::Backbone("a retraction flows from the actor to its store, never back".into())),
             }
             Ok(true)
         }
@@ -4595,16 +4723,16 @@ mod wasm_actor {
                     let envelopes = match decode_document_backbone_message_exact(&message) {
                         Ok(envelopes) if envelopes.iter().all(|envelope| envelope.document_id.0 == self.document_id) => envelopes,
                         Ok(envelopes) => {
-                            self.reject_document_backbone("document backbone scope mismatch", vec![envelopes.len().min(u8::MAX as usize) as u8]);
+                            self.reject_document_backbone(CommandAckOutcome::local_rejected(CommandRejectionCode::LocalBackboneScopeMismatch, "document backbone scope mismatch", CommandRejectionDetail { envelopes: Some(envelopes.len() as u64), ..CommandRejectionDetail::default() }));
                             return;
                         }
                         Err(_) => {
-                            self.reject_document_backbone("document backbone malformed", Vec::new());
+                            self.reject_document_backbone(CommandAckOutcome::local_rejected(CommandRejectionCode::LocalBackboneMalformed, "document backbone malformed", CommandRejectionDetail { bytes: Some(message.len() as u64), ..CommandRejectionDetail::default() }));
                             return;
                         }
                     };
-                    if let Err(reason) = self.document_backbone_retention.retain(message.len(), &envelopes) {
-                        self.reject_document_backbone(reason, vec![envelopes.len().min(u8::MAX as usize) as u8]);
+                    if let Err(refusal) = self.document_backbone_retention.retain(message.len(), &envelopes) {
+                        self.reject_document_backbone(refusal);
                         return;
                     }
                     if self.hub_space_id.is_some() {
@@ -4628,10 +4756,10 @@ mod wasm_actor {
             }
         }
 
-        fn reject_document_backbone(&mut self, reason: impl Into<String>, messages: Vec<u8>) {
+        fn reject_document_backbone(&mut self, outcome: CommandAckOutcome) {
             let batch_id = self.next_local_rejection_batch_id;
             self.next_local_rejection_batch_id = self.next_local_rejection_batch_id.wrapping_sub(1);
-            let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason: reason.into(), messages } });
+            let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome });
         }
 
         fn requeue_pending_batches(&mut self) {
@@ -4947,8 +5075,12 @@ mod wasm_actor {
                             rollbacks.extend(rollback_envelope(envelope).await);
                         }
                         let _ = self.deliver_remote_operations(rollbacks).await;
+                        let refusal = self.retract_refused_transitions(&sent, "transformed").await;
                         let _ = self.deliver_remote_operations(vec![*envelope]).await;
                         let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
+                        if let Some(refusal) = refusal {
+                            let _ = self.events.send(ArtifactEvent::Conflict(refusal));
+                        }
                     }
                     ApplyOutcome::Rejected { reason, messages } => {
                         let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
@@ -4956,9 +5088,9 @@ mod wasm_actor {
                             rollbacks.extend(rollback_envelope(envelope).await);
                         }
                         let _ = self.deliver_remote_operations(rollbacks).await;
-                        let irreversible = irreversible_refusal(&sent, &reason);
-                        let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason, messages } });
-                        if let Some(refusal) = irreversible {
+                        let refusal = self.retract_refused_transitions(&sent, &reason).await;
+                        let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::hub_rejected(reason, &messages) });
+                        if let Some(refusal) = refusal {
                             let _ = self.events.send(ArtifactEvent::Conflict(refusal));
                         }
                     }
@@ -4982,6 +5114,27 @@ mod wasm_actor {
                 let _ = self.events.send(ArtifactEvent::DocumentBackbone { message });
             } else {
                 let _ = self.events.send(ArtifactEvent::RemoteMutations { envelopes });
+            }
+            true
+        }
+
+        /// 🔙️ Mirrors the native actor's `retract_refused_transitions`; a browser actor persists no log of its own.
+        async fn retract_refused_transitions(&self, refused: &[MutationEnvelope], reason: &str) -> Option<MutationMessage> {
+            let refusal = transition_refusal(refused, reason)?;
+            let _ = self.deliver_retraction(refusal.target.clone()).await;
+            Some(refusal)
+        }
+
+        /// 🔙️ Mirrors the native actor's `deliver_retraction`.
+        async fn deliver_retraction(&self, mutation_ids: Vec<String>) -> bool {
+            let message = BackboneMessage::Retract { mutation_ids };
+            let encoded = message.encode_op();
+            if self.remote.push(message).await.is_err() {
+                return false;
+            }
+            if self.hub_space_id.is_some() {
+                let Ok(message) = encoded else { return false };
+                let _ = self.events.send(ArtifactEvent::DocumentBackbone { message });
             }
             true
         }
@@ -5691,3 +5844,6 @@ mod document_link_shortage_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️document-echo-suppression/🦀️.rs"]
 mod document_echo_suppression_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🧪️command-rejection/🦀️.rs"]
+mod command_rejection_tests;

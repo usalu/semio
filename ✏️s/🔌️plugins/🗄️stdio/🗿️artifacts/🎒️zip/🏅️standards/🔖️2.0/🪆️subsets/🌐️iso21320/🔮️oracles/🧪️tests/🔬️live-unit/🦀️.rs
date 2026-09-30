@@ -49,7 +49,7 @@ mod tests {
             spec("add-stored-entry", vec![("entry", entry("a.png", "p", 0.0))]),
             spec("add-deflated-entry", vec![("entry", entry("a.txt", "p", 8.0))]),
             spec("remove-entry", vec![("name", Json::String("notiz.txt".into()))]),
-            spec("rename-entry", vec![("name", Json::String("notiz.txt".into())), ("new_name", Json::String("notiz2.txt".into()))]),
+            spec("rename-entry", vec![("name", Json::String("notiz.txt".into())), ("newName", Json::String("notiz2.txt".into()))]),
             spec("set-entry-data", vec![("name", Json::String("notiz.txt".into())), ("data", bytes("anders"))]),
         ];
         for one in specs {

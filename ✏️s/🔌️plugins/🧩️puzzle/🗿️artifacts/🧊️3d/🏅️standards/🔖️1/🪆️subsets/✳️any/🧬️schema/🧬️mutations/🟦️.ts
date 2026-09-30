@@ -77,7 +77,10 @@ export type Puzzle3dMutation =
   | ({ mutation: "changeDomain" } & ChangeDomain)
   | ({ mutation: "connectKindCompatibility" } & ConnectKindCompatibility)
   | ({ mutation: "disconnectKindCompatibility" } & DisconnectKindCompatibility)
-  | ({ mutation: "replaceKindCatalogs" } & ReplaceKindCatalogs);
+  | ({ mutation: "replaceKindCatalogs" } & ReplaceKindCatalogs)
+  | ({ mutation: "dragSelection" } & DragSelection)
+  | ({ mutation: "rotateSelection" } & RotateSelection)
+  | ({ mutation: "scaleSelection" } & ScaleSelection);
 
 /** 🌱 `create-object` payload — full initial payload at an optional FINAL-state `index` (`null` appends). */
 export interface CreateObject {
@@ -302,4 +305,23 @@ export interface DisconnectKindCompatibility {
 /** 📚 `replace-kind-catalogs` payload — whole-value swap of the fixture-carried typed kind-catalog bundle (`null` clears the catalogs). */
 export interface ReplaceKindCatalogs {
   newCatalogs: Puzzle3dKindCatalogs | null;
+}
+
+/** ✋️ `drag-selection` payload — object and target-volume ids moved by one relative world offset. */
+export interface DragSelection {
+  targets: string[];
+  offset: [number, number, number];
+}
+
+/** 🔄️ `rotate-selection` payload — object and target-volume ids turned, each about its own origin, by `angle` radians about the world `axis`. */
+export interface RotateSelection {
+  targets: string[];
+  axis: [number, number, number];
+  angle: number;
+}
+
+/** 🔍️ `scale-selection` payload — object and target-volume ids whose scales are multiplied per axis by `factors`. */
+export interface ScaleSelection {
+  targets: string[];
+  factors: [number, number, number];
 }

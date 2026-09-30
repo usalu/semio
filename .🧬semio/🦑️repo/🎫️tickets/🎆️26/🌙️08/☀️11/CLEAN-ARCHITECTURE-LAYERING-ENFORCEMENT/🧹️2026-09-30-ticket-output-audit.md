@@ -30,3 +30,7 @@ All Markdown reports, the important Markdown note, Rust/TypeScript input snippet
 | `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/📸️baseline-cargo-check.txt` | `25ad8d7e627d2b0f279f53ea0a2543a88c2cedca85a166d737550a68f18d1a37` |
 | `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/📸️baseline-git-status.txt` | `612a6e1fba6964ce793e0b3376087ade7098b14f2b2ccb6a0cbe6164f2fa4595` |
 | `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/📸️baseline-verify-gate.txt` | `4ec5c0f9222260e783600fe47ab363ba053f4b542ccae7032fd6e1f727dce4e8` |
+
+## Completed Cleanup
+
+All owned proof jobs and agents finished before deletion. Removed exactly24 reviewed historical raw output files and the ticket-only `🗑️generated` directory (34739 generated files, 22189993881 bytes). Independently rechecked198 non-generated input/report files against their pre-cleanup SHA-256 values: all remain unchanged through deletion. Compiler logs, binaries, raw receipts, helper process captures and other generated files are removed as required. Final successful/failed test inventories, exact native hashes, diagnostic attribution and runtime measurements remain in Markdown. Source, frozen input snippets, configs, Cargo stubs, metadata and all audits are preserved. No shared Cargo/Nx/guest cache, peer checkout, or Git state is removed.

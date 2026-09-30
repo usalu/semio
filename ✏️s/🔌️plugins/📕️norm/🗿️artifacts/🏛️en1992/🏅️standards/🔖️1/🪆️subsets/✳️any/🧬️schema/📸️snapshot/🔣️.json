@@ -92,7 +92,13 @@
         "fCk": {
           "type": "number"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "ReinforcementGrade": {
       "type": "object",
@@ -133,7 +139,13 @@
             "c"
           ]
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "PrestressSteel": {
       "type": "object",
@@ -157,7 +169,13 @@
         "fP01k": {
           "type": "number"
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "BarLayer": {
       "title": "BarLayer",
@@ -264,7 +282,13 @@
             "precision": 1
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "Stirrups": {
       "title": "Stirrups",
@@ -318,7 +342,13 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "PunchingSpec": {
       "title": "PunchingSpec",
@@ -387,7 +417,13 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "PrestressSpec": {
       "title": "PrestressSpec",
@@ -456,7 +492,13 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "FireSpec": {
       "title": "FireSpec",
@@ -525,7 +567,13 @@
             "widget": "text"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "LoadCaseActions": {
       "title": "LoadCaseActions",
@@ -677,7 +725,13 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "RcMember": {
       "title": "RcMember",
@@ -1121,7 +1175,13 @@
             "precision": 1
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "Anchor": {
       "title": "Anchor",
@@ -1267,7 +1327,13 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql",
+        "🛰️protobuf"
+      ]
     },
     "AnnexChoice": {
       "title": "AnnexChoice",
@@ -1287,7 +1353,12 @@
             "de": "Deutscher Nationaler Anhang (DIN EN)"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
     },
     "ExposureClass": {
       "title": "ExposureClass",
@@ -1387,7 +1458,12 @@
             "de": "XA3"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
     },
     "FireRating": {
       "title": "FireRating",
@@ -1417,7 +1493,12 @@
             "de": "R120"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
     },
     "MemberKind": {
       "title": "MemberKind",
@@ -1472,7 +1553,12 @@
             "de": "Flüssigkeitsbehälter"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
     },
     "SupportCondition": {
       "title": "SupportCondition",
@@ -1502,7 +1588,12 @@
             "de": "Beidseitig eingespannt"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
     },
     "TightnessClass": {
       "title": "TightnessClass",
@@ -1527,7 +1618,12 @@
             "de": "Dichtheitsklasse 2"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript",
+        "🔗️graphql"
+      ]
     }
   }
 }

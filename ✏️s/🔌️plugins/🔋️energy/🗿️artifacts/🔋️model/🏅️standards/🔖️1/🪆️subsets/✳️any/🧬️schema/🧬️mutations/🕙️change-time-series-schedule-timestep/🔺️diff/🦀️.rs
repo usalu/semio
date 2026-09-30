@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeTimeSeriesScheduleTimestep, base: &EnergyMode
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Time series schedule {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if payload.new_timestep_seconds == 0 {
-        return protocol::MutationOutcome::error("mutation.invariant", "A time series schedule needs a timestep of at least one second.", [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "A time series schedule needs a timestep of at least one second.", [payload.id.0.to_string()]);
     }
     if existing.timestep_seconds == payload.new_timestep_seconds {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Time series schedule {} already carries this timestep_seconds: {}.", payload.id.0, payload.new_timestep_seconds));

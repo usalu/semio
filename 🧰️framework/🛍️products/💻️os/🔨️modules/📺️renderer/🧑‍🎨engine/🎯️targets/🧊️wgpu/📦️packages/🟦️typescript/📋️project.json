@@ -269,6 +269,38 @@
       },
       "outputs": []
     },
+    "browser-dock-acceptance": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default",
+        {
+          "externalDependencies": [
+            "ajv",
+            "playwright"
+          ]
+        },
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🌐️browser-acceptance/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧫️fixtures/🌐️browser-acceptance/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧬️schema/🌐️browser-acceptance/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts browser-dock-acceptance",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
+      }
+    },
+    "browser-media-acceptance": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts browser-media-acceptance",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "forwardAllArgs": true
+      }
+    },
     "test-browser": {
       "executor": "nx:run-commands",
       "inputs": [

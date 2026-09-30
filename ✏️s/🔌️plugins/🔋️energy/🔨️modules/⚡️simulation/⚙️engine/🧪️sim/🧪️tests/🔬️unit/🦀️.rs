@@ -690,7 +690,7 @@ fn p7c1_weather_owner_is_exactly_admitted_never_grows_and_retries_maximum_plus_o
     records.reserve_exact(3);
     assert!(records.capacity() > logical_records, "reserve-only mutation must increase owned weather backing");
     let pointer = records.as_ptr();
-    let config = SimulationConfig { weather: Some(crate::site::EpwWeather { location: "fixed".into(), latitude_deg: 0.0, longitude_deg: 0.0, elevation_m: 0.0, time_zone_hours: 0.0, records }), ..Default::default() };
+    let config = SimulationConfig { weather: Some(crate::site::WeatherData { location: "fixed".into(), latitude_deg: 0.0, longitude_deg: 0.0, elevation_m: 0.0, time_zone_hours: 0.0, records }), ..Default::default() };
     let census = EnergyNumericalCensus::observe(&model, &config).expect("weather census");
     assert_eq!(census.weather_records, config.weather.as_ref().expect("weather").records.capacity());
     assert!(census.weather_records > logical_records, "census must not collapse backing capacity to len/max1");
@@ -745,7 +745,7 @@ fn p7c1_weather_owner_is_exactly_admitted_never_grows_and_retries_maximum_plus_o
 fn p7c1_weather_reserve_only_capacity_is_independently_charged_to_items() {
     let model = test_model_single_zone();
     let mut config =
-        SimulationConfig { weather: Some(crate::site::EpwWeather { location: "items".into(), latitude_deg: 0.0, longitude_deg: 0.0, elevation_m: 0.0, time_zone_hours: 0.0, records: vec![design_day_hour(0, -10.0)] }), ..Default::default() };
+        SimulationConfig { weather: Some(crate::site::WeatherData { location: "items".into(), latitude_deg: 0.0, longitude_deg: 0.0, elevation_m: 0.0, time_zone_hours: 0.0, records: vec![design_day_hour(0, -10.0)] }), ..Default::default() };
     config.weather.as_mut().expect("weather").records.shrink_to_fit();
     let before = EnergyNumericalCensus::observe(&model, &config).expect("baseline weather census");
     config.weather.as_mut().expect("weather").records.reserve_exact(7);

@@ -16,7 +16,7 @@ describe("🎬️ presented media slots", () => {
     const props = structuredClone(reservation.cases[0].props);
     for (const key of Object.keys(props.labels)) props.labels[key as keyof typeof props.labels] = "x".repeat(fixture.descriptorBudget.labelBytes);
     expect(ajv.getSchema(mediaContract.$id)?.(props)).toBe(true);
-    const slot = { token: fixture.token, windowId: "media.video.viewer", nodeId: "1", nodeKey: "media-slot", rect: { x: 10, y: 20, width: 200, height: 240 }, clip: { x: 10, y: 20, width: 200, height: 240 }, paintOrder: 0, occluded: false, pluginId: "media", controllerId: "video.viewer", appInstanceId: 17, parentDocumentId: "document-7", props };
+    const slot = { token: fixture.token, windowId: "media.video.viewer", nodeId: "1", nodeKey: "x".repeat(fixture.descriptorBudget.nodeKeyBytes), rect: { x: 10, y: 20, width: 200, height: 240 }, clip: { x: 10, y: 20, width: 200, height: 240 }, paintOrder: 0, occluded: false, pluginId: "media", controllerId: "video.viewer", appInstanceId: 17, parentDocumentId: "document-7", props };
     const slots = Array.from({ length: fixture.descriptorBudget.expectedAcceptedSlots }, (_, paintOrder) => ({ ...slot, paintOrder, occluded: paintOrder < fixture.descriptorBudget.expectedAcceptedSlots - 1 }));
     expect(ajv.compile(contract)(slots)).toBe(true);
     expect(Buffer.byteLength(JSON.stringify(slots), "utf8")).toBeLessThanOrEqual(fixture.descriptorBytes);

@@ -28,7 +28,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemovePage {
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         if !self.valid(base) {
-            return MutationOutcome::error("stdio.pdf.remove-page.invalid-target", "Page target or geometry is outside the PDF 1.4 domain", self.target());
+            return MutationOutcome::error(if self.index < base.pages.len() { "mutation.target-mismatch" } else { "mutation.target-missing" }, "Page target or geometry is outside the PDF 1.4 domain", self.target());
         }
         MutationOutcome::new(PdfDiff { pages: Some(PdfPagesDiff { removed: vec![self.index], ..Default::default() }) })
     }

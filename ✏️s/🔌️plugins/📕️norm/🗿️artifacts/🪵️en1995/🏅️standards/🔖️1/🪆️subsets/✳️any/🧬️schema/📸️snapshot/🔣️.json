@@ -297,7 +297,11 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
     },
     "ConnectionAction": {
       "title": "ConnectionAction",
@@ -355,7 +359,11 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
     },
     "TimberMember": {
       "title": "TimberMember",
@@ -760,7 +768,11 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
     },
     "CharacteristicAction": {
       "title": "CharacteristicAction",
@@ -923,7 +935,11 @@
             "precision": 2
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
     },
     "AnnexChoice": {
       "title": "AnnexChoice",
@@ -943,7 +959,11 @@
             "de": "Deutscher Nationaler Anhang (DIN EN)"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
     },
     "MemberRole": {
       "title": "MemberRole",
@@ -973,7 +993,11 @@
             "de": "Brücke — Träger nach EN 1995-2"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
     },
     "SupportType": {
       "title": "SupportType",
@@ -998,7 +1022,11 @@
             "de": "Zweifeldträger"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
     }
   }
 }

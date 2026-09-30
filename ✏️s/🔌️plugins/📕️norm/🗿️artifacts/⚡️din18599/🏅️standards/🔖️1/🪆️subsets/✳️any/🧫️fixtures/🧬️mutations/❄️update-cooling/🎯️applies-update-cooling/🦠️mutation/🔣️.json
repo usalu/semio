@@ -1,0 +1,9 @@
+{
+  "mutation": "updateCooling",
+  "newCooling": {
+    "plant": {
+      "eer": 3.5,
+      "energyCarrier": "electricity"
+    }
+  }
+}

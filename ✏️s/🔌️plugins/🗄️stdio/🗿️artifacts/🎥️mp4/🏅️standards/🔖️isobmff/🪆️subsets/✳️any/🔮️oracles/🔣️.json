@@ -121,6 +121,26 @@
           ]
         },
         {
+          "id": "patch-snapshot",
+          "capability": "mp4-isobmff-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-snapshot",
+            "bridgeVersion": 1,
+            "variant": "PatchSnapshot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp4-isobmff-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
           "id": "remove-sample",
           "capability": "mp4-isobmff-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
@@ -605,6 +625,49 @@
       "reproducible": true,
       "family": "mp4-carrier",
       "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). RemoveSample{trackIndex:0,index:0} drops the first (sync) sample, leaving the second."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "patch-snapshot-applied",
+      "class": "handcrafted",
+      "target": {
+        "artifact": "s.stdio.mp4",
+        "standard": "isobmff",
+        "subset": "any"
+      },
+      "mutation": "patch-snapshot",
+      "outcome": "applied",
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "expected-before",
+          "path": "../🧫️fixtures/🩹️patch-snapshot/⬅️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:b934a19ee9a35cbd07b9d4d2ff48b445d987681f7949ded6acb56b265086e393",
+          "bytes": 2460
+        },
+        {
+          "role": "expected-after",
+          "path": "../🧫️fixtures/🩹️patch-snapshot/➡️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:a7ca68deb69be6a70689aeb1dca9ae3db79f41058733f966fcd809aa97e32d3f",
+          "bytes": 2460
+        }
+      ],
+      "provenance": {
+        "source": "authored",
+        "license": "public-domain (handcrafted by this repository)",
+        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
+        "security": "scanned-clean",
+        "privacy": "no-personal-data"
+      },
+      "comparisonProfile": "ordered-json-v1",
+      "reproducible": true,
+      "family": "mp4-carrier",
+      "notes": "Handcrafted Mp4Snapshot before/after pair on the same committed single-track AVC/H.264 base as set-sample-sync. PatchSnapshot{edits:[set /tracks/0/width = 32]} is the editor's compact path-addressed patch: the tkhd width changes in place and every sample, the codec and the movie header stay untouched."
     }
   ]
 }

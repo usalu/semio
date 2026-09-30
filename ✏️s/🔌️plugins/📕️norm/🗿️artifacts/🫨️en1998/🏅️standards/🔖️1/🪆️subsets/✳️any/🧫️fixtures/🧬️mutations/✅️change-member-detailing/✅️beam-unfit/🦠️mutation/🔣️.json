@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberDetailing",
+  "buildingIndex": 0,
+  "memberIndex": 1,
+  "newDetailingCompatibleWithQ": false
+}

@@ -19,7 +19,9 @@ Feature: Apply every typed drawing-document transform mutation to its committed 
   shared translate/scale/rotate record every layer carries, `set-layer-boolean-operation` edits the
   boolean-combine field a group layer carries, and `update-layer-trace-params` reaches a field only
   the trace node kind has — the one kind of the whole vocabulary that cannot be applied to an
-  arbitrary layer.
+  arbitrary layer. `drag-layers`, `rotate-layers`, `scale-layers` and `drag-path-points` are the relative, parametric
+  selection transforms the draw tool machine yields: each maps one world-space motion through every addressed layer's parent
+  chain, and their committed vectors are computed by an independent Python implementation.
 
   Because this case records a no-oracle decision the runner executes NO oracle role, so every
   assertion below lives in the subject handler, which compares against the committed after-document
@@ -37,6 +39,10 @@ Feature: Apply every typed drawing-document transform mutation to its committed 
       | update-layer-transform      |
       | set-layer-boolean-operation |
       | update-layer-trace-params   |
+      | drag-layers                 |
+      | rotate-layers               |
+      | scale-layers                |
+      | drag-path-points            |
 
   @id-inverse
   @level-exhaustive
@@ -50,3 +56,7 @@ Feature: Apply every typed drawing-document transform mutation to its committed 
       | update-layer-transform      |
       | set-layer-boolean-operation |
       | update-layer-trace-params   |
+      | drag-layers                 |
+      | rotate-layers               |
+      | scale-layers                |
+      | drag-path-points            |

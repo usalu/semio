@@ -183,8 +183,6 @@
             "openImportFixture",
             "registerBrushMesh",
             "targetBrushSuggestions",
-            "transformBegin",
-            "transformEnd",
             "worldPointerDown"
           ]
         },

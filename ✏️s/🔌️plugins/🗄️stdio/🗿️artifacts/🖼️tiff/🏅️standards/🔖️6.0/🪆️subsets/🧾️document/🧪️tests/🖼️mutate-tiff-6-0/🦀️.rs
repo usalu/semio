@@ -25,14 +25,22 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
+/// 🧭️ The document as an unchanged round trip through the reference IFD-chain codec leaves it — the baseline the
+/// observability and the inverse law are stated against. On the real scan it is the input itself (that writer
+/// authored it, and the identity scenario pins the fixpoint); on the small raster document, which another writer
+/// authored, it is that document in this writer's normal form, so neither law folds the normalization in.
+fn unmutated_baseline(input: &[u8]) -> Result<semio_repo_test_host::Json, String> {
+    project_tiff(&oracle_identity_round_trip(input)?)
+}
+
 /// 👁️ `@id-mutate`: applies the row's kind with the registered reference implementation and ASSERTS
-/// the result is distinguishable from the untouched fixture. The exemption list is empty — every
+/// the result is distinguishable from an unchanged round trip's. The exemption list is empty — every
 /// kind this vocabulary declares reaches the compared projection — so a kind that stops moving it
 /// fails here rather than reporting a green identical to an unchanged round trip's.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
     let input = mutable_input(ctx)?;
-    let before = project_tiff(&input)?;
+    let before = unmutated_baseline(&input)?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_tiff(&bytes)?;
     law::mutation_is_observable(&spec.str("kind"), &projection, &before, &[])?;
@@ -42,12 +50,12 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// ↩️ "Undoing `<id>` restores the document" is a law checkable WITHOUT a subject, so this handler
 /// checks it: apply the row's kind with the reference IFD-chain codec, apply that codec's own
 /// independently computed inverse on top, and assert the result projects back onto the pristine
-/// original. Returning the untouched original (what this used to do) asserted nothing at all — the
-/// scenario passed whenever the reference codec did not error.
+/// original as this writer emits it. Returning the untouched original (what this used to do) asserted
+/// nothing at all — the scenario passed whenever the reference codec did not error.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
-    let before = project_tiff(&input)?;
+    let before = unmutated_baseline(&input)?;
     let mutated = oracle_apply_mutation(&input, &spec)?;
     let restored = oracle_apply_mutation_inverse(&input, &spec, &mutated)?;
     let projection = project_tiff(&restored)?;
@@ -97,8 +105,7 @@ mod subject {
     //#endregion 🔖️SpecParsing
 
     //#region 🔖️Handlers
-    /// 🚫️ The tripwire this whole wave exists for: our encoder cannot reproduce another writer's
-    /// object layout, so byte-identical output means the input was smuggled through, not parsed.
+    /// 🚫️ The pass-through tripwire for the mutate rows: a mutated document can never legitimately be the input.
     fn no_byte_pass_through(output: &[u8], input: &[u8]) -> Result<(), String> {
         if output == input {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
@@ -133,11 +140,16 @@ mod subject {
         Ok(Outcome::with_raw(output, projection))
     }
 
+    /// 🔒️ Decode → re-encode from the typed IFD chain alone, asserting `carrier_is_exact`: the real scan is in the
+    /// canonical baseline layout (header, strips, IFD chain) this encoder also emits, and `TiffSnapshot` carries every
+    /// tag typed and each IFD's strip bytes as its own raster, so reproducing the scan byte for byte is the writer
+    /// being canonical — any dropped tag, reordered IFD or miscounted strip moves the bytes. The mutate rows are what
+    /// prove a real parse happened.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let snapshot = decode_tiff(&input).map_err(|error| format!("decode_tiff failed: {error:?}"))?;
         let output = encode_tiff(&snapshot).map_err(|error| format!("encode_tiff failed: {error:?}"))?;
-        no_byte_pass_through(&output, &input)?;
+        semio_s_plugin_stdio_test_oracle::law::carrier_is_exact(&output, &input)?;
         let projection = project_tiff(&output)?;
         Ok(Outcome::with_raw(output, projection))
     }
@@ -149,10 +161,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("mutate-raster", mutate_oracle).oracle("inverse", inverse_oracle).oracle("inverse-raster", inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("mutate-raster", subject::mutate).subject("inverse", subject::inverse).subject("inverse-raster", subject::inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

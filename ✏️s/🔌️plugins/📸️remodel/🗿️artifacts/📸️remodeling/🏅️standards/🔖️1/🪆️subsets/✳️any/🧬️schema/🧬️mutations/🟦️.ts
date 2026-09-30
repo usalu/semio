@@ -597,7 +597,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       if (!base.streams.some((stream) => stream.id === mutation.id)) return refuse("error", "mutation.target-missing", `Stream "${mutation.id}" does not exist.`, [mutation.id]);
       const referencing = base.gcps.filter((gcp) => gcp.observations.some((observation) => observation.streamId === mutation.id)).map((gcp) => gcp.id);
       if (referencing.length > 0)
-        return refuse("error", "mutation.referenced", `Stream "${mutation.id}" is still observed by ${referencing.length} ground control point(s); remove those observations first.`, referencing);
+        return refuse("error", "mutation.target-referenced", `Stream "${mutation.id}" is still observed by ${referencing.length} ground control point(s); remove those observations first.`, referencing);
       return ok({ streams: streamList(clone(base.streams).filter((stream) => stream.id !== mutation.id)) });
     }
     case "changeStreamSync": {
@@ -631,9 +631,9 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       return ok({ streams: streamList(streams) });
     }
     case "createAsset": {
-      if (remodelingContentHandleParts(mutation.asset.data) !== null) return refuse("error", "mutation.invalid-asset-payload", "Durable content handles are bound only by CommitReconstruction.", [mutation.key]);
+      if (remodelingContentHandleParts(mutation.asset.data) !== null) return refuse("fatal", "mutation.invariant", "Durable content handles are bound only by CommitReconstruction.", [mutation.key]);
       const artifact = durableRemodelingAsset(mutation.asset);
-      if (artifact === null) return refuse("error", "mutation.invalid-asset-payload", "The asset payload is malformed or exceeds its exact bounded envelope.", [mutation.key]);
+      if (artifact === null) return refuse("fatal", "mutation.invariant", "The asset payload is malformed or exceeds its exact bounded envelope.", [mutation.key]);
       const handle = imageAssetChildHandle(mutation.key, mutation.asset);
       const durableArtifacts = { ...withoutKey(clone(base.durableArtifacts), base.assets[mutation.key]?.childId), [handle.childId]: artifact };
       return ok({ assets: { ...clone(base.assets), [mutation.key]: handle }, durableArtifacts });
@@ -645,7 +645,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       if (base.results.geo !== null)
         for (const [lane, assetId] of [["dsm", base.results.geo.dsmAssetId], ["dtm", base.results.geo.dtmAssetId], ["ortho", base.results.geo.orthoAssetId]] as const)
           if (assetId === mutation.key) referencing.push(`results.geo.${lane}AssetId`);
-      if (referencing.length > 0) return refuse("error", "mutation.referenced", `Asset "${mutation.key}" is still referenced by ${referencing.length} place(s) in the document.`, referencing);
+      if (referencing.length > 0) return refuse("error", "mutation.target-referenced", `Asset "${mutation.key}" is still referenced by ${referencing.length} place(s) in the document.`, referencing);
       const assets = clone(base.assets);
       const childId = assets[mutation.key]?.childId;
       delete assets[mutation.key];
@@ -672,7 +672,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       const referencing = base.streams.filter((stream) => stream.cameraId === mutation.cameraId).map((stream) => stream.id);
       if (base.calibration.rig.some((extrinsic) => extrinsic.cameraId === mutation.cameraId)) referencing.push(`calibration.rig.${mutation.cameraId}`);
       if (referencing.length > 0)
-        return refuse("error", "mutation.referenced", `Camera calibration "${mutation.cameraId}" is still referenced by ${referencing.length} record(s); detach them first.`, referencing);
+        return refuse("error", "mutation.target-referenced", `Camera calibration "${mutation.cameraId}" is still referenced by ${referencing.length} record(s); detach them first.`, referencing);
       const calibration: CalibrationState = { ...clone(base.calibration), cameras: clone(base.calibration.cameras).filter((camera) => camera.id !== mutation.cameraId) };
       return ok({ calibration });
     }
@@ -800,7 +800,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
     case "replaceMeshResult": {
       const meshContent = remodelingMeshContentHandleParts(mutation.mesh.mesh);
       if (meshContent !== null && !remodelingContentIsComplete(base.durableArtifacts, meshContent[0], "mesh", meshContent[1]))
-        return refuse("error", "mutation.incomplete-mesh", "The mesh names durable content that is not complete.", [mutation.mesh.mesh.childId]);
+        return refuse("error", "mutation.target-mismatch", "The mesh names durable content that is not complete.", [mutation.mesh.mesh.childId]);
       if (same(mutation.mesh, base.results.mesh)) return noted(empty(), "warn", "mutation.no-op", "Mesh result is already up to date.");
       return ok({ results: { ...clone(base.results), mesh: clone(mutation.mesh) } });
     }
@@ -828,23 +828,23 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       let appendedBytes = 0;
       for (const chunk of mutation.chunks) {
         const bytes = decodeRemodelingDurableChunk(chunk);
-        if (bytes === null) return refuse("error", "mutation.invalid-content-chunk", "A content leaf is not base64 or exceeds the 4 KiB leaf envelope.", target);
+        if (bytes === null) return refuse("fatal", "mutation.invariant", "A content leaf is not base64 or exceeds the 4 KiB leaf envelope.", target);
         appendedBytes += bytes.length;
       }
-      if (mutation.chunks.length === 0) return refuse("error", "mutation.invalid-content-chunk", "An append carries no content leaves.", target);
+      if (mutation.chunks.length === 0) return refuse("fatal", "mutation.invariant", "An append carries no content leaves.", target);
       const existing = Object.hasOwn(base.durableArtifacts, mutation.contentId) ? base.durableArtifacts[mutation.contentId] : undefined;
       const stored = existing?.chunks ?? [];
-      if (mutation.first > stored.length) return refuse("error", "mutation.content-gap", `Leaf ${mutation.first} would leave a gap after ${stored.length} stored leaves.`, target);
+      if (mutation.first > stored.length) return refuse("error", "mutation.target-mismatch", `Leaf ${mutation.first} would leave a gap after ${stored.length} stored leaves.`, target);
       if (existing !== undefined && (existing.kind !== mutation.kind || existing.mime !== mutation.mime || existing.width !== mutation.width || existing.height !== mutation.height))
-        return refuse("error", "mutation.content-kind-mismatch", `Content "${mutation.contentId}" is stored as another kind or presentation.`, target);
+        return refuse("error", "mutation.target-mismatch", `Content "${mutation.contentId}" is stored as another kind or presentation.`, target);
       const overlap = Math.min(Math.max(stored.length - mutation.first, 0), mutation.chunks.length);
       if (!same(stored.slice(mutation.first, mutation.first + overlap), mutation.chunks.slice(0, overlap)))
-        return refuse("error", "mutation.content-conflict", "An appended leaf differs from the leaf already stored at its index.", target);
+        return refuse("error", "mutation.target-mismatch", "An appended leaf differs from the leaf already stored at its index.", target);
       if (overlap === mutation.chunks.length) return noted(empty(), "warn", "mutation.no-op", `Content "${mutation.contentId}" already stores these leaves.`);
       const storedBytes = stored.slice(0, mutation.first + overlap).reduce((sum, chunk) => sum + (decodeRemodelingDurableChunk(chunk)?.length ?? 0), 0);
       const envelope = REMODELING_CONTENT_ENVELOPES[mutation.kind];
       if (mutation.first + mutation.chunks.length > envelope.maxChunks || storedBytes + appendedBytes > envelope.maxBytes)
-        return refuse("error", "mutation.content-capacity", `Content "${mutation.contentId}" would exceed its ${mutation.kind} envelope.`, target);
+        return refuse("error", "mutation.target-mismatch", `Content "${mutation.contentId}" would exceed its ${mutation.kind} envelope.`, target);
       const entry = existing === undefined ? { kind: mutation.kind, mime: mutation.mime, width: mutation.width, height: mutation.height, chunks: [] } : clone(existing);
       return ok({ durableArtifacts: { ...clone(base.durableArtifacts), [mutation.contentId]: { ...entry, chunks: [...entry.chunks, ...mutation.chunks.slice(overlap)] } } });
     }
@@ -853,7 +853,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
       const artifact = Object.hasOwn(base.durableArtifacts, mutation.contentId) ? base.durableArtifacts[mutation.contentId] : undefined;
       if (artifact === undefined) return refuse("error", "mutation.target-missing", `Content "${mutation.contentId}" does not exist.`, target);
       const stored = artifact.chunks.length;
-      if (mutation.from > stored) return refuse("error", "mutation.content-gap", `Content "${mutation.contentId}" stores only ${stored} leaves.`, target);
+      if (mutation.from > stored) return refuse("error", "mutation.target-mismatch", `Content "${mutation.contentId}" stores only ${stored} leaves.`, target);
       if (mutation.from === stored) return noted(empty(), "warn", "mutation.no-op", `Content "${mutation.contentId}" stores no leaf from ${stored} on.`);
       const durableArtifacts = clone(base.durableArtifacts);
       if (mutation.from === 0) delete durableArtifacts[mutation.contentId];
@@ -863,10 +863,10 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
     case "commitReconstruction": {
       const sparseContent = mutation.sparse === null ? null : remodelingContentHandleParts(mutation.sparse.points);
       if (sparseContent !== null && !remodelingContentIsComplete(base.durableArtifacts, sparseContent[0], "sparse", sparseContent[1]))
-        return refuse("error", "mutation.invalid-reconstruction-sparse", "The sparse cloud names durable content that is not complete.", ["sparse"]);
+        return refuse("error", "mutation.target-mismatch", "The sparse cloud names durable content that is not complete.", ["sparse"]);
       const meshContent = mutation.mesh === null ? null : remodelingMeshContentHandleParts(mutation.mesh.mesh);
       if (meshContent !== null && !remodelingContentIsComplete(base.durableArtifacts, meshContent[0], "mesh", meshContent[1]))
-        return refuse("error", "mutation.invalid-reconstruction-mesh", "The mesh names durable content that is not complete.", [meshContent[0]]);
+        return refuse("error", "mutation.target-mismatch", "The mesh names durable content that is not complete.", [meshContent[0]]);
       const assets = clone(base.assets);
       for (const binding of mutation.assets) {
         if (binding.contentId === null) {
@@ -875,7 +875,7 @@ export function remodelingMutationOutcome(base: RemodelingSnapshot, mutation: Re
         }
         const artifact = Object.hasOwn(base.durableArtifacts, binding.contentId) ? base.durableArtifacts[binding.contentId] : undefined;
         if (artifact === undefined || artifact.kind !== "image" || !remodelingContentIsComplete(base.durableArtifacts, binding.contentId, "image", artifact.chunks.length))
-          return refuse("error", "mutation.invalid-reconstruction-asset", "A bound asset names durable image content that is not complete.", [binding.id]);
+          return refuse("error", "mutation.target-mismatch", "A bound asset names durable image content that is not complete.", [binding.id]);
         assets[binding.id] = committedRemodelingAssetHandle(binding.id, binding.contentId);
       }
       const results: ReconstructionResults = {

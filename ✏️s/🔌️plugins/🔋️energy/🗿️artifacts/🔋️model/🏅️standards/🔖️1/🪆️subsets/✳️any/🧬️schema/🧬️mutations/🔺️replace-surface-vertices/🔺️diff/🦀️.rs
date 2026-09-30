@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ReplaceSurfaceVertices, base: &EnergyModelSnapshot)
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Surface {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if payload.new_vertices_m.len() < 3 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("A surface polygon needs at least three vertices, got {}.", payload.new_vertices_m.len()), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("A surface polygon needs at least three vertices, got {}.", payload.new_vertices_m.len()), [payload.id.0.to_string()]);
     }
     if existing.vertices_m == payload.new_vertices_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Surface {} already has this polygon.", payload.id.0));

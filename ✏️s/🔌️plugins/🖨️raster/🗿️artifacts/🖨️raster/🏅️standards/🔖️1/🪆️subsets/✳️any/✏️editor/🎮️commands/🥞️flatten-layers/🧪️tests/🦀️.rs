@@ -57,7 +57,7 @@ fn retire(document:RasterSnapshot) {crate::standards::v1::subsets::any::schema::
 
 #[test]
 fn flatten_refuses_a_protected_descendant_without_changing_the_document() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧬️schema/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=dsl::json::from_json_str(&fixture["layers"].to_string()).unwrap();
     let before=dsl::json::to_json_string(&document);
     assert!(prepare(&FlattenLayers {name:"Flattened".into()},&document).is_err());assert_eq!(dsl::json::to_json_string(&document),before);

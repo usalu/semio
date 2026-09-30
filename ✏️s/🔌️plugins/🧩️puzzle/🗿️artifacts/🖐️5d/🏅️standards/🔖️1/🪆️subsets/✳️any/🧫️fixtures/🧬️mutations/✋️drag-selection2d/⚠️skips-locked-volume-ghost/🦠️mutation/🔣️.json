@@ -1,0 +1,11 @@
+{
+  "dx": 1.0,
+  "dy": 1.0,
+  "mutation": "dragSelection2d",
+  "targets": [
+    "part-a",
+    "part-c",
+    "volume-1",
+    "part-ghost"
+  ]
+}

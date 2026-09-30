@@ -193,7 +193,8 @@ mod app_builder_tests {
     }
 
     /// 👁️ Row 3.4 (C13, measured on hub 7800 p24): a viewer's manifest declares — and binds — no verb its `ViewerGuard`
-    /// rejects, so no host offers a Spectator an edit control; the read cursor and `copy` stay, and the editor of the same
+    /// rejects, so no host offers a Spectator an edit control; switching an alternative or checking out a checkpoint
+    /// commits a shared `Checkout` transition, so a viewer declares neither; `copy` stays, and the editor of the same
     /// dialect keeps every framework verb.
     #[semio_framework_async_macros::async_test]
     async fn build_definition_offers_a_viewer_no_verb_its_guard_rejects() {
@@ -205,9 +206,10 @@ mod app_builder_tests {
             assert!(!viewer_ids.contains(verb), "a viewer declares {verb}");
             assert!(viewer.keybindings.iter().all(|binding| binding.action.action != verb), "a viewer binds {verb}");
         }
-        for verb in ["switchAlternative", "checkoutCheckpoint", "copy"] {
-            assert!(viewer_ids.contains(verb), "a viewer still browses history and copies: {verb}");
+        for verb in ["switchAlternative", "checkoutCheckpoint"] {
+            assert!(!viewer_ids.contains(verb), "a viewer never moves the shared head: {verb}");
         }
+        assert!(viewer_ids.contains("copy"), "a viewer still copies");
         for verb in ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint", "copy", "cut", "paste"] {
             assert!(editor_ids.contains(verb), "the editor keeps {verb}");
         }

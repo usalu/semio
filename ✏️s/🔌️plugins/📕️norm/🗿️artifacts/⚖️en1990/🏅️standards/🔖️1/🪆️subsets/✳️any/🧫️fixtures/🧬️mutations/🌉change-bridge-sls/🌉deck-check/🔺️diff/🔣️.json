@@ -1,0 +1,33 @@
+{
+  "accidentals": null,
+  "altitudeM": null,
+  "annex": null,
+  "betaComputed": null,
+  "bridgeSls": [
+    {
+      "bridgeDeflection": 0.012,
+      "bridgeDeflectionLimit": 0.024,
+      "deckAcceleration": 0.5,
+      "deckAccelerationLimit": 0.7,
+      "deckTwist": 0.001,
+      "deckTwistLimit": 0.0015,
+      "id": "sls-deck",
+      "memberId": "beam-B1"
+    }
+  ],
+  "consequenceClass": null,
+  "designWorkingLifeCategory": null,
+  "designWorkingLifeYears": null,
+  "effects": null,
+  "inspectionLevel": null,
+  "kFiDeclared": null,
+  "members": null,
+  "permanents": null,
+  "projectId": null,
+  "referencePeriodYears": null,
+  "reliabilityClass": null,
+  "seismics": null,
+  "structureKind": null,
+  "supervisionLevel": null,
+  "variables": null
+}

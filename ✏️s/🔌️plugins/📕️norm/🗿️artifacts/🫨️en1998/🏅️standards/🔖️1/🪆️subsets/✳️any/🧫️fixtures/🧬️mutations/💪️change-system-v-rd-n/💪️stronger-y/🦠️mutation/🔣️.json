@@ -1,0 +1,6 @@
+{
+  "mutation": "changeSystemVRdN",
+  "buildingIndex": 0,
+  "systemIndex": 1,
+  "newBaseShearResistanceN": 1500000.0
+}

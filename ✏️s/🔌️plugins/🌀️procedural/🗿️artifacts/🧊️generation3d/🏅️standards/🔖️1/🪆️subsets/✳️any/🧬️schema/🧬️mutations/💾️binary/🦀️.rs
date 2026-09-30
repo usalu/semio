@@ -532,20 +532,20 @@ pub const GENERATION3D_RETAINED_OWNER_CATALOG: &[&str] = &[
     "snapshot.generation.generations.item.values.scalar",
     "snapshot.generation.selected-generation-id",
     "snapshot.generation.preview-text",
-    "mutation.create-widget",
-    "mutation.update-widget",
-    "mutation.delete-widget",
-    "mutation.connect-synapse",
-    "mutation.update-synapse",
-    "mutation.disconnect-synapse",
-    "mutation.move-widget",
-    "mutation.delete-widget-position.3d-only",
-    "mutation.update-camera",
-    "mutation.change-schema",
-    "mutation.create-generation",
-    "mutation.delete-generation",
-    "mutation.rename-generation",
-    "mutation.change-generation-value",
+    "mutations.create-widget",
+    "mutations.update-widget",
+    "mutations.delete-widget",
+    "mutations.connect-synapse",
+    "mutations.update-synapse",
+    "mutations.disconnect-synapse",
+    "mutations.move-widget",
+    "mutations.delete-widget-position.3d-only",
+    "mutations.update-camera",
+    "mutations.change-schema",
+    "mutations.create-generation",
+    "mutations.delete-generation",
+    "mutations.rename-generation",
+    "mutations.change-generation-value",
     "history.edit.id",
     "history.edit.actor",
     "history.edit.forward",
@@ -588,7 +588,7 @@ pub const GENERATION3D_FORBIDDEN_2D_DISCRIMINATOR: [u8; 4] = *b"P2D2";
 
 pub fn generation3d_retained_catalog_is_complete() -> bool {
     GENERATION3D_RETAINED_MUTATION_OWNERS == crate::standards::v1::subsets::any::schema::mutations::KINDS
-        && GENERATION3D_RETAINED_OWNER_CATALOG.contains(&"mutation.delete-widget-position.3d-only")
+        && GENERATION3D_RETAINED_OWNER_CATALOG.contains(&"mutations.delete-widget-position.3d-only")
         && !GENERATION3D_RETAINED_OWNER_CATALOG.iter().any(|owner| owner.contains("process2d"))
 }
 

@@ -10,25 +10,25 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const repoRoot = resolve(root, "../../../../..");
 
-/** 🧪️ Vitest for `@semio-tech/animate-js`. */
+/** 🧪️ Vitest for `@semio-tech/presentation-react`. */
 export default defineConfig({
   root: testRoot,
   plugins: [react()],
   resolve: {
     alias: [
-      { find: "@semio-tech/animate-presentation-core", replacement: resolve(repoRoot, "./✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️presentation/⚡️implementations/🟦️typescript/🟦️.ts") },
-      { find: "@semio-tech/animate-js", replacement: resolve(root, "🟦️.ts") },
+      { find: "@semio-tech/presentation", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts") },
+      { find: "@semio-tech/presentation-react", replacement: resolve(root, "🟦️.ts") },
       { find: "@semio-tech/framework", replacement: resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },
       { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
       {
-        find: "@semio-tech/mit-bestand-praesentation-projektetage-spec",
-        replacement: resolve(repoRoot, "./♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/🟦️.ts"),
+        find: "@semio-tech/mit-bestand-praesentation-projektetage/spec",
+        replacement: resolve(repoRoot, "./♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/🔖️spec.ts"),
       },
     ],
   },
   test: {
     root: testRoot,
-    name: "@semio-tech/animate-js",
+    name: "@semio-tech/presentation-react",
     mode: "test",
     environment: "jsdom",
     include: ["../../🎛️apps/🎬️presentation/🧪️tests/🧩️index/🟦️.ts"],

@@ -1,0 +1,34 @@
+{
+  "artifact": null,
+  "annex": null,
+  "site": null,
+  "buildings": null,
+  "bridges": null,
+  "assessments": null,
+  "silos": null,
+  "tanks": [
+    {
+      "id": "tk-1",
+      "heightM": 10.0,
+      "radiusM": 5.0,
+      "permanentGkN": 800000.0,
+      "contentQkN": 5000000.0,
+      "contentCategory": "E",
+      "fillingRatio": 0.9,
+      "vRdN": 3000000.0
+    },
+    {
+      "id": "tk-2",
+      "heightM": 8.0,
+      "radiusM": 6.0,
+      "permanentGkN": 800000.0,
+      "contentQkN": 5000000.0,
+      "contentCategory": "E",
+      "fillingRatio": 0.9,
+      "vRdN": 3000000.0
+    }
+  ],
+  "foundations": null,
+  "retainingWalls": null,
+  "towers": null
+}

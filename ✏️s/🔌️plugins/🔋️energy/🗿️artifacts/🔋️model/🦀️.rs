@@ -7,6 +7,9 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
+#[path = "../../🧩️extensions/🌦️epw/🦀️.rs"]
+pub mod epw;
+
 //#region ⚡️SimulationEngine
 #[path = "../../🔨️modules/⚡️simulation/⚙️engine/🔄️air_exchange/🦀️.rs"]
 pub mod air_exchange;

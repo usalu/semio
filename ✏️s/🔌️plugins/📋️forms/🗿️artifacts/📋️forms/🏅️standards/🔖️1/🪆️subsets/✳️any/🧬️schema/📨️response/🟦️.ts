@@ -60,13 +60,13 @@ export function applyResponseEvent(before: FormsResponse[], event: FormsResponse
     const existing = before.find(item => item.id === response.id);
     if (existing) {
       if (equal(existing, response)) return before;
-      throw new Error("duplicate-response");
+      throw new Error("mutation.duplicate-id");
     }
     const next = structuredClone(before);
     next.splice(Math.min(Math.max(0, event.index ?? next.length), next.length), 0, response);
     return next;
   }
-  if (!before.some(item => item.id === event.id)) throw new Error("missing-response");
+  if (!before.some(item => item.id === event.id)) throw new Error("mutation.target-missing");
   return before.filter(item => item.id !== event.id);
 }
 

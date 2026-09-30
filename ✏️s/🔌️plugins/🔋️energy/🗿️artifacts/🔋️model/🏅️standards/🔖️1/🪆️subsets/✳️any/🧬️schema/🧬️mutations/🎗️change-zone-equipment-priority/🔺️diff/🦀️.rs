@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeZoneEquipmentPriority, base: &EnergyModelSnap
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Zone equipment {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if payload.new_priority == 0 {
-        return protocol::MutationOutcome::error("mutation.invariant", "An equipment priority must be at least one.".to_string(), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "An equipment priority must be at least one.".to_string(), [payload.id.0.to_string()]);
     }
     if existing.priority == payload.new_priority {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Zone equipment {} already has that priority.", payload.id.0));

@@ -11,6 +11,9 @@ use semio_framework_plugin::{
 use semio_framework_value_derive as value_derive;
 use std::collections::{BTreeMap, BTreeSet};
 
+#[path = "../🦀️.rs"]
+pub mod registry;
+
 #[path = "✏️editing/🦀️.rs"]
 pub mod editing;
 /// 📐️ The canonical ISO 10303-21 codec every STEP-family artifact shares.
@@ -1488,3 +1491,7 @@ pub fn set_active_example_args(options: &[(&str, semio_framework_plugin::Localiz
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/📇️contributions/🦀️.rs"]
+mod contribution_tests;

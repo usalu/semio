@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeMechanicalVentilationDesignFlow, base: &Energ
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Mechanical Ventilation {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_design_flow_m3_s.is_finite() || payload.new_design_flow_m3_s < 0.0 {
-        return protocol::MutationOutcome::error(
+        return protocol::MutationOutcome::fatal(
             "mutation.invariant",
             format!("Mechanical Ventilation {}: design supply flow (m³/s) must be a finite non-negative value, got {}.", payload.id.0, payload.new_design_flow_m3_s),
             [payload.id.0.to_string()],

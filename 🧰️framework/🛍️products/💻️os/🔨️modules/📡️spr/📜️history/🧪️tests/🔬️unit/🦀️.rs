@@ -803,7 +803,8 @@ async fn fold_falls_back_to_positional_mutation_ids_and_zero_clock_without_meta(
     let fold = log.fold().unwrap();
     assert_eq!(fold.changes[0].edit_ids, vec!["edit-1".to_string(), "edit-2".to_string()]);
     assert_eq!(fold.alternative.as_deref(), Some("alt-1"));
-    assert_eq!(fold.alternatives[0].checkpoint_ids, vec!["ck-1".to_string()]);
+    assert_eq!(fold.alternatives.iter().find(|alternative| alternative.id == "alt-1").expect("the branched alternative").checkpoint_ids, vec!["ck-1".to_string()]);
+    assert_eq!(fold.alternatives[0].id, fold.trunk, "the trunk is listed first once a commit gave it a chain");
     assert_eq!(fold.applied, vec!["edit-1".to_string(), "edit-2".to_string()]);
 }
 

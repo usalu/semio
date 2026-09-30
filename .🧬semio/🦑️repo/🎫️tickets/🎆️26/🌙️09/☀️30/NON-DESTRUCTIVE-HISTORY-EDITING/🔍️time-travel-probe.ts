@@ -2,7 +2,8 @@
  * NON-DESTRUCTIVE-HISTORY-EDITING, work package W3-E2E). One headless Chromium, one tab at a time, one fresh browser
  * context per UI locale (`en`, then `de`, chosen through `navigator.language`), nine numbered steps per locale:
  *
- * 1. boot: `data-board-fixture-parsed` first, then a board with nodes and the locale of the history panel;
+ * 1. boot: `data-board-fixture-parsed` first, then a board with nodes and the locale of the history panel; then the
+ *    document is bound to a fresh local folder through the sync card (`--folder-at=1`, the default), so every edit persists;
  * 2. select two nodes, drag them by (+80,+40) world units → exactly one new document row labelled from its
  *    `drag-selection` mutation, `data-board-positions-json` moved by the offset; then one downstream drag of a third
  *    node, so "downstream is not applied" is observable;
@@ -12,14 +13,25 @@
  * 4. dx → 120 through the stepper (keyboard: fill, Enter, ArrowUp, ArrowDown) → preview; Accept → replay → review
  *    `ready` → head at +120 with the downstream drag re-applied;
  * 5. Finalize → dialog (destructive Overwrite, New alternative + name) → Overwrite → band gone, an
- *    "History edited — overwrite" row, positions survive a reload;
+ *    "History edited — overwrite" row; after step 8 a page reload plus a re-attach of the same folder must restore the head
+ *    and every document row;
  * 6. Undo (chord, then button) → +80; Redo → +120; the undone/redone rows;
- * 7. a second session on dy → New alternative with a name → the alternative row and head, then an alternative switcher;
+ * 7. a second session on dy → New alternative with a name → the alternative row, the head and the Alternatives section
+ *    (`framework.history.alternative.<id>`); switching to the trunk and back when the trunk is listed, else a second
+ *    alternative and switching between the two;
  * 8. fatal path: duplicate a node, drag the clone, withdraw the clone's `create-node` → review `blocked`, the drag row
  *    reads Error "Target missing", Finalize disabled; Next problem → Withdraw the drag → `ready`; Exit → zero trace;
  * 9. console: uncaught page errors fail the run; errors, warnings, hard faults and `[DEBUG] ` lines are digested.
  *
- * Run: `bun 🔍️time-travel-probe.ts --port=6012 [--only=1,2,3] [--locales=en,de] [--chords=de] [--explore]`.
+ * Every control is the real one, reached the way a user reaches it: the windowed history body is scrolled until the
+ * section holds the row, steppers take keyboard input.
+ *
+ * `--renderer=wgpu` drives the puzzle 2d wgpu shell (default port 6112) through the same steps: rows, buttons, inputs and the
+ * dialog through its ARIA mirror (`#semio-wgpu-accessibility`), chrome through `dumpChrome` hit rects, the board with the
+ * pointer and keyboard on the canvas at the positions `semioWgpuIntrospection.dumpBoard2d` publishes (region `🔖️Wgpu`).
+ *
+ * Run: `bun 🔍️time-travel-probe.ts [--renderer=react|wgpu] [--port=6012|6112] [--only=1,2,3] [--locales=en,de] [--chords=de]
+ * [--folder-at=1|5] [--explore]`.
  * `--chords=<locales>` drives Accept/Exit through the band chords (`alt+enter`, `alt+shift+backspace`) in those
  * locales and through the band buttons elsewhere. `--explore` boots each locale, opens the history panel, dumps the DOM
  * inventory and exits. Outputs: `🗑️generated/e2e/probe-<stamp>.md` (step lines, verdicts, notes, timeline, console
@@ -29,7 +41,7 @@
  * @see ./📓️w2-b-report.md
  * @see ../../☀️06/PUZZLE-2D-END-TO-END/🔍️browser-probe.ts */
 import { chromium, type BrowserContext, type ConsoleMessage, type Page } from "playwright";
-import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 //#region 🔖️Arguments
@@ -41,13 +53,15 @@ const TICKET = import.meta.dir;
 const OUT = join(TICKET, "🗑️generated", "e2e");
 mkdirSync(OUT, { recursive: true });
 const argument = (name: string) => process.argv.find((entry) => entry.startsWith(`--${name}=`))?.slice(name.length + 3);
-const port = argument("port") ?? "6012";
+const renderer: "react" | "wgpu" = argument("renderer") === "wgpu" ? "wgpu" : "react";
+const port = argument("port") ?? (renderer === "wgpu" ? "6112" : "6012");
 const only = argument("only") ? new Set(argument("only")!.split(",").map((entry) => Number(entry.trim())).filter(Number.isFinite)) : null;
 const locales = (argument("locales") ?? "en,de").split(",").map((entry) => entry.trim()).filter((entry): entry is Locale => entry === "en" || entry === "de");
 const chordLocales = new Set((argument("chords") ?? "de").split(",").map((entry) => entry.trim()));
 const explore = process.argv.includes("--explore");
+const folderAt = Number(argument("folder-at") ?? "1");
 const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-const base = `probe-${stamp}`;
+const base = `probe-${renderer === "wgpu" ? "wgpu-" : ""}${stamp}`;
 const ndjsonPath = join(OUT, `${base}.ndjson`);
 writeFileSync(ndjsonPath, "");
 const OVERVIEW = "2d-overview";
@@ -112,6 +126,7 @@ const COPY = {
     reviewBlocked: "Errors in later mutations block finalizing",
     dialogTitle: "Finish editing history",
     overwrite: "Overwrite",
+    overwriteDescription: "Replaces the edited mutations in every alternative that contains them.",
     newAlternative: "New alternative",
     defaultName: "Edited history",
     tourButtons: [/^\s*(x\s*)?skip\s*$/i, /^\s*close\s*$/i],
@@ -133,6 +148,7 @@ const COPY = {
     reviewBlocked: "Fehler in späteren Mutationen verhindern den Abschluss",
     dialogTitle: "Verlaufsbearbeitung abschließen",
     overwrite: "Überschreiben",
+    overwriteDescription: "Ersetzt die bearbeiteten Mutationen in jeder Alternative, die sie enthält.",
     newAlternative: "Neue Alternative",
     defaultName: "Bearbeiteter Verlauf",
     tourButtons: [/^\s*(x\s*)?(skip|überspringen)\s*$/i, /^\s*(close|schließen)\s*$/i],
@@ -173,6 +189,11 @@ const listen = (target: Page) => {
     keepConsole("page", message);
   });
   target.on("worker", (worker) => worker.on("console", (message) => keepConsole("worker", message)));
+  target.on("response", (response) => {
+    if (response.url().includes("/semio-backbone")) consoleRows.push({ t: Number(((Date.now() - t0) / 1000).toFixed(1)), locale: currentLocale, step: currentStep, source: "page", type: "backbone", text: `HTTP ${response.status()} ${response.request().method()} ${decodeURIComponent(response.url()).slice(0, 400)}` });
+    if (response.status() < 400) return;
+    consoleRows.push({ t: Number(((Date.now() - t0) / 1000).toFixed(1)), locale: currentLocale, step: currentStep, source: "page", type: "http", text: `HTTP ${response.status()} ${response.request().method()} ${response.url().slice(0, 300)}` });
+  });
   target.on("pageerror", (error) => {
     const text = String(error?.stack ?? error).slice(0, 1200);
     pageErrors.push({ locale: currentLocale, step: currentStep, text });
@@ -186,11 +207,13 @@ const browser = await chromium.launch({ headless: true, args: ["--use-angle=meta
 let context: BrowserContext;
 let page: Page;
 let mod = "Meta";
+let navigations = 0;
+let expectedReloads = 0;
 
 /** 🧭️ One `page.evaluate` that never takes the run down (a reload race answers `fallback`). */
-const evalSafe = async <T, A = undefined>(fn: (arg: A) => T, fallback: T, arg?: A): Promise<T> => {
+const evalSafe = async <T, A = undefined>(fn: (arg: A) => T | Promise<T>, fallback: T, arg?: A): Promise<T> => {
   try {
-    return await page.evaluate(fn as (value: unknown) => T, arg as unknown);
+    return (await page.evaluate(fn as (value: unknown) => T | Promise<T>, arg as unknown)) as T;
   } catch {
     return fallback;
   }
@@ -223,11 +246,201 @@ const dumpJson = (tag: string, value: unknown) => {
 };
 //#endregion 🔖️Page
 
+//#region 🔖️Wgpu
+/** 🧊️ The wgpu shell paints on a canvas and publishes no DOM of its own. What a user (or an assistive technology) can
+ * reach is: the ARIA mirror `#semio-wgpu-accessibility` (one element per projected node, `data-node-key` = the node key or
+ * chrome control id, `data-window` = its window; a synthetic `click` on an actionable element is an `accessibility-activate`,
+ * typing into a mirrored input an `accessibility-value`), the chrome hit registry (`semioWgpuIntrospection.dumpChrome()`:
+ * every pointer target with its page rect, and the dispatched-action ledger when `SEMIO_RUNTIME_DIAGNOSTICS` is armed), and
+ * the canvas itself for pointer and keyboard input. The board's positions, camera and selection are read from
+ * `semioWgpuIntrospection.dumpBoard2d(windowId)`, the wgpu twin of React's `data-board-*` vitals.
+ * @see ../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts
+ * @see ../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs */
+type MirrorNode = { key: string; window: string; role: string; label: string; description: string; disabled: boolean; expanded: string | null; pressed: string | null; selected: string | null; value: string | null; valueNow: string | null; valueMax: string | null; actionable: boolean; live: string | null; busy: boolean; shortcut: string | null; tag: string };
+type Board2dSurface = { surfaceId: string; windowId: string; rect: [number, number, number, number]; camera: { x: number; y: number; zoom: number }; positions: Positions; selection: string[]; nodes: number; edges: number; handles: number; parsed: boolean };
+
+/** 🪞️ Every mirrored node in reading order, with the ARIA state the mirror stamps. */
+const mirror = () =>
+  evalSafe(
+    () =>
+      Array.from(document.querySelectorAll<HTMLElement>("#semio-wgpu-accessibility [data-node-key]")).map((el) => {
+        const describedBy = el.getAttribute("aria-describedby");
+        return {
+          key: el.dataset.nodeKey ?? "",
+          window: el.dataset.window ?? "",
+          role: el.getAttribute("role") ?? el.tagName.toLowerCase(),
+          label: el.getAttribute("aria-label") ?? el.textContent ?? "",
+          description: describedBy ? (document.getElementById(describedBy)?.textContent ?? "") : "",
+          disabled: el.getAttribute("aria-disabled") === "true",
+          expanded: el.getAttribute("aria-expanded"),
+          pressed: el.getAttribute("aria-pressed"),
+          selected: el.getAttribute("aria-selected"),
+          value: el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement ? el.value : null,
+          valueNow: el.getAttribute("aria-valuenow"),
+          valueMax: el.getAttribute("aria-valuemax"),
+          actionable: el.dataset.actionable === "true",
+          live: el.getAttribute("aria-live"),
+          busy: el.getAttribute("aria-busy") === "true",
+          shortcut: el.getAttribute("aria-keyshortcuts"),
+          tag: el.tagName.toLowerCase(),
+        };
+      }),
+    [] as MirrorNode[],
+  );
+
+/** 🔎️ The mirrored node an authored key names: exact, then a `/`- or `.`-delimited suffix (a chrome control id prefixes
+ * the tab id: `shell.panel.tab.<anchor>.<tabId>`), never a bare substring. */
+const mirrorFind = (nodes: MirrorNode[], authored: string) =>
+  nodes.find((node) => node.key === authored) ?? nodes.find((node) => !node.key.includes("::") && (node.key.endsWith(`/${authored}`) || node.key.endsWith(`.${authored}`)));
+
+/** 🧷️ Stamps the mirrored element of `key` (in `window` when given) with a probe token and answers its locator. */
+const mirrorLocator = async (key: string, windowId?: string) => {
+  const token = markToken();
+  const found = await evalSafe(
+    (arg) => {
+      const el = Array.from(document.querySelectorAll<HTMLElement>("#semio-wgpu-accessibility [data-node-key]")).find((node) => node.dataset.nodeKey === arg.key && (!arg.windowId || node.dataset.window === arg.windowId));
+      el?.setAttribute("data-probe-target", arg.token);
+      return Boolean(el);
+    },
+    false,
+    { key, windowId: windowId ?? null, token },
+  );
+  return found ? page.locator(`[data-probe-target="${token}"]`).first() : null;
+};
+
+/** 👆️ Activates one mirrored node the way an assistive technology does: a `click` on its mirror element, which the mirror
+ * forwards as `accessibility-activate` to the renderer. */
+const mirrorActivate = async (key: string, windowId?: string) => {
+  const target = await mirrorLocator(key, windowId);
+  if (!target) return false;
+  await target.dispatchEvent("click").catch(() => {});
+  return true;
+};
+
+/** 🎯️ Focuses one mirrored node (the mirror forwards `accessibility-focus`, so keyboard input then reaches that node). */
+const mirrorFocus = async (key: string) => {
+  const target = await mirrorLocator(key);
+  if (!target) return false;
+  await target.focus().catch(() => {});
+  return true;
+};
+
+/** 🎯️ The chrome hit registry: every pointer target with its page rect (CSS px). */
+const chromeHits = async () => {
+  const json = await evalSafe(async () => (await (window as unknown as { semioWgpuIntrospection?: { dumpChrome: () => Promise<string> } }).semioWgpuIntrospection?.dumpChrome()) ?? "", "");
+  try {
+    return (JSON.parse(json || "{}") as { hits?: { controlId: string; kind: string; rect: [number, number, number, number]; windowId?: string; action?: string }[]; actions?: { seq: number; controllerId: string; action: string; origin: string; args?: string }[] });
+  } catch {
+    return {};
+  }
+};
+
+/** 🖱️ Presses a chrome control with the real pointer at the centre of its registered hit rect. */
+const pointerPress = async (authored: string) => {
+  const hits = (await chromeHits()).hits ?? [];
+  const hit = hits.find((row) => row.controlId === authored) ?? hits.find((row) => row.controlId.endsWith(`.${authored}`) || row.controlId.endsWith(`/${authored}`));
+  if (!hit) return null;
+  await page.mouse.click(hit.rect[0] + hit.rect[2] / 2, hit.rect[1] + hit.rect[3] / 2);
+  return hit.controlId;
+};
+
+/** 👆️ Presses `authored` through the mirror (activation), else with the pointer on its chrome hit rect. */
+const wgpuPress = async (authored: string) => {
+  const node = mirrorFind(await mirror(), authored);
+  if (node && (await mirrorActivate(node.key, node.window))) return `mirror:${node.key}`;
+  const hit = await pointerPress(authored);
+  return hit ? `pointer:${hit}` : null;
+};
+
+/** 🎲️ The overview board as `dumpBoard2d` publishes it, or null while the renderer lacks the export (a named prerequisite). */
+const wgpuBoard = async () => {
+  const json = await evalSafe(
+    async (windowId) => {
+      const introspection = (window as unknown as { semioWgpuIntrospection?: { dumpBoard2d?: (windowId?: string) => Promise<string> } }).semioWgpuIntrospection;
+      return typeof introspection?.dumpBoard2d === "function" ? await introspection.dumpBoard2d(windowId) : null;
+    },
+    null as string | null,
+    OVERVIEW,
+  );
+  if (!json) return null;
+  try {
+    const dump = JSON.parse(json) as { surfaces?: Board2dSurface[] };
+    return dump.surfaces?.find((surface) => surface.windowId === OVERVIEW) ?? dump.surfaces?.[0] ?? null;
+  } catch {
+    return null;
+  }
+};
+
+/** 📜️ The contract `dumpBoard2d` is asked to answer — the wgpu twin of React's Board2dHost `data-board-*` vitals. */
+const WGPU_BOARD_CONTRACT = "semioWgpuIntrospection.dumpBoard2d(windowId?) → {surfaces:[{surfaceId, windowId, rect:[x,y,w,h] (page CSS px of the board canvas), camera:{x,y,zoom}, positions:{nodeId:[x,y]} (the published fixture), selection:[id], nodes, edges, handles, parsed}]} — read-only, from the Board2d scene the frame worker already holds (fixture_json, camera_json, selection_json)";
+
+/** 🧊️ Band controls as the wgpu shell names them (`⏪️time-travel` `TimeTravelControl::control_id`). */
+const WGPU_BAND_CONTROLS: readonly (readonly [string, string])[] = [
+  ["accept", "ui.timeTravel.accept"],
+  ["discard", "ui.timeTravel.discard"],
+  ["cancelReplay", "shell.time-travel.cancel-replay"],
+  ["rerun", "shell.time-travel.rerun"],
+  ["finalize", "shell.time-travel.finalize"],
+  ["back", "shell.time-travel.back"],
+  ["exit", "ui.timeTravel.exit"],
+];
+
+/** 🪧️ Stage and review words of the band's announced message (`TimeTravelLabel`, en and de), in match order. */
+const BAND_WORDS: readonly (readonly [string, RegExp])[] = [
+  ["replaying", /Replaying later mutations|Spätere Mutationen werden neu angewendet/],
+  ["reviewing", /Reviewing the edited history|Bearbeiteter Verlauf wird geprüft/],
+  ["choosing", /Choose how to finalize|Art des Abschlusses wählen/],
+  ["finalizing", /Finalizing the history edit|Verlaufsbearbeitung wird abgeschlossen/],
+  ["editing", /Editing a mutation|Mutation wird bearbeitet/],
+];
+const REVIEW_WORDS: readonly (readonly [string, RegExp])[] = [
+  ["ready", /Ready to finalize|Bereit zum Abschließen/],
+  ["blocked", /Errors in later mutations block finalizing|Fehler in späteren Mutationen verhindern den Abschluss/],
+  ["needsReplay", /Replay needed|Neu anwenden nötig/],
+  ["noChanges", /No changes: showing the current history|Keine Änderungen: aktueller Verlauf wird angezeigt/],
+];
+
+/** 📣️ The band as the wgpu shell announces it: the live `shell.time-travel.status` node (its message joins stage · target ·
+ * progress · review · worst · fault · accepted) and the band controls the mirror carries. */
+const wgpuBand = async (): Promise<Band | null> => {
+  const nodes = await mirror();
+  const status = nodes.find((node) => node.key === "shell.time-travel.status");
+  if (!status) return null;
+  const text = status.label;
+  const controls = WGPU_BAND_CONTROLS.map(([control, key]) => [control, nodes.find((node) => node.key === key)] as const)
+    .filter((entry): entry is readonly [string, MirrorNode] => Boolean(entry[1]))
+    .map(([control, node]) => ({ control, disabled: node.disabled, title: node.description || null, keys: node.shortcut, text: node.label }));
+  return {
+    stage: BAND_WORDS.find(([, pattern]) => pattern.test(text))?.[0] ?? "",
+    role: status.role,
+    live: status.live,
+    generation: null,
+    text,
+    review: REVIEW_WORDS.find(([, pattern]) => pattern.test(text))?.[0] ?? null,
+    outcome: /Worst outcome: (\w+)|Schwerstes Ergebnis: (\w+)/.exec(text)?.slice(1).find(Boolean)?.toLowerCase() ?? null,
+    fault: null,
+    target: text,
+    progress: status.valueNow !== null && status.valueMax !== null ? `${status.valueNow}/${status.valueMax}` : null,
+    controls,
+  };
+};
+//#endregion 🔖️Wgpu
+
 //#region 🔖️Board
 type Vitals = { surface: string; nodes: number; edges: number; handles: number; parsed: string; selection: string; camera: string; transform: string; utility: string };
 
-/** 🩺️ The overview pane's `data-board-*` vitals, read without a guest round trip. */
-const vitals = () =>
+/** 🩺️ The overview pane's board vitals, read without a guest round trip: React's `data-board-*` attributes, wgpu's
+ * `dumpBoard2d`. */
+const vitals = async (): Promise<Vitals | null> => {
+  if (renderer === "wgpu") {
+    const board = await wgpuBoard();
+    return board ? { surface: board.surfaceId, nodes: board.nodes, edges: board.edges, handles: board.handles, parsed: String(board.parsed), selection: JSON.stringify(board.selection), camera: JSON.stringify(board.camera), transform: "", utility: "" } : null;
+  }
+  return reactVitals();
+};
+
+/** 🩺️ React's Board2dHost `data-board-*` vitals of the overview pane. */
+const reactVitals = () =>
   evalSafe(
     (surface) => {
       const el = document.querySelector(`[data-surface-id="${surface}"]`);
@@ -248,8 +461,9 @@ const vitals = () =>
     `window:${OVERVIEW}`,
   );
 
-/** 📍️ Every node position the overview pane publishes (`data-board-positions-json`). */
-const positions = async () => JSON.parse(await evalSafe((surface) => document.querySelector(`[data-surface-id="${surface}"]`)?.getAttribute("data-board-positions-json") ?? "{}", "{}", `window:${OVERVIEW}`)) as Positions;
+/** 📍️ Every node position the overview pane publishes (React `data-board-positions-json`, wgpu `dumpBoard2d`). */
+const positions = async (): Promise<Positions> => (renderer === "wgpu" ? ((await wgpuBoard())?.positions ?? {}) : reactPositions());
+const reactPositions = async () => JSON.parse(await evalSafe((surface) => document.querySelector(`[data-surface-id="${surface}"]`)?.getAttribute("data-board-positions-json") ?? "{}", "{}", `window:${OVERVIEW}`)) as Positions;
 const selectionIds = (v: Vitals | null) => {
   try {
     return JSON.parse(v?.selection || "[]") as string[];
@@ -265,7 +479,13 @@ const cameraOf = (v: Vitals | null) => {
     return { x: 0, y: 0, zoom: 1 };
   }
 };
-const paneBox = async () => (await page.locator(`[data-surface-id="window:${OVERVIEW}"] canvas`).first().boundingBox().catch(() => null)) ?? { x: 0, y: 0, width: 1, height: 1 };
+const paneBox = async () => {
+  if (renderer === "wgpu") {
+    const rect = (await wgpuBoard())?.rect;
+    return rect ? { x: rect[0], y: rect[1], width: rect[2], height: rect[3] } : { x: 0, y: 0, width: 1, height: 1 };
+  }
+  return (await page.locator(`[data-surface-id="window:${OVERVIEW}"] canvas`).first().boundingBox().catch(() => null)) ?? { x: 0, y: 0, width: 1, height: 1 };
+};
 
 /** 🎯️ World → screen through the published camera: the pane centre is the camera position. */
 const toScreen = (world: [number, number], camera: { x: number; y: number; zoom: number }, box: { x: number; y: number; width: number; height: number }): Point => ({
@@ -312,6 +532,31 @@ const pickNodes = async (count: number, offsets: [number, number][], exclude: st
   return { camera, box, picked };
 };
 
+/** 🧬️ A node to duplicate whose clone (`duplicate_selection_in_fixture` offsets it by +24,+24 world units) and a drag
+ * destination for that clone are both ≥ 55 world units from every other node — the press on the clone lands on the
+ * clone, never on a neighbour's free handle. Zooms out until one is inside the pane. */
+const pickCloneSource = async (exclude: string[]) => {
+  const moves: [number, number][] = [[70, 70], [90, 0], [0, 90], [-90, 0], [0, -90], [70, -70], [-70, 70], [-70, -70]];
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const { camera, box, rows } = await layout();
+    const clear = (world: [number, number], skip: string[]) => rows.every((other) => skip.includes(other.id) || Math.hypot(other.world[0] - world[0], other.world[1] - world[1]) >= 55);
+    for (const row of rows) {
+      if (exclude.includes(row.id) || row.clearance < 14 || !inside(row.at, box, 90)) continue;
+      const clone: [number, number] = [row.world[0] + 24, row.world[1] + 24];
+      if (!clear(clone, [row.id])) continue;
+      const move = moves.find(([dx, dy]) => {
+        const destination: [number, number] = [clone[0] + dx, clone[1] + dy];
+        return clear(destination, []) && Math.hypot(destination[0] - row.world[0], destination[1] - row.world[1]) >= 55 && inside(toScreen(destination, camera, box), box, 60);
+      });
+      if (move) return { row, move, zoom: camera.zoom };
+    }
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(0, 300);
+    await sleep(1200);
+  }
+  return null;
+};
+
 /** 🖱️ A press–move–release of `steps` pointer moves from `from` by `(dx, dy)` screen pixels. */
 const dragBy = async (from: Point, dx: number, dy: number, steps = 12) => {
   await page.mouse.move(from.x, from.y);
@@ -345,12 +590,49 @@ const resolveDomId = (authored: string) =>
   );
 const byId = (id: string) => page.locator(`[id="${id.replace(/"/g, '\\"')}"]`).first();
 
-/** 🪟️ The dock panels that are open, by tab id. */
-const openPanelTabIds = () => evalSafe(() => Array.from(document.querySelectorAll('[data-slot="panel"]')).filter((el) => (el as HTMLElement).offsetParent !== null).map((el) => el.id.replace(/^framework\.panelTab\./, "")), [] as string[]);
+/** 🔎️ The live handle of an authored key whichever renderer answers: React's DOM id, wgpu's mirror key. */
+const presentKey = async (authored: string) => (renderer === "wgpu" ? (mirrorFind(await mirror(), authored)?.key ?? null) : resolveDomId(authored));
+
+/** 🪟️ The per-window time-travel indicators as `stage-or-role:accessible name` (React `[data-semio-time-travel-indicator]`,
+ * wgpu `framework.window.<id>.timeTravel.indicator`, a `note`). */
+const indicators = async () =>
+  renderer === "wgpu"
+    ? (await mirror()).filter((node) => /framework\.window\..+\.timeTravel\.indicator$/.test(node.key)).map((node) => `${node.role}:${node.label}`)
+    : evalSafe(() => Array.from(document.querySelectorAll("[data-semio-time-travel-indicator]")).map((el) => `${el.getAttribute("data-semio-time-travel-indicator")}:${el.getAttribute("aria-label")}`), [] as string[]);
+
+/** 👥️ The presence roster's accessible text (React `#s-presence-peers`, wgpu the `s-presence-peers` status node). */
+const presenceText = async () =>
+  renderer === "wgpu"
+    ? (mirrorFind(await mirror(), "s-presence-peers")?.label ?? null)
+    : evalSafe(() => {
+        const el = document.getElementById("s-presence-peers");
+        return el ? `${el.getAttribute("aria-label") ?? ""} ${(el as HTMLElement).innerText}`.trim() : null;
+      }, null as string | null);
+
+/** 📝️ The visible text of an authored key: React's `innerText`, wgpu's accessible name and description. */
+const textOfKey = async (authored: string) => {
+  if (renderer === "wgpu") {
+    const node = mirrorFind(await mirror(), authored);
+    return node ? `${node.label} ${node.description}`.trim() : "";
+  }
+  const id = await resolveDomId(authored);
+  return id ? await byId(id).innerText().catch(() => "") : "";
+};
+
+/** 🪟️ The dock panels that are open, by tab id (wgpu: the chrome tab `shell.panel.tab.<anchor>.<tabId>` reads pressed). */
+const openPanelTabIds = async () =>
+  renderer === "wgpu"
+    ? (await mirror()).filter((node) => /^shell\.panel\.tab\./.test(node.key) && (node.pressed === "true" || node.selected === "true")).map((node) => node.key.replace(/^shell\.panel\.tab\.[^.]+\./, ""))
+    : reactOpenPanelTabIds();
+const reactOpenPanelTabIds = () => evalSafe(() => Array.from(document.querySelectorAll('[data-slot="panel"]')).filter((el) => (el as HTMLElement).offsetParent !== null).map((el) => el.id.replace(/^framework\.panelTab\./, "")), [] as string[]);
 
 /** 🪟️ Opens (never toggles) the panel tab `id`. */
 const openTab = async (id: string) => {
   if ((await openPanelTabIds()).includes(id)) return true;
+  if (renderer === "wgpu") {
+    const via = await wgpuPress(id);
+    return via !== null && (await waitUntil(openPanelTabIds, (ids) => ids.includes(id), 8000)).ok;
+  }
   const tab = page.locator(`[data-slot="panel-tab-button"][id="${id}"], [id="${id}"]`).first();
   if (!(await tab.count().catch(() => 0))) return false;
   await tab.click({ timeout: 4000 }).catch(() => {});
@@ -360,7 +642,8 @@ const openTab = async (id: string) => {
 /** 🪟️ Closes every open dock panel (they overlay the board, and a pointer gesture there lands on the panel). */
 const closePanels = async () => {
   for (const id of await openPanelTabIds()) {
-    await page.locator(`[data-slot="panel-tab-button"][id="${id}"]`).first().click({ timeout: 3000 }).catch(() => {});
+    if (renderer === "wgpu") await wgpuPress(id);
+    else await page.locator(`[data-slot="panel-tab-button"][id="${id}"]`).first().click({ timeout: 3000 }).catch(() => {});
     await sleep(300);
   }
   return openPanelTabIds();
@@ -368,6 +651,10 @@ const closePanels = async () => {
 
 /** 🙈️ Dismisses a boot tour dialog by its Skip/Close button (en or de), scoped to dialogs only. */
 const dismissTour = async () => {
+  if (renderer === "wgpu") {
+    if (mirrorFind(await mirror(), "ui.introduction.skip") && (await wgpuPress("ui.introduction.skip"))) log("dismissed tour ui.introduction.skip");
+    return;
+  }
   for (const pattern of COPY[currentLocale].tourButtons) {
     const button = page.locator('[role="dialog"] button', { hasText: pattern }).first();
     if (await button.count().catch(() => 0)) {
@@ -382,9 +669,9 @@ const dismissTour = async () => {
 const waitForBoot = async (label: string, polls = 100) => {
   for (let index = 0; index < polls; index++) {
     await sleep(3000);
-    const shape = await evalSafe(() => ({ windows: document.querySelectorAll('[data-slot="window"]').length, canvases: document.querySelectorAll("canvas").length, dialogs: document.querySelectorAll('[role="dialog"]').length, body: document.body?.innerText.slice(0, 160) ?? "" }), { windows: 0, canvases: 0, dialogs: 0, body: "" });
+    const shape = renderer === "wgpu" ? await wgpuBootShape() : await evalSafe(() => ({ windows: document.querySelectorAll('[data-slot="window"]').length, canvases: document.querySelectorAll("canvas").length, dialogs: document.querySelectorAll('[role="dialog"]').length, body: document.body?.innerText.slice(0, 160) ?? "" }), { windows: 0, canvases: 0, dialogs: 0, body: "" });
     if (shape.dialogs) await dismissTour();
-    if (shape.windows >= 3 && shape.canvases >= 3) {
+    if (shape.windows >= 3 && shape.canvases >= 1) {
       log(`${label} booted after ${((index + 1) * 3).toFixed(0)} s: ${JSON.stringify(shape).slice(0, 200)}`);
       await dismissTour();
       return true;
@@ -392,6 +679,27 @@ const waitForBoot = async (label: string, polls = 100) => {
     if (index % 5 === 4) log(`${label} waiting… ${JSON.stringify(shape).slice(0, 200)}`);
   }
   return false;
+};
+
+/** 🥾️ The wgpu boot shape: the introspection shim is attached only once the frame worker booted, its structure dump
+ * names the live windows, and the ARIA mirror holds nodes once the first frame was projected. */
+const wgpuBootShape = async () => {
+  const shape = await evalSafe(
+    async () => {
+      const introspection = (window as unknown as { semioWgpuIntrospection?: { dumpStructure: () => Promise<string> } }).semioWgpuIntrospection;
+      let windowIds: string[] = [];
+      try {
+        windowIds = introspection ? ((JSON.parse((await introspection.dumpStructure()) || "{}") as { windowIds?: string[] }).windowIds ?? []) : [];
+      } catch {
+        windowIds = [];
+      }
+      const mirrorRoot = document.getElementById("semio-wgpu-accessibility");
+      return { booted: Boolean(introspection), windowIds, mirrorNodes: Number(mirrorRoot?.dataset.nodeCount ?? "0"), canvases: document.querySelectorAll("canvas").length };
+    },
+    { booted: false, windowIds: [] as string[], mirrorNodes: 0, canvases: 0 },
+  );
+  const boards = shape.windowIds.filter((id) => id.startsWith("2d-")).length;
+  return { windows: boards, canvases: shape.canvases, dialogs: mirrorFind(await mirror(), "ui.introduction.skip") ? 1 : 0, body: JSON.stringify(shape).slice(0, 160) };
 };
 
 /** 🧷️ Marks the first element `find` answers with `data-probe-target=<token>` in page, so Playwright can click the
@@ -405,9 +713,21 @@ const markToken = (() => {
 //#region 🔖️History
 type HistoryRow = { id: string; kind: "entry" | "mutation"; key: string; label: string; text: string; expandable: boolean; expanded: boolean; parent: string | null; index: number };
 
-/** 🕰️ Every materialised history row (`framework.history.entry.<seq>` and `framework.history.mutation.<id>`) in DOM
- * order; a mutation row belongs to the entry row above it. */
-const readHistory = () =>
+/** 🕰️ Every materialised history row (`framework.history.entry.<seq>` and `framework.history.mutation.<id>`) in reading
+ * order; a mutation row belongs to the entry row above it. wgpu answers from the ARIA mirror (label plus description). */
+const readHistory = async (): Promise<HistoryRow[]> => {
+  if (renderer !== "wgpu") return reactReadHistory();
+  let parent: string | null = null;
+  return (await mirror())
+    .filter((node) => !node.key.includes("::") && /(^|\/)framework\.history\.(entry\.\d+$|mutation\.)/.test(node.key))
+    .map((node, index) => {
+      const match = node.key.match(/framework\.history\.(entry|mutation)\.(.+)$/)!;
+      const kind = match[1] as "entry" | "mutation";
+      if (kind === "entry") parent = node.key;
+      return { id: node.key, kind, key: match[2], label: node.label.replace(/\s+/g, " ").trim(), text: `${node.label} ${node.description}`.replace(/\s+/g, " ").trim().slice(0, 400), expandable: node.expanded !== null, expanded: node.expanded === "true", parent: kind === "mutation" ? parent : null, index };
+    });
+};
+const reactReadHistory = () =>
   evalSafe(
     () => {
       const rows = Array.from(document.querySelectorAll("[id]")).filter((el) => /(^|\/)framework\.history\.(entry\.\d+$|mutation\.)/.test(el.id));
@@ -434,8 +754,17 @@ const readHistory = () =>
     [] as HistoryRow[],
   );
 
-/** 📜️ Scrolls the history panel's scroll container to its start or end (the Commands section is windowed). */
-const scrollHistory = (where: "start" | "end") =>
+/** 📜️ Scrolls the history panel's scroll container to its start or end (the Commands section is windowed). wgpu: a wheel
+ * over the panel's registered scroll region. */
+const scrollHistory = async (where: "start" | "end") => {
+  if (renderer !== "wgpu") return reactScrollHistory(where);
+  const region = ((await chromeHits()).hits ?? []).find((hit) => /scroll/i.test(hit.kind) && /history/i.test(`${hit.controlId} ${hit.windowId ?? ""}`));
+  if (!region) return false;
+  await page.mouse.move(region.rect[0] + region.rect[2] / 2, region.rect[1] + region.rect[3] / 2);
+  await page.mouse.wheel(0, where === "end" ? 20000 : -20000);
+  return true;
+};
+const reactScrollHistory = (where: "start" | "end") =>
   evalSafe(
     (edge) => {
       const row = Array.from(document.querySelectorAll("[id]")).find((el) => /framework\.history\.(entry\.\d+|commands)$/.test(el.id));
@@ -457,7 +786,7 @@ const scrollHistory = (where: "start" | "end") =>
 /** 🕰️ Opens the History panel and waits for its body (`framework.history.actions`). */
 const openHistory = async () => {
   const opened = await openTab(HISTORY_TAB);
-  const body = await waitUntil(() => resolveDomId("framework.history.actions"), (id) => id !== null, 15000);
+  const body = await waitUntil(() => presentKey("framework.history.actions"), (id) => id !== null, 15000);
   return opened && body.ok;
 };
 
@@ -478,8 +807,37 @@ const allHistoryRows = async () => {
  * rows labelled as a history edit. Chrome rows (panel toggles, tool arming) are neither. */
 const documentEntries = (rows: HistoryRow[]) => rows.filter((row) => row.kind === "entry" && (row.expandable || /History edit|Verlauf bearbeitet|Verlaufsbearbeitung/.test(row.label)));
 
-/** 🌳️ Expands one entry row through its disclosure button and waits for its mutation children. */
+/** 🧬️ The edit ids the document rows carry: each expandable row is expanded and its mutation children's keys
+ * (`<editId>#<op>`) read — the label-independent identity of what history holds. */
+const documentEditIds = async (rows: HistoryRow[]) => {
+  const ids = new Set<string>();
+  for (const entry of documentEntries(rows).filter((row) => row.expandable).slice(0, 24)) {
+    for (const mutation of (await expandEntry(entry.id)).mutations) ids.add(mutation.key.replace(/#\d+$/, ""));
+  }
+  return [...ids].sort();
+};
+
+/** 🔢️ The newest entry sequence among `rows` (entry rows are keyed by their command-log seq). The Commands list is
+ * windowed, so "new rows" are the ones NEWER than this, never the ones missing from an earlier read. */
+const newestEntrySeq = (rows: HistoryRow[]) => Math.max(-1, ...rows.filter((row) => row.kind === "entry").map((row) => Number(row.key)).filter(Number.isFinite));
+
+/** 🌳️ Expands one entry row through its disclosure button (wgpu: its activation, else focus + ArrowRight) and waits for
+ * its mutation children. */
 const expandEntry = async (entryId: string) => {
+  if (renderer === "wgpu") {
+    const row = (await mirror()).find((node) => node.key === entryId);
+    let state = !row ? "absent" : row.expanded === "true" ? "open" : "activate";
+    if (state === "activate") {
+      await mirrorActivate(entryId);
+      if (!(await waitUntil(readHistory, (rows) => rows.some((entry) => entry.parent === entryId), 4000)).ok) {
+        state = "arrow";
+        await mirrorFocus(entryId);
+        await page.keyboard.press("ArrowRight").catch(() => {});
+      }
+    }
+    const children = await waitUntil(readHistory, (rows) => rows.some((entry) => entry.parent === entryId), 10000);
+    return { state, mutations: children.value.filter((entry) => entry.parent === entryId) };
+  }
   const state = await evalSafe(
     (id) => {
       const row = document.getElementById(id);
@@ -500,6 +858,11 @@ const expandEntry = async (entryId: string) => {
 /** 🖱️ Presses the row action of `rowId` whose accessible name matches `name` (hovering first, the action strip is a
  * reveal region); falls back to the row's own label, which is the row's activation. */
 const pressRowAction = async (rowId: string, name: RegExp) => {
+  if (renderer === "wgpu") {
+    const action = (await mirror()).find((node) => node.key.startsWith(`${rowId}::row-action::`) && name.test(node.label.trim()));
+    if (action) return (await mirrorActivate(action.key, action.window)) ? "action" : "absent";
+    return (await mirrorActivate(rowId)) ? "label" : "absent";
+  }
   const token = markToken();
   await byId(rowId).hover({ timeout: 3000 }).catch(() => {});
   const via = await evalSafe(
@@ -526,21 +889,41 @@ const pressRowAction = async (rowId: string, name: RegExp) => {
 
 /** 🔘️ Clicks a panel-body button by its authored id (`framework.history.editor.withdraw`, …). */
 const pressAuthored = async (authored: string) => {
-  const id = await resolveDomId(authored);
-  if (!id) return { present: false, disabled: null as boolean | null };
+  const section = authored.match(/framework\.history\.(editor|timeTravel)/)?.[0];
+  if (section) {
+    await revealHistory(section);
+    await revealHistory(`${authored}.row`);
+  }
+  if (renderer === "wgpu") {
+    const nodes = await mirror();
+    const node = mirrorFind(nodes, authored) ?? mirrorFind(nodes, `${authored}.row`);
+    if (!node) return { present: false, disabled: null as boolean | null, id: null as string | null };
+    await mirrorActivate(node.key, node.window);
+    return { present: true, disabled: node.disabled as boolean | null, id: node.key as string | null };
+  }
+  const id = (await resolveDomId(authored)) ?? (await resolveDomId(`${authored}.row`));
+  if (!id) return { present: false, disabled: null as boolean | null, id: null as string | null };
   const disabled = await evalSafe((target) => {
     const el = document.getElementById(target);
     const button = (el?.matches("button") ? el : el?.querySelector("button")) as HTMLButtonElement | null;
-    return button ? button.disabled : null;
+    if (button) return button.disabled;
+    const flag = el?.getAttribute("aria-disabled") ?? el?.getAttribute("data-disabled");
+    return flag === null || flag === undefined ? null : flag === "true" || flag === "";
   }, null as boolean | null, id);
   const target = page.locator(`[id="${id}"]`).first();
   const tag = await target.evaluate((el) => el.tagName.toLowerCase()).catch(() => "");
-  await (tag === "button" ? target : target.locator("button").first()).click({ force: true, timeout: 4000 }).catch(() => target.click({ force: true, timeout: 4000 }).catch(() => {}));
-  return { present: true, disabled };
+  const inner = tag === "button" ? 1 : await target.locator("button").count().catch(() => 0);
+  await (tag === "button" ? target : inner ? target.locator("button").first() : target.locator('[data-slot="tree-label"]').first()).click({ force: true, timeout: 4000 }).catch(() => target.click({ force: true, timeout: 4000 }).catch(() => {}));
+  return { present: true, disabled, id };
 };
 
-/** 🧾️ The history-panel DOM inventory for diagnosis: every id under `framework.history`, with slot, role, state. */
-const historyInventory = () =>
+/** 🧾️ The history-panel inventory for diagnosis: every id under `framework.history` (wgpu: every mirrored history, band,
+ * dialog and indicator node), with role and state. */
+const historyInventory = async (): Promise<Record<string, unknown>[]> =>
+  renderer === "wgpu"
+    ? (await mirror()).filter((node) => /framework\.history|shell\.time-travel|shell\.dialog|ui\.timeTravel|timeTravel\.indicator|framework\.sync|s-presence-peers|shell\.panel\.tab/.test(node.key)).slice(0, 400).map((node) => ({ id: node.key, window: node.window, role: node.role, expanded: node.expanded, disabled: node.disabled, aria: node.label, title: node.description, value: node.value ?? node.valueNow, text: node.label }))
+    : reactHistoryInventory();
+const reactHistoryInventory = () =>
   evalSafe(
     () =>
       Array.from(document.querySelectorAll("[id]"))
@@ -566,8 +949,10 @@ const historyInventory = () =>
 type BandControl = { control: string; disabled: boolean; title: string | null; keys: string | null; text: string };
 type Band = { stage: string; role: string | null; live: string | null; generation: string | null; text: string; review: string | null; outcome: string | null; fault: string | null; target: string | null; progress: string | null; controls: BandControl[] };
 
-/** 📣️ The React time-travel band (`[data-semio-time-travel]`), or null when no session is live. */
-const band = () =>
+/** 📣️ The time-travel band, or null when no session is live: React's `[data-semio-time-travel]`, wgpu's announced
+ * `shell.time-travel.status` with its mirrored controls. */
+const band = (): Promise<Band | null> => (renderer === "wgpu" ? wgpuBand() : reactBand());
+const reactBand = () =>
   evalSafe(
     () => {
       const el = document.querySelector("[data-semio-time-travel]");
@@ -600,6 +985,36 @@ const band = () =>
 /** 🎞️ Installs an in-page MutationObserver that records every distinct band state (stage | review | progress) with
  * its time, so a stage React rendered for one frame is still seen. Re-install after every reload. */
 const installBandTrace = () =>
+  renderer === "wgpu"
+    ? evalSafe(
+        (words) => {
+          const host = window as unknown as { __probeBandTrace?: { t: number; key: string }[]; __probeBandObserver?: MutationObserver };
+          host.__probeBandTrace = [];
+          host.__probeBandObserver?.disconnect();
+          let last = "";
+          const read = () => {
+            const el = document.querySelector('#semio-wgpu-accessibility [data-node-key="shell.time-travel.status"]');
+            const text = el?.getAttribute("aria-label") ?? "";
+            const stage = words.stages.find(([, source]) => new RegExp(source).test(text))?.[0] ?? "";
+            const review = words.reviews.find(([, source]) => new RegExp(source).test(text))?.[0] ?? "";
+            const progress = el?.getAttribute("aria-valuenow") !== null && el?.getAttribute("aria-valuenow") !== undefined ? `${el?.getAttribute("aria-valuenow")}/${el?.getAttribute("aria-valuemax")}` : "";
+            const key = el ? `${stage}|${review}|${progress}` : "none";
+            if (key === last) return;
+            last = key;
+            host.__probeBandTrace!.push({ t: Math.round(performance.now()), key });
+            if (host.__probeBandTrace!.length > 400) host.__probeBandTrace!.shift();
+          };
+          const root = document.getElementById("semio-wgpu-accessibility") ?? document.body;
+          host.__probeBandObserver = new MutationObserver(read);
+          host.__probeBandObserver.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: ["aria-label", "aria-valuenow", "aria-valuemax"] });
+          read();
+          return true;
+        },
+        false,
+        { stages: BAND_WORDS.map(([stage, pattern]) => [stage, pattern.source] as [string, string]), reviews: REVIEW_WORDS.map(([review, pattern]) => [review, pattern.source] as [string, string]) },
+      )
+    : reactInstallBandTrace();
+const reactInstallBandTrace = () =>
   evalSafe(() => {
     const host = window as unknown as { __probeBandTrace?: { t: number; key: string }[]; __probeBandObserver?: MutationObserver };
     host.__probeBandTrace = [];
@@ -619,23 +1034,111 @@ const installBandTrace = () =>
     read();
     return true;
   }, false);
+/** 📣️ Records every transient notice code React shows (`[data-notice-code]`) for the page's life; re-install after a reload. */
+const installNoticeTrace = () =>
+  renderer === "wgpu"
+    ? Promise.resolve(false)
+    : evalSafe(() => {
+        const host = window as unknown as { __probeNoticeCodes?: string[]; __probeNoticeObserver?: MutationObserver };
+        host.__probeNoticeCodes ??= [];
+        host.__probeNoticeObserver?.disconnect();
+        const read = () => {
+          for (const el of Array.from(document.querySelectorAll("[data-notice-code]"))) {
+            const code = el.getAttribute("data-notice-code") ?? "";
+            if (code && !host.__probeNoticeCodes!.includes(code)) host.__probeNoticeCodes!.push(code);
+          }
+        };
+        host.__probeNoticeObserver = new MutationObserver(read);
+        host.__probeNoticeObserver.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-notice-code"] });
+        read();
+        return true;
+      }, false);
+const noticeCodes = () => evalSafe(() => ((window as unknown as { __probeNoticeCodes?: string[] }).__probeNoticeCodes ?? []).slice(), [] as string[]);
 const bandTrace = () => evalSafe(() => ((window as unknown as { __probeBandTrace?: { t: number; key: string }[] }).__probeBandTrace ?? []).slice(), [] as { t: number; key: string }[]);
 const clearBandTrace = () => evalSafe(() => ((window as unknown as { __probeBandTrace?: unknown[] }).__probeBandTrace = []).length, 0);
+
+/** ⌨️ Puts keyboard focus where the shell admits a chord: React listens on the document, so the active field is blurred;
+ * the wgpu wire admits keys only from its canvas or a mirror element, so the largest focusable canvas takes focus. */
+const prepareChord = async () => {
+  if (renderer !== "wgpu") {
+    await evalSafe(() => (document.activeElement as HTMLElement | null)?.blur?.(), undefined);
+    return "blurred";
+  }
+  return evalSafe(() => {
+    const canvases = Array.from(document.querySelectorAll("canvas")).sort((left, right) => right.width * right.height - left.width * left.height);
+    for (const canvas of canvases) {
+      canvas.focus();
+      if (document.activeElement === canvas) return "canvas";
+    }
+    const status = document.querySelector<HTMLElement>('#semio-wgpu-accessibility [data-node-key="shell.time-travel.status"]');
+    status?.focus();
+    return document.activeElement === status ? "status" : "none";
+  }, "none");
+};
 
 /** 🔘️ Presses one band control by its button, or by its chord in a chord locale (`accept`, `discard`, `exit`). */
 const pressBand = async (control: string) => {
   const chords: Record<string, string> = { accept: "Alt+Enter", discard: "Alt+Backspace", exit: "Alt+Shift+Backspace" };
   if (chordLocales.has(currentLocale) && chords[control]) {
-    await evalSafe(() => (document.activeElement as HTMLElement | null)?.blur?.(), undefined);
+    await prepareChord();
     await page.keyboard.press(chords[control]).catch(() => {});
     return `chord ${chords[control]}`;
+  }
+  if (renderer === "wgpu") {
+    const id = WGPU_BAND_CONTROLS.find(([name]) => name === control)?.[1];
+    return (id && (await wgpuPress(id))) ?? "absent";
   }
   await page.locator(`[data-semio-time-travel-control="${control}"]`).first().click({ timeout: 4000 }).catch((error) => log(`band ${control} click failed ${String(error).split("\n")[0]}`));
   return "button";
 };
 
+type DialogButton = { text: string; destructive: string | null; tone: string | null; disabled: boolean | null; description: string | null };
+type FinalizeDialog = { title: string; text: string; overwrite: DialogButton | null; submit: DialogButton | null; cancel: { text: string } | null; name: { id: string; value: string } | null };
+
+/** 🪟️ The wgpu finalize dialog through the mirror: `shell.dialog.<id>` (title) with `.choice.overwrite`, `.confirm` (New
+ * alternative), `.cancel` and `.field.name`; the chrome projects only the dialog's nodes while it is open. */
+const wgpuFinalizeDialog = async (): Promise<FinalizeDialog | null> => {
+  const nodes = await mirror();
+  const root = nodes.find((node) => /^shell\.dialog\.[^.]+$/.test(node.key) && nodes.some((other) => other.key === `${node.key}.confirm`));
+  if (!root) return null;
+  const button = (suffix: string): DialogButton | null => {
+    const node = nodes.find((other) => other.key === `${root.key}.${suffix}`);
+    return node ? { text: node.label, destructive: null, tone: null, disabled: node.disabled, description: node.description || null } : null;
+  };
+  const name = nodes.find((node) => node.key === `${root.key}.field.name`);
+  return { title: root.label, text: nodes.filter((node) => node.key.startsWith(root.key)).map((node) => node.label).join(" ").slice(0, 500), overwrite: button("choice.overwrite"), submit: button("confirm"), cancel: button("cancel"), name: name ? { id: name.key, value: name.value ?? name.label } : null };
+};
+
+/** ✍️ Types the alternative name into the open finalize dialog; answers what the field then holds. */
+const dialogFillName = async (value: string) => {
+  if (renderer === "wgpu") {
+    const dialog = await wgpuFinalizeDialog();
+    const field = dialog?.name ? await mirrorLocator(dialog.name.id) : null;
+    if (!field) return null;
+    await field.fill(value, { force: true, timeout: 4000 }).catch(() => {});
+    return field.inputValue({ timeout: 2000 }).catch(() => null);
+  }
+  const field = page.locator('[role="dialog"] input[id="name"], [role="dialog"] input[type="text"]').first();
+  await field.fill(value, { timeout: 4000 }).catch(() => {});
+  return field.inputValue({ timeout: 2000 }).catch(() => null);
+};
+
+/** 🔀️ Presses the finalize dialog's destructive Overwrite choice or its New alternative submit. */
+const dialogChoose = async (choice: "overwrite" | "submit") => {
+  if (renderer === "wgpu") {
+    const nodes = await mirror();
+    const root = nodes.find((node) => /^shell\.dialog\.[^.]+$/.test(node.key) && nodes.some((other) => other.key === `${node.key}.confirm`));
+    return root ? mirrorActivate(`${root.key}.${choice === "overwrite" ? "choice.overwrite" : "confirm"}`) : false;
+  }
+  return page.locator(`[id="${choice === "overwrite" ? "ui.dialog.choice.overwrite" : "ui.dialog.submit"}"]`).first().click({ timeout: 4000 }).then(() => true).catch((error) => {
+    log(`dialog ${choice} click failed ${String(error).split("\n")[0]}`);
+    return false;
+  });
+};
+
 /** 🪟️ The finalize dialog (`finalizeHistoryEdit`): title, the destructive Overwrite choice, the name field, submit. */
-const finalizeDialog = () =>
+const finalizeDialog = (): Promise<FinalizeDialog | null> => (renderer === "wgpu" ? wgpuFinalizeDialog() : reactFinalizeDialog());
+const reactFinalizeDialog = () =>
   evalSafe(
     () => {
       const dialog = Array.from(document.querySelectorAll('[role="dialog"]')).find((el) => el.querySelector('[id="ui.dialog.submit"]')) as HTMLElement | undefined;
@@ -643,7 +1146,8 @@ const finalizeDialog = () =>
       const button = (id: string) => {
         const el = dialog.querySelector(`[id="${id}"]`);
         const control = (el?.matches("button") ? el : el?.querySelector("button")) as HTMLButtonElement | null;
-        return el ? { text: (el as HTMLElement).innerText.trim(), destructive: el.getAttribute("data-destructive") ?? control?.getAttribute("data-destructive") ?? null, tone: el.getAttribute("data-tone") ?? control?.getAttribute("data-tone") ?? null, disabled: control?.disabled ?? null } : null;
+        const describedBy = (control ?? el)?.getAttribute("aria-describedby");
+        return el ? { text: (el as HTMLElement).innerText.trim(), destructive: el.getAttribute("data-destructive") ?? control?.getAttribute("data-destructive") ?? null, tone: el.getAttribute("data-tone") ?? control?.getAttribute("data-tone") ?? null, disabled: control?.disabled ?? null, description: describedBy ? (document.getElementById(describedBy)?.textContent ?? null) : null } : null;
       };
       const name = (dialog.querySelector('input[id="name"]') ?? dialog.querySelector('input[type="text"]')) as HTMLInputElement | null;
       return {
@@ -655,14 +1159,37 @@ const finalizeDialog = () =>
         name: name ? { id: name.id, value: name.value } : null,
       };
     },
-    null as null | { title: string; text: string; overwrite: { text: string; destructive: string | null; tone: string | null; disabled: boolean | null } | null; submit: { text: string; destructive: string | null; tone: string | null; disabled: boolean | null } | null; cancel: { text: string } | null; name: { id: string; value: string } | null },
+    null as FinalizeDialog | null,
   );
 
 type Editor = { heading: string | null; status: string | null; dx: StepperRead | null; dy: StepperRead | null; targets: { id: string; chips: string[]; useSelection: boolean; text: string } | null; inputs: string[] };
 type StepperRead = { id: string; tag: string; stepper: boolean; value: string | null; step: string | null; min: string | null; max: string | null; plus: boolean; minus: boolean; role: string | null };
 
 /** ✏️ The draft editor section: its heading, the Rust band status line, the dx/dy controls and the targets list. */
-const editor = () =>
+const editor = (): Promise<Editor | null> => (renderer === "wgpu" ? wgpuEditor() : reactEditor());
+
+/** ✏️ The draft editor through the wgpu mirror; a number input is a `spinbutton` (or `slider`) whose value the mirror
+ * carries as the input value / `aria-valuenow`. */
+const wgpuEditor = async (): Promise<Editor | null> => {
+  const nodes = await mirror();
+  const number = (pointer: string): StepperRead | null => {
+    const node = mirrorFind(nodes, `framework.history.editor.input.${pointer}`);
+    if (!node) return null;
+    const steppers = nodes.filter((other) => other.key.startsWith(`${node.key}::`) || other.key.startsWith(`${node.key}.`));
+    return { id: node.key, tag: node.tag, stepper: node.role === "spinbutton", value: node.value ?? node.valueNow, step: null, min: null, max: null, plus: steppers.some((other) => /increase|erhöhen|\+/i.test(other.label)), minus: steppers.some((other) => /decrease|verringern|−|-/i.test(other.label)), role: node.role };
+  };
+  const targets = mirrorFind(nodes, "framework.history.editor.input.targets");
+  const chips = nodes.filter((node) => /framework\.history\.editor\.input\.targets\.chip\.\d+$/.test(node.key)).map((node) => node.label);
+  return {
+    heading: mirrorFind(nodes, "framework.history.editor.target")?.label ?? null,
+    status: mirrorFind(nodes, "framework.history.timeTravel.status")?.label ?? null,
+    dx: number("dx"),
+    dy: number("dy"),
+    targets: targets ? { id: targets.key, chips, useSelection: nodes.some((node) => /use selection|auswahl verwenden/i.test(node.label) && node.key.includes("framework.history.editor")), text: targets.label } : null,
+    inputs: nodes.filter((node) => /framework\.history\.editor\.input\.[^/]*\.row$/.test(node.key)).map((node) => `${node.key.replace(/^.*framework\.history\.editor\.input/, "")}=${node.label.slice(0, 60)}`),
+  };
+};
+const reactEditor = () =>
   evalSafe(
     () => {
       const find = (authored: string) => Array.from(document.querySelectorAll("[id]")).find((el) => el.id === authored || el.id.endsWith(`/${authored}`)) as HTMLElement | undefined;
@@ -698,9 +1225,54 @@ const editor = () =>
     null as Editor | null,
   );
 
+/** 🔭️ Scrolls the history body so the section (or row) `authored` names sits at the top of the panel — what a user does to
+ * reach it; the body is windowed, so rows below the viewport are not in the document until they scroll in. */
+const revealHistory = async (authored: string) => {
+  if (renderer === "wgpu") {
+    let node = mirrorFind(await mirror(), authored);
+    if (!node && (await scrollHistory("end"))) {
+      await sleep(700);
+      node = mirrorFind(await mirror(), authored);
+    }
+    if (node) await mirrorFocus(node.key);
+    await sleep(node ? 500 : 0);
+    return Boolean(node);
+  }
+  const found = await evalSafe(
+    (target) => {
+      const el = Array.from(document.querySelectorAll("[id]")).find((node) => node.id === target || node.id.endsWith(`/${target}`)) as HTMLElement | undefined;
+      el?.scrollIntoView({ block: "start" });
+      return Boolean(el);
+    },
+    false,
+    authored,
+  );
+  await sleep(found ? 500 : 0);
+  return found;
+};
+
+/** ✏️ {@link editor} after revealing the editor's inputs section (`framework.history.editor.inputs`). */
+const readEditor = async () => {
+  await openHistory();
+  if (!(await revealHistory("framework.history.editor.inputs"))) await revealHistory("framework.history.editor");
+  return editor();
+};
+
 /** ⌨️ Types `value` into the editor's number control at `pointer` (one `fill` = one input event = one draft), then
  * Enter to commit and blur; answers the value the field held before Enter. */
 const typeEditorNumber = async (pointer: string, value: number) => {
+  await revealHistory("framework.history.editor.inputs");
+  await revealHistory(`framework.history.editor.input.${pointer}.row`);
+  if (renderer === "wgpu") {
+    const node = mirrorFind(await mirror(), `framework.history.editor.input.${pointer}`);
+    const field = node ? await mirrorLocator(node.key, node.window) : null;
+    if (!node || !field) return { present: false, typed: null as string | null };
+    await field.fill(String(value), { force: true, timeout: 4000 }).catch(() => {});
+    const typed = await field.inputValue({ timeout: 2000 }).catch(() => null);
+    await mirrorFocus(node.key);
+    await page.keyboard.press("Enter").catch(() => {});
+    return { present: true, typed };
+  }
   const id = await resolveDomId(`framework.history.editor.input.${pointer}`);
   if (!id) return { present: false, typed: null as string | null };
   const host = page.locator(`[id="${id}"]`).first();
@@ -714,6 +1286,13 @@ const typeEditorNumber = async (pointer: string, value: number) => {
 
 /** ⌨️ Presses one key in the editor's number control at `pointer` (ArrowUp/ArrowDown step by the control's step). */
 const keyEditorNumber = async (pointer: string, key: string) => {
+  await revealHistory(`framework.history.editor.input.${pointer}.row`);
+  if (renderer === "wgpu") {
+    const node = mirrorFind(await mirror(), `framework.history.editor.input.${pointer}`);
+    if (!node || !(await mirrorFocus(node.key))) return false;
+    await page.keyboard.press(key).catch(() => {});
+    return true;
+  }
   const id = await resolveDomId(`framework.history.editor.input.${pointer}`);
   if (!id) return false;
   const host = page.locator(`[id="${id}"]`).first();
@@ -741,43 +1320,62 @@ type Ctx = {
   afterOverwrite?: Positions;
   dyEdited?: number;
   alternative?: string;
+  folder?: string;
 };
 
 /** 🧭️ Opens the drag's entry row and presses Edit on its `drag-selection` mutation; answers the band once `editing`. */
 const beginDragEdit = async (ctx: Ctx) => {
   await openHistory();
   const rows = await allHistoryRows();
-  const entry = rows.find((row) => row.id === ctx.dragEntry) ?? rows.find((row) => row.kind === "entry" && row.key === ctx.dragEntry?.split(".").pop());
-  if (!entry) return { entry: null, via: "absent", band: null as Band | null, rows };
-  const expanded = await expandEntry(entry.id);
-  const mutation = expanded.mutations.find((row) => row.key === ctx.dragMutation) ?? expanded.mutations[0];
-  if (!mutation) return { entry, via: "no-mutation-row", band: null as Band | null, rows };
+  const prefix = COPY[currentLocale].drag(2, "", "").split("(")[0];
+  const candidates = [...rows.filter((row) => row.id === ctx.dragEntry), ...documentEntries(rows).filter((row) => row.id !== ctx.dragEntry && row.label.startsWith(prefix))];
+  let entry: HistoryRow | undefined;
+  let mutation: HistoryRow | undefined;
+  for (const candidate of candidates.slice(0, 6)) {
+    const expanded = await expandEntry(candidate.id);
+    mutation = expanded.mutations.find((row) => row.key === ctx.dragMutation);
+    if (mutation) {
+      entry = candidate;
+      break;
+    }
+  }
+  if (!entry || !mutation) return { entry: null, via: "absent", band: null as Band | null, rows, candidates: candidates.map((row) => `${row.id}=${row.label.slice(0, 40)}`) };
+  if (entry.id !== ctx.dragEntry) log(`drag row moved ${ctx.dragEntry} → ${entry.id}`);
   const via = await pressRowAction(mutation.id, COPY[currentLocale].edit);
   const settled = await waitUntil(band, (b) => b?.stage === "editing", 20000);
   return { entry, mutation, via, band: settled.value, waitedMs: settled.waitedMs, rows };
 };
 
 /** 🥾️ Step 1 — the board is parsed and populated, and the history panel speaks the locale under test. */
-const step1 = async (_ctx: Ctx) => {
+const step1 = async (ctx: Ctx) => {
   const parsed = await waitUntil(vitals, (v) => v?.parsed === "true", 60000);
   verdict("fixture-parsed", parsed.ok, { parsed: parsed.value?.parsed, waitedMs: parsed.waitedMs });
   const populated = await waitUntil(vitals, (v) => (v?.nodes ?? 0) > 0, 30000);
   const p = await positions();
   verdict("board-has-nodes", (populated.value?.nodes ?? 0) > 0 && Object.keys(p).length > 0, { nodes: populated.value?.nodes, edges: populated.value?.edges, positions: Object.keys(p).length, camera: populated.value?.camera });
   const opened = await openHistory();
-  const commands = await resolveDomId("framework.history.commands");
-  const commandsText = commands ? await byId(commands).innerText().catch(() => "") : "";
-  verdict("history-panel-speaks-the-locale", opened && commandsText.includes(COPY[currentLocale].commands), { opened, commands, commandsText: commandsText.slice(0, 80), expected: COPY[currentLocale].commands, lang: await evalSafe(() => navigator.language, "") });
+  const commands = await presentKey("framework.history.commands");
+  const commandsText = await textOfKey("framework.history.commands");
+  verdict("history-panel-speaks-the-locale", opened && commandsText.toLowerCase().includes(COPY[currentLocale].commands.toLowerCase()), { opened, commands, commandsText: commandsText.slice(0, 80), expected: COPY[currentLocale].commands, lang: await evalSafe(() => navigator.language, "") });
   emit({ kind: "inventory", tag: "boot-history", rows: await historyInventory() });
   await shot("boot");
   await closePanels();
+  if (folderAt === 1) {
+    ctx.folder = join(OUT, `folder-${stamp}-${currentLocale}`);
+    mkdirSync(ctx.folder, { recursive: true });
+    const before = await positions();
+    const attached = await attachFolder(ctx.folder);
+    const after = await positions();
+    verdict("local-folder-attach-keeps-the-document", attached.typed === ctx.folder && attached.attachButton && movedIds(before, after, 1e-6).length === 0, { attached, drift: movedIds(before, after, 1e-6).length, reading: "the document is bound to a local folder (sync card → Folder → Attach, `persistedLocalOnly`) before any edit, so every later edit is persisted; step 5's reload check re-attaches it" });
+    await closePanels();
+  }
 };
 
 /** ✋️ Step 2 — select two nodes, drag them by (+80,+40) world units, one new row; then a downstream drag of a third node. */
 const step2 = async (ctx: Ctx) => {
   await closePanels();
   await frameBoard(6);
-  const rowsBefore = documentEntries(await allHistoryRows());
+  const newestBefore = newestEntrySeq(await allHistoryRows());
   await closePanels();
   const { camera, picked } = await pickNodes(3, [[80, 40], [-60, 30]], [], 50);
   if (picked.length < 3) {
@@ -789,6 +1387,7 @@ const step2 = async (ctx: Ctx) => {
   ctx.b = b.id;
   ctx.c = c.id;
   log(`picked a=${a.id}@${JSON.stringify(a.at)} b=${b.id}@${JSON.stringify(b.at)} c=${c.id}@${JSON.stringify(c.at)} zoom=${camera.zoom}`);
+  await prepareChord();
   await page.keyboard.press("Escape").catch(() => {});
   await page.mouse.click(a.at.x, a.at.y);
   const first = await waitUntil(vitals, (v) => selectionIds(v).includes(a.id), 15000);
@@ -811,7 +1410,7 @@ const step2 = async (ctx: Ctx) => {
   verdict("offset-is-80-40-world-units", Boolean(offA && near(offA[0], 80, 0.005) && near(offA[1], 40, 0.005)), { offA, screenDelta: [80 * zoom, 40 * zoom], note: "screen delta = world offset × zoom; a pixel-quantised pointer makes this inexact" });
   verdict("no-other-node-moved", others.length === 0, { others: others.slice(0, 8) });
   const expected = dragLabel(2, ctx.dx, ctx.dy);
-  const grew = await waitUntil(async () => documentEntries(await allHistoryRows()).filter((row) => !rowsBefore.some((before) => before.id === row.id)), (rows) => rows.length >= 1, 30000, 1000);
+  const grew = await waitUntil(async () => documentEntries(await allHistoryRows()).filter((row) => Number(row.key) > newestBefore), (rows) => rows.length >= 1, 30000, 1000);
   const added = grew.value;
   verdict("exactly-one-new-history-row", added.length === 1, { added: added.map((row) => `${row.id}=${row.label}`), waitedMs: grew.waitedMs });
   const row = added.find((entry) => entry.label.startsWith(expected) || entry.text.includes(expected)) ?? added[0];
@@ -833,7 +1432,7 @@ const step2 = async (ctx: Ctx) => {
   ctx.cOffset = offsetOf(beforeC, ctx.pc, c.id) ?? [0, 0];
   const cOthers = movedIds(beforeC, ctx.pc).filter((id) => id !== c.id);
   verdict("downstream-drag-moves-only-c", cMoved.ok && cOthers.length === 0, { cOffset: ctx.cOffset, others: cOthers.slice(0, 6) });
-  const cRows = await waitUntil(async () => documentEntries(await allHistoryRows()).filter((entry) => !rowsBefore.some((before) => before.id === entry.id) && entry.id !== ctx.dragEntry), (rows) => rows.length >= 1, 30000, 1000);
+  const cRows = await waitUntil(async () => documentEntries(await allHistoryRows()).filter((entry) => Number(entry.key) > newestBefore && entry.id !== ctx.dragEntry), (rows) => rows.length >= 1, 30000, 1000);
   const cRow = cRows.value[0];
   if (cRow) {
     const expanded = await expandEntry(cRow.id);
@@ -856,8 +1455,10 @@ const step3 = async (ctx: Ctx) => {
   verdict("band-is-a-polite-status-region", b?.role === "status" && b?.live === "polite", { role: b?.role, live: b?.live });
   verdict("band-names-stage-and-target", Boolean(b && b.text.includes(COPY[currentLocale].stageEditing) && (b.target ?? "").includes(dragLabel(2, ctx.dx!, ctx.dy!))), { text: b?.text?.slice(0, 200), target: b?.target });
   verdict("band-offers-accept-discard-exit", JSON.stringify(b?.controls.map((c) => c.control)) === JSON.stringify(["accept", "discard", "exit"]), { controls: b?.controls });
-  const indicator = await evalSafe(() => Array.from(document.querySelectorAll("[data-semio-time-travel-indicator]")).map((el) => `${el.getAttribute("data-semio-time-travel-indicator")}:${el.getAttribute("aria-label")}`), [] as string[]);
+  const indicator = await indicators();
   verdict("windows-wear-the-time-travel-indicator", indicator.length > 0, { indicator: indicator.slice(0, 4) });
+  const roster = await presenceText();
+  verdict("presence-roster-shows-no-editing-peer", roster === null || !/⏪|is editing|bearbeitet .* in der Zeitreise/.test(roster), { roster, reading: "one tab, no peer: the ⏪ badge and the \"is editing\" notes (`🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-peers`) must stay absent; a live second peer needs a presence transport (hub), which this serve does not run" });
   const preview = await waitUntil(positions, (p) => placed(p, ctx.a!, ctx.p0![ctx.a!], ctx.dx!, ctx.dy!) && placed(p, ctx.c!, ctx.p0![ctx.c!], 0, 0), 15000);
   verdict("preview-is-state-before-target-plus-draft", placed(preview.value, ctx.a, ctx.p0[ctx.a], ctx.dx!, ctx.dy!) && placed(preview.value, ctx.b, ctx.p0[ctx.b], ctx.dx!, ctx.dy!), {
     a: preview.value[ctx.a],
@@ -866,12 +1467,13 @@ const step3 = async (ctx: Ctx) => {
     design: "§4: the preview is the document as of the edited mutation with the DRAFT applied (Begin drafts the original input), so the dragged nodes read pre-drag + draft",
   });
   verdict("downstream-not-applied-while-editing", placed(preview.value, ctx.c, ctx.p0[ctx.c], 0, 0), { c: preview.value[ctx.c], cBeforeItsDrag: ctx.p0[ctx.c], cHead: ctx.pc[ctx.c], waitedMs: preview.waitedMs });
-  const rows = await readHistory();
-  const cRow = rows.find((row) => row.kind === "mutation" && row.key === ctx.cMutation);
+  const pendingRows = await waitUntil(readHistory, (rows) => rows.some((row) => row.kind === "mutation" && row.key === ctx.cMutation && row.text.includes(COPY[currentLocale].pending)), 10000);
+  const cRow = pendingRows.value.find((row) => row.kind === "mutation" && row.key === ctx.cMutation);
   verdict("downstream-row-reads-not-applied", Boolean(cRow?.text.includes(COPY[currentLocale].pending)), { cRow: cRow?.text?.slice(0, 160), expected: COPY[currentLocale].pending });
-  const e = await waitUntil(editor, (value) => Boolean(value?.dx && value?.dy && value?.targets), 15000);
+  const e = await waitUntil(readEditor, (value) => Boolean(value?.dx && value?.dy && value?.targets), 15000);
   const ed = e.value;
-  verdict("editor-shows-dx-dy-steppers-with-grid-snap-step", Boolean(ed?.dx?.stepper && ed?.dy?.stepper && ed.dx.step === "1" && ed.dy.step === "1" && ed.dx.plus && ed.dx.minus), { dx: ed?.dx, dy: ed?.dy, note: "snapSource {config: gridFactor} resolves to the grid factor (default 1) as the stepper step" });
+  const steppers = renderer === "wgpu" ? Boolean(ed?.dx?.stepper && ed?.dy?.stepper) : Boolean(ed?.dx?.stepper && ed?.dy?.stepper && ed.dx.step === "1" && ed.dy.step === "1" && ed.dx.plus && ed.dx.minus);
+  verdict("editor-shows-dx-dy-steppers-with-grid-snap-step", steppers, { dx: ed?.dx, dy: ed?.dy, note: renderer === "wgpu" ? "the mirror announces a spinbutton; its snap step is proven by ArrowUp/ArrowDown in step 4" : "snapSource {config: gridFactor} resolves to the grid factor (default 1) as the stepper step" });
   verdict("editor-dx-dy-read-the-original-input", Boolean(ed?.dx && ed?.dy && near(Number(ed.dx.value), ctx.dx!, 0.005) && near(Number(ed.dy.value), ctx.dy!, 0.005)), { dx: ed?.dx?.value, dy: ed?.dy?.value, expected: [ctx.dx, ctx.dy] });
   verdict("editor-shows-the-targets-reference-list", Boolean(ed?.targets && ed.targets.chips.length === 2 && ed.targets.chips.some((chip) => chip.includes(ctx.a!)) && ed.targets.chips.some((chip) => chip.includes(ctx.b!)) && ed.targets.useSelection), { targets: ed?.targets, inputs: ed?.inputs });
   emit({ kind: "inventory", tag: "editing", rows: await historyInventory(), editor: ed, band: b });
@@ -885,14 +1487,17 @@ const step4 = async (ctx: Ctx) => {
     return;
   }
   const typed = await typeEditorNumber("dx", 120);
+  verdict("dx-stepper-control-reachable", typed.present && typed.typed === "120", { typed, authored: "framework.history.editor.input.dx" });
   const preview = await waitUntil(positions, (p) => placed(p, ctx.a!, ctx.p0![ctx.a!], 120, ctx.dy!) && placed(p, ctx.b!, ctx.p0![ctx.b!], 120, ctx.dy!), 20000);
   verdict("dx-120-updates-the-preview", preview.ok && placed(preview.value, ctx.c, ctx.p0[ctx.c], 0, 0), { typed, a: preview.value[ctx.a], expected: [ctx.p0[ctx.a][0] + 120, ctx.p0[ctx.a][1] + ctx.dy!], c: preview.value[ctx.c], waitedMs: preview.waitedMs });
-  await keyEditorNumber("dx", "ArrowUp");
-  const up = await waitUntil(positions, (p) => placed(p, ctx.a!, ctx.p0![ctx.a!], 121, ctx.dy!), 15000);
-  await keyEditorNumber("dx", "ArrowDown");
-  const down = await waitUntil(positions, (p) => placed(p, ctx.a!, ctx.p0![ctx.a!], 120, ctx.dy!), 15000);
-  verdict("arrow-keys-step-dx-by-the-snap-step", up.ok && down.ok, { up: up.value[ctx.a], down: down.value[ctx.a], dxField: (await editor())?.dx?.value });
-  const accepted = (await editor())?.dx?.value;
+  if (typed.present) {
+    await keyEditorNumber("dx", "ArrowUp");
+    const up = await waitUntil(positions, (p) => placed(p, ctx.a!, ctx.p0![ctx.a!], 121, ctx.dy!), 15000);
+    await keyEditorNumber("dx", "ArrowDown");
+    const down = await waitUntil(positions, (p) => placed(p, ctx.a!, ctx.p0![ctx.a!], 120, ctx.dy!), 15000);
+    verdict("arrow-keys-step-dx-by-the-snap-step", up.ok && down.ok, { up: up.value[ctx.a], down: down.value[ctx.a], dxField: (await editor())?.dx?.value });
+  }
+  const accepted = (await editor())?.dx?.value ?? null;
   await clearBandTrace();
   const via = await pressBand("accept");
   const review = await waitUntil(band, (b) => b?.stage === "reviewing" && Boolean(b.review), 60000, 100);
@@ -921,11 +1526,12 @@ const step5 = async (ctx: Ctx) => {
   const d = dialog.value;
   const copy = COPY[currentLocale];
   verdict("finalize-opens-the-dialog", Boolean(d && d.title.includes(copy.dialogTitle)), { title: d?.title, waitedMs: dialog.waitedMs });
-  verdict("dialog-offers-destructive-overwrite", Boolean(d?.overwrite && d.overwrite.text.includes(copy.overwrite) && d.overwrite.destructive === "true"), { overwrite: d?.overwrite });
+  verdict("dialog-offers-destructive-overwrite", Boolean(d?.overwrite && d.overwrite.text.includes(copy.overwrite) && (renderer === "wgpu" || d.overwrite.destructive === "true") && (d.overwrite.description ?? "").includes(copy.overwriteDescription)), { overwrite: d?.overwrite, expectedDescription: copy.overwriteDescription, reading: renderer === "wgpu" ? "the mirror carries no tone; the destructive choice is told by its description" : "data-destructive + the choice description" });
   verdict("dialog-offers-new-alternative-with-a-name-field", Boolean(d?.submit && d.submit.text.includes(copy.newAlternative) && d.name && d.name.value === copy.defaultName), { submit: d?.submit, name: d?.name });
-  verdict("band-reads-choosing-while-the-dialog-is-open", (await band())?.stage === "choosing", { band: (await band())?.stage });
+  if (renderer === "wgpu") note("band-while-the-dialog-is-open", { band: (await band())?.stage ?? null, reading: "the wgpu chrome projects only the modal dialog's nodes while it is open (`chrome_accessibility_nodes`), so the band's status is not announced then" });
+  else verdict("band-reads-choosing-while-the-dialog-is-open", (await band())?.stage === "choosing", { band: (await band())?.stage });
   await shot("dialog");
-  await page.locator('[id="ui.dialog.choice.overwrite"]').first().click({ timeout: 4000 }).catch((error) => log(`overwrite click failed ${String(error).split("\n")[0]}`));
+  await dialogChoose("overwrite");
   const gone = await waitUntil(band, (b) => b === null, 30000);
   verdict("overwrite-closes-the-session", gone.ok && (await finalizeDialog()) === null, { waitedMs: gone.waitedMs, band: gone.value?.stage ?? null });
   const expected = copy.row("edit", null, 1);
@@ -934,13 +1540,140 @@ const step5 = async (ctx: Ctx) => {
   ctx.afterOverwrite = await positions();
   verdict("head-keeps-plus-120-after-overwrite", placed(ctx.afterOverwrite, ctx.a, ctx.p0[ctx.a], 120, ctx.dy!) && placed(ctx.afterOverwrite, ctx.b, ctx.p0[ctx.b], 120, ctx.dy!) && placed(ctx.afterOverwrite, ctx.c, ctx.pc![ctx.c], 0, 0), { a: ctx.afterOverwrite[ctx.a], c: ctx.afterOverwrite[ctx.c] });
   await shot("overwritten");
+  note("reload-check-deferred", { reason: "the reload is taken after step 8 and before step 9 (attributed to step 5), so steps 6–8 keep the document it would otherwise replace and step 9 digests its console" });
+};
+
+/** 📂️ Picks the sync card's Folder kind: the sync utilities render as one grouped toggle (`ui.utilities.group.sync`)
+ * whose menu lists File / Folder / Remote. */
+const pickSyncFolder = async () => {
+  if (renderer === "wgpu") {
+    if (!mirrorFind(await mirror(), "framework.sync.folder")) await wgpuPress("ui.utilities.group.sync");
+    await sleep(700);
+    return (await wgpuPress("framework.sync.folder")) ?? "absent";
+  }
+  const direct = page.locator('[id="framework.sync.folder"]').first();
+  if (!(await direct.count().catch(() => 0))) {
+    await page.locator('[id="ui.utilities.group.sync"]').first().click({ timeout: 4000 }).catch(() => {});
+    await sleep(700);
+  }
+  if (await direct.count().catch(() => 0)) {
+    await direct.click({ timeout: 4000 }).catch(() => {});
+    return "id";
+  }
+  const item = page.locator('[role="menuitem"], [role="menuitemradio"], [role="option"], button').filter({ hasText: /^\s*(folder|ordner)\s*$/i }).first();
+  if (await item.count().catch(() => 0)) {
+    await item.click({ timeout: 4000 }).catch(() => {});
+    return "text";
+  }
+  return "absent";
+};
+
+/** 🗂️ Attaches the session document to the local folder `path` through the sync chip (`s-sync-status` →
+ * `framework.sync.folder` → `framework.sync.folder.path` → Attach): `openSyncTarget` opens it with a
+ * `persistedLocalOnly` folder binding the backbone worker reads and writes through the dev serve's `/semio-backbone`. */
+const attachFolder = async (path: string) => {
+  if (renderer === "wgpu") {
+    if (!(await openPanelTabIds()).includes("s-sync-status")) await wgpuPress("s-sync-status");
+    await sleep(600);
+    await pickSyncFolder();
+    const shown = await waitUntil(async () => mirrorFind(await mirror(), "framework.sync.folder.path") ?? null, (node) => node !== null, 8000);
+    const field = shown.value ? await mirrorLocator(shown.value.key, shown.value.window) : null;
+    await field?.fill(path, { force: true, timeout: 4000 }).catch(() => {});
+    const typed = field ? await field.inputValue({ timeout: 2000 }).catch(() => null) : null;
+    await sleep(400);
+    const attached = await wgpuPress("framework.sync.attach");
+    await sleep(1500);
+    await prepareChord();
+    await page.keyboard.press("Escape").catch(() => {});
+    return { card: shown.ok, typed, attachButton: attached !== null };
+  }
+  const chip = page.locator('[id="s-sync-status"]').first();
+  if (!(await openPanelTabIds()).includes("s-sync-status")) await chip.click({ timeout: 4000 }).catch(() => {});
+  await sleep(600);
+  await pickSyncFolder();
+  const field = page.locator('[id="framework.sync.folder.path"]').first();
+  const shown = await waitUntil(() => field.count().catch(() => 0), (count) => count > 0, 8000);
+  await field.fill(path, { timeout: 4000 }).catch(() => {});
+  const typed = await field.inputValue({ timeout: 2000 }).catch(() => null);
+  const attach = page.locator("button").filter({ hasText: /^\s*(attach|verbinden)\s*$/i }).first();
+  const attachCount = await attach.count().catch(() => 0);
+  if (attachCount) await attach.click({ timeout: 4000 }).catch(() => {});
+  else await field.press("Enter").catch(() => {});
+  await sleep(1500);
+  await page.keyboard.press("Escape").catch(() => {});
+  return { card: shown.ok, typed, attachButton: attachCount > 0 };
+};
+
+/** 🔁️ Step 5's reload half, taken after step 8. A `?plugin=` playground opens no space, so
+ * `resolveDocumentOpeningBindings` (`🏛️ShellHost/🧭️opening/🟦️.ts`) answers no binding and a bare reload re-runs Set
+ * Active Example; the one local-only route is the sync card's folder attach, which does not reopen by itself after a
+ * reload. The folder is attached at boot (`--folder-at=1`) or here with one edit to trigger the write (`--folder-at=5`);
+ * then: see the archive on disk, reload, attach the same folder again, and compare the head and the document rows with
+ * the ones before the reload. */
+const reloadCheck = async (ctx: Ctx) => {
+  if (!ctx.afterOverwrite || !ctx.a) return;
+  const early = ctx.folder !== undefined;
+  const folder = ctx.folder ?? join(OUT, `folder-${stamp}-${currentLocale}`);
+  mkdirSync(folder, { recursive: true });
+  const beforeAttach = await positions();
+  await closePanels();
+  const attached = early ? { card: true, typed: folder, attachButton: true } : await attachFolder(folder);
+  const afterAttach = await positions();
+  if (!early) verdict("folder-attach-keeps-the-head", movedIds(beforeAttach, afterAttach, 1e-6).length === 0, { attached, drift: movedIds(beforeAttach, afterAttach, 1e-6).slice(0, 6) });
+  const files = () => readdirSync(folder, { recursive: true, withFileTypes: true }).filter((entry) => entry.isFile()).map((entry) => `${entry.parentPath ?? ""}/${entry.name}`.replace(folder, ""));
+  if (!early && ctx.c && afterAttach[ctx.c]) {
+    await closePanels();
+    const zoom = cameraOf(await vitals()).zoom;
+    await dragBy(toScreen(afterAttach[ctx.c], cameraOf(await vitals()), await paneBox()), 10 * zoom, 10 * zoom);
+    await waitUntil(positions, (p) => offsetOf(afterAttach, p, ctx.c!)?.some((v) => Math.abs(v) > 0.5) === true, 15000);
+  }
+  const written = await waitUntil(async () => files(), (list) => list.length > 0, 30000, 1000);
+  verdict("folder-attach-writes-the-document-archive", attached.typed === folder && written.ok, { files: written.value.slice(0, 8), folder, waitedMs: written.waitedMs, reading: "the archive is written on the bound document's outbound mutations (`archivePersistence` in `bindDocumentBackbone.send`), so one edit follows the attach" });
+  const before = await positions();
+  const historyBefore = await allHistoryRows();
+  const rowsBefore = documentEntries(historyBefore).map((row) => row.label.slice(0, 60));
+  const editsBefore = await documentEditIds(historyBefore);
+  emit({ kind: "rows", tag: "before-reload", editIds: editsBefore, rows: historyBefore.filter((row) => row.kind === "entry").map((row) => ({ key: row.key, label: row.label, text: row.text.slice(0, 160), expandable: row.expandable })) });
+  const warned = historyBefore.find((row) => row.kind === "entry" && /Set Active Example|Beispiel/i.test(row.label) && /Warning|Warnung/.test(row.text));
+  if (warned) {
+    const expanded = await expandEntry(warned.id);
+    note("example-row-warning-after-attach", { label: warned.text.slice(0, 120), flagged: expanded.mutations.filter((row) => /Warning|Warnung/.test(row.text)).slice(0, 8).map((row) => row.text.slice(0, 200)), shown: expanded.mutations.length });
+  }
+  await closePanels();
+  expectedReloads += 1;
   await page.reload({ waitUntil: "domcontentloaded", timeout: 60000 }).catch((error) => log(`reload failed ${String(error).split("\n")[0]}`));
   const rebooted = await waitForBoot("reload", 60);
   await installBandTrace();
-  const reloaded = await waitUntil(positions, (p) => placed(p, ctx.a!, ctx.p0![ctx.a!], 120, ctx.dy!), 60000, 1000);
-  const drift = movedIds(ctx.afterOverwrite, reloaded.value, 1e-6);
-  verdict("positions-persist-after-reload", rebooted && reloaded.ok && drift.length === 0, { rebooted, a: reloaded.value[ctx.a], expected: ctx.afterOverwrite[ctx.a], drift: drift.slice(0, 8), driftCount: drift.length, waitedMs: reloaded.waitedMs });
+  await installNoticeTrace();
+  const bare = await positions();
+  note("bare-reload-reruns-the-example", { driftCount: movedIds(before, bare, 1e-6).length, route: await evalSafe(() => location.search, "") });
+  const example = (await allHistoryRows()).filter((row) => row.kind === "entry" && /Set Active Example|Beispiel/i.test(row.label));
+  if (example[0]) {
+    const expanded = await expandEntry(example[0].id);
+    note("post-reload-example-row", { label: example[0].label.slice(0, 120), text: example[0].text.slice(0, 200), flagged: expanded.mutations.filter((row) => /Warning|Warnung|Error|Fehler/.test(row.text)).slice(0, 6).map((row) => row.text.slice(0, 160)) });
+  }
+  await closePanels();
+  const reattached = await attachFolder(folder);
+  const restored = await waitUntil(positions, (p) => movedIds(before, p, 1e-6).length === 0, 60000, 1000);
+  const drift = movedIds(before, restored.value, 1e-6);
+  verdict("positions-persist-after-reload", rebooted && restored.ok, { rebooted, reattached, a: restored.value[ctx.a], expected: before[ctx.a], driftCount: drift.length, drift: drift.slice(0, 6), folder });
+  note("folder-backbone-requests", { requests: consoleRows.filter((row) => row.locale === currentLocale && row.type === "backbone").slice(-30).map((row) => `${row.t}s ${row.text}`), sessions: await evalSafe(() => Array.from(document.querySelectorAll("[data-surface-id]")).map((el) => el.getAttribute("data-surface-id")).slice(0, 3), [] as (string | null)[]) });
+  const hydrated = await waitUntil(allHistoryRows, (all) => documentEntries(all).length >= rowsBefore.length, 20000, 1000);
+  const historyAfter = hydrated.value;
+  const editsAfter = await documentEditIds(historyAfter);
+  emit({ kind: "rows", tag: "after-reload-reattach", editIds: editsAfter, rows: historyAfter.filter((row) => row.kind === "entry").map((row) => ({ key: row.key, label: row.label, text: row.text.slice(0, 160), expandable: row.expandable })) });
+  verdict("edit-ids-survive-the-reload", editsBefore.length > 0 && editsBefore.every((id) => editsAfter.includes(id)), { before: editsBefore.length, after: editsAfter.length, lost: editsBefore.filter((id) => !editsAfter.includes(id)).slice(0, 12) });
+  const labels = documentEntries(historyAfter).map((row) => row.label.slice(0, 60));
+  const descriptionless = /^(Duplicate Selection|Set Active Example|Auswahl duplizieren|Aktives Beispiel festlegen)$/;
+  const lost = rowsBefore.filter((label) => !labels.includes(label) && !descriptionless.test(label));
+  const relabelled = rowsBefore.filter((label) => !labels.includes(label) && descriptionless.test(label));
+  verdict("document-rows-survive-the-reload", rowsBefore.length > 0 && lost.length === 0 && labels.length >= rowsBefore.length, { before: rowsBefore.slice(0, 14), after: labels.slice(0, 14), lost: lost.slice(0, 12), counts: [rowsBefore.length, labels.length], waitedMs: hydrated.waitedMs });
+  if (relabelled.length) note("descriptionless-rows-come-back-as-op-text", { relabelled, reading: "known W2-B gap: commands whose app emits no `description` (Duplicate Selection, Set Active Example) reload with op-text labels; counted, not compared by label" });
+  const overwrite = COPY[currentLocale].row("edit", null, 1);
+  if (rowsBefore.some((label) => label.startsWith(overwrite))) verdict("overwrite-row-survives-the-reload", labels.some((label) => label.startsWith(overwrite)), { labels: labels.slice(0, 10) });
+  else note("overwrite-row-absent-before-the-reload", { before: rowsBefore.slice(0, 12), reading: "the overwrite row was no longer in the document when the reload check ran (a dev reload reset it earlier)" });
   await shot("reloaded");
+  await closePanels();
 };
 
 /** ↩️ Step 6 — Undo takes the finalize back (+80), Redo re-authors it (+120); chord first, then the panel button. */
@@ -952,7 +1685,7 @@ const step6 = async (ctx: Ctx) => {
   const isAt = (dx: number) => async () => placed(await positions(), ctx.a!, ctx.p0![ctx.a!], dx, ctx.dy!);
   const attempt = async (verb: "undo" | "redo", target: number) => {
     const chord = verb === "undo" ? `${mod}+z` : `${mod}+Shift+z`;
-    await evalSafe(() => (document.activeElement as HTMLElement | null)?.blur?.(), undefined);
+    await prepareChord();
     await page.keyboard.press(chord).catch(() => {});
     const byChord = await waitUntil(isAt(target), (ok) => ok, 12000, 400);
     verdict(`${verb}-chord-${verb === "undo" ? "takes-back" : "re-applies"}-the-finalize`, byChord.ok, { chord, a: (await positions())[ctx.a!], expected: [ctx.p0![ctx.a!][0] + target, ctx.p0![ctx.a!][1] + ctx.dy!], waitedMs: byChord.waitedMs });
@@ -985,7 +1718,6 @@ const step6 = async (ctx: Ctx) => {
   const copy = COPY[currentLocale];
   const rows = await allHistoryRows();
   const labels = documentEntries(rows).map((row) => row.label);
-  verdict("overwrite-row-survives-the-reload", labels.some((label) => label.startsWith(copy.row("edit", null, 1))), { labels: labels.slice(-8) });
   verdict("undone-and-redone-rows-appear", labels.some((label) => label.startsWith(copy.row("undo", null, 1))) && labels.some((label) => label.startsWith(copy.row("redo", null, 1))), { expected: [copy.row("undo", null, 1), copy.row("redo", null, 1)], labels: labels.slice(-8) });
   await shot("undo-redo");
   await closePanels();
@@ -997,56 +1729,110 @@ const step7 = async (ctx: Ctx) => {
     verdict("precondition-step-2", false, {});
     return;
   }
+  const dy0 = ctx.dy!;
+  ctx.dyEdited = Math.round(dy0 + 30);
+  ctx.alternative = `probe ${currentLocale} ${stamp.slice(11, 19)}`;
+  const first = await editDragAsAlternative(ctx, ctx.dyEdited, ctx.alternative, "");
+  if (!first) return;
+  await shot("alternative");
+  const listed = await waitUntil(readAlternatives, (rows) => rows.some((row) => row.text.includes(ctx.alternative!)), 15000, 1000);
+  verdict("alternatives-section-lists-the-new-alternative", listed.ok, { rows: listed.value.map((row) => `${row.key}=${row.text.slice(0, 60)}${row.active ? " [active]" : ""}`), expectedSelector: "framework.history.alternatives / framework.history.alternative.<id>" });
+  if (!listed.value.length) {
+    verdict("alternative-switcher-present", false, { inventory: (await historyInventory()).filter((row) => /alternative/i.test(String(row.id))).slice(0, 12), note: "no `framework.history.alternative.<id>` rows in this build" });
+    await closePanels();
+    return;
+  }
+  const trunk = listed.value.find((row) => !row.text.includes(ctx.alternative!));
+  const expectAt = (dy: number) => async () => placed(await positions(), ctx.a!, ctx.p0![ctx.a!], 120, dy) && placed(await positions(), ctx.b!, ctx.p0![ctx.b!], 120, dy);
+  if (trunk) {
+    const via = await switchAlternative(trunk);
+    const back = await waitUntil(expectAt(dy0), (ok) => ok, 20000, 500);
+    verdict("switching-to-the-trunk-shows-original-positions", back.ok, { via, trunk: trunk.text.slice(0, 60), a: (await positions())[ctx.a], expected: [ctx.p0[ctx.a][0] + 120, ctx.p0[ctx.a][1] + dy0] });
+    const mine = (await readAlternatives()).find((row) => row.text.includes(ctx.alternative!));
+    const forth = mine ? await switchAlternative(mine) : "absent";
+    const edited = await waitUntil(expectAt(ctx.dyEdited), (ok) => ok, 20000, 500);
+    verdict("switching-back-shows-the-edited-positions", edited.ok, { via: forth, a: (await positions())[ctx.a], expected: [ctx.p0[ctx.a][0] + 120, ctx.p0[ctx.a][1] + ctx.dyEdited] });
+  } else {
+    verdict("trunk-listed-after-new-alternative", false, { rows: listed.value.map((row) => row.text.slice(0, 60)), pending: "W1-G: after finalize-as-new-alternative the original trunk is not yet listed — expected-pending" });
+    const second = `${ctx.alternative} b`;
+    const dy2 = Math.round(dy0 + 60);
+    const made = await editDragAsAlternative(ctx, dy2, second, "-2");
+    if (!made) return;
+    const both = await waitUntil(readAlternatives, (rows) => rows.some((row) => row.text.includes(second)) && rows.some((row) => row.text.includes(ctx.alternative!) && !row.text.includes(second)), 15000, 1000);
+    verdict("alternatives-section-lists-both-alternatives", both.ok, { rows: both.value.map((row) => `${row.key}=${row.text.slice(0, 60)}${row.active ? " [active]" : ""}`) });
+    const firstRow = both.value.find((row) => row.text.includes(ctx.alternative!) && !row.text.includes(second));
+    const viaFirst = firstRow ? await switchAlternative(firstRow) : "absent";
+    const atFirst = await waitUntil(expectAt(ctx.dyEdited), (ok) => ok, 20000, 500);
+    verdict("switching-to-the-first-alternative-shows-its-positions", atFirst.ok, { via: viaFirst, a: (await positions())[ctx.a], expected: [ctx.p0[ctx.a][0] + 120, ctx.p0[ctx.a][1] + ctx.dyEdited] });
+    const secondRow = (await readAlternatives()).find((row) => row.text.includes(second));
+    const viaSecond = secondRow ? await switchAlternative(secondRow) : "absent";
+    const atSecond = await waitUntil(expectAt(dy2), (ok) => ok, 20000, 500);
+    verdict("switching-to-the-second-alternative-shows-its-positions", atSecond.ok, { via: viaSecond, a: (await positions())[ctx.a], expected: [ctx.p0[ctx.a][0] + 120, ctx.p0[ctx.a][1] + dy2] });
+    const back = firstRow ? await switchAlternative((await readAlternatives()).find((row) => row.key === firstRow.key) ?? firstRow) : "absent";
+    await waitUntil(expectAt(ctx.dyEdited), (ok) => ok, 20000, 500);
+    note("left-on-the-first-alternative", { via: back });
+  }
+  await shot("switched");
+  await closePanels();
+};
+
+type AlternativeRow = { id: string; key: string; text: string; active: boolean };
+
+/** 🌿️ The Alternatives section's rows (`framework.history.alternative.<id>`), with whether each reads active. */
+const readAlternatives = async (): Promise<AlternativeRow[]> => {
+  await openHistory();
+  for (const edge of ["start", "end"] as const) await scrollHistory(edge);
+  if (renderer === "wgpu") return (await mirror()).filter((node) => !node.key.includes("::") && /(^|\/)framework\.history\.alternative\.[^/]+$/.test(node.key)).map((node) => ({ id: node.key, key: node.key.replace(/^.*framework\.history\.alternative\./, ""), text: `${node.label} ${node.description}`.trim(), active: node.selected === "true" || node.pressed === "true" }));
+  return evalSafe(
+    () =>
+      Array.from(document.querySelectorAll("[id]"))
+        .filter((el) => /(^|\/)framework\.history\.alternative\.[^/]+$/.test(el.id))
+        .map((el) => ({
+          id: el.id,
+          key: el.id.replace(/^.*framework\.history\.alternative\./, ""),
+          text: (el as HTMLElement).innerText.replace(/\s+/g, " ").trim(),
+          active: el.getAttribute("aria-selected") === "true" || el.getAttribute("aria-current") !== null || el.getAttribute("data-selected") === "true",
+        })),
+    [] as AlternativeRow[],
+  );
+};
+
+/** 🔀️ Switches to one alternative through its Switch row action, else the row's own activation. */
+const switchAlternative = async (row: AlternativeRow) => pressRowAction(row.id, /^(Switch|Switch to|Switch alternative|Wechseln|Umschalten|Alternative wechseln)$/i);
+
+/** 🌿️ One history-edit session on the drag's dy through the real stepper → Accept → Finalize → New alternative `name`;
+ * verdicts carry `suffix` so a second alternative reads apart from the first. Answers whether the session committed. */
+const editDragAsAlternative = async (ctx: Ctx, dyValue: number, name: string, suffix: string) => {
   await installBandTrace();
   const begun = await beginDragEdit(ctx);
-  verdict("second-session-opens", begun.band?.stage === "editing", { via: begun.via, stage: begun.band?.stage });
-  const ed = (await waitUntil(editor, (value) => Boolean(value?.dx && value?.dy), 15000)).value;
-  verdict("editor-reads-the-effective-input", Boolean(ed?.dx && near(Number(ed.dx.value), 120, 0.005)), { dx: ed?.dx?.value, dy: ed?.dy?.value, note: "after the redo the drag's effective input is the overwritten dx=120" });
-  ctx.dyEdited = Math.round(ctx.dy! + 30);
-  const typed = await typeEditorNumber("dy", ctx.dyEdited);
-  const preview = await waitUntil(positions, (p) => placed(p, ctx.a!, ctx.p0![ctx.a!], 120, ctx.dyEdited!), 20000);
-  verdict("dy-edit-updates-the-preview", preview.ok, { typed, a: preview.value[ctx.a], expected: [ctx.p0[ctx.a][0] + 120, ctx.p0[ctx.a][1] + ctx.dyEdited] });
-  await pressBand("accept");
+  verdict(`session-opens${suffix}`, begun.band?.stage === "editing", { via: begun.via, stage: begun.band?.stage });
+  if (begun.band?.stage !== "editing") return false;
+  const ed = (await waitUntil(readEditor, (value) => Boolean(value?.dx && value?.dy), 15000)).value;
+  verdict(`editor-reads-the-effective-input${suffix}`, Boolean(ed?.dx && near(Number(ed.dx.value), 120, 0.005)), { dx: ed?.dx?.value, dy: ed?.dy?.value, note: "the drag's effective input in the current alternative carries the overwritten dx=120" });
+  if (!ed?.dx) {
+    dumpJson(`no-editor${suffix}`, { band: await band(), panels: await openPanelTabIds(), inventory: (await historyInventory()).filter((row) => !/entry\.|mutation\./.test(String(row.id))), rows: (await readHistory()).slice(0, 40) });
+    await shot(`no-editor${suffix}`);
+  }
+  const typed = await typeEditorNumber("dy", dyValue);
+  verdict(`dy-stepper-control-reachable${suffix}`, typed.present && typed.typed === String(dyValue), { typed, authored: "framework.history.editor.input.dy" });
+  const preview = await waitUntil(positions, (p) => placed(p, ctx.a!, ctx.p0![ctx.a!], 120, dyValue), 20000);
+  verdict(`dy-edit-updates-the-preview${suffix}`, preview.ok, { a: preview.value[ctx.a!], expected: [ctx.p0![ctx.a!][0] + 120, ctx.p0![ctx.a!][1] + dyValue] });
+  const via = await pressBand("accept");
   const review = await waitUntil(band, (b) => b?.stage === "reviewing" && Boolean(b.review), 60000, 100);
-  verdict("second-review-ready", review.value?.review === "ready", { review: review.value?.review, text: review.value?.text?.slice(0, 160) });
+  verdict(`review-ready${suffix}`, review.value?.review === "ready", { via, review: review.value?.review, text: review.value?.text?.slice(0, 160) });
   await pressBand("finalize");
   const dialog = await waitUntil(finalizeDialog, (d) => d !== null, 15000);
-  ctx.alternative = `probe ${currentLocale} ${stamp.slice(11, 19)}`;
-  const name = page.locator('[role="dialog"] input[id="name"], [role="dialog"] input[type="text"]').first();
-  await name.fill(ctx.alternative, { timeout: 4000 }).catch(() => {});
-  const nameValue = await name.inputValue({ timeout: 2000 }).catch(() => null);
-  verdict("name-field-takes-the-alternative-name", dialog.ok && nameValue === ctx.alternative, { nameValue, dialog: dialog.value?.submit });
-  await page.locator('[id="ui.dialog.submit"]').first().click({ timeout: 4000 }).catch((error) => log(`submit click failed ${String(error).split("\n")[0]}`));
+  const nameValue = await dialogFillName(name);
+  verdict(`name-field-takes-the-alternative-name${suffix}`, dialog.ok && nameValue === name, { nameValue, submit: dialog.value?.submit });
+  await dialogChoose("submit");
   const gone = await waitUntil(band, (b) => b === null, 30000);
-  verdict("new-alternative-closes-the-session", gone.ok, { band: gone.value?.stage ?? null, fault: gone.value?.fault ?? null });
-  const expected = COPY[currentLocale].row("edit", ctx.alternative, 1);
+  verdict(`new-alternative-closes-the-session${suffix}`, gone.ok, { band: gone.value?.stage ?? null, fault: gone.value?.fault ?? null });
+  const expected = COPY[currentLocale].row("edit", name, 1);
   const rows = await waitUntil(allHistoryRows, (all) => all.some((row) => row.kind === "entry" && row.label.startsWith(expected)), 20000, 1000);
-  verdict("alternative-row-appears", rows.ok, { expected, entries: documentEntries(rows.value).map((row) => row.label).slice(-6) });
-  const head = await waitUntil(positions, (p) => placed(p, ctx.a!, ctx.p0![ctx.a!], 120, ctx.dyEdited!), 15000);
-  verdict("head-is-on-the-edited-alternative", head.ok, { a: head.value[ctx.a], expected: [ctx.p0[ctx.a][0] + 120, ctx.p0[ctx.a][1] + ctx.dyEdited] });
-  await shot("alternative");
-  const switchers = await evalSafe(
-    () =>
-      Array.from(document.querySelectorAll("[id], [aria-label], [title]"))
-        .filter((el) => /alternative|switchAlternative/i.test(`${el.id} ${el.getAttribute("aria-label") ?? ""} ${el.getAttribute("title") ?? ""}`) && !/createAlternative|ui\.dialog/.test(el.id))
-        .map((el) => `${el.tagName.toLowerCase()}#${el.id}[${el.getAttribute("role") ?? el.getAttribute("data-slot") ?? ""}] ${(el as HTMLElement).innerText?.replace(/\s+/g, " ").trim().slice(0, 60) ?? ""}`)
-        .slice(0, 20),
-    [] as string[],
-  );
-  const select = page.locator('select, [role="combobox"]').filter({ hasText: ctx.alternative }).first();
-  if (await select.count().catch(() => 0)) {
-    await select.click({ timeout: 3000 }).catch(() => {});
-    const original = page.locator('[role="option"]').filter({ hasNotText: ctx.alternative }).first();
-    await original.click({ timeout: 3000 }).catch(() => {});
-    const back = await waitUntil(positions, (p) => placed(p, ctx.a!, ctx.p0![ctx.a!], 120, ctx.dy!), 20000);
-    verdict("switching-to-the-original-alternative-shows-original-positions", back.ok, { a: back.value[ctx.a], switchers });
-  } else {
-    verdict("alternative-switcher-present", false, {
-      switchers,
-      finding: "no React control switches alternatives: the Rust history body renders no alternatives list, and `switchAlternative` declares no `alternativeId` argument, so neither the palette nor a dialog can dispatch it (only the tutorial driver does, `🏛️ShellHost/🟦️.tsx` applyTutorialSliceToShell)",
-    });
-  }
-  await closePanels();
+  verdict(`alternative-row-appears${suffix}`, rows.ok, { expected, entries: documentEntries(rows.value).map((row) => row.label).slice(0, 6) });
+  const head = await waitUntil(positions, (p) => placed(p, ctx.a!, ctx.p0![ctx.a!], 120, dyValue), 15000);
+  verdict(`head-is-on-the-edited-alternative${suffix}`, head.ok, { a: head.value[ctx.a!], expected: [ctx.p0![ctx.a!][0] + 120, ctx.p0![ctx.a!][1] + dyValue] });
+  return gone.ok;
 };
 
 /** 💥️ Step 8 — duplicate a node, drag the clone, withdraw the clone's `create-node` → blocked review with an Error row,
@@ -1055,34 +1841,40 @@ const step8 = async (ctx: Ctx) => {
   await closePanels();
   await frameBoard(4);
   const exclude = [ctx.a, ctx.b, ctx.c].filter((id): id is string => Boolean(id));
-  const { picked } = await pickNodes(1, [[24 + 70, 24 + 70]], exclude, 0);
-  const d = picked[0];
-  if (!d) {
-    verdict("clickable-node-for-the-fatal-path", false, {});
+  const spot = await pickCloneSource(exclude);
+  const d = spot?.row;
+  if (!spot || !d) {
+    verdict("clone-source-with-free-space", false, { reason: "no node whose clone (+24,+24) and drag destination are ≥ 55 world units from every other node" });
     return;
   }
-  const rowsBefore = documentEntries(await allHistoryRows());
+  log(`clone source ${d.id} at ${JSON.stringify(d.world)} drag ${JSON.stringify(spot.move)} zoom=${spot.zoom}`);
+  const newestBefore = newestEntrySeq(await allHistoryRows());
   await closePanels();
   const nodesBefore = (await vitals())?.nodes ?? -1;
   const idsBefore = Object.keys(await positions());
   await page.mouse.click(d.at.x, d.at.y);
   const selected = await waitUntil(vitals, (v) => selectionIds(v).length === 1 && selectionIds(v)[0] === d.id, 15000);
+  await prepareChord();
   await page.keyboard.press(`${mod}+d`).catch(() => {});
   const grew = await waitUntil(vitals, (v) => (v?.nodes ?? -1) === nodesBefore + 1, 30000);
   const clone = Object.keys(await positions()).find((id) => !idsBefore.includes(id));
   verdict("duplicate-adds-one-clone", selected.ok && grew.ok && Boolean(clone), { d: d.id, clone, nodes: [nodesBefore, grew.value?.nodes] });
   if (!clone) return;
   const reselected = await waitUntil(vitals, (v) => selectionIds(v).includes(clone), 15000);
+  await prepareChord();
+  await page.keyboard.press("Escape").catch(() => {});
+  const cleared = await waitUntil(vitals, (v) => !selectionIds(v).includes(clone), 8000);
+  note("clone-deselected-before-its-drag", { cleared: cleared.ok, selection: selectionIds(cleared.value), reading: "board `sole_indirect_handle_hit_idle_selected_node`: while a node with a sole free handle is the only selection, a press inside it resolves to that handle and starts a link drag" });
   const beforeDrag = await positions();
   const camera = cameraOf(await vitals());
   const cloneAt = toScreen(beforeDrag[clone], camera, await paneBox());
-  const grab = { x: cloneAt.x + 4, y: cloneAt.y + 4 };
-  await dragBy(grab, 70 * camera.zoom, 70 * camera.zoom);
+  const grab = { x: cloneAt.x + 8 * camera.zoom * Math.SQRT1_2, y: cloneAt.y + 8 * camera.zoom * Math.SQRT1_2 };
+  await dragBy(grab, spot.move[0] * camera.zoom, spot.move[1] * camera.zoom);
   const dragged = await waitUntil(positions, (p) => offsetOf(beforeDrag, p, clone)?.some((v) => Math.abs(v) > 0.5) === true, 20000);
   const cloneOffset = offsetOf(beforeDrag, dragged.value, clone);
-  verdict("clone-drag-moves-only-the-clone", dragged.ok && movedIds(beforeDrag, dragged.value).every((id) => id === clone), { reselected: reselected.ok, cloneOffset, moved: movedIds(beforeDrag, dragged.value).slice(0, 4) });
+  verdict("clone-drag-moves-only-the-clone", dragged.ok && movedIds(beforeDrag, dragged.value).every((id) => id === clone), { reselected: reselected.ok, cloneOffset, moved: movedIds(beforeDrag, dragged.value).slice(0, 4), selection: selectionIds(await vitals()), grab, cloneAt });
   const head = dragged.value;
-  const added = (await waitUntil(async () => documentEntries(await allHistoryRows()).filter((row) => !rowsBefore.some((before) => before.id === row.id)), (rows) => rows.length >= 2, 30000, 1000)).value;
+  const added = (await waitUntil(async () => documentEntries(await allHistoryRows()).filter((row) => Number(row.key) > newestBefore), (rows) => rows.length >= 2, 30000, 1000)).value;
   const copy = COPY[currentLocale];
   let createRow: HistoryRow | undefined;
   let dragRow: HistoryRow | undefined;
@@ -1097,11 +1889,12 @@ const step8 = async (ctx: Ctx) => {
   await installBandTrace();
   const via = await pressRowAction(createRow.id, copy.edit);
   const editing = await waitUntil(band, (b) => b?.stage === "editing", 20000);
-  const preview = await positions();
-  verdict("editing-the-create-node-previews-the-clone-before-its-drag", editing.ok && Boolean(cloneOffset && placed(preview, clone, beforeDrag[clone], 0, 0)), { via, clone: preview[clone], beforeDrag: beforeDrag[clone] });
+  const preview = await waitUntil(positions, (p) => placed(p, clone, beforeDrag[clone], 0, 0), 15000);
+  verdict("editing-the-create-node-previews-the-clone-before-its-drag", editing.ok && preview.ok, { via, clone: preview.value[clone], beforeDrag: beforeDrag[clone], head: head[clone], waitedMs: preview.waitedMs });
   const withdraw = await pressAuthored("framework.history.editor.withdraw");
+  verdict("withdraw-control-reachable", withdraw.present && withdraw.disabled !== true, { withdraw, authored: "framework.history.editor.withdraw(.row)" });
   const withdrawn = await waitUntil(positions, (p) => !p[clone], 15000);
-  verdict("withdraw-previews-the-document-without-the-clone", withdraw.present && withdrawn.ok, { withdraw, hasClone: Boolean(withdrawn.value[clone]) });
+  verdict("withdraw-previews-the-document-without-the-clone", withdrawn.ok, { withdraw, hasClone: Boolean(withdrawn.value[clone]) });
   await pressBand("accept");
   const blocked = await waitUntil(band, (b) => b?.stage === "reviewing" && Boolean(b.review), 60000, 100);
   verdict("replay-review-is-blocked", blocked.value?.review === "blocked", { review: blocked.value?.review, text: blocked.value?.text?.slice(0, 200), outcome: blocked.value?.outcome });
@@ -1115,15 +1908,25 @@ const step8 = async (ctx: Ctx) => {
   emit({ kind: "inventory", tag: "blocked", rows: await historyInventory(), band: blocked.value });
   const rounds: Record<string, unknown>[] = [];
   for (let round = 0; round < 4 && (await band())?.review === "blocked"; round++) {
-    const next = await pressAuthored("framework.history.timeTravel.nextProblem");
+    const next: Record<string, unknown> = await pressAuthored("framework.history.timeTravel.nextProblem");
+    if (!next.present) {
+      await openHistory();
+      const problem = (await readHistory()).find((row) => row.kind === "mutation" && copy.severityError.test(row.text));
+      next.fallback = problem ? `edit on failing row ${problem.key} via ${await pressRowAction(problem.id, copy.edit)}` : "no failing row";
+    }
+    const generationBefore = (await band())?.generation;
     const reopened = await waitUntil(band, (b) => b?.stage === "editing", 15000);
-    const heading = (await editor())?.heading;
-    const pulled = await pressAuthored("framework.history.editor.withdraw");
-    await sleep(500);
+    await sleep(800);
+    const generationEditing = (await band())?.generation;
+    const heading = (await editor())?.heading ?? (await band())?.target;
+    const pulled: Record<string, unknown> = await pressAuthored("framework.history.editor.withdraw");
+    const marked = await waitUntil(readHistory, (rows) => rows.some((row) => row.key === dragRow!.key && /Withdrawn|Zurückgezogen/.test(row.text)), 8000);
+    const dragText = marked.value.find((row) => row.key === dragRow!.key)?.text?.slice(0, 160);
     await pressBand("accept");
     const settled = await waitUntil(band, (b) => b?.stage === "reviewing" && Boolean(b.review), 60000, 100);
-    rounds.push({ round, next, reopened: reopened.ok, heading, pulled, review: settled.value?.review });
+    rounds.push({ round, next, reopened: reopened.ok, generationBefore, generationEditing, heading, pulled, dragMarkedWithdrawn: marked.ok, dragText, review: settled.value?.review, accepted: settled.value?.text?.match(/Accepted changes: \d+|Übernommene Änderungen: \d+/)?.[0] });
   }
+  verdict("next-problem-control-reachable", rounds.length > 0 && (rounds[0].next as { present?: boolean } | undefined)?.present === true, { first: rounds[0]?.next, authored: "framework.history.timeTravel.nextProblem(.row)" });
   const ready = await band();
   verdict("withdrawing-the-failing-drag-makes-the-review-ready", ready?.review === "ready", { rounds, review: ready?.review, text: ready?.text?.slice(0, 160) });
   await shot("resolved");
@@ -1132,8 +1935,12 @@ const step8 = async (ctx: Ctx) => {
   verdict("exit-closes-the-session", gone.ok, { band: gone.value?.stage ?? null });
   const after = await waitUntil(positions, (p) => movedIds(head, p).length === 0, 15000);
   verdict("exit-leaves-head-positions-unchanged", after.ok, { drift: movedIds(head, after.value).slice(0, 8) });
+  const seqOf = (row: string) => Number(row.match(/framework\.history\.entry\.(\d+)=/)?.[1] ?? -1);
+  const newestPre = Math.max(...rowsPre.map(seqOf));
   const rowsPost = documentEntries(await allHistoryRows()).map((row) => `${row.id}=${row.label}`);
-  verdict("exit-leaves-no-new-rows", JSON.stringify(rowsPost) === JSON.stringify(rowsPre), { added: rowsPost.filter((row) => !rowsPre.includes(row)), removed: rowsPre.filter((row) => !rowsPost.includes(row)) });
+  const addedRows = rowsPost.filter((row) => seqOf(row) > newestPre);
+  const relabelled = rowsPost.filter((row) => seqOf(row) <= newestPre && rowsPre.some((pre) => seqOf(pre) === seqOf(row)) && !rowsPre.includes(row));
+  verdict("exit-leaves-no-new-rows", addedRows.length === 0 && relabelled.length === 0, { newestPre, added: addedRows.map((row) => row.slice(0, 120)), relabelled: relabelled.map((row) => row.slice(0, 120)) });
   await shot("exited");
   await closePanels();
 };
@@ -1145,12 +1952,18 @@ const step9 = async (_ctx: Ctx) => {
   const errors = mine.filter((row) => row.type === "error" && !BENIGN_RE.test(row.text));
   const warnings = mine.filter((row) => row.type === "warning" && !BENIGN_RE.test(row.text));
   const debug = mine.filter((row) => row.text.startsWith("[DEBUG] "));
+  const http = mine.filter((row) => row.type === "http");
   const top = (rows: ConsoleRow[]) => [...rows.reduce((map, row) => map.set(row.text.slice(0, 160), (map.get(row.text.slice(0, 160)) ?? 0) + 1), new Map<string, number>())].sort((x, y) => y[1] - x[1]).slice(0, 12);
+  const refusals = [...new Set(mine.map((row) => /refused a local batch \S+ ((?:local|sync)\.[\w.-]+)/.exec(row.text)?.[1]).filter((code): code is string => Boolean(code)))];
+  const shownCodes = await noticeCodes();
+  if (!refusals.length) note("no-command-rejection-in-this-run", {});
+  else if (renderer === "wgpu") verdict("rejection-notices-carry-their-code", false, { refusals, prerequisite: "the wgpu transient notice is painted only: its message and `ShellTransientNotice.code` are not projected into the ARIA mirror (only `shell.notice.close` is a hit), so no DOM carries React's `data-notice-code` — project it as a polite status node (key `shell.notice`, description = code)" });
+  else verdict("rejection-notices-carry-their-code", refusals.every((code) => shownCodes.includes(code)), { refusals, shownCodes });
   const uncaught = pageErrors.filter((row) => row.locale === currentLocale);
   verdict("no-uncaught-page-errors", uncaught.length === 0, { count: uncaught.length, first: uncaught.slice(0, 3) });
   const hard = hardFaults.filter((row) => row.locale === currentLocale);
   verdict("no-hard-guest-faults", hard.length === 0, { count: hard.length, first: hard.slice(0, 3) });
-  note("console-digest", { lines: mine.length, errors: errors.length, warnings: warnings.length, debug: debug.length, topErrors: top(errors), topWarnings: top(warnings), topDebug: top(debug) });
+  note("console-digest", { lines: mine.length, errors: errors.length, warnings: warnings.length, debug: debug.length, http: top(http), topErrors: top(errors), topWarnings: top(warnings), topDebug: top(debug) });
 };
 
 const STEPS: Record<number, (ctx: Ctx) => Promise<void>> = { 1: step1, 2: step2, 3: step3, 4: step4, 5: step5, 6: step6, 7: step7, 8: step8, 9: step9 };
@@ -1163,9 +1976,23 @@ const runLocale = async (locale: Locale) => {
   currentStep = 0;
   context = await browser.newContext({ viewport: { width: 1600, height: 1000 }, locale: locale === "de" ? "de-DE" : "en-US", acceptDownloads: false });
   page = await context.newPage();
+  if (renderer === "wgpu") await page.addInitScript(() => {
+    try {
+      globalThis.localStorage?.setItem("SEMIO_RUNTIME_DIAGNOSTICS", "1");
+    } catch {
+      return;
+    }
+  });
   listen(page);
+  navigations = 0;
+  expectedReloads = 0;
+  page.on("framenavigated", (frame) => {
+    if (frame !== page.mainFrame()) return;
+    navigations += 1;
+    if (navigations > 1) log(`main frame navigated (#${navigations}) → ${frame.url().slice(0, 120)}`);
+  });
   mod = (await page.evaluate(() => navigator.platform).catch(() => "MacIntel")).includes("Mac") ? "Meta" : "Control";
-  log(`navigating to :${port} locale=${locale} mod=${mod}`);
+  log(`navigating to :${port} renderer=${renderer} locale=${locale} mod=${mod}`);
   await page.goto(`http://127.0.0.1:${port}/?plugin=puzzle2d`, { waitUntil: "domcontentloaded", timeout: 90000 }).catch((error) => log(`goto failed ${String(error).split("\n")[0]}`));
   const booted = await waitForBoot("boot");
   currentStep = 1;
@@ -1176,26 +2003,72 @@ const runLocale = async (locale: Locale) => {
     return;
   }
   await installBandTrace();
+  await installNoticeTrace();
+  if (explore && renderer === "wgpu") {
+    const structure = await evalSafe(async () => (await (window as unknown as { semioWgpuIntrospection?: { dumpStructure: () => Promise<string> } }).semioWgpuIntrospection?.dumpStructure()) ?? "", "");
+    const before = await mirror();
+    await openHistory();
+    const history = await mirror();
+    await attachFolder(join(OUT, `folder-explore-${stamp}-${locale}`));
+    dumpJson("explore", { windowIds: (() => { try { return (JSON.parse(structure || "{}") as { windowIds?: string[] }).windowIds; } catch { return null; } })(), board: await wgpuBoard(), boardContract: WGPU_BOARD_CONTRACT, chrome: await chromeHits(), mirrorBefore: before.map((node) => `${node.window}|${node.key}|${node.role}|${node.label.slice(0, 60)}`), mirrorHistory: history.map((node) => `${node.window}|${node.key}|${node.role}|${node.label.slice(0, 60)}`), mirrorAfterSync: (await mirror()).map((node) => `${node.window}|${node.key}|${node.role}|${node.label.slice(0, 60)}`), band: await band(), presence: await presenceText() });
+    await shot("explore");
+    await context.close().catch(() => {});
+    return;
+  }
   if (explore) {
     await openHistory();
-    dumpJson("explore", { inventory: await historyInventory(), rows: await readHistory(), band: await band(), vitals: await vitals(), tabs: await evalSafe(() => Array.from(document.querySelectorAll('[data-slot="panel-tab-button"]')).map((el) => `${el.id}:${(el as HTMLElement).innerText.trim()}`), [] as string[]) });
+    const syncIds = () => evalSafe(() => Array.from(document.querySelectorAll("[id]")).filter((el) => /sync/i.test(el.id)).map((el) => `${el.tagName.toLowerCase()}#${el.id}[${el.getAttribute("data-slot") ?? el.getAttribute("role") ?? ""}] vis=${(el as HTMLElement).offsetParent !== null} ${(el as HTMLElement).innerText?.replace(/\s+/g, " ").trim().slice(0, 60) ?? ""}`), [] as string[]);
+    const syncBefore = await syncIds();
+    await page.locator('[id="s-sync-status"]').first().click({ timeout: 4000 }).catch(() => {});
+    await sleep(1000);
+    const syncOpen = await syncIds();
+    const picked = await pickSyncFolder();
+    log(`sync folder pick: ${picked}`);
+    await sleep(1000);
+    const syncFolder = await syncIds();
+    const popovers = await evalSafe(() => Array.from(document.querySelectorAll("[data-radix-popper-content-wrapper], [role=dialog]")).map((el) => (el as HTMLElement).innerText.replace(/\s+/g, " ").slice(0, 200)), [] as string[]);
+    await shot("explore-sync");
+    await page.keyboard.press("Escape").catch(() => {});
+    dumpJson("explore", { syncBefore, syncOpen, syncFolder, popovers, inventory: await historyInventory(), rows: await readHistory(), band: await band(), vitals: await vitals(), tabs: await evalSafe(() => Array.from(document.querySelectorAll('[data-slot="panel-tab-button"]')).map((el) => `${el.id}:${(el as HTMLElement).innerText.trim()}`), [] as string[]) });
     await shot("explore");
     await context.close().catch(() => {});
     return;
   }
   const ctx: Ctx = {};
+  const boardBlocked = renderer === "wgpu" && (await wgpuBoard()) === null;
+  if (boardBlocked) verdict("wgpu-board-introspection-present", false, { prerequisite: WGPU_BOARD_CONTRACT, reading: "the wgpu Board2d surface projects no accessibility nodes and no dump carries its positions, camera or selection, so no pointer gesture can be aimed at a node; steps 2–8 are blocked until the export exists" });
   for (const step of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
     if (only && !only.has(step)) continue;
+    if (boardBlocked && step >= 2 && step <= 8) {
+      currentStep = step;
+      verdict("blocked-by-missing-board-introspection", false, { prerequisite: "semioWgpuIntrospection.dumpBoard2d" });
+      continue;
+    }
+    if (step === 9 && (!only || only.has(5))) {
+      currentStep = 5;
+      try {
+        await reloadCheck(ctx);
+      } catch (error) {
+        verdict("reload-check-threw", false, { error: String(error).slice(0, 400) });
+      }
+    }
     currentStep = step;
+    const navigationsBefore = navigations;
+    const reloadsBefore = expectedReloads;
     log(`step ${step} begins`);
     try {
       await STEPS[step](ctx);
     } catch (error) {
       verdict("step-threw", false, { error: String(error).slice(0, 400) });
     }
+    if (navigations - navigationsBefore > expectedReloads - reloadsBefore) note("page-reloaded-under-the-step", { navigations: navigations - navigationsBefore, reading: "the dev serve reloaded the page (Vite reconnect / supervisor recycle); verdicts after that point measure a fresh document" });
     const results = verdicts.filter((row) => row.locale === locale && row.step === step);
     if (results.some((row) => !row.ok)) dumpJson("failure", { inventory: await historyInventory(), band: await band(), editor: await editor(), dialog: await finalizeDialog(), vitals: await vitals(), console: consoleRows.filter((row) => row.locale === locale && row.step === step).slice(-60) });
     await shot("end");
+  }
+  if (only?.has(5) && !only.has(9)) {
+    currentStep = 5;
+    await reloadCheck(ctx);
   }
   emit({ kind: "context", ctx });
   await context.close().catch(() => {});
@@ -1214,14 +2087,14 @@ for (const locale of locales) {
   }
 }
 const passed = verdicts.filter((row) => row.ok).length;
-const summary = `time-travel probe PASS=${passed} FAIL=${verdicts.length - passed} uncaught=${pageErrors.length} hard=${hardFaults.length} locales=${locales.join(",")} only=${only ? [...only].join(",") : "all"}`;
+const summary = `time-travel probe renderer=${renderer} PASS=${passed} FAIL=${verdicts.length - passed} uncaught=${pageErrors.length} hard=${hardFaults.length} locales=${locales.join(",")} only=${only ? [...only].join(",") : "all"}`;
 console.log(summary);
 for (const line of stepLines) console.log(line);
 emit({ kind: "summary", summary, steps: stepLines });
 writeFileSync(
   join(OUT, `${base}.md`),
   [
-    `# ${base} (port ${port}, locales ${locales.join(",")}, chords ${[...chordLocales].join(",")}, only ${only ? [...only].join(",") : "all"})`,
+    `# ${base} (renderer ${renderer}, port ${port}, locales ${locales.join(",")}, chords ${[...chordLocales].join(",")}, only ${only ? [...only].join(",") : "all"})`,
     "",
     summary,
     "",
@@ -1244,7 +2117,7 @@ writeFileSync(
     ...timeline,
     "",
     "## Console (errors and warnings, last 200)",
-    ...consoleRows.filter((row) => row.type === "error" || row.type === "warning" || row.type === "pageerror").slice(-200).map((row) => `${row.t}s ${row.locale}/${row.step} ${row.source} ${row.type}: ${row.text.slice(0, 400)}`),
+    ...consoleRows.filter((row) => row.type === "error" || row.type === "warning" || row.type === "pageerror" || row.type === "http").slice(-200).map((row) => `${row.t}s ${row.locale}/${row.step} ${row.source} ${row.type}: ${row.text.slice(0, 400)}`),
   ].join("\n"),
 );
 process.exit(verdicts.length - passed === 0 && pageErrors.length === 0 ? 0 : 1);

@@ -29,9 +29,9 @@
     "appChannelVersion": 20
   },
   "hashes": {
-    "coreWasmSha256": "54236a776a43013b6ae3efa3baa8d37a334aaf18bd99e3ae23fd3ea11ca5671a",
-    "descriptorSha256": "86665eb31e3b0dfe5c30df9a35855797576ba739dd390f9f8b07cac075411722",
-    "wasmSha256": "2dcab63c73c6756530ef31647bed3aef3c2ae4f57924cf83687004043f4ac4b6"
+    "coreWasmSha256": "d016abd83e8eaa946f8f0e7b68d5110621a5b93c4535ab2639124129c3b399b4",
+    "descriptorSha256": "52041240969ec1d6023e438a6239b1ad998d4d3d180ede46db15c2c60d902dcf",
+    "wasmSha256": "398de155ebc8871805ce3df61449bfa302405545ae55d3a22c672fdcbbbe93a2"
   },
   "manifest": {
     "apps": [],

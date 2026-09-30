@@ -12,13 +12,13 @@
 //! **Design**: every mutation kind is expressed as a pure operation on an in-memory, ordered
 //! `Vec<PSlide>` (this module's own typed shape tree, independent of
 //! `crate::schema::snapshot::PptxShape`), mirroring the vocabulary's own
-//! `slide_index`/`shape_index` addressing. After the operation, every `ppt/slides/*.xml` part,
+//! `slideIndex`/`shapeIndex` addressing, read straight off each leaf's wire payload. After the operation, every `ppt/slides/*.xml` part,
 //! `ppt/_rels/presentation.xml.rels`'s slide relationships, `ppt/presentation.xml`'s
 //! `p:sldIdLst`, and `[Content_Types].xml`'s slide `Override` entries are freshly regenerated from
 //! that `Vec<PSlide>` — every other OPC part (layouts, master, themes, media, docProps, root
 //! rels) is carried forward byte-for-byte untouched. This sidesteps incremental rId/id bookkeeping
-//! entirely: `no-mutation` and every real mutation alike re-derive the whole slide part set from
-//! the current typed model, a genuine re-serialization each time (never a byte pass-through).
+//! entirely: the identity round trip and every mutation alike re-derive the whole slide part set
+//! from the current typed model, a genuine re-serialization each time (never a byte pass-through).
 //!
 //! The vocabulary is per SUBSET, not per artifact: two standards of the same format declare
 //! different mutations, and a subset that shares an implementation with another reaches it through
@@ -26,7 +26,7 @@
 //!
 //! @see ../🔣️oracle.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself (`PptxMutation`'s
-//! 9 variants).
+//! 8 variants).
 
 use semio_repo_test_host::Json;
 
@@ -598,18 +598,44 @@ mod oracles {
         Json::Object(vec![("x".into(), Json::Number(t.x as f64)), ("y".into(), Json::Number(t.y as f64)), ("cx".into(), Json::Number(t.cx as f64)), ("cy".into(), Json::Number(t.cy as f64))])
     }
 
-    /// 🔎️ Owned shape-spec JSON grammar mutation params speak: `{"kind":"textBox"|"placeholder",
-    /// "text":..., "position":{"x":...,"y":...,"cx":...,"cy":...}}` | `{"kind":"picture",
-    /// "blipRelId":...,"position":{...}}`.
-    fn json_to_shape(value: &Json) -> Result<PShape, String> {
+    /// 🔎️ A wire `textFrame` (`[{runs: [{text, …}]}]`) as the text this oracle models: runs concatenated per paragraph,
+    /// paragraphs joined by `\n` — exactly how [`text_from_shape`] reads a `p:txBody` back.
+    fn wire_text(value: &Json) -> String {
+        value.array("textFrame").iter().map(|paragraph| paragraph.array("runs").iter().map(|run| run.str("text")).collect::<String>()).collect::<Vec<_>>().join("\n")
+    }
+    /// 🔎️ This oracle's text as a wire `textFrame`: one paragraph per line, one plain run each.
+    fn text_wire(text: &str) -> Json {
+        Json::Array(text.split('\n').map(|line| Json::Object(vec![("runs".into(), Json::Array(vec![Json::Object(vec![("text".into(), Json::String(line.to_string())), ("bold".into(), Json::Bool(false)), ("italic".into(), Json::Bool(false))])]))])).collect())
+    }
+
+    /// 🔎️ One wire `PptxShape` (`{shapeKind: textBox|placeholder|picture, …}`, the leaf payload's own shape) as this
+    /// oracle's typed shape. An `other` shape carries a raw XML node this oracle does not re-author, and is refused.
+    fn wire_shape(value: &Json) -> Result<PShape, String> {
         let position = json_to_transform(value);
-        match value.str("kind").as_str() {
-            "textBox" => Ok(PShape::TextBox { text: value.str("text"), position }),
-            "placeholder" => Ok(PShape::Placeholder { kind: value.str("phKind"), text: value.str("text"), position }),
+        match value.str("shapeKind").as_str() {
+            "textBox" => Ok(PShape::TextBox { text: wire_text(value), position }),
+            "placeholder" => Ok(PShape::Placeholder { kind: value.str("kind"), text: wire_text(value), position }),
             "picture" => Ok(PShape::Picture { blip_rel_id: value.str("blipRelId"), position }),
-            other => Err(format!("unknown shape kind {other:?}")),
+            other => Err(format!("wire shape kind {other:?} is outside what this oracle re-authors")),
         }
     }
+    /// 🔎️ This oracle's typed shape as the wire `PptxShape` its undo spec carries.
+    fn shape_wire(shape: &PShape) -> Result<Json, String> {
+        let position = |t: &Transform| ("position".to_string(), transform_to_json(*t));
+        match shape {
+            PShape::TextBox { text, position: t } => Ok(Json::Object(vec![("shapeKind".into(), Json::String("textBox".into())), ("textFrame".into(), text_wire(text)), position(t)])),
+            PShape::Placeholder { kind, text, position: t } => Ok(Json::Object(vec![("shapeKind".into(), Json::String("placeholder".into())), ("kind".into(), Json::String(kind.clone())), ("textFrame".into(), text_wire(text)), position(t)])),
+            PShape::Picture { blip_rel_id, position: t } => Ok(Json::Object(vec![("shapeKind".into(), Json::String("picture".into())), ("blipRelId".into(), Json::String(blip_rel_id.clone())), position(t)])),
+            PShape::Other { .. } => Err("an unmodelled shape has no wire form this oracle authors".to_string()),
+        }
+    }
+    fn wire_slide(value: &Json) -> Result<PSlide, String> {
+        Ok(PSlide { shapes: value.array("shapes").iter().map(wire_shape).collect::<Result<Vec<_>, _>>()? })
+    }
+    fn slide_wire(slide: &PSlide) -> Result<Json, String> {
+        Ok(Json::Object(vec![("shapes".into(), Json::Array(slide.shapes.iter().map(shape_wire).collect::<Result<Vec<_>, _>>()?))]))
+    }
+
     fn shape_to_json(shape: &PShape) -> Json {
         match shape {
             PShape::TextBox { text, position } => Json::Object(vec![("kind".into(), Json::String("textBox".into())), ("text".into(), Json::String(text.clone())), ("position".into(), transform_to_json(*position))]),
@@ -619,9 +645,6 @@ mod oracles {
             PShape::Picture { blip_rel_id, position } => Json::Object(vec![("kind".into(), Json::String("picture".into())), ("blipRelId".into(), Json::String(blip_rel_id.clone())), ("position".into(), transform_to_json(*position))]),
             PShape::Other { .. } => Json::Object(vec![("kind".into(), Json::String("other".into()))]),
         }
-    }
-    fn json_to_slide(value: &Json) -> Result<PSlide, String> {
-        Ok(PSlide { shapes: value.array("shapes").iter().map(json_to_shape).collect::<Result<Vec<_>, _>>()? })
     }
     fn slide_to_json(slide: &PSlide) -> Json {
         Json::Object(vec![("shapeCount".into(), Json::Number(slide.shapes.len() as f64)), ("shapes".into(), Json::Array(slide.shapes.iter().map(shape_to_json).collect()))])
@@ -661,11 +684,13 @@ mod oracles {
     /// kind, or a target index out of range, is an error — never a silent no-op.
     fn apply(mut slides: Vec<PSlide>, kind: &str, params: &Json) -> Result<Vec<PSlide>, String> {
         match kind {
-            "no-mutation" => Ok(slides),
-            "set-snapshot" => Ok(params.array("slides").iter().map(json_to_slide).collect::<Result<Vec<_>, _>>()?),
+            "set-snapshot" => {
+                let presentation = params.get("snapshot").and_then(|snapshot| snapshot.get("presentation")).ok_or("set-snapshot: missing `snapshot.presentation`")?;
+                Ok(presentation.array("slides").iter().map(wire_slide).collect::<Result<Vec<_>, _>>()?)
+            }
             "insert-slide" => {
                 let index = usize_field(params, "index").min(slides.len());
-                slides.insert(index, json_to_slide(params.get("slide").ok_or("insert-slide: missing slide")?)?);
+                slides.insert(index, wire_slide(params.get("slide").ok_or("insert-slide: missing slide")?)?);
                 Ok(slides)
             }
             "remove-slide" => {
@@ -690,7 +715,7 @@ mod oracles {
                 let slide_index = usize_field(params, "slideIndex");
                 let slide = slides.get_mut(slide_index).ok_or_else(|| format!("insert-shape: slideIndex {slide_index} out of range"))?;
                 let shape_index = usize_field(params, "shapeIndex").min(slide.shapes.len());
-                slide.shapes.insert(shape_index, json_to_shape(params.get("shape").ok_or("insert-shape: missing shape")?)?);
+                slide.shapes.insert(shape_index, wire_shape(params.get("shape").ok_or("insert-shape: missing shape")?)?);
                 Ok(slides)
             }
             "remove-shape" => {
@@ -709,7 +734,7 @@ mod oracles {
                 let shape_index = usize_field(params, "shapeIndex");
                 let shape = slide.shapes.get_mut(shape_index).ok_or_else(|| format!("set-shape-text: shapeIndex {shape_index} out of range"))?;
                 if shape_has_text(shape).is_some() {
-                    *shape = with_text(shape, params.str("text"));
+                    *shape = with_text(shape, wire_text(params));
                 }
                 Ok(slides)
             }
@@ -729,59 +754,45 @@ mod oracles {
     //#endregion 🔖️Forward
 
     //#region 🔖️Inverse
-    /// ↩️ Reads `base` (the CURRENT, pre-mutation slide list) to build the spec that undoes
+    /// ↩️ Reads `base` (the CURRENT, pre-mutation slide list) to build the wire spec that undoes
     /// `{kind, params}` — the same law `PptxMutation::inverse` proves at the Rust-model level
     /// (`../🧬️schema/🧬️mutations/🦀️.rs`), computed here against the reference implementation
-    /// instead.
-    fn inverse_spec(base: &[PSlide], kind: &str, params: &Json) -> Json {
+    /// instead. A target the base does not hold has nothing to undo, and is refused.
+    fn inverse_spec(base: &[PSlide], kind: &str, params: &Json) -> Result<Json, String> {
         let spec = |k: &str, p: Json| Json::Object(vec![("kind".into(), Json::String(k.into())), ("params".into(), p)]);
         let obj = |entries: Vec<(&str, Json)>| Json::Object(entries.into_iter().map(|(k, v)| (k.to_string(), v)).collect());
-        match kind {
-            "no-mutation" => spec("no-mutation", obj(vec![])),
-            "set-snapshot" => spec("set-snapshot", obj(vec![("slides", Json::Array(base.iter().map(slide_to_json).collect()))])),
+        let (slide_index, shape_index) = (usize_field(params, "slideIndex"), usize_field(params, "shapeIndex"));
+        let at = |slide: usize, shape: usize| vec![("slideIndex", Json::Number(slide as f64)), ("shapeIndex", Json::Number(shape as f64))];
+        let target = || base.get(slide_index).and_then(|slide| slide.shapes.get(shape_index)).ok_or_else(|| format!("{kind}: the base has no shape {shape_index} on slide {slide_index}"));
+        Ok(match kind {
+            "set-snapshot" => {
+                let slides = base.iter().map(slide_wire).collect::<Result<Vec<_>, _>>()?;
+                let opc = obj(vec![("parts", Json::Array(Vec::new())), ("contentTypes", obj(vec![("defaults", Json::Array(Vec::new())), ("overrides", Json::Array(Vec::new()))])), ("relationships", obj(vec![])), ("comment", Json::String(String::new()))]);
+                spec("set-snapshot", obj(vec![("snapshot", obj(vec![("schema", Json::String("stdio.pptx".into())), ("opc", opc), ("xmlParts", Json::Array(Vec::new())), ("presentation", obj(vec![("slides", Json::Array(slides))]))]))]))
+            }
             "insert-slide" => spec("remove-slide", obj(vec![("index", Json::Number(usize_field(params, "index") as f64))])),
-            "remove-slide" => match base.get(usize_field(params, "index")) {
-                Some(slide) => spec("insert-slide", obj(vec![("index", Json::Number(usize_field(params, "index") as f64)), ("slide", slide_to_json(slide))])),
-                None => spec("no-mutation", obj(vec![])),
-            },
+            "remove-slide" => {
+                let index = usize_field(params, "index");
+                let slide = base.get(index).ok_or_else(|| format!("remove-slide: the base has no slide {index}"))?;
+                spec("insert-slide", obj(vec![("index", Json::Number(index as f64)), ("slide", slide_wire(slide)?)]))
+            }
             "move-slide" => {
                 let from = usize_field(params, "from");
-                let to = usize_field(params, "to");
-                let final_pos = to.min(base.len().saturating_sub(1));
+                let final_pos = usize_field(params, "to").min(base.len().saturating_sub(1));
                 spec("move-slide", obj(vec![("from", Json::Number(final_pos as f64)), ("to", Json::Number(from as f64))]))
             }
-            "insert-shape" => spec("remove-shape", obj(vec![("slideIndex", Json::Number(usize_field(params, "slideIndex") as f64)), ("shapeIndex", Json::Number(usize_field(params, "shapeIndex") as f64))])),
-            "remove-shape" => {
-                let slide_index = usize_field(params, "slideIndex");
-                let shape_index = usize_field(params, "shapeIndex");
-                match base.get(slide_index).and_then(|slide| slide.shapes.get(shape_index)) {
-                    Some(shape) => spec("insert-shape", obj(vec![("slideIndex", Json::Number(slide_index as f64)), ("shapeIndex", Json::Number(shape_index as f64)), ("shape", shape_to_json(shape))])),
-                    None => spec("no-mutation", obj(vec![])),
-                }
-            }
+            "insert-shape" => spec("remove-shape", obj(at(slide_index, shape_index))),
+            "remove-shape" => spec("insert-shape", obj([at(slide_index, shape_index), vec![("shape", shape_wire(target()?)?)]].concat())),
             "set-shape-text" => {
-                let slide_index = usize_field(params, "slideIndex");
-                let shape_index = usize_field(params, "shapeIndex");
-                match base.get(slide_index).and_then(|slide| slide.shapes.get(shape_index)).and_then(shape_has_text) {
-                    Some((text, _)) => spec("set-shape-text", obj(vec![("slideIndex", Json::Number(slide_index as f64)), ("shapeIndex", Json::Number(shape_index as f64)), ("text", Json::String(text.clone()))])),
-                    None => spec("no-mutation", obj(vec![])),
-                }
+                let (text, _) = shape_has_text(target()?).ok_or_else(|| format!("set-shape-text: shape {shape_index} on slide {slide_index} carries no text"))?;
+                spec("set-shape-text", obj([at(slide_index, shape_index), vec![("textFrame", text_wire(text))]].concat()))
             }
             "set-shape-position" => {
-                let slide_index = usize_field(params, "slideIndex");
-                let shape_index = usize_field(params, "shapeIndex");
-                match base.get(slide_index).and_then(|slide| slide.shapes.get(shape_index)).and_then(shape_position) {
-                    Some(position) => {
-                        let mut entries = vec![("slideIndex".to_string(), Json::Number(slide_index as f64)), ("shapeIndex".to_string(), Json::Number(shape_index as f64))];
-                        let Json::Object(position_entries) = transform_to_json(position) else { unreachable!() };
-                        entries.push(("position".to_string(), Json::Object(position_entries)));
-                        spec("set-shape-position", Json::Object(entries))
-                    }
-                    None => spec("no-mutation", obj(vec![])),
-                }
+                let position = shape_position(target()?).ok_or_else(|| format!("set-shape-position: shape {shape_index} on slide {slide_index} has no position"))?;
+                spec("set-shape-position", obj([at(slide_index, shape_index), vec![("position", transform_to_json(position))]].concat()))
             }
-            other => spec(other, params.clone()),
-        }
+            other => return Err(format!("no inverse rule for kind {other:?}")),
+        })
     }
     //#endregion 🔖️Inverse
 
@@ -798,7 +809,7 @@ mod oracles {
     pub fn apply_mutation_inverse(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
         let pkg = read_zip(input)?;
         let base = read_presentation(&pkg)?;
-        let inverse = inverse_spec(&base, kind, params);
+        let inverse = inverse_spec(&base, kind, params)?;
         let mutated = apply_mutation(input, kind, params)?;
         apply_mutation(&mutated, &inverse.str("kind"), inverse.get("params").unwrap_or(&Json::Null))
     }

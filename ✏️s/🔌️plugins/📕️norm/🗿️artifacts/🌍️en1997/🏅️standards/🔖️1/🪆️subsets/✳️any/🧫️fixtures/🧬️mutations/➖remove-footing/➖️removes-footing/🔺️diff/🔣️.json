@@ -1,0 +1,18 @@
+{
+  "artifact": null,
+  "structureId": null,
+  "geotechnicalCategory": null,
+  "designSituation": null,
+  "designApproach": null,
+  "annex": null,
+  "groundwaterLevel": null,
+  "investigationDepth": null,
+  "layers": null,
+  "footings": {
+    "values": []
+  },
+  "piles": null,
+  "retainingWalls": null,
+  "slopes": null,
+  "upliftCases": null
+}

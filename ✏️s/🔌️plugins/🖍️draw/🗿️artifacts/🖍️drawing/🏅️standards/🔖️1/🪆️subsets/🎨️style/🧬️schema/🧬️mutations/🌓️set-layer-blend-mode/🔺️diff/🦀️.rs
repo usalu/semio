@@ -9,7 +9,7 @@ pub fn diff(payload: &super::mutation::SetLayerBlendMode, base: &DrawingSnapshot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.clone()]);
     };
     if !crate::DRAWING_BLEND_MODES.contains(&payload.blend_mode.as_str()) {
-        return protocol::MutationOutcome::error("mutation.blend-mode-invalid", "Unsupported blend mode.", [payload.layer_id.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", "Unsupported blend mode.", [payload.layer_id.clone()]);
     }
     if layer_base(layer).blend_mode == payload.blend_mode {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer \"{}\" blend mode is already \"{}\".", payload.layer_id, payload.blend_mode));

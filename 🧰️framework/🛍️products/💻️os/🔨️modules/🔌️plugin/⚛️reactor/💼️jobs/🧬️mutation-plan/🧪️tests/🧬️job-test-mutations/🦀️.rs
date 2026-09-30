@@ -28,7 +28,7 @@ pub(crate) struct JobTestDiff {
 
 impl protocol::MutationDiff<JobTestSnapshot> for JobTestDiff {
     fn apply(&self, base: &JobTestSnapshot) -> protocol::MutationApplyResult<JobTestSnapshot> {
-        let value = self.deltas.iter().try_fold(base.value, |value, delta| value.checked_add(*delta).ok_or_else(|| protocol::MutationApplyError::new("job-test.value-overflow", "job fixture value addition exceeds i32").at(["value"])))?;
+        let value = self.deltas.iter().try_fold(base.value, |value, delta| value.checked_add(*delta).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.value-overflow", "job fixture value addition exceeds i32").at(["value"])))?;
         Ok(JobTestSnapshot { value })
     }
     fn absorb(&mut self, other: Self) {

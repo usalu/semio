@@ -931,9 +931,10 @@ impl Brep {
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn planar_face_from_wire_sync(&mut self, wire: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
-        let w = self.wire_ref(wire)?.clone();
-        let origin = self.body.vertices.get(w.vertices[0]).map_or(Pnt3::new(0.0, 0.0, 0.0), |v| v.position);
+        let wire = self.wire_ref(wire)?.clone();
         let mut rec = OpRecorder::new();
+        let w = transform_wire(&mut self.body, &wire, &Affine3::IDENTITY, &mut rec);
+        let origin = self.body.vertices.get(w.vertices[0]).map_or(Pnt3::new(0.0, 0.0, 0.0), |v| v.position);
         let face = make_planar_face_from_wire(&mut self.body, &w, origin, NativeVec3::Z, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_face(face))
     }
@@ -981,15 +982,21 @@ impl Brep {
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn extrude_wire_sync(&mut self, wire: &GeometryHandle, vector: EVec3) -> Result<GeometryHandle, BrepError> {
-        let face = self.planar_face_from_wire_sync(wire)?;
+        let wire = self.wire_ref(wire)?.clone();
+        let mut rec = OpRecorder::new();
+        let wire = transform_wire(&mut self.body, &wire, &Affine3::IDENTITY, &mut rec);
+        let origin = self.body.vertices.get(wire.vertices[0]).map_or(Pnt3::new(0.0, 0.0, 0.0), |v| v.position);
+        let face = make_planar_face_from_wire(&mut self.body, &wire, origin, NativeVec3::Z, &mut rec).map_err(|error| map_err(&error))?;
         let dist = (vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]).sqrt();
         let dir = if dist > 1e-15 { [vector[0] / dist, vector[1] / dist, vector[2] / dist] } else { [0.0, 0.0, 1.0] };
-        self.extrude_sync(&face, dir, dist)
+        let solid = extrude_face(&mut self.body, face, vec3(dir), dist, &mut rec).map_err(|error| map_err(&error))?;
+        Ok(self.register_solid(solid))
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn extrude_sync(&mut self, face: &GeometryHandle, direction: EVec3, distance: f64) -> Result<GeometryHandle, BrepError> {
         let id = self.face_id(face)?;
         let mut rec = OpRecorder::new();
+        let id = transform_face(&mut self.body, id, &Affine3::IDENTITY, &mut rec).map_err(|error| map_err(&error))?;
         let solid = extrude_face(&mut self.body, id, vec3(direction), distance, &mut rec).map_err(|error| map_err(&error))?;
         Ok(self.register_solid(solid))
     }

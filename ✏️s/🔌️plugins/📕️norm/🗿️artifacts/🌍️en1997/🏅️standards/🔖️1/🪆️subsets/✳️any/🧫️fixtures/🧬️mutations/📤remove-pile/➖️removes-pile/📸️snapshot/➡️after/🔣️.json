@@ -1,0 +1,102 @@
+{
+  "structureId": "geo-demo-compliant",
+  "geotechnicalCategory": 2,
+  "designSituation": "bsP",
+  "designApproach": "da2",
+  "annex": "De",
+  "groundwaterLevel": 4.0,
+  "investigationDepth": 12.0,
+  "layers": [
+    {
+      "id": "layer-sand",
+      "soilType": "sand",
+      "depthTop": 0.0,
+      "depthBottom": 8.0,
+      "gamma": 19000.0,
+      "gammaPrime": 10000.0,
+      "phiPrimeDeg": 32.0,
+      "cohesionEffective": 0.0,
+      "cohesionUndrained": 0.0,
+      "oedometricModulus": 40000000.0,
+      "poissonRatio": 0.3,
+      "cptQc": 8000000.0,
+      "sptN": 18.0
+    },
+    {
+      "id": "layer-gravel",
+      "soilType": "gravel",
+      "depthTop": 8.0,
+      "depthBottom": 20.0,
+      "gamma": 20000.0,
+      "gammaPrime": 11000.0,
+      "phiPrimeDeg": 35.0,
+      "cohesionEffective": 0.0,
+      "cohesionUndrained": 0.0,
+      "oedometricModulus": 60000000.0,
+      "poissonRatio": 0.28,
+      "cptQc": 12000000.0,
+      "sptN": 28.0
+    }
+  ],
+  "footings": [
+    {
+      "id": "footing-F1",
+      "width": 2.5,
+      "length": 2.5,
+      "embedment": 1.5,
+      "baseInclinationDeg": 0.0,
+      "settlementLimit": 0.025,
+      "loadCases": [
+        {
+          "id": "lc-bsP",
+          "designSituation": "bsP",
+          "verticalPermanent": 400000.0,
+          "verticalVariable": 150000.0,
+          "horizontalPermanent": 20000.0,
+          "horizontalVariable": 40000.0,
+          "momentPermanent": 30000.0,
+          "momentVariable": 50000.0
+        }
+      ]
+    }
+  ],
+  "piles": [],
+  "retainingWalls": [
+    {
+      "id": "wall-W1",
+      "height": 4.0,
+      "embedment": 1.2,
+      "baseWidth": 2.5,
+      "stemThickness": 0.35,
+      "backfillPhiDeg": 30.0,
+      "backfillGamma": 18000.0,
+      "wallFrictionDeg": 20.0,
+      "earthPressureMode": "active",
+      "wallMovement": "free",
+      "ocr": 1.0,
+      "concreteGamma": 25000.0,
+      "surcharge": 10000.0,
+      "verticalPermanent": 320000.0,
+      "horizontalPermanent": 40000.0
+    }
+  ],
+  "slopes": [
+    {
+      "id": "slope-S1",
+      "angleDeg": 25.0,
+      "height": 6.0,
+      "length": 14.0,
+      "governingLayerId": "layer-sand"
+    }
+  ],
+  "upliftCases": [
+    {
+      "id": "upl-U1",
+      "permanentStabilizing": 900000.0,
+      "permanentDestabilizing": 500000.0,
+      "variableDestabilizing": 50000.0,
+      "porePressure": 40000.0,
+      "totalStress": 120000.0
+    }
+  ]
+}

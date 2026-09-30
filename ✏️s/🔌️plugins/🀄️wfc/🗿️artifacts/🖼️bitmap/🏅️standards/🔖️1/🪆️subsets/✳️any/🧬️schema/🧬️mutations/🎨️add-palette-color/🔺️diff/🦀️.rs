@@ -12,7 +12,7 @@ pub fn diff(payload: &super::AddPaletteColor, base: &BitmapSnapshot) -> protocol
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A palette may hold at most {BITMAP_MAX_PALETTE} colours."), ["palette".to_string()]);
     }
     let Some(buffer) = base.input.indices() else {
-        return protocol::MutationOutcome::fatal("mutation.malformed-payload", "The base input pixel buffer does not decode.".to_string(), ["input".to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.apply.invalid-base", "The base input pixel buffer does not decode.".to_string(), ["input".to_string()]);
     };
     let mut palette = base.input.palette.clone();
     palette.insert(payload.index, payload.color);

@@ -1,0 +1,22 @@
+{
+  "accidentals": null,
+  "altitudeM": null,
+  "annex": null,
+  "betaComputed": null,
+  "bridgeSls": null,
+  "consequenceClass": null,
+  "designWorkingLifeCategory": null,
+  "designWorkingLifeYears": null,
+  "effects": null,
+  "inspectionLevel": null,
+  "kFiDeclared": null,
+  "members": null,
+  "permanents": null,
+  "projectId": null,
+  "referencePeriodYears": null,
+  "reliabilityClass": 3,
+  "seismics": null,
+  "structureKind": null,
+  "supervisionLevel": null,
+  "variables": null
+}

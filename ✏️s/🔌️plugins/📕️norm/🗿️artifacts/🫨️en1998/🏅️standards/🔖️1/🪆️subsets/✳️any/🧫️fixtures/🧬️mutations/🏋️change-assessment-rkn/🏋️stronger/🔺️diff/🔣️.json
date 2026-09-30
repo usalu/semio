@@ -1,0 +1,22 @@
+{
+  "artifact": null,
+  "annex": null,
+  "site": null,
+  "buildings": null,
+  "bridges": null,
+  "assessments": [
+    {
+      "id": "as-1",
+      "knowledgeLevel": "kl2",
+      "limitState": "sd",
+      "supportedBuildingId": "bldg-office",
+      "rKN": 650000.0,
+      "gammaEl": 1.0
+    }
+  ],
+  "silos": null,
+  "tanks": null,
+  "foundations": null,
+  "retainingWalls": null,
+  "towers": null
+}

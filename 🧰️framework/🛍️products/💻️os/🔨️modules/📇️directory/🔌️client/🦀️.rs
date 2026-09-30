@@ -23,15 +23,65 @@ use super::schema::{
     DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceListEntryV1,
     DirectorySpaceRole, DirectoryStreamMessage, DocumentBrowserActorSourceV1, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenBrowserActorV1,
     DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanV1, DocumentOpenRendererTargetV1,
-    DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView, GisMapInferenceApprovalReceiptV1, GisMapInferenceApprovalRequestV1, GisMapInferenceEventPageV1,
-    GisMapInferenceJobReceiptV1, GisMapInferenceJobRequestV1, GisMapInferencePortCodeV1, MemberSpaceViewV1, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES,
+    DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView, MemberSpaceViewV1, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES,
     DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER,
-    GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR, GIS_MAP_INFERENCE_REQUEST_MAX_BYTES, GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES,
 };
 use crate::os_dsl::{DslValue, FromValue, ToValue, ValueError};
 use semio_framework_async::OperationContext;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::Arc;
+
+/// 🧩 Manifest topic carrying owner-authored document HTTP schemas and routes.
+pub const DOCUMENT_HTTP_PORT_TOPIC: &str = "semio.os.document-http-port/v1";
+pub const DOCUMENT_HTTP_REQUEST_MAX_BYTES: usize = 64 * 1024;
+pub const DOCUMENT_HTTP_RESPONSE_MAX_BYTES: usize = 64 * 1024;
+
+/// 🛡 Closed transport outcomes without server body disclosure.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DocumentHttpPortCodeV1 {
+    Invalid, Bounds, Cancelled, Denied, Transport, NotFound, Conflict, Gone, Capacity, Unavailable,
+}
+
+impl DocumentHttpPortCodeV1 {
+    pub fn from_status(status: u16) -> Self {
+        match status { 400 => Self::Invalid, 429 => Self::Capacity, 401 | 403 => Self::Denied, 404 => Self::NotFound, 409 => Self::Conflict, 410 => Self::Gone, 413 => Self::Bounds, 503 => Self::Unavailable, _ => Self::Transport }
+    }
+}
+
+/// 📜 Closed owner declaration transported by the existing plugin manifest contribution.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentHttpPortDeclarationV1 {
+    pub schema: String,
+    pub owner: String,
+    pub service_id: String,
+    pub operations: Vec<DocumentHttpOperationV1>,
+}
+
+/// 📖 One named operation and its published request/response schemas.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentHttpOperationV1 {
+    pub action: String,
+    pub method: String,
+    pub route: Vec<String>,
+    pub send_body: bool,
+    pub cursor_field: Option<String>,
+    pub request_max_bytes: usize,
+    pub response_max_bytes: usize,
+    pub input_schema: String,
+    pub output_schema: String,
+}
+
+/// 📦 An admitted request; path segments are encoded independently inside the exact document scope.
+pub struct DocumentHttpRequestV1 {
+    pub method: HttpMethod,
+    pub segments: Vec<String>,
+    pub after: Option<u64>,
+    pub body: Option<Vec<u8>>,
+    pub request_max_bytes: usize,
+    pub response_max_bytes: usize,
+}
 
 //#region 🔖️Transport
 /// 📨️ One HTTP verb `DirectoryClient` issues against the hub REST surface: queries are `GET`,
@@ -1184,70 +1234,40 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         Ok(CanonicalDirectoryCommandReceiptV1 { canonical_json, receipt })
     }
 
-    //#region 💡️InferencePort
-    /// 🚪 The only four inference calls this client may make, each rebuilt from the caller's own
-    /// document scope. No package, digest, generation, path or receipt selector is accepted, so a
-    /// caller can never widen the request beyond the document it already holds.
-    fn gis_map_inference_path(scope: &DocumentScope, suffix: &str) -> String {
-        format!("/spaces/{}/documents/{}/inference/gis-map{}", encode_url_component(&scope.space_id), encode_url_component(&scope.document_id), suffix)
-    }
-
-    async fn gis_map_inference_call<R: FromValue>(&self, ctx: &OperationContext, method: HttpMethod, scope: &DocumentScope, suffix: &str, body: Option<Vec<u8>>) -> Result<R, GisMapInferencePortCodeV1> {
-        if body.as_ref().is_some_and(|bytes| bytes.len() > GIS_MAP_INFERENCE_REQUEST_MAX_BYTES) {
-            return Err(GisMapInferencePortCodeV1::Bounds);
+    /// 📡 Executes one owner-prepared bounded document call and returns only its validated reply.
+    pub async fn document_http_call<R>(&self, ctx: &OperationContext, scope: &DocumentScope, request: &DocumentHttpRequestV1, decode: impl FnOnce(&[u8]) -> Result<R, DocumentHttpPortCodeV1>) -> Result<R, DocumentHttpPortCodeV1> {
+        if scope.space_id.is_empty() || scope.document_id.is_empty() || scope.space_id.len() > 256 || scope.document_id.len() > 256 || request.segments.is_empty() || request.segments.len() > 8 || request.segments.iter().any(|part| part.is_empty() || part.len() > 256 || matches!(part.as_str(), "." | "..")) {
+            return Err(DocumentHttpPortCodeV1::Invalid);
+        }
+        if request.request_max_bytes == 0 || request.request_max_bytes > DOCUMENT_HTTP_REQUEST_MAX_BYTES || request.response_max_bytes == 0 || request.response_max_bytes > DOCUMENT_HTTP_RESPONSE_MAX_BYTES || request.body.as_ref().is_some_and(|bytes| bytes.len() > request.request_max_bytes) || request.after.is_some_and(|after| after > DOCUMENT_OPEN_MAX_SAFE_INTEGER) {
+            return Err(DocumentHttpPortCodeV1::Bounds);
         }
         if ctx.cancel.is_cancelled().await {
-            return Err(GisMapInferencePortCodeV1::Cancelled);
+            return Err(DocumentHttpPortCodeV1::Cancelled);
         }
-        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose().map_err(|_| GisMapInferencePortCodeV1::Denied)?;
-        let path = Self::gis_map_inference_path(scope, suffix);
-        let response = match self.transport.http(ctx, method, &self.url(&path), bearer, body).await {
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose().map_err(|_| DocumentHttpPortCodeV1::Denied)?;
+        let suffix = request.segments.iter().map(|part| encode_url_component(part)).collect::<Vec<_>>().join("/");
+        let mut path = format!("/spaces/{}/documents/{}/{suffix}", encode_url_component(&scope.space_id), encode_url_component(&scope.document_id));
+        if let Some(after) = request.after {
+            path.push_str(&format!("?after={after}"));
+        }
+        let response = match self.transport.http(ctx, request.method, &self.url(&path), bearer, request.body.clone()).await {
             Ok(response) => response,
-            Err(TransportError::Cancelled) => return Err(GisMapInferencePortCodeV1::Cancelled),
-            Err(_) => return Err(GisMapInferencePortCodeV1::Transport),
+            Err(TransportError::Cancelled) => return Err(DocumentHttpPortCodeV1::Cancelled),
+            Err(_) => return Err(DocumentHttpPortCodeV1::Transport),
         };
         if ctx.cancel.is_cancelled().await {
-            return Err(GisMapInferencePortCodeV1::Cancelled);
+            return Err(DocumentHttpPortCodeV1::Cancelled);
         }
         if !(200..=299).contains(&response.status) {
-            return Err(GisMapInferencePortCodeV1::from_status(response.status));
+            return Err(DocumentHttpPortCodeV1::from_status(response.status));
         }
-        if response.body.len() > GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES {
-            return Err(GisMapInferencePortCodeV1::Bounds);
+        if response.body.len() > request.response_max_bytes {
+            return Err(DocumentHttpPortCodeV1::Bounds);
         }
-        decode_json_bytes(&response.body).map_err(|_: DirectoryClientError| GisMapInferencePortCodeV1::Invalid)
+        decode(&response.body)
     }
 
-    /// 📮 Submits exactly one job. It is never retried: an indeterminate transport is terminal, so a
-    /// replay can never mint a second job behind the operator's back.
-    pub async fn submit_gis_map_inference_job(&self, ctx: &OperationContext, scope: &DocumentScope, request: &GisMapInferenceJobRequestV1) -> Result<GisMapInferenceJobReceiptV1, GisMapInferencePortCodeV1> {
-        let body = crate::os_pack::json::to_json_string(request).into_bytes();
-        let receipt: GisMapInferenceJobReceiptV1 = self.gis_map_inference_call(ctx, HttpMethod::Post, scope, "/jobs", Some(body)).await?;
-        receipt.validate().then_some(receipt).ok_or(GisMapInferencePortCodeV1::Invalid)
-    }
-
-    /// 📃 Reads one bounded owner-private page after an exact progress cursor.
-    pub async fn read_gis_map_inference_events(&self, ctx: &OperationContext, scope: &DocumentScope, job_id: &str, after: u64) -> Result<GisMapInferenceEventPageV1, GisMapInferencePortCodeV1> {
-        if after > GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR {
-            return Err(GisMapInferencePortCodeV1::Bounds);
-        }
-        let page: GisMapInferenceEventPageV1 = self.gis_map_inference_call(ctx, HttpMethod::Get, scope, &format!("/jobs/{}/events?after={after}", encode_url_component(job_id)), None).await?;
-        page.validate(job_id).then_some(page).ok_or(GisMapInferencePortCodeV1::Invalid)
-    }
-
-    /// 🛑 Requests cancellation and returns the server's own next page; the caller never assumes it.
-    pub async fn cancel_gis_map_inference_job(&self, ctx: &OperationContext, scope: &DocumentScope, job_id: &str) -> Result<GisMapInferenceEventPageV1, GisMapInferencePortCodeV1> {
-        let page: GisMapInferenceEventPageV1 = self.gis_map_inference_call(ctx, HttpMethod::Post, scope, &format!("/jobs/{}/cancel", encode_url_component(job_id)), None).await?;
-        page.validate(job_id).then_some(page).ok_or(GisMapInferencePortCodeV1::Invalid)
-    }
-
-    /// ✅ Approves exactly the offered proposal, echoing back the hash the server itself published.
-    pub async fn approve_gis_map_inference_job(&self, ctx: &OperationContext, scope: &DocumentScope, request: &GisMapInferenceApprovalRequestV1) -> Result<GisMapInferenceApprovalReceiptV1, GisMapInferencePortCodeV1> {
-        let body = crate::os_pack::json::to_json_string(request).into_bytes();
-        let receipt: GisMapInferenceApprovalReceiptV1 = self.gis_map_inference_call(ctx, HttpMethod::Post, scope, &format!("/jobs/{}/approval", encode_url_component(&request.job_id)), Some(body)).await?;
-        receipt.validate(&request.job_id, &request.proposal_hash).then_some(receipt).ok_or(GisMapInferencePortCodeV1::Invalid)
-    }
-    //#endregion 💡️InferencePort
 
     pub fn stream(self: &Arc<Self>, since: u64) -> DirectoryStream<T>
     where

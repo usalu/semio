@@ -16,7 +16,7 @@ async fn layer_transforms_preserve_exact_inverse_and_sequential_moves(){
             if horizontal {patch.transform_x=Some(0.0);}else{patch.transform_y=Some(0.0);}
             assert!(ambiguous.apply(&base).is_err());ambiguous.retire_cold();
         }
-        assert_eq!(validate(&payload,&after),Err("mutation.transform-conflict"));
+        assert_eq!(validate(&payload,&after),Err("mutation.target-mismatch"));
         let inverse=mutation.inverse(&base).remove(0);let (undo,_)=inverse.diff(&after).into_parts();let restored=undo.apply(&after).unwrap();assert_eq!(restored,base);
         let movement=RasterMutation::MoveLayer(crate::mutations::move_layer::MoveLayer {layer_id:id,new_x:9.0,new_y:10.0});
         for full_first in [false,true] {

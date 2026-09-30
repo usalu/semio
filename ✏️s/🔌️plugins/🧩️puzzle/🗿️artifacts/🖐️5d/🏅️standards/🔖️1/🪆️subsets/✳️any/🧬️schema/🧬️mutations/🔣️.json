@@ -107,6 +107,18 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/mutation/change-target-volume-locked/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/mutation/drag-selection2d/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/mutation/drag-selection3d/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/mutation/rotate-selection3d/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/mutation/scale-selection3d/schema.json"
     }
   ]
 }

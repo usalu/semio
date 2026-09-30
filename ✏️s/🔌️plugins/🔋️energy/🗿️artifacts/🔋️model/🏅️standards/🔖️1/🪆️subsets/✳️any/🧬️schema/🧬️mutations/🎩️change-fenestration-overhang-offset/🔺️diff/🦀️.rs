@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeFenestrationOverhangOffset, base: &EnergyMode
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Fenestration {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_overhang_offset_m.is_finite() || payload.new_overhang_offset_m < 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Fenestration {} needs a non-negative finite overhang offset, got {}.", payload.id.0, payload.new_overhang_offset_m), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fenestration {} needs a non-negative finite overhang offset, got {}.", payload.id.0, payload.new_overhang_offset_m), [payload.id.0.to_string()]);
     }
     if existing.overhang_offset_m == payload.new_overhang_offset_m {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fenestration {} already has this overhang offset.", payload.id.0));

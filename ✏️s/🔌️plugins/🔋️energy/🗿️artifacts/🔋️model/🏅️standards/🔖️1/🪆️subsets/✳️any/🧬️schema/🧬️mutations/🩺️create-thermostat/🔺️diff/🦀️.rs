@@ -7,7 +7,7 @@ use crate::EnergyModelSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateThermostat, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
     if base.model.thermostats.iter().any(|item| item.id == payload.id) {
-        return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Thermostat {} already exists.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Thermostat {} already exists.", payload.id.0), [payload.id.0.to_string()]);
     }
     if !base.model.zones.iter().any(|zone| zone.id == payload.zone_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Zone {} does not exist.", payload.zone_id.0), [payload.zone_id.0.to_string()]);
@@ -29,10 +29,10 @@ pub fn diff(payload: &super::CreateThermostat, base: &EnergyModelSnapshot) -> pr
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} is not defined by this model.", payload.cooling_setpoint_schedule_id.0), [payload.cooling_setpoint_schedule_id.0.to_string()]);
     }
     if !payload.heating_throttle_range_k.is_finite() || payload.heating_throttle_range_k <= 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("A heating throttle range must be a positive finite number, got {}.", payload.heating_throttle_range_k), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("A heating throttle range must be a positive finite number, got {}.", payload.heating_throttle_range_k), [payload.id.0.to_string()]);
     }
     if !payload.cooling_throttle_range_k.is_finite() || payload.cooling_throttle_range_k <= 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("A cooling throttle range must be a positive finite number, got {}.", payload.cooling_throttle_range_k), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("A cooling throttle range must be a positive finite number, got {}.", payload.cooling_throttle_range_k), [payload.id.0.to_string()]);
     }
     let mut model = base.model.clone();
     model.thermostats.push(crate::model::Thermostat {

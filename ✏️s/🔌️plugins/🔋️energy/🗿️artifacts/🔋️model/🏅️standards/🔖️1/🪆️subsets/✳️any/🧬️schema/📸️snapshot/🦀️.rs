@@ -31,7 +31,7 @@ pub struct EnergyModelSnapshot {
     #[link_slot(roles("model"))]
     pub referenced_model: Option<store::ArtifactLink>,
     /// 🌦️ Forward link to the `🌦️epw` stdio artifact this model is simulated against — a link slot
-    /// exactly like `referenced_model`, never an inlined `EpwWeather` (ticket
+    /// exactly like `referenced_model`, never an inlined `WeatherData` (ticket
     /// 26/09/06/ENERGY-PLUGIN-END-TO-END).
     #[state(artifact)]
     #[link_slot(roles("weather"))]

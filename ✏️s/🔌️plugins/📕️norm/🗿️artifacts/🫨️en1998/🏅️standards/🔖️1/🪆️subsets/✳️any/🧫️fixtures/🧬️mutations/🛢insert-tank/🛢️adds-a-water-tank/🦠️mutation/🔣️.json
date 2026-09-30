@@ -1,0 +1,14 @@
+{
+  "mutation": "insertTank",
+  "index": 1,
+  "tank": {
+    "id": "tk-2",
+    "heightM": 8.0,
+    "radiusM": 6.0,
+    "permanentGkN": 800000.0,
+    "contentQkN": 5000000.0,
+    "contentCategory": "E",
+    "fillingRatio": 0.9,
+    "vRdN": 3000000.0
+  }
+}

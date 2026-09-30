@@ -2,7 +2,7 @@
 //! patches it.
 //!
 //! Guards, in the order they run: `mutation.target-missing` (Error) on `case_id`, the same code on
-//! `load_id`, `mutation.id-mismatch` (Fatal) when the replacement renames the load,
+//! `load_id`, `mutation.target-mismatch` (Error) when the replacement renames the load,
 //! the SAME per-variant target resolution `add-load` runs (`mutation.target-missing`, Error), the
 //! finite-magnitude bound (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceLoad;

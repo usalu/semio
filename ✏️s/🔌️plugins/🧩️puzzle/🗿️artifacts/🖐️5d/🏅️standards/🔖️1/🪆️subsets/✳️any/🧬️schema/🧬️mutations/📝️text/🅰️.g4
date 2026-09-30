@@ -7,7 +7,7 @@ grammar Puzzle_puzzle5d_mutations;
 
 DOCUMENT: 'schema' [ ]+ 'puzzle.puzzle5d.mutations' ;
 
-line: createPart | deletePart | movePart2d | replacePart2dGeometry | editPart2dText | changePart2dIcon | changePart2dHidden | changePart2dLocked | movePart3d | rotatePart3d | scalePart3d | changePart3dMesh | editPart3dLabel | changePartKind | changePartAnchor | addPartGrip | removePartGrip | replacePartGrip | connectGrips | disconnectGrips | replaceFastenerGeometry | changeFastenerKind | renamePuzzle5d | changeDomain | changeDescription | connectKindCompatibility | disconnectKindCompatibility | replaceKindCatalogs ;
+line: createPart | deletePart | movePart2d | replacePart2dGeometry | editPart2dText | changePart2dIcon | changePart2dHidden | changePart2dLocked | movePart3d | rotatePart3d | scalePart3d | changePart3dMesh | editPart3dLabel | changePartKind | changePartAnchor | addPartGrip | removePartGrip | replacePartGrip | connectGrips | disconnectGrips | replaceFastenerGeometry | changeFastenerKind | renamePuzzle5d | changeDomain | changeDescription | connectKindCompatibility | disconnectKindCompatibility | replaceKindCatalogs | dragSelection2d | dragSelection3d | rotateSelection3d | scaleSelection3d ;
 createPart: 'create-part' SP partBlock SP indexOpt ;
 deletePart: 'delete-part' SP id ;
 movePart2d: 'move-part2d' SP id SP number SP number ;
@@ -36,6 +36,10 @@ changeDescription: 'change-description' SP text ;
 connectKindCompatibility: 'connect-kind-compatibility' SP id SP id SP boolean SP boolean SP specificity ;
 disconnectKindCompatibility: 'disconnect-kind-compatibility' SP id SP id ;
 replaceKindCatalogs: 'replace-kind-catalogs' SP catalogsBlockOpt ;
+dragSelection2d: 'drag-selection2d' SP idList SP number SP number ;
+dragSelection3d: 'drag-selection3d' SP idList SP number SP number SP number ;
+rotateSelection3d: 'rotate-selection3d' SP idList SP number SP number SP number SP number ;
+scaleSelection3d: 'scale-selection3d' SP idList SP number SP number SP number ;
 partBlock: '{' NL OCTET+ '}' ;
 gripBlock: '{' NL OCTET+ '}' ;
 catalogsBlockOpt: ('{' NL OCTET+ '}') | 'none' ;
@@ -49,6 +53,7 @@ indexOpt: number | 'none' ;
 textOpt: text | 'none' ;
 numberOpt: number | 'none' ;
 booleanOpt: boolean | 'none' ;
+idList: '[' id* ']' ;
 id: OCTET+ ;
 number: OCTET+ ;
 text: OCTET+ ;

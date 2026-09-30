@@ -1,0 +1,14 @@
+{
+  "InsertBridgeFatigue": {
+    "index": 1,
+    "bridgeFatigueItem": {
+      "id": "br-1-2",
+      "memberId": "member-b1",
+      "lambda": 0.8,
+      "phi2": 1.0,
+      "deltaSigmaP": 40000000.0,
+      "category": 71,
+      "method": "damage_tolerant"
+    }
+  }
+}

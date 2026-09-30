@@ -27,6 +27,7 @@
     },
     "weight": {
       "type": "number",
+      "exclusiveMinimum": 0,
       "x-semio-ui": {
         "widget": "stepper",
         "role": "value",

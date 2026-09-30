@@ -1,0 +1,26 @@
+{
+  "buildingCategory": null,
+  "attachment": null,
+  "useClass": null,
+  "method": null,
+  "netFloorAreaM2": null,
+  "heatedVolumeM3": null,
+  "gegQpFactor": null,
+  "deltaUWbWM2k": null,
+  "automationClass": null,
+  "zones": null,
+  "elements": null,
+  "heating": {
+    "generationEfficiency": 1.078,
+    "distributionEfficiency": 0.96,
+    "storageEfficiency": 0.98,
+    "transferEfficiency": 0.96,
+    "energyCarrier": "natural_gas"
+  },
+  "dhw": null,
+  "ventilation": null,
+  "cooling": null,
+  "lighting": null,
+  "renewables": null,
+  "climate": null
+}

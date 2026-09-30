@@ -306,6 +306,34 @@ fn flow_from_spec(spec: &LayoutSpec) -> FlowStyle {
     }
 }
 
+/// 🧺️ How a node inside a tree row's content lays out — the one geometry every renderer's row content shares here:
+/// `Slot` is a direct content child, its box in the row's value column `top` below the row's top and `height` tall (a
+/// `container` stacks its children between its label bands, `above` and `below` tall, a leaf fills the box); `Column`
+/// is a nested container stacking its children between its label bands; `Line` is a content leaf, exactly one line tall.
+/// Every content leaf and every label fills one line, so a row's content height is known before layout
+/// (`layout::tree_content_height`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) enum TreeContentFlow {
+    Slot { top: f32, height: f32, above: f32, below: f32, container: bool },
+    Column { above: f32, below: f32 },
+    Line { height: f32 },
+}
+
+/// 🧵️ The flow a tree-row content node takes: its `natural` style keeps only what its own painting needs (a text
+/// leaf's measuring, a button's label padding); the box and the stacking are [`TreeContentFlow`]'s.
+fn tree_content_flow(content: TreeContentFlow, natural: FlowStyle, metrics: &TreeRowMetrics) -> FlowStyle {
+    let column = |above: f32, below: f32| FlowStyle { gap_main: metrics.gap, gap_cross: metrics.gap, padding: EdgePx { top: above, bottom: below, ..EdgePx::default() }, shrink: 0.0, ..FlowStyle::default() };
+    match content {
+        TreeContentFlow::Slot { top, height, above, below, container } => {
+            let inset = if metrics.inline.is_rtl() { [Some(top), None, None, Some(metrics.gap)] } else { [Some(top), Some(metrics.gap), None, None] };
+            let base = if container { column(above, below) } else { FlowStyle { text: natural.text, padding: natural.padding, shrink: 0.0, ..FlowStyle::default() } };
+            FlowStyle { absolute: true, inset, width: Dim::Length(metrics.control_width), height: Dim::Length(height), clips: true, ..base }
+        }
+        TreeContentFlow::Column { above, below } => column(above, below),
+        TreeContentFlow::Line { height } => FlowStyle { height: Dim::Length(height), min_height: height, shrink: 0.0, text: natural.text, padding: natural.padding, ..FlowStyle::default() },
+    }
+}
+
 /// 🌊️ One retained node's flow style. `authored` is the node's own `LayoutSpec` when the producer
 /// published one (the React-parity dialect); the composite wgpu kinds ignore it on purpose — their
 /// geometry is what `paint`/`events` already derive their rows from.
@@ -620,12 +648,15 @@ impl FlexTree {
     /// 🌱️ Admits the job's next node (nodes arrive in the admission walk's depth-first preorder).
     /// Only a `Grid` retains its authored track lists — everything else layout needs lives in the
     /// [`FlowStyle`], so the common node costs one small `Copy` record and no allocation at all.
-    pub(crate) fn push(&mut self, kind: LayoutNodeKind, parent: Option<usize>, authored: Option<&LayoutSpec>, metrics: &TreeRowMetrics, parent_kind: Option<LayoutNodeKind>) -> bool {
-        let mut flow = flow_for(kind, parent_kind, authored, metrics);
+    pub(crate) fn push(&mut self, kind: LayoutNodeKind, parent: Option<usize>, authored: Option<&LayoutSpec>, metrics: &TreeRowMetrics, parent_kind: Option<LayoutNodeKind>, content: Option<TreeContentFlow>) -> bool {
+        let mut flow = match content {
+            Some(content) => tree_content_flow(content, flow_for(kind, None, authored, metrics), metrics),
+            None => flow_for(kind, parent_kind, authored, metrics),
+        };
         if parent.is_some_and(|parent| self.flows.get(parent).is_some_and(|owner| owner.grows_children)) && !flow.absolute {
             flow.grow = 1.0;
         }
-        flow.grows_children = grows_children(kind, authored.is_some());
+        flow.grows_children = content.is_none() && grows_children(kind, authored.is_some());
         let grid = match authored {
             Some(LayoutSpec::Grid(tracks)) if matches!(flow.kind, FlowKind::Grid) => Some(Box::new(tracks.clone())),
             _ => None,

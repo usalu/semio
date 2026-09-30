@@ -1,0 +1,64 @@
+{
+  "artifact": null,
+  "structureId": null,
+  "geotechnicalCategory": null,
+  "designSituation": null,
+  "designApproach": null,
+  "annex": null,
+  "groundwaterLevel": null,
+  "investigationDepth": null,
+  "layers": {
+    "values": [
+      {
+        "id": "layer-sand",
+        "soilType": "sand",
+        "depthTop": 0.0,
+        "depthBottom": 8.0,
+        "gamma": 19000.0,
+        "gammaPrime": 10000.0,
+        "phiPrimeDeg": 32.0,
+        "cohesionEffective": 0.0,
+        "cohesionUndrained": 0.0,
+        "oedometricModulus": 40000000.0,
+        "poissonRatio": 0.3,
+        "cptQc": 8000000.0,
+        "sptN": 18.0
+      },
+      {
+        "id": "layer-gravel",
+        "soilType": "gravel",
+        "depthTop": 8.0,
+        "depthBottom": 20.0,
+        "gamma": 20000.0,
+        "gammaPrime": 11000.0,
+        "phiPrimeDeg": 35.0,
+        "cohesionEffective": 0.0,
+        "cohesionUndrained": 0.0,
+        "oedometricModulus": 60000000.0,
+        "poissonRatio": 0.28,
+        "cptQc": 12000000.0,
+        "sptN": 28.0
+      },
+      {
+        "id": "layer-sand-2",
+        "soilType": "sand",
+        "depthTop": 8.0,
+        "depthBottom": 11.0,
+        "gamma": 19000.0,
+        "gammaPrime": 10000.0,
+        "phiPrimeDeg": 32.0,
+        "cohesionEffective": 0.0,
+        "cohesionUndrained": 0.0,
+        "oedometricModulus": 40000000.0,
+        "poissonRatio": 0.3,
+        "cptQc": 8000000.0,
+        "sptN": 18.0
+      }
+    ]
+  },
+  "footings": null,
+  "piles": null,
+  "retainingWalls": null,
+  "slopes": null,
+  "upliftCases": null
+}

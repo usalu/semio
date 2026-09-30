@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/editor/gumball-transient/schema.json",
+  "title": "FemGumballTransient",
+  "description": "🫧️ The FEM editors' local-only transient: every open gumball gesture of one artifact instance, keyed by the owning window id. Ephemeral tool state — never history, never shared.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gestures"
+  ],
+  "properties": {
+    "gestures": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/FemGumballGesture"
+      },
+      "x-semio-state": "transient"
+    }
+  },
+  "definitions": {
+    "FemGumballGesture": {
+      "description": "💾️ One window's in-flight gumball gesture: the tool statechart configuration by stable ids, the admission and base revision it opened on, and the open tool transaction's provisional entries.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "states",
+        "verb",
+        "authoringSeed",
+        "baseRevision",
+        "transaction",
+        "entries"
+      ],
+      "properties": {
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "verb": {
+          "type": "string",
+          "enum": [
+            "translateSelection",
+            "rotateSelection",
+            "scaleSelection"
+          ]
+        },
+        "authoringSeed": {
+          "type": "string"
+        },
+        "baseRevision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "transaction": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "tool"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^tx-[0-9a-f]{16}$"
+            },
+            "tool": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "mutation"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "mutation": {
+                "description": "One provisional FEM mutation in value form, internally tagged on `mutation` with the camelCase variant name.",
+                "type": "object",
+                "required": [
+                  "mutation"
+                ],
+                "properties": {
+                  "mutation": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,81 @@
+//! 🧪️ `scale-selection` fixture — `🧱️zero-factor`.
+//!
+//! A zero factor would flatten the object; the schema's `exclusiveMinimum: 0` forbids it: a Fatal `mutation.invariant`.
+//!
+//! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/🔍️scale-selection/🧱️zero-factor/`
+//! (contract D1); the scene is the synthetic selection scene shared by every selection-transform vector.
+
+use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle3d_mutation;
+use crate::Puzzle3dSnapshot;
+
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍️scale-selection/🧱️zero-factor/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍️scale-selection/🧱️zero-factor/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍️scale-selection/🧱️zero-factor/🦠️mutation/🔣️.json");
+const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍️scale-selection/🧱️zero-factor/🔺️diff/🚫️.absent");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍️scale-selection/🧱️zero-factor/🎯️outcome/🔣️.json");
+
+fn before() -> Puzzle3dSnapshot {
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+}
+fn expected_after() -> Puzzle3dSnapshot {
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+}
+fn mutation() -> Puzzle3dMutation {
+    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+}
+fn outcome() -> serde_json::Value {
+    serde_json::from_str(OUTCOME).expect("outcome decodes")
+}
+
+/// 🗣️ `(level, code, target)` of every message `scale-selection` raises on the committed base.
+fn produced_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {
+    let produced = <Puzzle3dMutation as protocol::Mutation<Puzzle3dSnapshot>>::diff(&mutation(), &before());
+    produced.messages().iter().map(|message| (message.level, message.code.0.clone(), message.target.clone())).collect()
+}
+
+/// 🔣️ Both committed snapshots and the committed `scale-selection` payload are already canonical.
+#[test]
+fn committed_json_is_canonical() {
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: Puzzle3dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "scale-selection/zero-factor: committed {label} JSON is not canonical");
+    }
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&mutation())).expect("mutation encodes");
+    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    assert_eq!(reencoded, original, "scale-selection/zero-factor: committed mutation JSON is not canonical");
+}
+
+/// ▶️ A refused `scale-selection` still applies cleanly — its diff is the default one — and leaves the scene at
+/// the committed `after`, which is the committed `before`.
+#[test]
+fn refusal_leaves_the_document_at_the_committed_after() {
+    let mut snapshot = before();
+    apply_puzzle3d_mutation(&mut snapshot, &mutation()).expect("an empty diff still applies cleanly");
+    assert_eq!(snapshot, expected_after(), "scale-selection/zero-factor: applied state differs from committed after-snapshot");
+    assert_eq!(expected_after(), before(), "scale-selection/zero-factor: a rejected vector's two committed snapshots must be identical");
+}
+
+/// 🧱️ The payload breaks a hard bound of its own schema, so the refusal is exactly one Fatal
+/// `mutation.invariant` addressing the declared path, with the default diff.
+#[test]
+fn the_invariant_is_the_declared_refusal() {
+    assert!(DIFF_ABSENT.is_empty(), "scale-selection/zero-factor: the D6 sentinel 🔺️diff/🚫️.absent must stay empty");
+    let produced = <Puzzle3dMutation as protocol::Mutation<Puzzle3dSnapshot>>::diff(&mutation(), &before());
+    assert_eq!(produced.diff(), &Puzzle3dDiff::default(), "scale-selection/zero-factor: a Fatal outcome carries the default diff");
+    let outcome = outcome();
+    assert_eq!(outcome["status"].as_str(), Some("rejected"), "scale-selection/zero-factor declares a rejected outcome");
+    assert_eq!(outcome["code"].as_str(), Some("mutation.invariant"), "scale-selection/zero-factor declares the invariant refusal");
+    let path: Vec<String> = outcome["path"].as_array().expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
+    assert_eq!(produced_messages(), vec![(protocol::Severity::Fatal, "mutation.invariant".to_string(), path)], "scale-selection/zero-factor: the refusal differs from the declared one");
+}
+
+/// 🌐️ The refusal does not depend on the scene: the empty scene refuses the same payload the same way.
+#[test]
+fn the_invariant_is_independent_of_the_base() {
+    let produced = <Puzzle3dMutation as protocol::Mutation<Puzzle3dSnapshot>>::diff(&mutation(), &Puzzle3dSnapshot::default());
+    assert_eq!(produced.messages().iter().map(|message| (message.level, message.code.0.as_str())).collect::<Vec<_>>(), vec![(protocol::Severity::Fatal, "mutation.invariant")], "scale-selection/zero-factor: an invariant is a property of the payload alone");
+}

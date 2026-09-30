@@ -1,0 +1,17 @@
+{
+  "mutation": "dragPathPoints",
+  "targets": [
+    {
+      "layerId": "path-a",
+      "index": 0,
+      "point": "anchor"
+    },
+    {
+      "layerId": "path-a",
+      "index": 1,
+      "point": "anchor"
+    }
+  ],
+  "dx": 20.0,
+  "dy": 10.0
+}

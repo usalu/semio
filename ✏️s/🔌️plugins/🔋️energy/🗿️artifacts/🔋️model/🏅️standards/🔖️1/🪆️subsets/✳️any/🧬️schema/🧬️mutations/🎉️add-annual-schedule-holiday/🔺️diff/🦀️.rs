@@ -10,7 +10,7 @@ pub fn diff(payload: &super::AddAnnualScheduleHoliday, base: &EnergyModelSnapsho
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Annual schedule {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !(1..=12).contains(&payload.month) || !(1..=31).contains(&payload.day) {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("{}-{}-{} is not a calendar date.", payload.year, payload.month, payload.day), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("{}-{}-{} is not a calendar date.", payload.year, payload.month, payload.day), [payload.id.0.to_string()]);
     }
     if payload.index as usize > existing.holiday_dates.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of annual schedule {}'s {} holidays.", payload.index, payload.id.0, existing.holiday_dates.len()), [payload.id.0.to_string()]);

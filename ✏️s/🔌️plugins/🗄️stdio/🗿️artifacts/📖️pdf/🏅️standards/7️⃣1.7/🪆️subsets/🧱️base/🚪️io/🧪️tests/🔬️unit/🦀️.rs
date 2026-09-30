@@ -244,6 +244,114 @@ fn retained_graph_survives_typed_edits_and_keeps_foreign_objects() {
     assert_eq!(encode_pdf(&reread).unwrap(), edited, "one regeneration reaches the fixed point");
 }
 
+/// 💾️ Writes `snapshot` with this subset's writer and reads the bytes back.
+fn rewritten(snapshot: &PdfSnapshot) -> PdfSnapshot {
+    decode_pdf(&encode_pdf(snapshot).unwrap()).unwrap()
+}
+
+/// 🔍️ The retained object numbered `num`.
+fn retained(snapshot: &PdfSnapshot, num: u32) -> Option<&PdfObject> {
+    snapshot.objects.iter().find(|object| object.id.num == num).map(|object| &object.value)
+}
+
+/// 📕️ The catalog reference and dictionary the trailer names.
+fn catalog_of(snapshot: &PdfSnapshot) -> (ObjRef, PdfObject) {
+    let root = dict_get(&snapshot.trailer, "Root").and_then(PdfObject::as_ref).expect("a retained /Root");
+    (root, retained(snapshot, root.num).cloned().expect("the catalog object"))
+}
+
+/// 🧮️ Object numbers whose value differs between two retained graphs, or that only one holds.
+fn moved_objects(before: &PdfSnapshot, after: &PdfSnapshot) -> (Vec<u32>, Vec<u32>, Vec<u32>) {
+    let changed = before.objects.iter().filter(|object| retained(after, object.id.num).is_some_and(|value| *value != object.value)).map(|object| object.id.num).collect();
+    let removed = before.objects.iter().filter(|object| retained(after, object.id.num).is_none()).map(|object| object.id.num).collect();
+    let added = after.objects.iter().filter(|object| retained(before, object.id.num).is_none()).map(|object| object.id.num).collect();
+    (changed, removed, added)
+}
+
+#[test]
+fn a_direct_graph_edit_moves_its_typed_lanes_and_survives_the_write() {
+    let base = decode_pdf(THESIS).unwrap();
+    let (root, catalog) = catalog_of(&base);
+    let action = catalog.dict_get("OpenAction").and_then(PdfObject::as_ref).expect("the thesis opens through an indirect action");
+    let mut edited = base.clone();
+    let replaced = PdfObject::Dict(vec![PdfDictEntry::new("S", PdfObject::name("GoToR")), PdfDictEntry::new("F", PdfObject::Str(b"other.pdf".to_vec())), PdfDictEntry::new("D", PdfObject::Array(vec![PdfObject::Int(0), PdfObject::name("Fit")]))]);
+    edited.objects.iter_mut().find(|object| object.id == action).unwrap().value = replaced.clone();
+    let PdfObject::Dict(entries) = &mut edited.objects.iter_mut().find(|object| object.id == root).unwrap().value else { panic!("the catalog is a dictionary") };
+    entries.iter_mut().find(|entry| entry.key == "PageMode").unwrap().value = PdfObject::name("UseNone");
+    edited.trailer.retain(|entry| entry.key != "ID");
+    edited.trailer.push(PdfDictEntry::new("SemioMarker", PdfObject::Int(42)));
+    carry_graph_edit(&base, &mut edited);
+    assert_eq!(edited.page_mode, Some(PdfPageMode::UseNone), "the page-mode lane reads the edited catalog");
+    assert_eq!(edited.document_id, None, "the identity lane reads the edited trailer");
+    assert_ne!(edited.open_action, base.open_action, "the open-action lane reads the edited action");
+    assert_eq!(edited.pages, base.pages, "a lane the edit never reached keeps its value");
+    let written = rewritten(&edited);
+    assert_same_lanes(&written, &edited);
+    assert_eq!(retained(&written, action.num), Some(&replaced), "the direct object edit is written as it stands");
+    assert_eq!(catalog_of(&written).1.dict_get("PageMode"), Some(&PdfObject::name("UseNone")));
+    assert_eq!(dict_get(&written.trailer, "SemioMarker"), Some(&PdfObject::Int(42)), "a trailer entry the writer does not own survives");
+    assert!(dict_get(&written.trailer, "ID").is_none(), "a removed trailer /ID stays removed");
+}
+
+#[test]
+fn a_typed_page_and_info_edit_rewrites_only_what_those_lanes_own() {
+    let base = decode_pdf(THESIS).unwrap();
+    let mut edited = base.clone();
+    edited.pages[5].rotate = 90;
+    edited.pages[15].media_box = [0.0, 0.0, 595.0, 842.0];
+    edited.pages[16].crop_box = Some([10.0, 10.0, 580.0, 820.0]);
+    edited.pages[20].content = vec![PdfOp::BeginText, PdfOp::SetFont { name: "F1".into(), size: 12.0 }, PdfOp::MoveText { tx: 72.0, ty: 720.0 }, PdfOp::ShowText { text: PdfTextString::text("Replaced page content") }, PdfOp::EndText];
+    edited.info = PdfInfo { title: Some("Replaced title".into()), author: Some("Replaced author".into()), ..PdfInfo::default() };
+    let written = rewritten(&edited);
+    assert_same_lanes(&written, &edited);
+    let original = Reading::of(GraphSource::new(&base.objects), &base.trailer, &base.declared_version);
+    let info = dict_get(&base.trailer, "Info").and_then(PdfObject::as_ref).unwrap();
+    let pages: Vec<u32> = [5, 15, 16, 20].iter().map(|index| original.page_refs[*index].num).collect();
+    let (changed, removed, added) = moved_objects(&base, &written);
+    assert!(changed.iter().all(|num| pages.contains(num) || *num == info.num), "only the edited pages and the information dictionary are re-stated: {changed:?}");
+    assert_eq!(changed.len(), pages.len() + 1);
+    assert_eq!(added.len(), 1, "the replaced page content is one new stream");
+    assert_eq!(removed.len(), 1, "the displaced page content stream leaves the file: {removed:?}");
+    assert_eq!(catalog_of(&written), catalog_of(&base), "a page edit never re-states the catalog");
+}
+
+#[test]
+fn a_structural_page_edit_restates_the_page_tree_and_keeps_the_catalog() {
+    let base = decode_pdf(THESIS).unwrap();
+    let mut edited = base.clone();
+    let moved = edited.pages.remove(10);
+    edited.pages.insert(40, moved);
+    edited.pages.remove(7);
+    let mut inserted = PdfPage::new(612.0, 792.0);
+    inserted.content = vec![PdfOp::BeginText, PdfOp::SetFont { name: "F1".into(), size: 12.0 }, PdfOp::MoveText { tx: 72.0, ty: 720.0 }, PdfOp::ShowText { text: PdfTextString::text("Inserted page") }, PdfOp::EndText];
+    edited.pages.insert(30, inserted);
+    let bytes = encode_pdf(&edited).unwrap();
+    let written = decode_pdf(&bytes).unwrap();
+    assert_eq!(written.pages.len(), 65);
+    assert_same_lanes(&written, &edited);
+    let (_, catalog) = catalog_of(&base);
+    assert_eq!(catalog_of(&written).1, catalog, "the catalog dictionary itself is untouched");
+    for key in ["OpenAction", "Outlines"] {
+        let reference = catalog.dict_get(key).and_then(PdfObject::as_ref).unwrap();
+        assert_eq!(retained(&written, reference.num), retained(&base, reference.num), "{key} keeps its retained object");
+    }
+    assert_eq!(encode_pdf(&written).unwrap(), bytes, "the grafted document is its own fixed point");
+}
+
+#[test]
+fn a_page_removal_keeps_the_catalog_when_a_destination_outruns_the_pages() {
+    let base = decode_pdf(THESIS).unwrap();
+    let mut edited = base.clone();
+    edited.pages.remove(7);
+    let last = edited.pages.len() as u32;
+    assert!(edited.named_destinations.iter().any(|named| matches!(named.destination, PdfDestination::Page { page, .. } if page == last)), "the thesis names a destination on its last page, which a removal leaves out of range");
+    let written = rewritten(&edited);
+    assert_eq!(written.pages, edited.pages);
+    assert_eq!(catalog_of(&written), catalog_of(&base), "an unrepresentable destination never regenerates the catalog");
+    let representable: Vec<&PdfNamedDestination> = edited.named_destinations.iter().filter(|named| !matches!(named.destination, PdfDestination::Page { page, .. } if page >= last)).collect();
+    assert_eq!(written.named_destinations.iter().collect::<Vec<_>>(), representable, "every destination a page still exists for is written as the typed lane states it");
+}
+
 #[test]
 fn document_stream_matches_the_whole_document_write() {
     let seed = rich_document();

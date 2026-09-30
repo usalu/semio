@@ -1,0 +1,6 @@
+{
+  "ChangeBedJointThickness": {
+    "index": 0,
+    "newBedJointThicknessM": 0.01
+  }
+}

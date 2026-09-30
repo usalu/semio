@@ -1643,4 +1643,26 @@ fn a_cancelled_node_drag_leaves_zero_trace() {
         assert_eq!(record["payload"]["dx"].as_f64(), Some(20.0), "the next drag starts from the restored geometry");
     }
 }
+#[cfg(test)]
+/// ✂️ A drag offset is recorded as the shortest decimal of its f32 value: pointer coordinates carry f32 precision,
+/// so a release whose screen reading picked up f32 noise stores a short offset, never the f64 residue.
+#[test]
+fn a_drag_offset_is_recorded_without_f64_pointer_noise() {
+    assert_eq!(board_pointer_offset(80.00003051757813), 80.00003);
+    assert_eq!(board_pointer_offset(0.1 + 0.2), 0.3);
+    for exact in [80.0, -12.5, 0.0, 1.0e-9, 1234.5] {
+        assert_eq!(board_pointer_offset(exact), exact, "{exact} is already short");
+    }
+    assert!(board_pointer_offset(f64::NAN).is_nan());
+    let mut host = gesture_host();
+    let grab = host.world_to_screen(Point::new(-40.0, 0.0));
+    host.pointer_down_screen(grab.x, grab.y, 0, false, false);
+    let (release_x, release_y) = (grab.x + 80.00003051757813, grab.y + 0.1 + 0.2);
+    host.pointer_move_screen(grab.x + 40.0, grab.y, false, false, false);
+    host.pointer_move_screen(release_x, release_y, false, false, false);
+    host.pointer_up_screen(release_x, release_y, false, false, false);
+    let released = gesture_rows(&mut host);
+    let record = released.iter().find(|row| row["name"] == "gesture").map(|row| &row["payload"]).expect("the release records the drag");
+    assert_eq!((record["dx"].as_f64(), record["dy"].as_f64()), (Some(80.00003), Some(0.3)), "the stored offset is short: {record}");
+}
 //#endregion 🎬️Gestures

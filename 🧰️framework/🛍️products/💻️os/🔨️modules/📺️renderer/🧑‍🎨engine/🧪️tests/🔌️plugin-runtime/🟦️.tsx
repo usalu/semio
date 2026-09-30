@@ -1153,6 +1153,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         subscribeOperationProgress: () => () => {},
         readWindowConfigPacks: async () => [],
         loadWindowConfigPack: async () => {},
+        readAppDocumentIdentity: async (instanceId) => ({ app_instance_id: instanceId, parent_document_id: `fake-document-${instanceId}` }),
         documentPack: (instanceId) => (options.pack !== undefined ? options.pack : { pack: new Uint8Array([1]), spr: new Uint8Array([instanceId]) }),
         transactionPrepare: async (instanceId, _txnId, _request) => {
           calls.push(`${pluginId}:${instanceId}:prepare`);
@@ -1458,6 +1459,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         subscribeOperationProgress: () => () => {},
           readWindowConfigPacks: async () => [],
           loadWindowConfigPack: async () => {},
+          readAppDocumentIdentity: async (instanceId) => ({ app_instance_id: instanceId, parent_document_id: `fake-document-${instanceId}` }),
           documentPack: () => ({ pack: new Uint8Array([1]), spr: new Uint8Array([2]) }),
           transactionPrepare: async (instanceId) => {
             calls.push(`chain:${instanceId}:prepare`);

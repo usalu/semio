@@ -1178,7 +1178,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         state.currentPack = new Uint8Array([9]);
         state.currentSpr = new Uint8Array([8]);
         if (row.name.startsWith("lease-")) {
-          const leaseFixture = JSON.parse(await readFile(new URL("../../../🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8")),
+          const leaseFixture = JSON.parse(await readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8")),
             fields = structuredClone(leaseFixture.manifest),
             frontier = bootstrap.baseline_frontier;
           fields.scope = { spaceId: binding.spaceId, documentId: config.documentId };
@@ -4075,7 +4075,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     async function executionTargetLeaseFixture(): Promise<ExecutionTargetLeaseFixture> {
       const { readFile } = await import("node:fs/promises");
-      return JSON.parse(await readFile(new URL("../../../🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8")) as ExecutionTargetLeaseFixture;
+      return JSON.parse(await readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8")) as ExecutionTargetLeaseFixture;
     }
 
     function executionTargetBytes(hexText: string): Uint8Array {
@@ -6239,7 +6239,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const refused = messageOfSize("edit-refused", 128);
         handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: refused } });
         expect(state.pendingDocumentBackboneBytes).toBe(DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - 1);
-        expect(outcomes.at(-1)).toMatchObject({ kind: "event", event: { kind: "commandOutcome", outcome: { kind: "rejected", reason: "document backbone pending capacity" } } });
+        expect(outcomes.at(-1)).toMatchObject({ kind: "event", event: { kind: "commandOutcome", outcome: { kind: "rejected", code: "local.backbone-capacity", reason: "document backbone pending capacity", messages: [], detail: { envelopes: 1, limit: DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes } } } });
         await handleAck(state, 0, [{ Applied: { outcome: "Accepted" } }]);
         expect(state.pendingDocumentBackboneBytes).toBe(DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - 1 - targets[0]);
         handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: refused } });
@@ -6267,7 +6267,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       testSeams.documentSocketGrantTestIssue = async () => ({ schema: "semio.hub.document-socket-grant/v1", protocol: "semio.session.v1", actorId: `hub.v1.${"4".repeat(64)}`, expiresAtMs: Number.MAX_SAFE_INTEGER });
       const replacement = (documentId: string) => ({ mutation_id: "hub-replacement", document_id: documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: Array.from(encodePackValue("hub")) }, inverse: { schema: "demo/v1", payload: Array.from(encodePackValue(null)) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 4n }, transaction: null });
       const cases = [
-        { documentId: "doc-ack-refused", outcome: { Rejected: { reason: "stale-base", messages: [] } }, expected: { kind: "rejected", reason: "stale-base", messages: [] } },
+        { documentId: "doc-ack-refused", outcome: { Rejected: { reason: "stale-base", messages: [] } }, expected: { kind: "rejected", code: "hub.refused", reason: "stale-base", messages: [] } },
         { documentId: "doc-ack-transformed", outcome: { Transformed: { envelope: replacement("doc-ack-transformed") } }, expected: { kind: "transformed" } },
       ] as const;
       try {
@@ -6597,13 +6597,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(state.pendingMutations.map((envelope) => envelope.id)).toEqual([first.id]);
         expect(state.outbox.map((envelope) => envelope.id)).toEqual([first.id]);
         expect(oldSocket.sent).toHaveLength(sentBeforeRefusal);
-        expect(posted.at(-1)).toMatchObject({ kind: "event", event: { kind: "commandOutcome", outcome: { kind: "rejected", reason: "document backbone canonical pair unavailable" } } });
+        expect(posted.at(-1)).toMatchObject({ kind: "event", event: { kind: "commandOutcome", outcome: { kind: "rejected", code: "local.backbone-pair-unavailable", reason: "document backbone canonical pair unavailable", messages: [] } } });
         handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "localMutations", envelopes: [second] } });
         expect(state.pendingDocumentBackboneBytes).toBe(firstMessage.byteLength);
         expect(state.pendingMutations.map((envelope) => envelope.id)).toEqual([first.id]);
         expect(state.outbox.map((envelope) => envelope.id)).toEqual([first.id]);
         expect(oldSocket.sent).toHaveLength(sentBeforeRefusal);
-        expect(posted.at(-1)).toMatchObject({ kind: "event", event: { kind: "commandOutcome", outcome: { kind: "rejected", reason: "document backbone canonical pair unavailable", messages: [0] } } });
+        expect(posted.at(-1)).toMatchObject({ kind: "event", event: { kind: "commandOutcome", outcome: { kind: "rejected", code: "local.backbone-pair-unavailable", reason: "document backbone canonical pair unavailable", messages: [], detail: { bytes: 0 } } } });
 
         await handleHubFrame(state, { Ack: { batch_id: 0, stages: [{ Applied: { outcome: "Accepted" } }], frontier } });
         expect(state.pendingDocumentBackboneBytes).toBe(firstMessage.byteLength);
@@ -6820,7 +6820,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         // `commandOutcome`/`rejected` vocabulary a real hub rejection uses — see
         // `rejectMutationQueueOverflow`'s doc comment).
         expect(state.pendingMutations).toHaveLength(0);
-        expect(errorSpy).toHaveBeenCalledWith("[backbone-worker] pending mutation queue full, rejecting batch", "doc-overflow", overSized.length);
+        expect(errorSpy).toHaveBeenCalledWith("[backbone-worker] refused a local batch", "doc-overflow", "local.queue-full", { envelopes: overSized.length, limit: PENDING_MUTATIONS_QUEUE_LIMIT });
 
         // ✅ A batch that fits is still accepted normally — overflow doesn't wedge the queue shut.
         handleTsRequest({ kind: "send", documentId: "doc-overflow", clientInstanceId: state.openClientInstanceId, message: { kind: "localMutations", envelopes: [makeEnvelope(0)] } });
@@ -7199,7 +7199,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   describe("browser actor catch-up tail", () => {
     it("keeps a remote batch that arrives before an actor-bound document's child exists for that child, never the Shell", async () => {
-      const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("../../../🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
       const hexBytes = (hex: string): Uint8Array => Uint8Array.from({ length: hex.length / 2 }, (_unused, index) => Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16));
       const { encodeDocumentBackboneEnvelopeBatchExact: encodeBatch } = await import("../../../../🔨️modules/📡️replication/🟦️.ts");
       const posted: BackboneWorkerResponse[] = [];
@@ -7243,7 +7243,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   describe("remote operations folded over pending local ones", () => {
     it("rebuilds an actor-bound document from the hub once its own operations are accepted after another human's were folded over them", async () => {
-      const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("../../../🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
       const hexBytes = (hex: string): Uint8Array => Uint8Array.from({ length: hex.length / 2 }, (_unused, index) => Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16));
       const { encodeDocumentBackboneEnvelopeBatchExact: encodeBatch } = await import("../../../../🔨️modules/📡️replication/🟦️.ts");
       const posted: BackboneWorkerResponse[] = [];
@@ -7295,7 +7295,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: Ajv } = await import("ajv");
       const validate = new Ajv({ strict: false, allErrors: true }).compile(schema);
       expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
-      const fixture = JSON.parse(await readFile(new URL("../../../🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(await readFile(new URL("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
       const hexBytes = (hex: string): Uint8Array => Uint8Array.from({ length: hex.length / 2 }, (_unused, index) => Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16));
       const posted: BackboneWorkerResponse[] = [];
       testSeams.workerPostTestSink = (message) => posted.push(message);

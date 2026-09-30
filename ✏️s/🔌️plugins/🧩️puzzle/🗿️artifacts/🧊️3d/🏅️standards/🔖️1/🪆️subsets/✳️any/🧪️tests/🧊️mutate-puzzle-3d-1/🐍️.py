@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""🧩️ An INDEPENDENT second implementation of the `s.puzzle.3d` scene document and its thirty-five
+"""🧩️ An INDEPENDENT second implementation of the `s.puzzle.3d` scene document and its thirty-eight
 typed mutations, in Python, serving as this case's differential oracle.
 
 **Why a second implementation and not a third-party library.** A `puzzle3d` document is a SCENE whose
@@ -39,6 +39,7 @@ only.
 # region 🔖️Imports
 import copy
 import json
+import math
 
 from semio_repo_test import Adapter, Outcome
 
@@ -123,8 +124,22 @@ KINDS = (
     "connect-kind-compatibility",
     "disconnect-kind-compatibility",
     "replace-kind-catalogs",
+    "drag-selection",
+    "rotate-selection",
+    "scale-selection",
 )
 """🏷️ Every kind the catalog declares, in its declared order."""
+
+SELECTION = {"drag-selection": "origin", "rotate-selection": "orientation", "scale-selection": "scale"}
+"""🧭️ The three parametric selection kinds and the one pose member each rewrites. They state INTENT rather
+than a final value: every addressed id that names an unlocked object or target volume is transformed IN PLACE
+from whatever pose the scene holds; absent and locked ids are skipped."""
+
+SETTERS = {("objects", "origin"): ("move-object", "newOrigin"), ("objects", "orientation"): ("rotate-object", "newOrientation"), ("objects", "scale"): ("scale-object", "newScale"), ("targetVolumes", "origin"): ("move-target-volume", "newOrigin"), ("targetVolumes", "orientation"): ("rotate-target-volume", "newOrientation"), ("targetVolumes", "scale"): ("scale-target-volume", "newScale")}
+"""↩️ The absolute setter that restores one pose member of one collection — how a selection kind is undone."""
+
+IDENTITY = [0.0, 0.0, 0.0, 1.0]
+"""🧭️ The quaternion of no rotation, `[x, y, z, w]` — what an object without an orientation stands at."""
 
 
 def tag_of(kind):
@@ -182,7 +197,62 @@ def attached_to(document, ports):
 # endregion 🔖️Document
 
 
+# region 🔖️Selection
+def hamilton(a, b):
+    """✖️ The Hamilton product `a·b` of two `[x, y, z, w]` quaternions: turning by `b` and then by `a`."""
+    ax, ay, az, aw = a
+    bx, by, bz, bw = b
+    return [aw * bx + ax * bw + ay * bz - az * by, aw * by - ax * bz + ay * bw + az * bx, aw * bz + ax * by - ay * bx + az * bw, aw * bw - ax * bx - ay * by - az * bz]
+
+
+def axis_angle(axis, angle):
+    """🧭️ The unit quaternion turning `angle` radians about `axis` (right-handed); no turn for a degenerate axis."""
+    length = math.sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2])
+    if length < 1e-8:
+        return list(IDENTITY)
+    sine = math.sin(angle * 0.5)
+    return [axis[0] / length * sine, axis[1] / length * sine, axis[2] / length * sine, math.cos(angle * 0.5)]
+
+
+def moves(kind, payload):
+    """🚦️ Whether the parameters move anything at all: a zero offset, a turn that is no turn and unit factors
+    leave every pose exactly as it stands."""
+    if kind == "drag-selection":
+        return payload["offset"] != [0.0, 0.0, 0.0]
+    if kind == "rotate-selection":
+        return payload["angle"] != 0.0 and axis_angle(payload["axis"], payload["angle"]) != IDENTITY
+    return payload["factors"] != [1.0, 1.0, 1.0]
+
+
+def addressed(document, kind, payload):
+    """🎯️ `(member, index)` of every addressed unlocked object or target volume a moving selection kind
+    rewrites, in scene order."""
+    if not moves(kind, payload):
+        return []
+    return [(member, at) for member in ("objects", "targetVolumes") for at, record in enumerate(document[member]) if record["id"] in payload["targets"] and not record["locked"]]
+
+
+def transformed(kind, payload, record):
+    """🧮️ The value the selection kind writes into one record's pose member."""
+    if kind == "drag-selection":
+        return [record["origin"][axis] + payload["offset"][axis] for axis in range(3)]
+    if kind == "rotate-selection":
+        return hamilton(axis_angle(payload["axis"], payload["angle"]), record.get("orientation") or IDENTITY)
+    held = record.get("scale")
+    triple = [1.0, 1.0, 1.0] if held is None else ([held] * 3 if isinstance(held, (int, float)) else held)
+    return [triple[axis] * payload["factors"][axis] for axis in range(3)]
+# endregion 🔖️Selection
+
+
 # region 🔖️Verbs
+def put(record, member, value):
+    """✏️ Writes one member; an absent optional member is removed, never stored as `null`."""
+    if value is None:
+        record.pop(member, None)
+    else:
+        record[member] = value
+
+
 def apply_mutation(document, kind, payload):
     """🦠️ Applies one kind. Every committed vector of this subset is accepted (`applied` or `no-op`), so an
     address the scene does not hold is an error rather than a rejection outcome."""
@@ -202,10 +272,13 @@ def apply_mutation(document, kind, payload):
         document[member].pop(at)
     elif kind in OBJECT_FIELDS:
         member, argument = OBJECT_FIELDS[kind]
-        document["objects"][record_at(document, "objects", payload["id"], kind, "mutate")][member] = copy.deepcopy(payload[argument])
+        put(document["objects"][record_at(document, "objects", payload["id"], kind, "mutate")], member, copy.deepcopy(payload[argument]))
     elif kind in VOLUME_FIELDS:
         member, argument = VOLUME_FIELDS[kind]
-        document["targetVolumes"][record_at(document, "targetVolumes", payload["id"], kind, "mutate")][member] = copy.deepcopy(payload[argument])
+        put(document["targetVolumes"][record_at(document, "targetVolumes", payload["id"], kind, "mutate")], member, copy.deepcopy(payload[argument]))
+    elif kind in SELECTION:
+        for member, at in addressed(document, kind, payload):
+            document[member][at][SELECTION[kind]] = transformed(kind, payload, document[member][at])
     elif kind in REFERENCE_FIELDS:
         member, argument = REFERENCE_FIELDS[kind]
         document["references"][record_at(document, "references", payload["id"], kind, "mutate")][member] = copy.deepcopy(payload[argument])
@@ -284,6 +357,12 @@ def inverse_mutation(document, kind, payload):
     if kind in REFERENCE_FIELDS:
         member, argument = REFERENCE_FIELDS[kind]
         return [(kind, {"id": payload["id"], argument: copy.deepcopy(document["references"][record_at(document, "references", payload["id"], kind, "inverse")][member])})]
+    if kind in SELECTION:
+        steps = []
+        for member, at in addressed(document, kind, payload):
+            setter, argument = SETTERS[(member, SELECTION[kind])]
+            steps.append((setter, {"id": document[member][at]["id"], argument: copy.deepcopy(document[member][at].get(SELECTION[kind]))}))
+        return steps
     if kind == "add-object-vortex":
         return [("remove-object-vortex", {"objectId": payload["objectId"], "vortexId": payload["vortex"]["id"]})]
     if kind == "remove-object-vortex":

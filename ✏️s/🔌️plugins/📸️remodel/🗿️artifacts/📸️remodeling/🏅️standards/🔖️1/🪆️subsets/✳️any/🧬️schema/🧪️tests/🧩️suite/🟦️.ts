@@ -186,11 +186,11 @@ describe("commit-reconstruction shared vector", () => {
     expect(base.results.mesh).not.toBeNull();
   });
 
-  it("refuses an unpublished sparse content handle with mutation.invalid-reconstruction-sparse and moves nothing", () => {
+  it("refuses an unpublished sparse content handle with mutation.target-mismatch and moves nothing", () => {
     const base = decodeRemodelingSnapshot(readJson(join(fixtures, "⬅️before.json")));
     const commit = decodeRemodelingMutation(readJson(join(fixtures, "🦠️mutation.json")));
     const outcome = remodelingMutationOutcome(base, commit);
-    expect(outcome.messages.map((message) => message.code)).toEqual(["mutation.invalid-reconstruction-sparse"]);
+    expect(outcome.messages.map((message) => message.code)).toEqual(["mutation.target-mismatch"]);
     expect(applyRemodelingMutation(base, commit)).toEqual(base);
   });
 });

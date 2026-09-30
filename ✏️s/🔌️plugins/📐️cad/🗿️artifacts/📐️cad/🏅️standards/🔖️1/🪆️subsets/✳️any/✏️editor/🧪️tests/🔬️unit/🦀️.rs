@@ -2301,17 +2301,17 @@ async fn empty_submit_during_a_session_fires_the_state_confirm_and_commits() {
         assert_eq!(session.state, "first_corner_height");
     }
     runtime.engagement_input = "2".into();
-    assert!(engagement_submit_mutations(&document, &mut runtime, CadPaneId::Shape).is_empty(), "the typed height is a scalar entry, not a commit");
+    assert!(engagement_submit_entries(&document, &mut runtime, CadPaneId::Shape).is_empty(), "the typed height is a scalar entry, not a commit");
     assert_eq!(runtime.engagement_session.as_ref().map(|session| session.state.as_str()), Some("first_corner_height"));
     assert!(runtime.engagement_input.is_empty(), "a consumed scalar entry clears the published line");
     // 🏁️ `ready` is the spec's `commit.fromStates` entry, so accepting the height commits at once.
-    let ops = engagement_submit_mutations(&document, &mut runtime, CadPaneId::Shape);
-    assert_eq!(ops.len(), 1, "accepting the height reaches `ready` and commits exactly one box: {ops:?}");
-    assert!(matches!(ops[0], CadMutation::CreateObject(_)));
+    let entries = engagement_submit_entries(&document, &mut runtime, CadPaneId::Shape);
+    assert_eq!(entries.len(), 1, "accepting the height reaches `ready` and commits exactly one box: {entries:?}");
+    assert!(matches!(entries[0], CadToolEntry::Leaf(CadMutation::CreateObject(_))));
     assert!(runtime.engagement_session.is_none(), "the committed session is closed");
     assert_eq!(runtime.engagement_step, "Committed 1 object(s)");
     // 🛑️ Without a session the empty line stays the idle no-op.
-    assert!(engagement_submit_mutations(&document, &mut runtime, CadPaneId::Shape).is_empty());
+    assert!(engagement_submit_entries(&document, &mut runtime, CadPaneId::Shape).is_empty());
     assert_eq!(runtime.engagement_step, "Idle");
 }
 //#endregion 🔖️EngagementSubmit

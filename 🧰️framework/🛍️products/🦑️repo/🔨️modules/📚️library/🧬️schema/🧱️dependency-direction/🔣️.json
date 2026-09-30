@@ -8,7 +8,10 @@
     "graphCases",
     "graphScope",
     "inventoryCases",
-    "resolutionCases"
+    "resolutionCases",
+    "removabilityCases",
+    "publicExportCases",
+    "typeCases"
   ],
   "properties": {
     "schemaVersion": {
@@ -162,7 +165,8 @@
               "unresolved-workspace-alias",
               "unresolved-workspace-subpath",
               "missing-scope-metadata",
-              "invalid-scope-pattern"
+              "invalid-scope-pattern",
+              "multiple-unresolved-local-sources"
             ]
           },
           "accept": {
@@ -284,6 +288,140 @@
           "forbidden": {
             "type": "integer",
             "minimum": 0
+          }
+        }
+      }
+    },
+    "removabilityCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "directories",
+          "manifests",
+          "expectedPackages",
+          "expectedPlugins",
+          "accept"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "directories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "manifests": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "object"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "expectedPackages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expectedPlugins": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "accept": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "publicExportCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "owner",
+          "specifier",
+          "accept",
+          "conditions"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "specifier": {
+            "type": "string",
+            "minLength": 1
+          },
+          "accept": {
+            "type": "boolean"
+          },
+          "conditions": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "typeCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "name",
+          "value",
+          "accept"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {},
+          "accept": {
+            "type": "boolean"
           }
         }
       }

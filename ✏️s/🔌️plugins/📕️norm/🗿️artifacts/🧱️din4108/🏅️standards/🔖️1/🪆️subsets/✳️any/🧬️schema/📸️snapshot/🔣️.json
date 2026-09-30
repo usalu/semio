@@ -424,7 +424,10 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "ThermalZone": {
       "title": "ThermalZone",
@@ -494,7 +497,10 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "ThermalBridge": {
       "title": "ThermalBridge",
@@ -550,7 +556,10 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "ClimateZoneDe": {
       "title": "ClimateZoneDe",
@@ -580,7 +589,10 @@
             "de": "Sommerklimaregion D"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "EnvelopeElement": {
       "title": "EnvelopeElement",
@@ -750,7 +762,10 @@
             }
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "ZoneWindow": {
       "title": "ZoneWindow",
@@ -842,7 +857,10 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "LayerSegment": {
       "title": "LayerSegment",
@@ -922,7 +940,10 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

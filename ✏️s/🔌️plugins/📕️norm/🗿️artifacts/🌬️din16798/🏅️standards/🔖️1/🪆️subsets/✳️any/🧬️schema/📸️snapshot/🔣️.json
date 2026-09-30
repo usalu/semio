@@ -504,7 +504,10 @@
             "role": "value"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "VentSystemDocument": {
       "title": "VentSystemDocument",
@@ -737,7 +740,10 @@
             "precision": 0
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     },
     "AnnexChoice": {
       "title": "AnnexChoice",
@@ -757,7 +763,10 @@
             "de": "Deutscher Nationaler Anhang (DIN EN)"
           }
         }
-      }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

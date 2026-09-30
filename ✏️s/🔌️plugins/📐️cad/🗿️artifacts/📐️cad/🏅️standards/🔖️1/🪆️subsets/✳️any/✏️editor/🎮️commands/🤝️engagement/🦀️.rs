@@ -3,7 +3,8 @@
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::engine::interaction::{apply_event, inject_selection};
 use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{cad_pane_id_from_suffix, engagement_submit_mutations, preview_transition_snapshot_of, runtime_of, snapshot_of, start_interaction_session, try_commit_session_mutations};
+use crate::editor::cad::modes::edit::tools::transform::{cad_transform_tool_emit, CadToolEntry};
+use crate::editor::cad::{cad_pane_id_from_suffix, engagement_submit_entries, preview_transition_snapshot_of, runtime_of, snapshot_of, start_interaction_session, try_commit_session_entries, CadPlayRuntime};
 use crate::op::CadMutation;
 use crate::CadPaneId;
 use crate::CadSnapshot;
@@ -20,15 +21,21 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// mutation) or an unrelated edit closes the run.
 pub(crate) const CAD_ENGAGEMENT_COALESCE_KEY: &str = "engagement";
 
-/// 🧵️ The emit every engagement command ends with: a commit carries its objects as a described
-/// document edit, anything else amends the running engagement item.
-fn engagement_emit(ops: Vec<CadMutation>, config: CadConfigMutation) -> Emit<CadMutation, CadConfigMutation> {
-    if ops.is_empty() {
-        return Emit::amend_config(vec![config], CAD_ENGAGEMENT_COALESCE_KEY);
+/// 🧵️ The emit every engagement command ends with: a commit is ONE transform-tool transaction — the interaction's
+/// leaves as one document edit stamped with its `TransactionRef` (tool `<appId>#<interaction id>`) — anything else amends
+/// the running engagement item.
+fn engagement_emit(doc: &ArtifactView<'_, CadSnapshot>, runtime: &CadPlayRuntime, entries: Vec<CadToolEntry>, config: CadConfigMutation) -> Emit<CadMutation, CadConfigMutation> {
+    let mut emit = if entries.is_empty() { Emit::default() } else { cad_transform_tool_emit(doc, runtime.last_finalized_interaction_id.as_deref().unwrap_or("engagement"), entries) };
+    if emit.artifact_mutations.is_empty() {
+        return engagement_amend(config);
     }
-    let mut emit = Emit::mutations(ops);
     emit.config_mutations = vec![config];
     emit
+}
+
+/// 🧵️ A non-committing engagement step: the session snapshot amends the running engagement item.
+fn engagement_amend(config: CadConfigMutation) -> Emit<CadMutation, CadConfigMutation> {
+    Emit::amend_config(vec![config], CAD_ENGAGEMENT_COALESCE_KEY)
 }
 
 //#region 🔖️EngagementSubmit
@@ -47,8 +54,8 @@ pub mod engagement_submit {
         if let Some(session) = runtime.engagement_session.as_mut() {
             inject_selection(session, &ctx.interaction.ids);
         }
-        let ops = engagement_submit_mutations(doc.snapshot, &mut runtime, pane_id);
-        Ok(engagement_emit(ops, preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?))
+        let entries = engagement_submit_entries(doc.snapshot, &mut runtime, pane_id);
+        Ok(engagement_emit(doc, &runtime, entries, preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?))
     }
 }
 //#endregion 🔖️EngagementSubmit
@@ -68,7 +75,7 @@ pub mod engagement_input {
         let mut runtime = runtime_of(cfg);
         runtime.engagement_input = payload.value.clone();
         runtime.engagement_pane = payload.pane.clone();
-        Ok(engagement_emit(Vec::new(), snapshot_of(&runtime, cfg.snapshot)?))
+        Ok(engagement_amend(snapshot_of(&runtime, cfg.snapshot)?))
     }
 }
 //#endregion 🔖️EngagementInput
@@ -95,8 +102,8 @@ pub mod engagement_possible_select {
         });
         if let Some((step, snapshot)) = step {
             runtime.engagement_step = step;
-            let ops = try_commit_session_mutations(doc.snapshot, &mut runtime, pane_id, &snapshot);
-            return Ok(engagement_emit(ops, preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?));
+            let entries = try_commit_session_entries(doc.snapshot, &mut runtime, pane_id, &snapshot);
+            return Ok(engagement_emit(doc, &runtime, entries, preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?));
         }
         if start_interaction_session(&mut runtime, pane_id, &payload.possible_id) {
             if let Some(session) = runtime.engagement_session.as_mut() {
@@ -106,7 +113,7 @@ pub mod engagement_possible_select {
         } else {
             runtime.engagement_input = payload.possible_id.clone();
         }
-        Ok(engagement_emit(Vec::new(), preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?))
+        Ok(engagement_amend(preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?))
     }
 }
 //#endregion 🔖️EngagementPossibleSelect
@@ -127,11 +134,11 @@ pub mod engagement_repeat_last {
         if runtime.engagement_session.is_none() {
             if let Some(interaction_id) = runtime.last_finalized_interaction_id.clone() {
                 start_interaction_session(&mut runtime, pane_id, &interaction_id);
-                return Ok(engagement_emit(Vec::new(), preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?));
+                return Ok(engagement_amend(preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?));
             }
         }
         runtime.engagement_step = "Idle".into();
-        Ok(engagement_emit(Vec::new(), preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?))
+        Ok(engagement_amend(preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?))
     }
 }
 //#endregion 🔖️EngagementRepeatLast
@@ -149,7 +156,7 @@ pub mod engagement_abort {
         runtime.engagement_input.clear();
         runtime.engagement_session = None;
         runtime.engagement_step = "Idle".into();
-        Ok(engagement_emit(Vec::new(), preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?))
+        Ok(engagement_amend(preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?))
     }
 }
 //#endregion 🔖️EngagementAbort
@@ -183,8 +190,8 @@ pub mod world_pointer_down {
         });
         if let Some((step, snapshot)) = commit {
             runtime.engagement_step = step;
-            let ops = try_commit_session_mutations(document, &mut runtime, pane_id, &snapshot);
-            return Ok(engagement_emit(ops, preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?));
+            let entries = try_commit_session_entries(document, &mut runtime, pane_id, &snapshot);
+            return Ok(engagement_emit(doc, &runtime, entries, preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?));
         }
         Ok(Emit::default())
     }
@@ -212,7 +219,7 @@ pub mod world_pointer_move {
         let mut runtime = runtime_of(cfg);
         if let Some(session) = runtime.engagement_session.as_mut() {
             apply_event(session, "pointer.move", point_value.as_ref());
-            Ok(engagement_emit(Vec::new(), preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?))
+            Ok(engagement_amend(preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?))
         } else {
             Ok(Emit::default())
         }

@@ -99,3 +99,19 @@ fn the_finalize_dialog_is_the_renderer_dialog_choices_fixture_without_a_literal_
     }
     assert_eq!(history_edit_finalize_dialog(), expected);
 }
+
+/// 🌿️ `switchAlternative` declares its one required, visible `alternativeId` for agents: an EN and DE description on the
+/// verb and on the argument, `use_when` phrases, the History kind and the agent audience.
+#[test]
+fn switch_alternative_declares_its_alternative_id_for_agents() {
+    let action = history_action_definitions().into_iter().find(|action| action.id == SWITCH_ALTERNATIVE_ACTION_ID).expect("switchAlternative");
+    assert_eq!((action.kind, resolve_audience(&action)), (ActionKind::History, CapabilityAudience::Agent));
+    let [arg] = action.args.as_slice() else { panic!("one argument: {:?}", action.args) };
+    assert_eq!((arg.id.as_str(), arg_schema_kind(&arg.schema), arg.required, arg.presentation.as_ref()), (SWITCH_ALTERNATIVE_ARG_ALTERNATIVE_ID, "text", true, None));
+    for description in [action.semantics.description.as_ref().expect("verb description"), arg.description.as_ref().expect("argument description")] {
+        for locale in [Locale::En, Locale::De] {
+            assert!(!description.resolve(Terminology::Native, locale).is_empty(), "{locale:?}");
+        }
+    }
+    assert!(action.semantics.use_when.len() >= 2, "use_when phrases");
+}

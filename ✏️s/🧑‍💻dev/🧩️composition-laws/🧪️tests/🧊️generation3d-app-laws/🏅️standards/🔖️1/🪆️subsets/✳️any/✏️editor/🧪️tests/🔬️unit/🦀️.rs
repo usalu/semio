@@ -258,7 +258,7 @@ pub(crate) mod context {
             columns: Vec::new(),
             can_undo: false,
             can_redo: false,
-            active_alternative_id: None,
+            active_alternative_id: None, alternatives: Vec::new(),
             current_checkpoint_id: None,
             commands: Vec::new(),
             command_filter: semio_framework_plugin::app::HistoryCommandFilter::default(),
@@ -1214,6 +1214,52 @@ fn preview_payload_from_evaluated_fixture(host_snapshot: &semio_framework_artifa
     let payload = preview_payload(&eval_json, host_snapshot, cfg, Some(&session), &Default::default());
     crate::flow_operators::retire_flow_eval_session(session);
     (payload.meshes_json, payload.instances_json)
+}
+
+/// 🪪️ The geometry export reads the supplied instance's prepared document and refuses a closed owner.
+#[test]
+fn geometry_media_export_uses_the_supplied_instance_owner_and_refuses_closed_authority() {
+    let _serial = test_serial();
+    use semio_framework_plugin::{ArtifactEditor, MediaClass, MediaForm, MediaPayload, TransientView};
+    let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧫️fixtures/🔣️.json")).expect("the language-neutral mesh corpus");
+    let fixture = fixtures["meshes"].as_array().unwrap().iter().find(|case| case["name"] == "unit-tetrahedron").expect("the independent tetrahedron fixture");
+    let source = semio_framework_plugin::MeshData {
+        positions: fixture["mesh"]["vertices"].as_array().unwrap().iter().flat_map(|vertex| vertex.as_array().unwrap().iter().map(|coordinate| coordinate.as_f64().unwrap() as f32)).collect(),
+        indices: fixture["mesh"]["faces"].as_array().unwrap().iter().flat_map(|face| face.as_array().unwrap().iter().map(|index| index.as_u64().unwrap() as u32)).collect(),
+        ..Default::default()
+    };
+    let document = generation3d_document_from_mesh(&source).expect("an imported tetrahedron document");
+    let projection = <Generation3dSnapshot as protocol::FromValue>::from_value(protocol::json::to_dsl_value(&document)).expect("the actual imported graph");
+    let owner = context::instance_operation_owner();
+    let eval_json = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&projection.host_snapshot, |host| host.evaluate().expect("the imported graph evaluates"));
+    owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
+        owner.with_session_waking(|session| {
+            let previous = std::mem::replace(session, FlowEvalSession::new().with_geometry_port(crate::flow_operators::geometry_session().port()));
+            crate::flow_operators::retire_flow_eval_session(previous);
+            session.set_eval_json(eval_json.clone());
+            crate::flow_operators::resolve_preview_geometry(&eval_json, &projection.host_snapshot, &Generation3dConfig::default().lod_mode, session);
+        })
+    }).expect("the supplied owner retains the prepared evaluation");
+    let history = semio_framework_plugin::HistoryView::empty();
+    let doc = ArtifactView::new(&projection, &history);
+    let transient = Generation3dTransient::default();
+    let transient = TransientView { snapshot: &transient, window: None };
+    let media = Generation3dPlayApp::export_media_with_request_context(&owner, "geometry:out", &doc, &transient).expect("the supplied owner exports real geometry");
+    assert_eq!(media.media_type.class, MediaClass::ThreeD);
+    assert_eq!(media.media_type.form, MediaForm::Mesh);
+    let MediaPayload::Structured { schema, json } = media.payload else { panic!("geometry export must carry a structured mesh"); };
+    assert_eq!(schema, "3d.mesh");
+    let mesh: semio_framework_plugin::MeshData = dsl::json::from_json_str(&json).expect("the exported actual geometry");
+    assert!(mesh.positions.len() >= 12);
+    assert_eq!(mesh.indices.len() / 3, fixture["expected"]["faces"].as_u64().unwrap() as usize);
+    assert_eq!(mesh.indices.len(), source.indices.len());
+    assert!(mesh.positions.iter().all(|coordinate| coordinate.is_finite()));
+    for (actual, expected) in mesh.indices.iter().zip(&source.indices) {
+        assert_eq!(&mesh.positions[*actual as usize * 3..*actual as usize * 3 + 3], &source.positions[*expected as usize * 3..*expected as usize * 3 + 3]);
+    }
+    context::retire_instance_operation_owner(&owner);
+    assert!(Generation3dPlayApp::export_media_with_request_context(&owner, "geometry:out", &doc, &transient).is_err());
+    projection.retire_cold();
 }
 
 /// 📦️ Supplies the actual document geometry from the concrete Session to its IO bridge.
@@ -2818,6 +2864,9 @@ async fn mesh_component_gumball_rejects_changed_selection_before_and_during_drag
             _ => Generation3dCommand::ScaleSelection(scale_selection::ScaleSelection { node_ids: vec!["extrude@meshOut#0.face.0".into()], sx: 1.1, sy: 1.0, sz: 1.0 }),
         };
         let view = context::preview_views("mesh-edit", "second").0;
+        let args: dsl::DslValue = serde_json::json!({"domainId":selection::DOMAIN,"granularityId":"face"}).into();
+        let admitted = app.handle_action("setInteractionGranularity", Some(&args), &semio_framework_plugin::artifact_app_laws::meta("local")).await.unwrap();
+        semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.unwrap();
         context::select_domain(&mut app, selection::DOMAIN, "face", &["extrude@meshOut#0.face.1"]).await;
         let before = dsl::json::to_json_string(&context::snapshot(&app).host_snapshot);
         assert!(context::dispatch_with_view(&mut app, command(), view.clone()).await.is_err());

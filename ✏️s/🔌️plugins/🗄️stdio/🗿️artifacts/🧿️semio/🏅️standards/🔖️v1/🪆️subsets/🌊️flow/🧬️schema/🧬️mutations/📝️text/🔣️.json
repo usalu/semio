@@ -22,7 +22,8 @@
         "insertEdge",
         "removeEdge",
         "setEdgeEndpoints",
-        "setEdgeKind"
+        "setEdgeKind",
+        "dragNodes"
       ]
     },
     "snapshot": {
@@ -57,6 +58,18 @@
     },
     "to": {
       "$ref": "#/definitions/PortRef"
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dx": {
+      "type": "number"
+    },
+    "dy": {
+      "type": "number"
     }
   },
   "definitions": {

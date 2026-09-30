@@ -1,7 +1,0 @@
-{
-  "ChangeLayerCompressiveClass": {
-    "elementId": "wall-north",
-    "index": 2,
-    "newCompressiveClass": "dk"
-  }
-}

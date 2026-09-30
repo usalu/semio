@@ -299,14 +299,14 @@
     "requested": 60
   },
   "targetRegion": {
-    "description": "Fill places only inside VISIBLE target regions when the board declares any — the flat twin of puzzle3d's `world_volumes_contain_aabb` rule. The region is stated as a half-span around the seed node's own centre rather than as absolute coordinates, so this vector stays language-neutral and survives any re-authoring of the example's geometry. `halfSpan` is wide enough to admit several placements and narrow enough that the same run without a region provably leaves it.",
+    "description": "Fill places only inside VISIBLE target regions when the board declares any — the flat twin of puzzle3d's `world_volumes_contain_aabb` rule. The region is stated as a half-span around the seed node's own centre rather than as absolute coordinates, so this vector stays language-neutral and survives any re-authoring of the example's geometry. `halfSpan` is wide enough to admit several placements and narrow enough that the same run without a region provably leaves it: the unconstrained run of this vector reaches 148, ≈188, 276, ≈316 and 404 from the seed centre, so 200 admits the first two and refuses the rest.",
     "document": {
       "example": "nakagin-capsule-tower",
       "keepNodes": 1
     },
     "run": 1,
     "requested": 5,
-    "halfSpan": 120,
+    "halfSpan": 200,
     "expected": {
       "everyPlacementInsideRegion": true,
       "atLeastOneOutsideRejection": true,

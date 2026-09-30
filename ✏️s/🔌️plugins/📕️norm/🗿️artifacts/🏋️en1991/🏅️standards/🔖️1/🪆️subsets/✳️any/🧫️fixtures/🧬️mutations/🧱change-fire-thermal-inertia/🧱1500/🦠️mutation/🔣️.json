@@ -1,0 +1,5 @@
+{
+  "ChangeFireThermalInertia": {
+    "newFireThermalInertia": 1500.0
+  }
+}

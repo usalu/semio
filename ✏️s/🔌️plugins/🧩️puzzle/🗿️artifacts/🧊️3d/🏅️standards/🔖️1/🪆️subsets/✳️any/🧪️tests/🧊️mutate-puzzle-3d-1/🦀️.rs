@@ -86,6 +86,9 @@ const KINDS: &[&str] = &[
     "connect-kind-compatibility",
     "disconnect-kind-compatibility",
     "replace-kind-catalogs",
+    "drag-selection",
+    "rotate-selection",
+    "scale-selection",
 ];
 
 /// 🔀️ Snapshot field → the diff field(s) allowed to declare it. `Puzzle3dDiff` mirrors `Puzzle3dSnapshot` name for name across all four collections, so the table is empty; the sibling `🀄️wfc` subset, whose diff splits every collection into a `<name>Removed`/`<name>Upserted` pair, carries real rows here.

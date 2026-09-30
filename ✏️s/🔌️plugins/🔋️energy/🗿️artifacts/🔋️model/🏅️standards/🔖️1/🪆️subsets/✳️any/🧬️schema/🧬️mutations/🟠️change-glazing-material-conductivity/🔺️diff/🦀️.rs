@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeGlazingMaterialConductivity, base: &EnergyMod
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Glazing material {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_conductivity_w_m_k.is_finite() || payload.new_conductivity_w_m_k <= 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Glazing material {}: conductivity (W/m·K) must be a positive finite value, got {}.", payload.id.0, payload.new_conductivity_w_m_k), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Glazing material {}: conductivity (W/m·K) must be a positive finite value, got {}.", payload.id.0, payload.new_conductivity_w_m_k), [payload.id.0.to_string()]);
     }
     if existing.conductivity_w_m_k == payload.new_conductivity_w_m_k {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Glazing material {} already carries this conductivity (W/m·K): {}.", payload.id.0, payload.new_conductivity_w_m_k));

@@ -461,7 +461,7 @@ fn paint_stroke_intent_uses_intrinsic_layer_coordinates_without_mutating_pixels(
 
 #[test]
 fn paint_stroke_refuses_locked_layers_and_locked_ancestors(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap().iter().filter(|case|matches!(case["id"].as_str().unwrap(),"locked-pixel"|"editable-pixel"|"inherited-pixel"|"outside")){
         let mut host=RasterHost::new();host.set_size(100,100,1.0);host.sync_document_json(&serde_json::json!({"schema":"raster.document","layers":fixture["layers"]}).to_string()).unwrap();
         host.sync_interaction(&[case["id"].as_str().unwrap().into()],None);host.set_active_utility("paintBrush");let (x,y)=host.world_to_screen_point(0.0,0.0);

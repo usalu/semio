@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeBatteryCapacity, base: &EnergyModelSnapshot) 
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Battery {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_capacity_kwh.is_finite() || payload.new_capacity_kwh <= 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Battery {}: storage capacity (kWh) must be a positive finite value, got {}.", payload.id.0, payload.new_capacity_kwh), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Battery {}: storage capacity (kWh) must be a positive finite value, got {}.", payload.id.0, payload.new_capacity_kwh), [payload.id.0.to_string()]);
     }
     if existing.capacity_kwh == payload.new_capacity_kwh {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Battery {} already carries this storage capacity (kWh): {}.", payload.id.0, payload.new_capacity_kwh));

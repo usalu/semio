@@ -293,7 +293,7 @@ fn supersedes_inputs(envelope: &protocol::MutationEnvelope) -> bool {
 /// about a conflict, is where that grading belongs. `TouchedRegion` still lands (last-writer-wins,
 /// see `🔖️Conflict`'s doc) so it reads as an adjusted-but-applied write (`mutation.clamped`); a
 /// violated `Constraint` reads as a broken structural invariant (`mutation.invariant`) — the two
-/// `Warning`/`Fatal` codes from the frozen 7 that fit each shape.
+/// `Warning`/`Fatal` codes from the frozen nine that fit each shape.
 async fn grade_conflict_record(record: &db_conflict::ConflictRecord) -> protocol::MutationMessage {
     match &record.kind {
         db_conflict::ConflictKind::TouchedRegion(regions) => {

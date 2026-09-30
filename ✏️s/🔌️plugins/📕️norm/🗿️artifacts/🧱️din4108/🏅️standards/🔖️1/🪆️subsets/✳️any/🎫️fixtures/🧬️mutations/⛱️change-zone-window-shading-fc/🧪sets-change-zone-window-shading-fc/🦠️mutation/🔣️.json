@@ -1,7 +1,0 @@
-{
-  "ChangeZoneWindowShadingFc": {
-    "zoneId": "zone-living",
-    "windowId": "win-south",
-    "newShadingFc": 0.3
-  }
-}

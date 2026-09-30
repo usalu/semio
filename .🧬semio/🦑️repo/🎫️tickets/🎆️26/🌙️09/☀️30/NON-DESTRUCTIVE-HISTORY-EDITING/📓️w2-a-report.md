@@ -488,3 +488,138 @@ The full plugin suite now reports **904 passed, 13 failed**. No failure is cause
 - **Modified, fallout:** `✏️s/🧑‍💻dev/…/🧵️preview-eval/🧪️tests/🔬️unit/🦀️.rs`, which has the `CommandView` literal.
 - **Scratch:** `🗑️generated/w2-a/` (logs, tsconfigs) and `🗑️generated/w2a-supersede-oracle.ts`. Both are safe to
   delete at close.
+
+## 7. Follow-up 2
+
+Status: (5), (1), (c), (d), (a), (2) and the generation fix are landed and tested. (3) host events and (4) the
+Alternatives section are **not started**.
+
+### 7.1 (5) One tree vocabulary for the band and the draft editor
+
+- **Before.** The band and the editor were `section()` containers. React's `TreeView` keeps only `treeSection`
+  children, so it dropped both.
+- **Band.** `time_travel_band_section` returns the `tree_section` `framework.history.timeTravel`. It has one
+  `tree_item` per row:
+  - the stage row `framework.history.timeTravel.status`, whose label carries the stage, edited mutation and worst
+    severity;
+  - the replay progress row `….progress`, whose label is the localized "done of total";
+  - the fault row `….fault`;
+  - one button row each for cancelReplay, nextProblem, finalize, rerun and exit (`{id}.row` holds button `{id}`;
+    Finalize is disabled and carries its refusal reason as the row description).
+- **Editor.** `time_travel_editor_sections` builds two tree sections:
+  - `framework.history.editor`: the target row, the refused row, and the accept, discard and withdraw button rows;
+  - the windowed `framework.history.editor.inputs`: one row per input.
+  A nullable input nests a Clear row (`{id}.clear.row` holding button `{id}.clear`). The input row is `default_open`.
+- **wgpu finding (why rows carry text in labels).** wgpu's `tree_item` projection (`🖱️ui/🎯️targets/🧊️wgpu/🔀️reconcile`,
+  `tree_item_control`) mounts only one of nine single controls per row. Every other non-row child becomes a nested
+  placeholder row labelled with its record key: text, progress, groups, and a second control. Both hosts therefore
+  get rows with at most one single control. The polite live region and the progress bar now live only in each
+  shell's own band, which React and wgpu both already announce.
+- **Open wgpu gap (not mine to fix).** The composite input recipes (`color_input`, `vector_input`, `reference_list`)
+  are container groups. They render in React but become placeholder rows in wgpu. The fix belongs in the wgpu tree
+  row: mount a group child like React does, or add a group `UiControlNode`.
+- **Law.** `the_band_and_the_editor_rows_hold_at_most_one_single_control` walks both sections while editing and
+  while reviewing. It asserts that each is a `treeSection` and that no row has more than one non-row child, of the
+  nine wgpu kinds.
+
+### 7.2 (1) Window-transient drop
+
+- The fix and its law (`a_refused_window_transient_emission_keeps_its_mutation_and_faults`) landed earlier: a refused
+  `begin` hands the mutation back. The puzzle 2d `select_tool` is boxed so it fits the ephemeral inline bound.
+- The puzzle 2d rerun (`cargo test -p semio-s-artifact-puzzle-2d --features component-app-assembly --lib`) gives
+  **1061 passed, 5 failed**. The window-transient and ui_scope laws now pass.
+  - `leaving_the_select_utility_retires_an_open_gesture` needs (3), the `UtilityChanged` host event.
+  - 4 brush/fill engine laws fail inside the board host (`♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal`: "fill
+    placement must reach exact terminal-empty before Drop"). Commit `48d881aa7ab` (09-30 12:00) changed that host. I
+    did not bisect it. It is not in my ownership, and the puzzle engine directories are unchanged since 09-23.
+
+### 7.3 (c) `[DEBUG]` removal
+
+- There is no `[DEBUG]` left in P or K (checked with grep).
+
+### 7.4 (d) Interaction and pure view verbs are no longer history rows
+
+- `history_row_is_recorded(kind, edited, inverse)` is the one predicate. `record_command` applies it:
+  - an interaction is never a row;
+  - a `View` is a row only with a store edit (document or config) or an inverse;
+  - everything else always is.
+  So hover, pick and clear selection, and an op-less view verb, leave no row.
+- **Laws:**
+  - `interaction_verbs_never_become_history_rows`: pick, hover and clear selection after a seed edit leave only the
+    seed row;
+  - `a_pure_view_verb_is_no_history_row`;
+  - the table law `history_rows_exclude_interactions_and_pure_views`;
+  - the three fold laws now assert that no interaction row exists.
+
+### 7.5 (a) No raw op-lines under labelled mutations
+
+- `ui_history_panel` shows the `op_lines` description only when the row has no mutation children. The wire keeps
+  `op_lines` as data.
+- **Law:** an extension of `a_committed_tool_transaction_is_one_row_with_its_reference_and_mutation_rows`. The rendered
+  row, without its children, carries none of its op-lines.
+
+### 7.6 (2) ui_scope widening
+
+- **Root cause.** `take_operation_progress_scope` returned `Full` on every progress change, so the framework
+  widened every app to `Full`.
+- **Fix.**
+  - `ArtifactApp`, `ArtifactEditor` and `ArtifactViewer` gain `operation_progress_scope() -> UiDirtyScope`, which
+    defaults to `None`. The raster editor declares its layers panel.
+  - `operation_progress_dirty_scope(changed, declared)` is the rule: the declared scope, never wider, and nothing
+    for `None`.
+  - Cancellation also returns the declared scope instead of `Full`.
+- **Law:** `a_progress_change_dirties_exactly_the_declared_scope`. The puzzle 2d ui_scope laws pass.
+
+### 7.7 The new generation ships in the frame where the stage flips
+
+- **Root cause:** three compounding faults.
+  1. A retained-surface intent (the history body's buttons in React) replies with an `Emit` frame, which has no
+     history patch.
+  2. `dispatch_time_travel_action` dropped the owed patch.
+  3. `drive_time_travel_turn` prepared a patch only after snapshot retirement, and a progress frame shipped a
+     prepared patch only alongside some UI scope. Begin from Reviewing retires the review's snapshots, so the new
+     generation waited for an unrelated later scope, which was the ~800 ms. Meanwhile the React band still stamped
+     the old generation, and its verbs were `timeTravel.stale`.
+- **Fix (Rust).**
+  - `prepare_time_travel_patch` runs in the dispatch and first in every driver turn. A patch that has not shipped is
+    superseded by one that still carries its rows.
+  - `take_typed_operation_ui_progress` ships a pending patch even with no scope queued (scope `None`).
+  - `has_pending_work` counts an owed patch, so the continuation of the same reactor turn ships it.
+- **Fix (React, one line).** `onBrowserActorIntent` in `🏛️ShellHost/🟦️.tsx` now applies `result.historyPatches`,
+  exactly as `dispatchDirectBrowserActorCommand` does. Before this, it ignored them.
+- **Law:** `a_stage_change_ships_its_generation_in_the_same_turn_and_a_verb_stamped_with_it_applies`.
+  - Begin from Reviewing bumps the generation.
+  - The reply and the first progress frame, taken before any driver turn and while snapshots still retire, both
+    carry `(editing, new generation)` with rows.
+  - A discard stamped with the old generation is stale; one stamped with the new generation applies.
+  - The return to review ships at once.
+
+### 7.8 Not started
+
+- **(3)** Typed host-event delivery (`ArtifactApp::host_event`, `HostEvent`, dispatch on time-travel begin, base
+  move and utility switch, blur and capture-loss forwarding from both hosts, the puzzle select tool). The failing
+  puzzle law above waits for it.
+- **(4)** The Alternatives section with a Switch row action and the `alternativeId` manifest arg. Note that
+  `switchAlternative` already exists as a history-lane verb in M.
+
+### 7.9 Verification (gated, foreground; `cargo test` with `CARGO_INCREMENTAL=0`, `target-nde-w2a`)
+
+| Run | Result |
+|---|---|
+| `cargo check -p semio-framework-plugin -p semio-framework-os-renderer-wgpu` | Finished |
+| `cargo test -p semio-framework-plugin --lib -- time_travel supersede` | **23 passed** |
+| `cargo test -p semio-framework-plugin --lib` (full) | 912 passed, 14 failed. The same baseline set as section 6.4; `a_dropped_selection…`, `tool_run_scene_render…` and `…reconcile_ladder…` pass when run alone |
+| the new (d), (a), (2) and generation laws, run alone | pass |
+| `cargo test -p semio-framework-os-renderer-wgpu --lib -- time_travel` | **17 passed** |
+| `cargo test -p semio-s-artifact-puzzle-2d --features component-app-assembly --lib` | 1061 passed, 5 failed (section 7.2) |
+| `bunx tsc --noEmit -p tsconfig.json` (React renderer package, includes ShellHost) | 0 errors |
+
+### 7.10 Files (Follow-up 2)
+
+- `P/🦀️.rs`: history row predicate, op-lines description, `take_typed_operation_ui_progress`, an unused
+  `ActionArgOption` import removed.
+- `P/⏪️time-travel/🦀️.rs`: band and editor rows, patch preparation, `has_patch`.
+- `P/⏳️operation-progress/{🦀️.rs,🧪️tests/🦀️.rs}`.
+- `P/🧪️tests/{🧪️time-travel,🔬️plugin-runtime-plugin-builder-contract}/🦀️.rs`.
+- `💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx`: one line plus a dependency.
+- The puzzle 2d window and select-tool tests (the earlier `Box` change).

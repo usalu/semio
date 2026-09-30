@@ -176,7 +176,7 @@ pub(crate) mod context {
             columns: Vec::new(),
             can_undo: false,
             can_redo: false,
-            active_alternative_id: None,
+            active_alternative_id: None, alternatives: Vec::new(),
             current_checkpoint_id: None,
             commands: Vec::new(),
             command_filter: semio_framework_plugin::app::HistoryCommandFilter::default(),

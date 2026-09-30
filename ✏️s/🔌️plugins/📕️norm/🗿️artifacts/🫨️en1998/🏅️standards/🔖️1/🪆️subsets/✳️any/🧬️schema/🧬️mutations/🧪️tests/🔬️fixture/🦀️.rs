@@ -1,98 +1,59 @@
-#[path = "../../🌍️change-annex/🧪️tests/🌍️switches-annex-to-en/🦀️.rs"]
-mod tests_change_annex_switches;
-#[path = "../../🎯️change-bearing-d-ed-mm/🧪️tests/🎯️raises-bearing-d-ed-mm-to-165-5/🦀️.rs"]
-mod tests_change_bearing_d_ed_mm_raises;
-#[path = "../../🛑️change-bearing-d-rd-mm/🧪️tests/🛑️raises-bearing-d-rd-mm-to-312-5/🦀️.rs"]
-mod tests_change_bearing_d_rd_mm_raises;
-#[path = "../../🌉️change-bridge-v-rd-kn/🧪️tests/🌉️raises-bridge-v-rd-kn-to-725-0/🦀️.rs"]
-mod tests_change_bridge_v_rd_kn_raises;
-#[path = "../../↔️change-drift-mm/🧪️tests/↔️raises-drift-mm-to-33-5/🦀️.rs"]
-mod tests_change_drift_mm_raises;
-#[path = "../../🏎️change-en-a-gr/🧪️tests/🏎️raises-en-a-gr-to-0-25/🦀️.rs"]
-mod tests_change_en_a_gr_raises;
-#[path = "../../🗺️change-en-ground-type/🧪️tests/🗺️switches-en-ground-type-to-e/🦀️.rs"]
-mod tests_change_en_ground_type_switches;
-#[path = "../../🌈️change-en-spectrum-type/🧪️tests/🌈️switches-en-spectrum-type-to-type2/🦀️.rs"]
-mod tests_change_en_spectrum_type_switches;
-#[path = "../../🔲️change-foundation-area-m2/🧪️tests/🔲️raises-foundation-area-m2-to-144-0/🦀️.rs"]
-mod tests_change_foundation_area_m2_raises;
-#[path = "../../➡️change-foundation-h-ed-kn/🧪️tests/➡️raises-foundation-h-ed-kn-to-212-5/🦀️.rs"]
-mod tests_change_foundation_h_ed_kn_raises;
-#[path = "../../🧲️change-foundation-h-rd-kn/🧪️tests/🧲️raises-foundation-h-rd-kn-to-475-0/🦀️.rs"]
-mod tests_change_foundation_h_rd_kn_raises;
-#[path = "../../👇️change-foundation-p-rd-kpa/🧪️tests/👇️raises-foundation-p-rd-kpa-to-625-0/🦀️.rs"]
-mod tests_change_foundation_p_rd_kpa_raises;
-#[path = "../../🪨️change-ground-type/🧪️tests/🪨️switches-ground-type-to-c/🦀️.rs"]
-mod tests_change_ground_type_switches;
-#[path = "../../↕️change-height-m/🧪️tests/↕️raises-height-m-to-18-75/🦀️.rs"]
-mod tests_change_height_m_raises;
-#[path = "../../🏛️change-importance-class/🧪️tests/🏛️switches-importance-class-to-cc3/🦀️.rs"]
-mod tests_change_importance_class_switches;
-#[path = "../../🌀️change-k-foundation/🧪️tests/🌀️raises-k-foundation-to-640000-0/🦀️.rs"]
-mod tests_change_k_foundation_raises;
-#[path = "../../🌱️change-k-soil/🧪️tests/🌱️raises-k-soil-to-262500-0/🦀️.rs"]
-mod tests_change_k_soil_raises;
-#[path = "../../⚖️change-mass-t/🧪️tests/⚖️raises-mass-t-to-812-5/🦀️.rs"]
-mod tests_change_mass_t_raises;
-#[path = "../../🕸️change-multiple-resisting-systems/🧪️tests/🕸️turns-multiple-resisting-systems-off/🦀️.rs"]
-mod tests_change_multiple_resisting_systems_turns_off;
-#[path = "../../⏱️change-period-ratio/🧪️tests/⏱️raises-period-ratio-to-3-5/🦀️.rs"]
-mod tests_change_period_ratio_raises;
-#[path = "../../📥️change-retrofit-ed-kn/🧪️tests/📥️raises-retrofit-e-d-kn-to-337-5/🦀️.rs"]
-mod tests_change_retrofit_e_d_kn_raises;
-#[path = "../../✖️change-retrofit-gamma-el/🧪️tests/✖️raises-retrofit-gamma-el-to-1-25/🦀️.rs"]
-mod tests_change_retrofit_gamma_el_raises;
-#[path = "../../🎓️change-retrofit-knowledge-level/🧪️tests/🎓️switches-retrofit-knowledge-level-to-kl3/🦀️.rs"]
-mod tests_change_retrofit_knowledge_level_switches;
-#[path = "../../🚦️change-retrofit-limit-state/🧪️tests/🚦️switches-retrofit-limit-state-to-near-collapse/🦀️.rs"]
-mod tests_change_retrofit_limit_state_switches;
-#[path = "../../💪️change-retrofit-rk-kn/🧪️tests/💪️raises-retrofit-r-k-kn-to-512-5/🦀️.rs"]
-mod tests_change_retrofit_r_k_kn_raises;
-#[path = "../../🫨️change-seismic-zone/🧪️tests/🫨️raises-seismic-zone-to-4/🦀️.rs"]
-mod tests_change_seismic_zone_raises;
-#[path = "../../🌾️change-silo-height-m/🧪️tests/🌾️raises-silo-height-m-to-14-5/🦀️.rs"]
-mod tests_change_silo_height_m_raises;
-#[path = "../../🗜️change-silo-n-rd-kn/🧪️tests/🗜️raises-silo-n-rd-kn-to-640-0/🦀️.rs"]
-mod tests_change_silo_n_rd_kn_raises;
-#[path = "../../📊️change-silo-q-nominal/🧪️tests/📊️raises-silo-q-nominal-to-2-75/🦀️.rs"]
-mod tests_change_silo_q_nominal_raises;
-#[path = "../../⭕️change-silo-radius-m/🧪️tests/⭕️raises-silo-radius-m-to-6-25/🦀️.rs"]
-mod tests_change_silo_radius_m_raises;
-#[path = "../../📉️change-silo-v-ed-kn/🧪️tests/📉️raises-silo-v-ed-kn-to-225-5/🦀️.rs"]
-mod tests_change_silo_v_ed_kn_raises;
-#[path = "../../🚧️change-silo-v-rd-kn/🧪️tests/🚧️raises-silo-v-rd-kn-to-412-5/🦀️.rs"]
-mod tests_change_silo_v_rd_kn_raises;
-#[path = "../../🏗️change-structural-system/🧪️tests/🏗️switches-structural-system-to-wall-dcm/🦀️.rs"]
-mod tests_change_structural_system_switches;
-#[path = "../../🕐️change-t1-s/🧪️tests/🕐️raises-t1-s-to-0-75/🦀️.rs"]
-mod tests_change_t1_s_raises;
-#[path = "../../🛢️change-tank-height-m/🧪️tests/🛢️raises-tank-height-m-to-11-5/🦀️.rs"]
-mod tests_change_tank_height_m_raises;
-#[path = "../../⚓️change-tank-mass-t/🧪️tests/⚓️raises-tank-mass-t-to-425-0/🦀️.rs"]
-mod tests_change_tank_mass_t_raises;
-#[path = "../../🥁️change-tank-radius-m/🧪️tests/🥁️raises-tank-radius-m-to-5-75/🦀️.rs"]
-mod tests_change_tank_radius_m_raises;
-#[path = "../../🔰️change-tank-v-rd-kn/🧪️tests/🔰️raises-tank-v-rd-kn-to-537-5/🦀️.rs"]
-mod tests_change_tank_v_rd_kn_raises;
-#[path = "../../🏭️change-tower-is-chimney/🧪️tests/🏭️turns-tower-is-chimney-off/🦀️.rs"]
-mod tests_change_tower_is_chimney_turns_off;
-#[path = "../../↪️change-tower-m-ed-knm/🧪️tests/↪️raises-tower-m-ed-knm-to-1562-5/🦀️.rs"]
-mod tests_change_tower_m_ed_knm_raises;
-#[path = "../../🦾️change-tower-m-rd-knm/🧪️tests/🦾️raises-tower-m-rd-knm-to-2812-5/🦀️.rs"]
-mod tests_change_tower_m_rd_knm_raises;
-#[path = "../../🗼️change-tower-mass-t/🧪️tests/🗼️raises-tower-mass-t-to-112-5/🦀️.rs"]
-mod tests_change_tower_mass_t_raises;
-#[path = "../../💨️change-tower-q-nominal/🧪️tests/💨️raises-tower-q-nominal-to-3-25/🦀️.rs"]
-mod tests_change_tower_q_nominal_raises;
-#[path = "../../🛡️change-v-rd-kn/🧪️tests/🛡️raises-v-rd-kn-to-925-0/🦀️.rs"]
-mod tests_change_v_rd_kn_raises;
-#[path = "../../🏋️change-wall-h-rd-kn/🧪️tests/🏋️raises-wall-h-rd-kn-to-187-5/🦀️.rs"]
-mod tests_change_wall_h_rd_kn_raises;
-#[path = "../../🧱️change-wall-height-m/🧪️tests/🧱️raises-wall-height-m-to-5-5/🦀️.rs"]
-mod tests_change_wall_height_m_raises;
-#[path = "../../📐️change-wall-phi-deg/🧪️tests/📐️raises-wall-phi-deg-to-37-5/🦀️.rs"]
-mod tests_change_wall_phi_deg_raises;
-#[path = "../../🔢️change-wall-r/🧪️tests/🔢️raises-wall-r-to-2-25/🦀️.rs"]
-mod tests_change_wall_r_raises;
-#[path = "../../🧂️change-wall-soil-gamma-kn-m3/🧪️tests/🧂️raises-wall-soil-gamma-kn-m3-to-20-5/🦀️.rs"]
-mod tests_change_wall_soil_gamma_kn_m3_raises;
+//! 🧫️ One canonical test per committed EN 1998 specification vector.
+#[path = "../../📎️change-annex/🧪️tests/🌍️switches-to-en/🦀️.rs"]
+mod vector_change_annex_switches_to_en;
+#[path = "../../🌚️update-site/🧪️tests/🌋️zone-3-soft-soil/🦀️.rs"]
+mod vector_update_site_zone_3_soft_soil;
+#[path = "../../➕️insert-building/🧪️tests/🏢️adds-an-annex/🦀️.rs"]
+mod vector_insert_building_adds_an_annex;
+#[path = "../../➖️remove-building/🧪️tests/🏚️drops-the-office/🦀️.rs"]
+mod vector_remove_building_drops_the_office;
+#[path = "../../💪️change-system-v-rd-n/🧪️tests/💪️stronger-y/🦀️.rs"]
+mod vector_change_system_v_rd_n_stronger_y;
+#[path = "../../⚖️change-storey-permanent-gk-n/🧪️tests/⚖️heavier/🦀️.rs"]
+mod vector_change_storey_permanent_gk_n_heavier;
+#[path = "../../📐️change-storey-stiffness-x/🧪️tests/📐️softer/🦀️.rs"]
+mod vector_change_storey_stiffness_x_softer;
+#[path = "../../📏️change-storey-drift-xm/🧪️tests/📏️more-drift/🦀️.rs"]
+mod vector_change_storey_drift_xm_more_drift;
+#[path = "../../🧭️change-building-plan-regular/🧪️tests/🧭️twist/🦀️.rs"]
+mod vector_change_building_plan_regular_twist;
+#[path = "../../📏️change-elevation-regular/🧪️tests/🏙️irregular/🦀️.rs"]
+mod vector_change_elevation_regular_irregular;
+#[path = "../../✅️change-member-detailing/🧪️tests/✅️beam-unfit/🦀️.rs"]
+mod vector_change_member_detailing_beam_unfit;
+#[path = "../../🧱️change-masonry-wall-ratio/🧪️tests/🧱️four-pct/🦀️.rs"]
+mod vector_change_masonry_wall_ratio_four_pct;
+#[path = "../../🌉insert-bridge/🧪️tests/🌉️adds-a-viaduct/🦀️.rs"]
+mod vector_insert_bridge_adds_a_viaduct;
+#[path = "../../🛑️change-bridge-v-rd-n/🧪️tests/🛑️stronger-pier/🦀️.rs"]
+mod vector_change_bridge_v_rd_n_stronger_pier;
+#[path = "../../🔧insert-assessment/🧪️tests/🔧️adds-a-kl3-check/🦀️.rs"]
+mod vector_insert_assessment_adds_a_kl3_check;
+#[path = "../../🏋️change-assessment-rkn/🧪️tests/🏋️stronger/🦀️.rs"]
+mod vector_change_assessment_rkn_stronger;
+#[path = "../../🫙insert-silo/🧪️tests/🫙️adds-a-grain-silo/🦀️.rs"]
+mod vector_insert_silo_adds_a_grain_silo;
+#[path = "../../🛢insert-tank/🧪️tests/🛢️adds-a-water-tank/🦀️.rs"]
+mod vector_insert_tank_adds_a_water_tank;
+#[path = "../../🪨insert-foundation/🧪️tests/🪨️adds-a-pad/🦀️.rs"]
+mod vector_insert_foundation_adds_a_pad;
+#[path = "../../🧱️insert-retaining-wall/🧪️tests/🧱️adds-a-wall/🦀️.rs"]
+mod vector_insert_retaining_wall_adds_a_wall;
+#[path = "../../🗼insert-tower/🧪️tests/🏭️adds-a-chimney/🦀️.rs"]
+mod vector_insert_tower_adds_a_chimney;
+#[path = "../../↪️change-tower-m-rd-nm/🧪️tests/↪️stronger-base/🦀️.rs"]
+mod vector_change_tower_m_rd_nm_stronger_base;
+#[path = "../../➖️remove-bridge/🧪️tests/🌉️drops-the-viaduct/🦀️.rs"]
+mod vector_remove_bridge_drops_the_viaduct;
+#[path = "../../➖️remove-assessment/🧪️tests/🔧️drops-the-check/🦀️.rs"]
+mod vector_remove_assessment_drops_the_check;
+#[path = "../../➖️remove-silo/🧪️tests/🫙️drops-the-silo/🦀️.rs"]
+mod vector_remove_silo_drops_the_silo;
+#[path = "../../➖️remove-tank/🧪️tests/🛢️drops-the-tank/🦀️.rs"]
+mod vector_remove_tank_drops_the_tank;
+#[path = "../../➖️remove-foundation/🧪️tests/🪨️drops-the-pad/🦀️.rs"]
+mod vector_remove_foundation_drops_the_pad;
+#[path = "../../➖️remove-retaining-wall/🧪️tests/🧱️drops-it/🦀️.rs"]
+mod vector_remove_retaining_wall_drops_it;
+#[path = "../../➖️remove-tower/🧪️tests/🗼️drops-the-tower/🦀️.rs"]
+mod vector_remove_tower_drops_the_tower;

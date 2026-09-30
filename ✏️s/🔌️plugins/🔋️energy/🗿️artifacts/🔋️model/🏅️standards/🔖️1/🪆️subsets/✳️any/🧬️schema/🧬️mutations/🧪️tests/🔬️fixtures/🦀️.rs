@@ -150,8 +150,9 @@ fn level_name(level: protocol::Severity) -> &'static str {
     }
 }
 
-/// 🎯️ The declared outcome document a produced `MutationOutcome` corresponds to: a refusal names
-/// one fault code and the offending address, an application names its ordered message list.
+/// 🎯️ The declared outcome document a produced `MutationOutcome` corresponds to, in the outcome-class vocabulary
+/// `applied | no-op | rejected`: a refusal names one fault code and the offending address, an application or a no-op
+/// (the `mutation.no-op` warning) names its ordered message list.
 fn outcome_document(outcome: &protocol::MutationOutcome<EnergyModelDiff>) -> pack::json::Value {
     let rejected = outcome.worst_level().is_some_and(|level| level >= protocol::Severity::Error);
     if rejected {
@@ -162,8 +163,9 @@ fn outcome_document(outcome: &protocol::MutationOutcome<EnergyModelDiff>) -> pac
             ("path".to_string(), pack::json::Value::Array(first.target.iter().map(|entry| pack::json::Value::String(entry.clone())).collect())),
         ]);
     }
+    let no_op = outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op");
     pack::json::object([
-        ("status".to_string(), pack::json::Value::String("applied".to_string())),
+        ("status".to_string(), pack::json::Value::String(if no_op { "no-op" } else { "applied" }.to_string())),
         (
             "messages".to_string(),
             pack::json::Value::Array(

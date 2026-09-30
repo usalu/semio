@@ -1,0 +1,9 @@
+{
+  "description": "The wgpu shell's transient notice as an assistive technology meets it (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING, W2-C follow-up 4, W3-E2E P2). React renders the notice as `role=status`, `aria-live=polite` with the localized message as its text and the machine code on `data-notice-code`. The wgpu shell paints it, so it projects it into the ARIA mirror as the one polite status node `node`: named by the localized `message`, described by the `code` (no description when the notice carries none), never focusable nor actionable (its close button is its own hit). A notice past its 4 s deadline or dismissed projects nothing. Every `notices` row is shown in its `locale` and must project exactly `node` with that label and description.",
+  "node": { "key": "shell.notice", "role": "status", "live": "polite", "focusable": false, "actionable": false },
+  "notices": [
+    { "locale": "de", "severity": "error", "code": "history.unknown-target", "message": "Verlaufsbearbeitung abgelehnt: Die bearbeitete Mutation existiert nicht mehr." },
+    { "locale": "en", "severity": "warning", "code": "sync.command.rejected", "message": "Change refused by the hub: Someone else changed the same part at the same time" },
+    { "locale": "en", "severity": "info", "code": null, "message": "Copied to the clipboard" }
+  ]
+}

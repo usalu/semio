@@ -1,4 +1,6 @@
-module Stdio_json_mutations;
-type Document = unit {
+module Norm_en1990_mutations;
+public type Op = unit {
+    format: uint8 &requires=($$ == 1);
+    tag: uint8;
     payload: bytes &eod;
 };

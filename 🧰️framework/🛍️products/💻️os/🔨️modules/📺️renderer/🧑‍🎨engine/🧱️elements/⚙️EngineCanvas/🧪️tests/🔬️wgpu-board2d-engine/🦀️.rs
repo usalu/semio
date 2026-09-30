@@ -3,6 +3,9 @@ use super::*;
 /// 🧫️ The corpus React's `coalesceBoard2dEvents` replays too (`🖥️Board2dHost/🧪️tests/🧪️board-event-coalescing`).
 const BOARD_EVENT_COALESCING_CORPUS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/🖥️Board2dHost/🧫️fixtures/🧫️board-event-coalescing/🔣️.json"));
 
+/// 🧫️ The corpus React's `board2dFloat32Decimal` replays too (`🖥️Board2dHost/🧪️tests/🧪️float32-decimal`).
+const BOARD_FLOAT32_DECIMAL_CORPUS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/🖥️Board2dHost/🧫️fixtures/🧫️float32-decimal/🔣️.json"));
+
 fn typed_queue(rows: &[Value]) -> infinite_canvas::BoardEventQueue {
     let mut queue = infinite_canvas::BoardEventQueue::default();
     for row in rows {
@@ -13,6 +16,17 @@ fn typed_queue(rows: &[Value]) -> infinite_canvas::BoardEventQueue {
         queue.push(infinite_canvas::BoardOwnedEvent::from_payload(kind, &payload, key).expect("corpus row fits one event")).expect("corpus batch fits the queue");
     }
     queue
+}
+
+/// ✂️ Law: the board engine records a drag offset in exactly the canonical form React gives pointer coordinates —
+/// the shortest decimal of the f32 value — over the one shared corpus.
+#[test]
+fn the_engine_offset_form_replays_the_shared_f32_decimal_corpus() {
+    let corpus: Value = serde_json::from_str(BOARD_FLOAT32_DECIMAL_CORPUS).expect("corpus parses");
+    for case in corpus["cases"].as_array().expect("cases") {
+        let (value, expected) = (case["value"].as_f64().expect("value"), case["expect"].as_f64().expect("expect"));
+        assert_eq!(infinite_canvas::board_pointer_offset(value), expected, "{}", case["name"]);
+    }
 }
 
 /// ⚖️ Law: every corpus case coalesces here exactly as React coalesces it — same dispatched rows in the same

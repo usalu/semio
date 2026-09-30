@@ -42,3 +42,7 @@ Whole-stack transforms already exist in both renderers, but the current React Ca
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🎯️stack-drop-destination/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-shell-input/🦀️.rs`
 - This ticket report.
+
+## Native Runtime Law Receipt
+
+The coordinator broad native gate `🗑️generated/sol-2026-09-29/wgpu-native-green-2.log` actually executed `dock::stack_drop_destination_tests::committed_stack_drops_land_on_every_neutral_visible_destination`: PASS at line 1222, with all 13 `[DEBUG] WGPU stack drop` fixture projections at lines 1209–1221. This is native production-transform execution evidence. The broad run stopped on two unrelated media-slot failures and does not constitute a full native pass. Normalized physical pointer-event and spawned-owner laws await the separate focused gate. Browser physical Dock receipt remains pending fresh source builds.

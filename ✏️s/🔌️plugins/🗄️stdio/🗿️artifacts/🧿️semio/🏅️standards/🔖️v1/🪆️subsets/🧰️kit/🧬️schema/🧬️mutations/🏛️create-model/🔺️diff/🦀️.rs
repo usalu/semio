@@ -10,7 +10,7 @@ pub fn diff(payload: &super::CreateModel, base: &SemioKitSnapshot) -> protocol::
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A model child with id \"{}\" already exists.", payload.child_id), [payload.child_id.clone()]);
     }
     if let Err(message) = crate::standards::v1::subsets::base::schema::child::validate_semio_child_identity(&payload.child_id, &payload.target, "model") {
-        return protocol::MutationOutcome::fatal("mutation.child-identity", message, ["models".to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", message, ["models".to_string()]);
     }
     let mut models = base.models.clone();
     models.push(store::ArtifactChild::new(payload.child_id.clone(), payload.target.clone()));

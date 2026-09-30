@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection2d",
+  "semanticKind": "drag-selection2d",
+  "displayName": "Drag Selection 2d",
+  "emoji": "✋️",
+  "aggregateVariant": "DragSelection2d",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "drag-selection2d",
+  "binaryTag": 35,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

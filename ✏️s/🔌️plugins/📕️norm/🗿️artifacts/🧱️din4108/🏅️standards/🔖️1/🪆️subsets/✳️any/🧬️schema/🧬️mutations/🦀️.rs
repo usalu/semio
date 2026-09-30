@@ -215,3 +215,7 @@ pub fn inverse_din4108_mutation(mutation: &Din4108Mutation, base: &Din4108Snapsh
 #[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
+mod fixture;

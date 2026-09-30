@@ -1,0 +1,61 @@
+{
+  "artifact": null,
+  "annex": null,
+  "masonryClass": null,
+  "designSituation": null,
+  "storeys": null,
+  "walls": {
+    "values": [
+      {
+        "id": "wall-north",
+        "labelEn": "North load-bearing wall",
+        "labelDe": "Tragende Nordwand",
+        "wallType": "LoadBearing",
+        "thicknessM": 0.365,
+        "heightM": 2.75,
+        "lengthM": 5.0,
+        "supportSides": 4,
+        "openings": [],
+        "slabBearingDepthM": 0.12,
+        "eccentricityTopM": 0.02,
+        "eccentricityBottomM": 0.015,
+        "unitGroup": "Group1",
+        "unitMaterial": "Clay",
+        "fBPa": 20000000.0,
+        "unitLengthM": 0.24,
+        "unitWidthM": 0.365,
+        "unitHeightM": 0.113,
+        "mortarType": "GeneralPurpose",
+        "mortarClass": "M10",
+        "mortarStrengthPa": 10000000.0,
+        "bedJointThicknessM": 0.012,
+        "reinforced": false,
+        "asVerticalM2": 0.0,
+        "asHorizontalM2": 0.0,
+        "fYdPa": 0.0,
+        "fireReiMin": 90,
+        "exposure": "Mx1",
+        "mu": 0.4,
+        "densityKgM3": 1800.0,
+        "phiInfinity": 1.5,
+        "isBasement": false,
+        "loadCases": [
+          {
+            "id": "ulsinz",
+            "designSituation": "persistent",
+            "imposedCategory": "A",
+            "gKSlabN": 120000.0,
+            "qKImposedPa": 2000.0,
+            "tributaryAreaM2": 12.5,
+            "slabSpanM": 5.0,
+            "qKSnowPa": 0.0,
+            "qPWindPa": 800.0,
+            "cPe": 0.8,
+            "hKEarthN": 0.0,
+            "concentrated": []
+          }
+        ]
+      }
+    ]
+  }
+}

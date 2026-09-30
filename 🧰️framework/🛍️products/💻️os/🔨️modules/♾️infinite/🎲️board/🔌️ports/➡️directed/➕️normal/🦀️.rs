@@ -1675,6 +1675,18 @@ pub mod board_host {
         }
     }
 
+    /// ✂️ A drag offset measured from pointer input, as the shortest decimal of its f32 value. Pointer coordinates
+    /// arrive with f32 precision, so every f64 digit below it is representation noise — an 80 px drag reading
+    /// `80.00003051757813` — that must never become a stored mutation input. A rotation keeps its f64 angle: a snapped
+    /// angle is an exact multiple whose narrowing would move every orbit off its exact pose.
+    pub fn board_pointer_offset(value: f64) -> f64 {
+        let narrowed = value as f32;
+        if !narrowed.is_finite() {
+            return value;
+        }
+        narrowed.to_string().parse().unwrap_or(value)
+    }
+
     /// 🎬️ What one released pointer gesture did, in its record's own terms: a drag by one offset, or a
     /// rotation by `angle` radians (counter-clockwise) about `pivot`.
     #[derive(Clone, Copy, Debug, PartialEq)]
@@ -2057,9 +2069,9 @@ pub mod board_host {
             match motion {
                 BoardGestureMotion::Drag { dx, dy } => {
                     payload.raw(",\"dx\":")?;
-                    payload.number(dx)?;
+                    payload.number(board_pointer_offset(dx))?;
                     payload.raw(",\"dy\":")?;
-                    payload.number(dy)?;
+                    payload.number(board_pointer_offset(dy))?;
                 }
                 BoardGestureMotion::Rotate { pivot, angle } => {
                     payload.raw(",\"pivotX\":")?;
@@ -6537,9 +6549,12 @@ pub mod board_host {
             }
         }
 
+        /// ⏯️ The job resumed from `checkpoint` under exactly `operation`. A checkpoint still carrying the placement it
+        /// published is refused: that placement is the owner's hand-off ([`BoardFillCheckpoint::take_pending_placement`]),
+        /// and a resumed job must never hold — let alone overwrite — a placement nobody claimed.
         #[expect(clippy::result_large_err, reason = "Refusal returns the exact event, reservation, placement or checkpoint without allocating outside the bounded operation.")]
         pub fn restore(mut checkpoint: BoardFillCheckpoint, operation: semio_framework_job::Operation) -> Result<Self, BoardFillCheckpoint> {
-            if checkpoint.operation.operation != operation.operation || checkpoint.operation.base_revision != operation.base_revision || checkpoint.operation.generation != operation.generation {
+            if checkpoint.operation.operation != operation.operation || checkpoint.operation.base_revision != operation.base_revision || checkpoint.operation.generation != operation.generation || checkpoint.pending_placement().is_some() {
                 return Err(checkpoint);
             }
             let Some(state) = checkpoint.state.take() else { return Err(checkpoint) };
@@ -6556,7 +6571,7 @@ pub mod board_host {
 
         #[expect(clippy::result_large_err, reason = "Refusal returns the exact event, reservation, placement or checkpoint without allocating outside the bounded operation.")]
         pub fn adopt_checkpoint(&mut self, mut checkpoint: BoardFillCheckpoint) -> Result<(), BoardFillCheckpoint> {
-            if self.state.is_some() || checkpoint.operation.operation != self.operation.operation || checkpoint.operation.base_revision != self.operation.base_revision || checkpoint.operation.generation != self.operation.generation {
+            if self.state.is_some() || checkpoint.pending_placement().is_some() || checkpoint.operation.operation != self.operation.operation || checkpoint.operation.base_revision != self.operation.base_revision || checkpoint.operation.generation != self.operation.generation {
                 return Err(checkpoint);
             }
             let Some(state) = checkpoint.state.take() else { return Err(checkpoint) };
@@ -6945,6 +6960,9 @@ pub mod board_host {
         }
 
         fn accept_candidate(state: &mut BoardFillJobState) -> Result<(), &'static str> {
+            if state.pending_placement.is_some() {
+                return Err("placement-unclaimed");
+            }
             let preview = state.current_preview.ok_or("missing-preview")?;
             let kind = state.snapshot.kinds.get(preview.kind_index).ok_or("missing-candidate-kind")?;
             let kind_handle_count = kind.handles.len;
@@ -7330,9 +7348,6 @@ pub mod board_host {
             context.consume_fuel(1);
             if context.is_cancelled() {
                 return semio_framework_job::StepOutcome::Cancelled;
-            }
-            if context.should_yield() {
-                return semio_framework_job::StepOutcome::Yield;
             }
             let preview_sequence = match context.next_preview_sequence() {
                 Ok(sequence) => sequence,

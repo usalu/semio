@@ -149,6 +149,55 @@ fn walk_mesh_stats_finds_nested_world3d_surfaces_at_their_absolute_rect() {
     assert!(surfaces[0].meshes.is_empty(), "an empty publication is an empty row list, never a missing surface");
 }
 
+/// 🎲️ `dumpBoard2d` answers React's Board2dHost `data-board-*` vitals for one board: every node's world position, the
+/// published `{x, y, zoom}` camera, the selection, and the node, edge and handle counts; a fixture that does not parse
+/// reads `parsed: false`, `-1` counts and no positions, exactly as React's `board2dVitals`.
+#[test]
+fn board2d_dump_reads_the_published_board_like_reacts_vitals() {
+    let fixture = serde_json::json!({
+        "nodes": [{"id": "n-1", "x": 10.0, "y": -4.5, "handles": [{"id": "h-1"}, {"id": "h-2"}]}, {"id": "n-2", "x": 0.0, "y": 3.0}, {"id": "n-3", "x": "far"}],
+        "edges": [{"id": "e-1", "from": "n-1:h-1", "to": "n-2"}]
+    })
+    .to_string();
+    let mut board = ui_wgpu::wgpu::Board2dScene::base(fixture, serde_json::json!({"x": 12.5, "y": -3.0, "zoom": 1.75}).to_string(), true);
+    board.selection_json = serde_json::json!(["n-2", "n-1:h-1"]).to_string();
+    let surface = board2d_surface("puzzle2d-edit", "2d-edit", &board, [100.0, 50.0, 640.0, 480.0]);
+    let json = serde_json::to_value(&surface).expect("the row serializes");
+    assert_eq!(
+        json,
+        serde_json::json!({
+            "surfaceId": "puzzle2d-edit", "windowId": "2d-edit", "rect": [100.0, 50.0, 640.0, 480.0],
+            "camera": {"x": 12.5, "y": -3.0, "zoom": 1.75},
+            "positions": {"n-1": [10.0, -4.5], "n-2": [0.0, 3.0]},
+            "selection": ["n-2", "n-1:h-1"],
+            "nodes": 3, "edges": 1, "handles": 2, "parsed": true
+        }),
+        "the wire shape the W3-E2E probe reads (`📓️w3-e2e-report.md` W.3 P1)"
+    );
+    let broken = board2d_surface("s", "w", &ui_wgpu::wgpu::Board2dScene::base("{not json".into(), "{}".into(), false), [0.0; 4]);
+    assert_eq!((broken.parsed, broken.nodes, broken.edges, broken.handles, broken.positions.len(), broken.camera, broken.selection.len()), (false, -1, -1, -1, 0, None, 0));
+}
+
+/// 🚶️ The board walk finds a board wherever the dock nested it, names the window it was found in, and reports its
+/// ABSOLUTE page rect; a window without a board contributes no row.
+#[test]
+fn walk_board2d_finds_nested_boards_at_their_absolute_rect_in_their_window() {
+    let scene = ui_wgpu::wgpu::build_board2d_scene("puzzle2d-edit", "controller", ui_wgpu::wgpu::Board2dScene::base("{\"nodes\":[],\"edges\":[]}".into(), "{}".into(), true));
+    let mut tree = ui_wgpu::wgpu::UiTree::new();
+    let root_id = tree.insert_child(None, Node::new(NodeKey::Explicit("root".into()), WidgetSpec(stack_node(Some("root"), vec![]))));
+    let scene_id = tree.insert_child(Some(root_id), Node::new(NodeKey::Explicit("board".into()), WidgetSpec(scene)));
+    tree.node_mut(root_id).unwrap().layout = LayoutBucket { x: 10.0, y: 20.0, width: 900.0, height: 800.0, ..Default::default() };
+    tree.node_mut(scene_id).unwrap().layout = LayoutBucket { x: 5.0, y: 6.0, width: 400.0, height: 300.0, ..Default::default() };
+    let mut surfaces = Vec::new();
+    walk_board2d(&tree, root_id, 0.0, 0.0, "2d-edit", &mut surfaces);
+    assert_eq!(surfaces.iter().map(|surface| (surface.surface_id.as_str(), surface.window_id.as_str(), surface.rect, surface.parsed, surface.nodes)).collect::<Vec<_>>(), [("puzzle2d-edit", "2d-edit", [15.0, 26.0, 400.0, 300.0], true, 0)]);
+    let mut none = Vec::new();
+    let text_id = tree.insert_child(None, Node::new(NodeKey::Explicit("plain".into()), WidgetSpec(text_node("no board"))));
+    walk_board2d(&tree, text_id, 0.0, 0.0, "plain", &mut none);
+    assert!(none.is_empty());
+    assert_eq!(serde_json::to_value(build_board2d_dump(&ui_wgpu::wgpu::Ui::new(), None)).expect("serializes"), serde_json::json!({"surfaces": []}), "an engine with no window answers an empty board list");
+}
+
 #[test]
 fn sibling_world_diagnostics_read_their_exact_host_camera_and_keep_the_public_surface_id() {
     let mut node = ui_wgpu::wgpu::build_world_3d_scene("shared-world-document", "controller", ui_wgpu::wgpu::World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into()));

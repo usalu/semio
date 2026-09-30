@@ -8,13 +8,13 @@
   "semio": {
     "browserSessionFactories": [
       {
-        "module": "@semio-tech/puzzle-js",
+        "module": "@semio-tech/puzzle-2d",
         "engine": "./✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust"
       }
     ]
   },
   "dependencies": {
-    "@semio-tech/puzzle-js": "workspace:*"
+    "@semio-tech/puzzle-2d": "workspace:*"
   },
   "scripts": {
     "dev": "bun nx run @semio-tech/mit-bestand-demonstrator:dev",

@@ -83,6 +83,8 @@ plugin-entry = []
 component-receipt-acceptance = []
 
 [dependencies]
+semio-framework-async = { workspace = true }
+semio-framework-schema = { workspace = true }
 semio-s-artifact-gis-gismap = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-gis-gisterrain = { workspace = true, features = ["component-app-assembly"] }
 semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }

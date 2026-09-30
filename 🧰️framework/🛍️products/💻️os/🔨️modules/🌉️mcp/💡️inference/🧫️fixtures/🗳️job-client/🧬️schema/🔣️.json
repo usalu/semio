@@ -1,0 +1,143 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/inference-job-client-fixture.json",
+  "type": "object",
+  "required": [
+    "schema",
+    "cases",
+    "operationLabels"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "semio.os.inference-job-client-fixture/v1"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "requestedJobId",
+          "response",
+          "expectedError"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "requestedJobId": {
+            "type": "string"
+          },
+          "response": {
+            "type": "object"
+          },
+          "expectedError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "operationLabels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "spaceId",
+          "documentId",
+          "jobId",
+          "expected"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "spaceId": {
+            "type": "string"
+          },
+          "documentId": {
+            "type": "string"
+          },
+          "jobId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expected": {
+            "type": "string",
+            "pattern": "^inference:"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "EventPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "jobId",
+        "state",
+        "proposalState",
+        "cancelRequested",
+        "stale",
+        "proposalHash",
+        "events",
+        "progress",
+        "nextCursor"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.inference-job-events/v1"
+        },
+        "jobId": {
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "accepted",
+            "running",
+            "succeeded",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "proposalState": {
+          "enum": [
+            "none",
+            "offered",
+            "approved",
+            "stale",
+            "cancelled"
+          ]
+        },
+        "cancelRequested": {
+          "type": "boolean"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "proposalHash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "events": {
+          "type": "array"
+        },
+        "progress": {
+          "type": "array"
+        },
+        "nextCursor": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

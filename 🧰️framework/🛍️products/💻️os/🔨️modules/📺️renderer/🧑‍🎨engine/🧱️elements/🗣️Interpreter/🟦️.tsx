@@ -77,7 +77,7 @@ import {
   type UiTranslationKey,
   type VirtualFileSystemNode,
 } from "@semio-tech/ui-react";
-import { domSizePx, uiSpacingRem } from "@semio-tech/ui-styling";
+import { domSizePx, uiSpacingLen } from "@semio-tech/ui-styling";
 import {
   type ActionBinding,
   type ActionDescriptor,
@@ -928,11 +928,11 @@ export function VirtualFileSystemHost({ node, onAction, requestContextMenu }: Co
 const SPACE_TOKEN_MULTIPLIER: Record<SpaceToken, number> = { none: 0, xs: 1, sm: 2, md: 4, lg: 6, xl: 8, xxl: 12 };
 
 /** 📐️ Resolves a closed `SpaceToken` against the theme's own `--ui-spacing` ramp
- * (`@semio-tech/ui-styling`'s `uiSpacingRem`) — never a raw pixel value shipped over the wire. The
+ * (`@semio-tech/ui-styling`'s `uiSpacingLen`) — never a raw pixel value shipped over the wire. The
  * per-token multiplier is the one place this renderer decides "how big is `md`"; it can be retuned
  * without touching the contract, which only ever carries the token name. */
 function spaceTokenRem(token: SpaceToken): string {
-  return uiSpacingRem(SPACE_TOKEN_MULTIPLIER[token]);
+  return uiSpacingLen(SPACE_TOKEN_MULTIPLIER[token]);
 }
 
 function edgeSpaceToPadding(edge: EdgeSpace): string {
@@ -1440,6 +1440,7 @@ function SliderView({ record, context }: { readonly record: UiNodeRecord; readon
     <Slider
       id={nodeDomId(context.store, record, context.domScope)}
       data-ui-node-id={record.id} data-ui-node-key={record.key}
+      aria-label={record.accessibility.label ?? undefined}
       className="w-full min-w-0"
       max={component.max}
       min={component.min}

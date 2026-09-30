@@ -182,3 +182,7 @@ These exact sources include the neutral shell-admission schema/fixture, seven-la
 - `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/Cargo.toml`
 - `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/📜️script.ts`
 - `Cargo.lock`
+
+## Mounted Refusal Publication
+
+The already listed framework plugin root additionally has a private canonical retained-fault conversion and uses existing framed completion pages. The original reducer fault-detail codec and prior page framing are peer-authored; root owns only this corrected mounted handoff.

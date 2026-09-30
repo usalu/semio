@@ -11,8 +11,8 @@ use super::*;
 /// blocks against this repository's five. `📓️w13-final-audit.md` §2.2(11) attributed that to
 /// THIS parser dropping the node. It does not: fed the oracle's own output, this parser reports
 /// the `htmlBlock` in position 3, exactly as the oracle does. The divergence is the reference
-/// writer's injected content, which is why `mutate-md-commonmark`'s feature leaves the row red
-/// rather than teaching this renderer to emit a separator no specification asks for.
+/// writer's injected content, which is why `mutate-md-commonmark`'s oracle projects the tree its
+/// mutation edited rather than its writer's rendering of it.
 #[semio_framework_async_macros::async_test]
 async fn html_comment_between_a_list_and_a_code_block_is_an_html_block() {
     let source = "- First replacement item\n- Second replacement item\n\n<!-- end list -->\n\n```bash\necho hi\n```\n";

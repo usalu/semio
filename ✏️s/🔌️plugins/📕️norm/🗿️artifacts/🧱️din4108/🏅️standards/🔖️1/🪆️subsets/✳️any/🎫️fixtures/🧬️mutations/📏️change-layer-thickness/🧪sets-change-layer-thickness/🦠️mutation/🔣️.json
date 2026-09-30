@@ -1,7 +1,0 @@
-{
-  "ChangeLayerThickness": {
-    "elementId": "wall-north",
-    "index": 2,
-    "newThicknessM": 0.16
-  }
-}

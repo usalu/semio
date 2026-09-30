@@ -6,7 +6,7 @@ rust-version.workspace = true
 description = "Norm en1996 artifact"
 
 [package.metadata.semio]
-role = "s-module"
+role = "artifact"
 
 [lints]
 workspace = true
@@ -42,4 +42,3 @@ serde_json = { workspace = true }
 [[bin]]
 name = "regenerate-en1996-example-assets"
 path = "bins/regenerate_example_assets.rs"
-

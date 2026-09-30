@@ -1,4 +1,4 @@
-import type { QueryResult } from "../../../../../../../../../../../../../🧬️schema/🌳️ast/🟦️";
+import type { QueryResult } from "../../../../../../../🧬️schema/🌳️ast/🟦️.ts";
 
 /** 📊️ Ephemeral execution output for one concrete Jack results window. */
 export interface JackResultsWindowTransient {

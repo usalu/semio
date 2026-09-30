@@ -39,6 +39,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/flow/mutation/set-edge-kind/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/flow/mutation/drag-nodes/schema.json"
     }
   ]
 }

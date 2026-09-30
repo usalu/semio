@@ -1,0 +1,25 @@
+{
+  "buildingCategory": null,
+  "attachment": null,
+  "useClass": null,
+  "method": null,
+  "netFloorAreaM2": null,
+  "heatedVolumeM3": null,
+  "gegQpFactor": null,
+  "deltaUWbWM2k": null,
+  "automationClass": null,
+  "zones": null,
+  "elements": null,
+  "heating": null,
+  "dhw": {
+    "specificDemandKwhPersonA": 550.0,
+    "storageLossKwhA": 200.0,
+    "distributionLossKwhA": 150.0,
+    "energyCarrier": "natural_gas"
+  },
+  "ventilation": null,
+  "cooling": null,
+  "lighting": null,
+  "renewables": null,
+  "climate": null
+}

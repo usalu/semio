@@ -460,8 +460,8 @@ const DRAWING_GESTURE_RAW_BYTES: usize = 8_192;
 const DRAWING_GESTURE_RETAINED_BYTES: usize = 131_072;
 
 /// 🛣️ One publication lane row per gesture route, read off each route's real `Emit` construction, not
-/// off its `ActionKind`: every gesture that reaches a commit does so through
-/// `commit_with_utility_reset`/`DrawingDraftQuery::advance` (artifact lane), and the two routes that
+/// off its `ActionKind`: every gesture that reaches a commit does so through the canvas tool's one
+/// `Emit::commit_transaction` (`drawing_tool_emit`, artifact lane), and the two routes that
 /// additionally write the exact Canvas `WindowTransient` snapshot — `canvasPointerDown` through
 /// `advance_trace_pointer`, `canvasEscape` through its own trace cancellation — carry the config lane
 /// as well. Under-declaring a lane that is actually emitted faults at publication time.
@@ -487,8 +487,8 @@ struct DrawingGestureOperationOwner {
 }
 
 impl DrawingGestureOperationOwner {
-    fn new(active_utility_id: &str) -> Self {
-        Self { session: Some(DrawingSession::with_active_utility(active_utility_id)), closing: false, unreleased_bytes: DRAWING_GESTURE_RETAINED_BYTES }
+    fn new(active_utility_id: &str, authoring_seed: &str) -> Self {
+        Self { session: Some(DrawingSession::new(active_utility_id, authoring_seed)), closing: false, unreleased_bytes: DRAWING_GESTURE_RETAINED_BYTES }
     }
 }
 
@@ -577,7 +577,7 @@ impl DrawingInstanceOperationOwner {
                     let _ = self.operations.close_step(1, DRAWING_GESTURE_RETAINED_BYTES);
                 }
             }
-            self.operations.admit(live_key, DrawingGestureOperationOwner::new(active_utility_id)).map_err(|mut rejected| {
+            self.operations.admit(live_key, DrawingGestureOperationOwner::new(active_utility_id, &operation.authoring_seed)).map_err(|mut rejected| {
                 rejected.owner.cancel();
                 rejected.owner.begin_close();
                 let _ = rejected.owner.close_step(1, DRAWING_GESTURE_RETAINED_BYTES);
@@ -589,23 +589,11 @@ impl DrawingInstanceOperationOwner {
         let session = retained.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.owner"), "the Drawing gesture session is already closing"))?;
         session.window_config = payload.window_config.clone();
         session.window_transient = payload.window_transient.clone();
-        if session.gesture.context.points_overflowed {
+        session.base = Some(canvas_pointer_down::DrawingToolBase { document: payload.snapshot.clone(), operation: Some(operation.clone()) });
+        if session.tool.context().points_overflowed {
             self.operations.cancel(live_key);
             self.active = None;
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.point-capacity"), "the fixed Drawing gesture point capacity was exceeded"));
-        }
-        if let Some(query) = session.draft_query.as_mut() {
-            if query.command_id != command.command_id() {
-                return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.draft-owner"), "a retained Drawing draft query rejects a different command owner"));
-            }
-            let Some(emit) = query.advance(snapshot) else { return Ok(None) };
-            session.draft_query = None;
-            let window_transient = session.window_transient.clone();
-            if session.gesture.matches("idle") && session.trace_pointer.is_none() {
-                self.operations.cancel(live_key);
-                self.active = None;
-            }
-            return Ok(Some((emit, window_transient)));
         }
         if let Some(query) = session.point_query.as_mut() {
             if query.command_id != command.command_id() {
@@ -626,13 +614,13 @@ impl DrawingInstanceOperationOwner {
             }
             let ids=payload.interaction_state.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection|selection.ids.as_slice()).unwrap_or(&[]);
             let point_ids=payload.interaction_state.selection.get(DRAWING_POINT_DOMAIN).map(|selection|selection.ids.as_slice()).unwrap_or(&[]);
-            match session.prepare_layer_move(snapshot,ids,point_ids) {
+            match session.prepare_grab(snapshot,ids,point_ids) {
                 Ok(false)=>return Ok(None),
                 Err(fault)=>{ self.operations.cancel(live_key); self.active=None; return Err(fault); },
                 Ok(true)=>{},
             }
-            if session.point_query.as_ref().is_some_and(|query|query.constrained) && session.layer_move.is_none() && session.node_move.is_none() && session.node_marquee.is_none() {
-                session.step_gesture(canvas_pointer_down::drawing_gesture::Event::Escape,snapshot,config);
+            if session.point_query.as_ref().is_some_and(|query|query.constrained) && session.tool.matches("pressing") && session.node_marquee.is_none() {
+                session.escape()?;
             }
             let query=session.point_query.as_mut().expect("retained point query");
             let targets = match query.publication_step() {
@@ -652,7 +640,7 @@ impl DrawingInstanceOperationOwner {
                 emit.effects.push(if query.hover {canvas_pointer_down::interaction_hover_effect_from_targets(targets)}else {canvas_pointer_down::interaction_select_effect_from_targets(targets,&query.merge)});
             }
             let window_transient = session.window_transient.clone();
-            if session.gesture.matches("idle") && session.trace_pointer.is_none() {
+            if session.tool.at_rest() && session.trace_pointer.is_none() {
                 self.operations.cancel(live_key);
                 self.active = None;
             }
@@ -662,7 +650,7 @@ impl DrawingInstanceOperationOwner {
             if (active_utility_id=="editNodes" || active_utility_id=="selectDirect" && !pointer.ctrl && !pointer.meta) && pointer.generation.is_none() {
                 let (x,y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport,pointer.x,pointer.y,pointer.width,pointer.height);
                 let world = [x,y];
-                session.step_gesture(canvas_pointer_down::drawing_gesture::Event::PointerDown { utility:active_utility_id.into(),world,shift:false,ctrl:false,meta:false },snapshot,config);
+                session.press(canvas_pointer_down::DrawingPointer { utility:active_utility_id.into(),world,shift:pointer.shift,alt:pointer.alt,ctrl:pointer.ctrl,meta:pointer.meta })?;
                 let tolerance = canvas_pointer_down::DRAWING_PICK_TOLERANCE_PX/session.window_config.viewport.zoom.max(1e-6);
                 let mut query = canvas_pointer_down::DrawingPointQuery::new(command.command_id(),canvas_pointer_down::TracePointerJob::new_query(snapshot,world,tolerance,false),false,"replace".into(),false);
                 query.cursor.node_editing=active_utility_id=="editNodes";
@@ -676,7 +664,7 @@ impl DrawingInstanceOperationOwner {
             }
         }
         if let DrawingCommand::CanvasPointerMove(payload) = command {
-            if session.gesture.matches("idle") {
+            if session.tool.at_rest() {
                 // 🧵️ Idle hover hit-tests the LAST sample of a batch only (design L4 / §2 D).
                 let [x, y] = payload.last_sample();
                 let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport, x, y, payload.width, payload.height);
@@ -691,44 +679,32 @@ impl DrawingInstanceOperationOwner {
                 return Ok(None);
             }
         }
+        let document_owner = payload.snapshot.clone();
         let retained_emit = match command {
-            DrawingCommand::CanvasPointerMove(pointer) if session.gesture.matches("moving_layer") => {
+            DrawingCommand::CanvasPointerMove(pointer) if session.tool.matches("pressing") || session.tool.matches("dragging") => {
                 let [x,y] = pointer.last_sample();
                 let (x,y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport,x,y,pointer.width,pointer.height);
-                session.set_transform_modifiers(pointer.shift,pointer.alt);
-                session.move_layer_preview([x,y]);
-                Some(Some(Emit::default()))
+                Some(Some(session.sample([x,y],pointer.shift,pointer.alt)?))
             }
-            DrawingCommand::CanvasPointerMove(payload) if session.gesture.matches("marqueeing") && session.gesture.context.method == "lasso" => Some(session.advance_lasso_move(payload,snapshot,config)),
-            // 🚫️ A cancelled release clears a live drag and selects/commits nothing.
-            DrawingCommand::CanvasPointerUp(payload) if payload.cancelled => Some(Some(canvas_pointer_up::cancel_gesture(session, snapshot, config))),
-            DrawingCommand::CanvasPointerUp(pointer) if session.node_move.is_some() => {
-                let (x,y)=canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport,pointer.x,pointer.y,pointer.width,pointer.height);
-                session.set_transform_modifiers(pointer.shift,pointer.alt);
-                Some(Some(session.finish_node_move([x,y],snapshot,config)?))
-            }
-            DrawingCommand::CanvasPointerUp(pointer) if session.layer_move.is_some() => {
-                let (x,y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport,pointer.x,pointer.y,pointer.width,pointer.height);
-                session.set_transform_modifiers(pointer.shift,pointer.alt);
-                Some(Some(session.finish_layer_move([x,y],snapshot,config)?))
-            }
+            DrawingCommand::CanvasPointerMove(payload) if session.tool.matches("marqueeing") && session.tool.context().method == "lasso" => Some(session.advance_lasso_move(payload)?),
+            // 🚫️ A cancelled release aborts a live gesture with zero trace and selects/commits nothing.
+            DrawingCommand::CanvasPointerUp(payload) if payload.cancelled => Some(Some(session.cancel())),
             DrawingCommand::CanvasPointerUp(payload) => {
                 let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport, payload.x, payload.y, payload.width, payload.height);
-                Some(session.step_gesture_retained(
-                    command.command_id(),
-                    canvas_pointer_down::drawing_gesture::Event::PointerUp { utility: session.active_utility_id.clone(), world: [world_x, world_y], shift: payload.shift, ctrl: payload.ctrl, meta: payload.meta },
-                    snapshot,
-                    config,
-                    &operation,
-                ))
+                let pointer = canvas_pointer_down::DrawingPointer { utility: session.active_utility_id.clone(), world: [world_x, world_y], shift: payload.shift, alt: payload.alt, ctrl: payload.ctrl, meta: payload.meta };
+                let base = canvas_pointer_down::DrawingToolBase { document: document_owner, operation: Some(operation.clone()) };
+                Some(session.release(command.command_id(), pointer, base)?)
             }
-            DrawingCommand::CanvasDoubleClick(_) | DrawingCommand::CanvasCommitDraft(_) => Some(session.step_gesture_retained(command.command_id(), canvas_pointer_down::drawing_gesture::Event::CommitDraft, snapshot, config, &operation)),
+            DrawingCommand::CanvasDoubleClick(_) | DrawingCommand::CanvasCommitDraft(_) => {
+                let base = canvas_pointer_down::DrawingToolBase { document: document_owner, operation: Some(operation.clone()) };
+                Some(Some(session.finish_draft(base)?))
+            }
             _ => None,
         };
         if let Some(retained_emit) = retained_emit {
             let Some(emit) = retained_emit else { return Ok(None) };
             let window_transient = session.window_transient.clone();
-            if session.gesture.matches("idle") && session.trace_pointer.is_none() {
+            if session.tool.at_rest() && session.trace_pointer.is_none() && session.point_query.is_none() {
                 self.operations.cancel(live_key);
                 self.active = None;
             }
@@ -743,13 +719,13 @@ impl DrawingInstanceOperationOwner {
             DrawingCommand::CanvasEscape(payload) => canvas_escape::handle(payload, &doc, &cfg, session),
             _ => Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.command"), "the retained Drawing gesture owner rejects non-gesture commands")),
         }?;
-        if session.gesture.context.points_overflowed {
+        if session.tool.context().points_overflowed {
             self.operations.cancel(live_key);
             self.active = None;
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.point-capacity"), "the fixed Drawing gesture point capacity was exceeded"));
         }
         let window_transient = session.window_transient.clone();
-        if session.gesture.matches("idle") && session.trace_pointer.is_none() {
+        if session.tool.at_rest() && session.trace_pointer.is_none() {
             self.operations.cancel(live_key);
             self.active = None;
         }
@@ -769,7 +745,7 @@ impl DrawingInstanceOperationOwner {
             self.active = None;
             return None;
         }
-        if session.gesture.matches("idle") && session.trace_pointer.is_none() && session.point_query.is_none() && session.draft_query.is_none() {
+        if session.tool.at_rest() && session.trace_pointer.is_none() && session.point_query.is_none() {
             self.operations.cancel(key);
             self.active = None;
             return None;
@@ -1209,7 +1185,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let cfg = ConfigView { snapshot: input.config, window: input.context.and_then(|context| context.window_config.as_ref()) };
         let active_utility = input.context.and_then(|context| context.view_state.as_ref()).map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility);
-        let mut session = DrawingSession::with_active_utility(active_utility);
+        let mut session = DrawingSession::new(active_utility, &input.operation.authoring_seed);
         session.interaction.ids = input.interaction.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default();
         session.interaction.points = input.interaction.selection.get(DRAWING_POINT_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default();
         session.window_config = canvas_window::config::from_snapshot(input.context.and_then(|context| context.window_config.as_ref()));
@@ -1389,11 +1365,11 @@ struct DrawingArtifactStorePreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<DrawingSnapshot, DrawingMutation> for DrawingArtifactStorePreparationFactory {
-    fn preflight(&self, _mutation: &DrawingMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &DrawingMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("drawing-artifact-lane-or-description-envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Ok(store::ArtifactStoreOneItemFootprint::for_one_item(crate::mutations::drawing_inverse_rows(mutation), store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn begin(
@@ -1796,7 +1772,7 @@ impl ArtifactEditor for DrawingPlayApp {
         if DRAWING_GESTURE_TOOL_IDS.contains(&command.command_id()) {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.retained-route"), "Drawing gesture commands are reachable only through their exact retained factory owner"));
         }
-        let mut session = DrawingSession::with_active_utility(view_state.map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility));
+        let mut session = DrawingSession::new(view_state.map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility), doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()));
         session.interaction.ids = interaction.selection(DRAWING_INTERACTION_DOMAIN).ids.clone();
         session.interaction.points = interaction.selection(DRAWING_POINT_DOMAIN).ids.clone();
         session.window_config = canvas_window::config::current(cfg);

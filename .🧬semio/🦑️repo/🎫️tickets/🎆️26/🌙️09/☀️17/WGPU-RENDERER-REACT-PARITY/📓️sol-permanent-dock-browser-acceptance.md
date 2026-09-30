@@ -1,0 +1,11 @@
+# Permanent Dock Browser Acceptance
+
+The existing ticket adapter has been placed in the domain-owned Dock `🧪️tests/🌐️browser-acceptance/📜️script.ts`, with its eight-case fixture and schema in adjacent Dock `🧫️fixtures/🌐️browser-acceptance` and `🧬️schema/🌐️browser-acceptance` homes. The renderer task router exposes `browser-dock-acceptance test` for the Ajv and Chromium trusted drag/cancel oracle and `browser-dock-acceptance run react|wgpu [url] --output absolute-directory` for actual renderer pointer acceptance. Physical runs require an explicit output destination; permanent code contains no ticket path. The coordinator owns Nx project, cache-input and launch registration.
+
+The physical adapter reads public React DOM layout or published WGPU introspection geometry and drives Playwright mouse/keyboard inputs. It verifies four split directions, tab merge, reorder, Escape cancellation, and template transfer with camera semantics. It records screenshots, faults, console output, topology and outcomes. The transferred code has not yet been executed through the new Nx command; fresh runtime acceptance remains pending.
+
+The coordinator registered the Nx target, explicit neutral fixture/schema/test source inputs, existing Ajv/Playwright external test ownership, and editor commands. First execution using forced cached graph reuse rejected the new target before test execution (`sol-dock-browser-contract.txt`). A normal fresh graph attempt, retaining all graph enforcement, is waiting for another graph construction process (`sol-dock-browser-contract-fresh-graph.txt`). No pass is inferred from target registration.
+
+## Contract and Third-Party Runtime Receipt
+
+The fresh graph attempt executed `@semio-tech/framework-renderer-wgpu:browser-dock-acceptance -- test` and PASSED. The log `🗑️generated/sol-dock-browser-contract-fresh-graph.txt` records Ajv validation of all eight authored cases, actual Chromium trusted `dragstart`, `dragover`, `drop`, pointer events and Escape key handling, exact template MIME/payload transfer, and zero cancelled pointer commits. Nx reported target success in 11.9 seconds. This validates the domain-owned task and browser oracle; it is not yet the physical renderer receipt.

@@ -3,7 +3,7 @@ import { applyPatch, compare } from "fast-json-patch";
 import fixture from "../../🧫️fixtures/🔣️events.json";
 import timestamps from "../../🧫️fixtures/🔣️timestamps.json";
 import responseSchema from "../../🔣️.json";
-import Ajv from "ajv";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
 import { parseFormsResponse, applyResponseEvent, inverseResponseEvent, type FormsResponseEvent } from "../../🟦️.ts";
 
 /** 📨️ Submission, retraction and undo share fixtures and independent JSON Patch outcomes. */
@@ -18,7 +18,7 @@ export function testFormsResponses(): void {
       assert.deepEqual(inverseResponseEvent(item.before, event).reduce(applyResponseEvent, actual), item.before, item.name);
     }
   }
-  const validate = new Ajv().compile(responseSchema);
+  const validate = semioSchemaAjvV1().compile(responseSchema);
   for (const item of timestamps.cases) {
     const response = { id: "response-a", submittedAt: item.submittedAt, definitionVersion: "revision-a", answers: [] };
     assert.equal(validate(response), item.valid, item.name);
@@ -32,8 +32,7 @@ export async function testFormsSubmission(): Promise<void> {
   const { prepareResponse } = await import("../../🟦️.ts");
   const { default: input } = await import("../../🧫️fixtures/🔣️submission.json");
   const { default: responseSchema } = await import("../../🔣️.json");
-  const { default: Ajv } = await import("ajv");
-  const validate = new Ajv().compile(responseSchema);
+  const validate = semioSchemaAjvV1().compile(responseSchema);
   for (const test of input.cases) {
     const result = prepareResponse(input.definition as import("../../../📝️definition/🟦️.ts").FormsDefinition, test.values, input.metadata);
     assert.deepEqual(result, test.expected, test.name);

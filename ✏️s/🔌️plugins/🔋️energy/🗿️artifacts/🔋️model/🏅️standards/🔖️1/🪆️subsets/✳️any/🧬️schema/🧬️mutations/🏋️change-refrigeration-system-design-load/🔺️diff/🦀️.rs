@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeRefrigerationSystemDesignLoad, base: &EnergyM
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Refrigeration system {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_design_load_w.is_finite() || payload.new_design_load_w <= 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Refrigeration system {}: design load (W) must be a positive finite value, got {}.", payload.id.0, payload.new_design_load_w), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Refrigeration system {}: design load (W) must be a positive finite value, got {}.", payload.id.0, payload.new_design_load_w), [payload.id.0.to_string()]);
     }
     if existing.design_load_w == payload.new_design_load_w {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Refrigeration system {} already carries this design load (W): {}.", payload.id.0, payload.new_design_load_w));

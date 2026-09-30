@@ -996,8 +996,6 @@ pub enum WidgetDescriptor {
         id: Option<String>,
     },
     InputSlider {
-        #[serde(default)]
-        #[value(default)]
         label: String,
         #[serde(default)]
         #[value(default)]

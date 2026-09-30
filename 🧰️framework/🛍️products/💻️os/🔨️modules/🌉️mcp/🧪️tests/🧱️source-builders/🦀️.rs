@@ -27,6 +27,16 @@ use semio_framework::{ArtifactDialect, IconName};
 use semio_framework_ui::wgpu::{LocalizedLabel, SurfaceKind};
 
 //#region 🔖️Helpers
+/// 🧱️ A schema-authored neutral package exercises retained catalog and inference discovery.
+pub fn catalog_contract_descriptor() -> (PackageDescriptor, Vec<u8>) {
+    use semio_framework_os_kernel::ToValue;
+    let json = include_str!("../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/📦️catalog-package/🔣️.json");
+    let descriptor: PackageDescriptor = semio_framework_os_kernel::os_pack::json::from_json_str(json).expect("catalog package contract");
+    assert_eq!(descriptor, serde_json::from_str::<PackageDescriptor>(json).expect("independent catalog package parser"));
+    let bytes = semio_framework_os_kernel::os_store::pack_rt::encode_wire_value(&descriptor.to_value());
+    (descriptor, bytes)
+}
+
 fn action(id: &str, en: &str, de: &str, kind: ActionKind) -> ActionDefinition {
     ActionDefinition::bounded_catalog(id, LocalizedLabel::native(en, de), kind)
 }

@@ -368,3 +368,277 @@ dropped, as the reader requires. Breakdown by `ref`:
 - The energy crate `cargo check` remains blocked by the peer's staged mount-path edit (§7.3). Re-run it once that is
   consistent.
 - The schema-catalog hashes need a central `schema generate` (§5.3).
+
+## 9. Follow-up: invariant refusals are negative witnesses (W2-S F16)
+
+Starting point: `schema mutation-payloads --census --under ✏️s/🔌️plugins/🔋️energy` reported **149 `negative` findings**.
+These were fixtures the Rust diff refuses with `mutation.invariant` while the leaf schema accepts them.
+
+| Lint | Before | After |
+|---|---|---|
+| `schema mutation-payloads` | 431/580 clean, 149 findings | **580/580, 0 findings**: 134 negative witnesses, of which 130 are rejected by the schema itself and 4 are covered by a declared `x-semio-invariant` |
+| `schema mutation-inputs` (strict) | 0 findings | **0 findings**, 738/738 |
+
+### 9.1 Kind 1: ranges the leaf diff enforces are now hard bounds
+
+**Principle.** The annotator (`🧪️w2-r-energy-annotate.py`, tables `RULES`, `CONDITIONS` and `INVARIANTS`) now states in each
+leaf schema exactly what that leaf's own diff refuses as a payload-intrinsic `mutation.invariant`. This is per-leaf parity with
+the Rust code, and it reverses the §3.2 decision now that the refusal fixtures count as negative witnesses. Coverage is
+~140 leaves.
+
+**Rule shapes.**
+
+| Rule | Schema |
+|---|---|
+| positive | `exclusiveMinimum: 0` |
+| non-negative | `minimum: 0` |
+| fraction | 0–1 |
+| efficiency | (0, 1] |
+| temperature ranges | −100…300 °C (plant loop), −100…200 °C (ideal loads), 0…100 °C (hot-water setpoint) |
+| site | latitude ±90, longitude ±180, time zone −12…14 |
+| angles | tilt 0–90, azimuth 0–360 |
+| calendar | month 1–12, day 1–31; weekday slot 0–6 |
+| non-zero integers | multipliers, counts, priority, node ids, timestep, plant component ids: `minimum: 1` |
+| exact list lengths | 12 monthly ground temperatures, 24 hourly values, 7 weekly days; time series ≥ 1 value; polygons ≥ 3 vertices |
+| fenestration polygon | empty or ≥ 3 vertices (`anyOf`) |
+| names | non-blank via `pattern` |
+| artifact reference URIs | `pattern ^[^!]+![^@]+@[\s\S]+/[^/]+$`, the exact `ArtifactRef::parse_uri` grammar |
+| setpoint control law | `enum [Scheduled, OutdoorAirReset, WarmestZone, ColdestZone]`, now a `select` with de/en options; the TS twin became the same union |
+
+The name pattern is the exact complement of Rust's `char::is_whitespace`, so it matches `str::trim().is_empty()`.
+
+**Cross-field rules draft-07 can state.** These go in the root `allOf` as `if/then/else`:
+
+- ideal-loads capacity present ⇔ capacity > 0, absent ⇔ 0;
+- setpoint limits are 0 unless the law is OutdoorAirReset;
+- no setpoint schedule ⇒ schedule id 0;
+- Interzone boundary ⇔ integer partner surface;
+- schedule limits: both or neither;
+- airflow network absent ⇒ empty lists.
+
+The W1-D reader ignores `if/then`, and the strict Ajv oracle compiles them because every branch declares its `type`.
+
+**UI coherence.**
+
+- Soft ranges stay inside the hard bounds. Efficiency sliders start at 0.001 because an exclusive 0 cannot be a soft minimum.
+- Glare limit: slider 0.01–1, as a simplified 0–1 index. **Settled by the Rust code**: `daylight::simplified_glare_index` is
+  0–1.
+- Humidistat throttle ranges: an RH fraction shown in %. **Settled by the Rust code**: `controls::HumidistatSpec` compares
+  0–1 RH.
+
+  The committed humidistat fixtures still carry 5.0 and 10.0. These are valid (> 0) but act as on/off bands; this is a realism
+  note, not a defect.
+
+**Leaves without bounds.** Create leaves whose diff does not check a value get no bound. Examples: `create-material`,
+`create-people-gain`, `create-pv-system`, `create-battery`, `create-fault`, and `name` in `create-construction`,
+`create-space-list`, `create-thermal-enclosure` and `create-electrical-load-center`. **Rust follow-up:** these creates should
+enforce the same invariants as their change siblings. Once they do, the rows go into `RULES`.
+
+### 9.2 Kind 2: state-dependent refusals recoded
+
+`🧪️w2-r-energy-recode.py` is idempotent. It updated three places:
+
+- **Rust diffs:** 46 files.
+- **Python second implementation:** 55 edits in `🏛️mutate-energy-model-1/🐍️.py`.
+- **Committed outcomes:** 15 of the fixtures that witness these refusals.
+
+| Refusal (depends on the base document) | Was | Now |
+|---|---|---|
+| delete while still referenced (13 leaves: zone, space, surface, material, construction, air loop, PV, battery, 5 schedule kinds) | invariant | `mutation.target-referenced` (fem precedent) |
+| index past the end: 27 create/add/insert leaves, `remove-construction-layer`, `reorder-annual-schedule-rules`, holiday/rule index | invariant | `mutation.target-missing` |
+| `reorder-construction-layers` list is not a permutation of the held layers | invariant | `mutation.id-mismatch` |
+| `replace-fenestration-vertices` polygon off the host surface's plane | invariant | `mutation.target-mismatch` |
+
+The `delete-zone` docstrings (Rust and Python) were updated to name the new code.
+
+### 9.3 Kind 3: payload-intrinsic rules draft-07 cannot state
+
+These are declared in the leaf root's `x-semio-invariant`, which uses the manifest `$defs/SchemaInvariants` shape
+`[{id, description{en,de}}]`:
+
+| Id | Leaves |
+|---|---|
+| `equipment-ids-ascending` | create-plant-loop |
+| `terminal-zone-ids-ascending` | create-air-loop |
+| `distinct-surfaces` | connect-surfaces |
+| `zone-node-pairs` | replace-airflow-network |
+| `outdoor-reset-range` | create-setpoint-manager, replace-setpoint-manager-kind |
+| `limits-ordered` | create-daily-schedule, change-daily-schedule-limits |
+
+The 4 witnesses (jumbled plant loop, jumbled air loop, self-pair, unpaired nodes) name their id in the committed outcome
+(`"invariant": "<id>"`).
+
+- **Python:** `rejected(code, path, invariant=None)` produces the id at all 8 sites.
+- **Rust:** a produced `MutationOutcome` has no slot for the id. The energy fixture harness
+  (`🧬️mutations/🧪️tests/🔬️fixtures/🦀️.rs`) therefore handles it three ways:
+  - `assert_outcome` compares the outcome without `invariant`;
+  - it asserts that the produced code is `mutation.invariant` and that the leaf's own `Mutation::input_schema` declares the id;
+  - `write_when_requested` preserves a committed `invariant`.
+
+### 9.4 Pre-existing blockers fixed on the way
+
+- **Peer mount rename completed.**
+  - A staged peer change had pointed the crate mount (`🗿️artifacts/🔋️model/🦀️.rs`), the leaf tests and the descriptors at
+    shortened directory names. The 4 over-long leaf directories themselves had not moved; their paths were 256–261 bytes,
+    above the 240-byte limit.
+  - They are now moved (`mv`) to the short names, which match the already-renamed fixture directories:
+    - `🏝️change-humidistat-dehumidifying-setpoint`
+    - `🧻️change-humidistat-dehumidifying-throttle`
+    - `🔴️change-ideal-loads-system-max-heating-supply`
+    - `🔵️change-ideal-loads-system-min-cooling-supply`
+  - The remaining long-name references in `DIRECTORIES`, the oracle catalog, the feature file and the leaf `Case.directory`
+    strings were updated.
+  - The schema catalog was regenerated at the repo root (`bun ./📜️script.ts schema generate`, 3650 scopes), so the lints
+    find the moved leaves.
+- **No-op outcome class.** The harness `outcome_document` emitted only `applied`/`rejected`, while two committed vectors say
+  `no-op` (committed 09-25). It now emits `no-op` for the `mutation.no-op` warning, which is the `applied | no-op | rejected`
+  vocabulary the Python oracle already used.
+- **Two "applies" vectors that applied nothing.** `change-zone-volume/✅️resizes-zone-one` (129.6 m³, equal to the base) and
+  `change-glazing-material-conductivity/✅️applies` (1.06, equal to the base) violated the mutate case's observability law.
+  - Their scenarios now really change the document: 158.4 m³, and 1.4 W/(m·K).
+  - Both quintets were regenerated by the fixture writer (`SEMIO_ENERGY_WRITE_FIXTURES=1`).
+  - That writer run regenerated **all 580 vectors**, and only these 8 files changed. This proves that every other committed
+    quintet — including the 19 recoded/renamed outcomes — is exactly what the Rust implementation and harness produce.
+
+### 9.5 Verification (all run, foreground, gated; `cargo test` with `CARGO_INCREMENTAL=0` and a private `target-nde-w2r-energy`)
+
+| Command | Result |
+|---|---|
+| `schema mutation-payloads --under ✏️s/🔌️plugins/🔋️energy` (strict) | **exit 0**: 580/580 fixtures meet their leaf schema, 134 negative witnesses (4 via `x-semio-invariant`), 291/291 leaves witnessed, **0 findings** |
+| `schema mutation-inputs --under ✏️s/🔌️plugins/🔋️energy` (strict) | **exit 0**, 738/738, **0 findings** |
+| `.venv/bin/python 🧪️w2-r-energy-check.py` | Now witness-direction aware. 580 fixtures, 134 negatives rejected, 6/6 corpus verdicts, 744 annotations valid against `InputUi`, **0 failures** |
+| `bun 🧪️w2-r-energy-check-inputs.ts` | Strict Ajv compiles all 291 leaves, including the `if/then` rules. Ajv judges 580 fixtures, 134 negatives, 0 failures. 738 reader inputs, `parseInputUi` accepts all 744 annotations. |
+| `cargo check -p semio-s-artifact-energy-model` | **ok**: 2 warnings, both in the peer-owned `⚡️simulation` window. The mount blocker of §7.3 is gone. |
+| `cargo test -p semio-s-artifact-energy-model --lib` | **6298 passed, 2 failed, 1 ignored**. See the notes below the table. |
+| `SEMIO_ENERGY_WRITE_FIXTURES=1 cargo test … writes_the_committed_vector_when_requested …` | 592 passed. It rewrote every vector from its scenario, and only the 8 files of the two repaired vectors changed. |
+| `bun ./📜️script.ts parity exhaustive --owner …/✳️any --case 🏛️mutate-energy-model-1` (test domain) | **2297/2298 passed, parity 1148/1149**: every mutate and inverse scenario agrees between Python and Rust. See the notes below the table. |
+
+**Crate tests.**
+
+- The 2 failures are `editor|viewer::…::windows::zones::tests::render_lists_one_row_per_zone`
+  (`assert!(table.children.is_empty())`). They are UI render tests in files I did not touch, unrelated to schemas, codes or
+  fixtures.
+- Every leaf fixture law passes, as does the structural correspondence test with the moved directories.
+- The earlier run (before the no-op/observability repair) had 2 more failures: the two no-op vectors.
+
+**Parity.** The one remaining gap is `identity-round-trip`, a `@mode-round-trip` scenario that the Python adapter by design
+does not register (`adapter has no oracle registration`). Its scenario and the adapter registration are unchanged.
+
+**Files (this follow-up).**
+
+- **Leaf payload schemas:** 158 were re-rendered by the annotator. The ones that gained schema rules are listed in `RULES`,
+  `CONDITIONS` and `INVARIANTS` of `🧪️w2-r-energy-annotate.py`.
+- **Rust diffs:** 46 files (`🧬️mutations/*/🔺️diff/🦀️.rs`, codes only).
+- **Leaf descriptions:** `🏚️delete-zone/🦀️.rs` (docstring).
+- **Energy fixture harness:** `🧬️mutations/🧪️tests/🔬️fixtures/🦀️.rs`.
+- **Leaf test scenarios:** `📦️change-zone-volume/🧪️tests/✅️resizes-zone-one/🦀️.rs` and
+  `🟠️change-glazing-material-conductivity/🧪️tests/✅️applies/🦀️.rs`.
+- **Fixture quintets and outcomes:**
+  - 8 regenerated quintet files;
+  - 19 outcome files (15 recoded codes, 4 named invariants).
+- **Python second implementation:** `🧪️tests/🏛️mutate-energy-model-1/🐍️.py`.
+- **Renamed leaf directories (4), and the files that referenced them:**
+  - `🧬️mutations/🦀️.rs` (`DIRECTORIES`);
+  - `🔮️oracles/🔣️.json`;
+  - `🥒️.feature`;
+  - the 8 leaf test `Case.directory` strings.
+- **TS twin:** `🧬️mutations/🟦️.ts` (setpoint control-law unions).
+- **Schema catalog:** `📚️library/🔣️schema-catalog.json`, regenerated.
+- **Ticket scripts:** `🧪️w2-r-energy-recode.py` (new); annotate and both checkers updated.
+
+**Checked by reading, not run.** The framework's Rust validator
+(`🧬️schema/✅️validator/🦀️.rs::PatternMatcher`, used when a history edit is validated) runs its own regex subset with
+unanchored search. That subset parses every construct the two new patterns use: `[^…]` with `\t \n \f \r \uXXXX` escapes and
+`\u`-bounded ranges, `[\s\S]`, `^ $` and `+`.
+
+No Rust test validates a payload against these patterns, so this was verified from the parser source only. Python `re`, Ajv
+(`u` flag) and npm/Python `jsonschema` did run the patterns, above.
+
+## 10. Outcome-code vocabulary extension (coordinator decision, 2026-09-30)
+
+§9 introduced three new codes. The vocabulary is frozen and enforced at persistence: `🏪️store` `expected_mutation_message_level`
+refuses unknown codes, and a persisted message must carry exactly its code's level. Decision, implemented framework-wide in
+one change:
+
+### 10.1 Design note (this replaces the ticket 26/08/16 contract-freeze §C2 table)
+
+| Code | Level | Meaning |
+|---|---|---|
+| `mutation.target-missing` | Error | the addressed target (or position) does not exist in this base |
+| **`mutation.target-referenced`** | **Error** | deleting or replacing a target that something else still references |
+| **`mutation.target-mismatch`** | **Error** | the payload is inconsistent with the target's current state: a reorder that is not a permutation of the held ids, a polygon off its host plane, a `replace-` whose record renames the target it selects |
+| `mutation.no-op` · `mutation.partial` · `mutation.clamped` | Warning | unchanged |
+| `mutation.duplicate-id` · `mutation.invariant` | Fatal | unchanged. The payload itself is wrong; the payload-intrinsic ones are stated in the leaf schema or in `x-semio-invariant`. |
+| `mutation.cascade` | Info | unchanged |
+
+- The vocabulary is **nine codes, no per-plugin codes**.
+- `mutation.id-mismatch` (fem only, Fatal) is gone. It collapsed into `mutation.target-mismatch` at `Error`, per the
+  coordinator's decision.
+- The two new codes are *state-dependent*: a different base can admit the same payload. That is why they are `Error`, never
+  `Fatal`.
+
+### 10.2 Surfaces changed
+
+| Surface | Change |
+|---|---|
+| Store persistence (`🏪️store/🦀️.rs` `expected_mutation_message_level`) | the two codes at `Error` |
+| Store test (`🏪️store/🧪️tests/🔬️unit/🦀️.rs`) | new `spr_round_trip_preserves_state_dependent_error_codes`: each new code survives the `.spr` history round trip (conflict messages), and the same codes at `Fatal` are refused ("malformed mutation message") |
+| Replication | `⚔️conflict/🧬️schema/🔣️replay-report/🔣️.json` code enum (+2); `🎮️mutation` `MutationMessage` doc (nine codes) |
+| Store replay schema | `🏪️store/🧬️schema/🔣️supersede-replay/🔣️.json` code enum (+2) |
+| Gate | `📜️script.ts` `POLICY_MUTATION_FROZEN_CODES` (+2), plus the rule docs and breach texts (7 → 9) |
+| Rust labels | `🔌️plugin/⏪️time-travel/🦀️.rs` `history_code_text`: "Target still referenced / Ziel wird noch referenziert", "Inconsistent with the target / Widerspricht dem Ziel" |
+| React | `ShellHost` `mutationCodeLabelKey` (+2 cases); `📚️I18n` `UiTranslationSchema.mutation.code` (+`targetReferenced`, `targetMismatch`); de and en bundles in `⚛️react/🌐️i18n/🟦️.ts` (normal and beginner texts) |
+| TS twin | `🎠️kernel/🟦️.ts` `MutationMessage` doc (nine codes; `code` is typed `string`, so there is no union to extend) |
+| Docs mentioning the count | spr history, db artifact, workflow, I18n, store fixture docs |
+
+**fem, id-mismatch → target-mismatch.** `🧪️w2-r-energy-fem-target-mismatch.py` (idempotent) changed 61 files plus the helper
+rename:
+
+- the Rust guard helpers in 2d and 3d: `fatal` → `error`, and the 3d helper `id_mismatch` → `target_mismatch`;
+- the level-discipline docs and the leaf diff docs;
+- 16 leaf tests and 4 unit tests: level `Fatal` → `Error`, and the 2d `…_rename_is_id_mismatch` tests renamed to
+  `…_rename_is_target_mismatch`;
+- the 3d `replace_node_rename_is_fatal` test, renamed to `replace_node_rename_is_a_target_mismatch_error`;
+- 9 committed outcomes (code, and message level `fatal` → `error`);
+- 10 Python second implementations (`TARGET_MISMATCH`, `error(...)`).
+
+**energy.**
+
+- `reorder-construction-layers` → `mutation.target-mismatch` in the Rust diff, the Python second implementation and the
+  committed outcome.
+- Every energy `mutation.invariant` (197) and `mutation.duplicate-id` (59) refusal was raised at `Error`. These are now `Fatal`,
+  the level the persistence table demands; otherwise a replayed or degraded conflict carrying them would fail
+  `validate_persisted_message`.
+- The committed outcomes are unaffected, because rejections carry no level.
+- `🧪️w2-r-energy-recode.py` now also does the level pass.
+
+**Not changed.** No Python oracle enumerates the code set: the fem and energy second implementations use constants per
+refusal, and those were updated above.
+
+### 10.3 Verification (all run, foreground, gated; private `CARGO_TARGET_DIR=…/target-nde-w2r-energy`)
+
+| Command | Result |
+|---|---|
+| `cargo check -p semio-framework-os-kernel --features sync` | ok. The first two attempts failed on a peer's in-flight store edit (`trunk_alternative_id` not yet re-exported from `os_spr`, and the `♻️retirement` macro); the retry once the peer landed was green. |
+| `cargo test -p semio-framework-os-kernel --lib --features sync -- spr_round_trip_preserves` | **3/3 passed**, including the new `spr_round_trip_preserves_state_dependent_error_codes` |
+| `cargo check -p semio-framework-plugin` (time-travel labels) | ok |
+| `cargo test -p semio-s-artifact-fem-2d -p semio-s-artifact-fem-3d --lib` | **fem-2d 1039/1039, fem-3d 957/957**. The first run had 1 failure, 3d `replace_node_rename_is_fatal`, which asserted Fatal; it was renamed and now asserts the Error + target-mismatch contract. |
+| fem Python oracles (`bun ./📜️script.ts oracle exhaustive --owner <subset> --case <case>`, 15 fem cases) | **389/389 passed** |
+| `cargo test -p semio-s-artifact-energy-model --lib` | **6297 passed, 3 failed**. See the notes below the table. |
+| `parity exhaustive … 🏛️mutate-energy-model-1` | **2297/2298, parity 1148/1149**. The only gap is the pre-existing Python `identity-round-trip` registration. |
+| `schema mutation-payloads` / `schema mutation-inputs` under energy | **0 / 0 findings**: 580/580 fixtures, 134 negatives; 738/738 inputs |
+| `bunx tsc --noEmit -p 🧰️framework/🛍️products/💻️os/tsconfig.json` | 26 errors, **none in the files changed here** (`ShellHost`, `📚️I18n`, the i18n bundles, kernel twin). All 26 are in peer files: engine-contract, extension-retirement, frame-worker, browser-bundle worker, hub-edit-durability. |
+| `bun ./📜️script.ts verify mutation-outcome-law` | **Crashes before any verdict, pre-existing.** `policySeverityInfoBreaches` refuses the repo-root `.tmp-ticket` symlink, a peer's since 2026-09-23. Running the 7 rules one by one (`🧪️w2-r-energy-outcome-law.ts`) did not finish rule 1 within 50 min under fleet load, so it was stopped. |
+| Code-rule equivalent: rule 2's builder regex over all 23,248 tracked `.rs` files, against the nine-code set | **Only 2 out-of-vocabulary codes, both in `🗄️stdio`** (`stdio.png.patch-pixels.invalid-range`, `stdio.wav.patch-data.invalid-range`), for W3-CODES. energy, fem and the framework show 0. |
+
+**Energy crate failures.**
+
+- 2 are the unrelated zones-window render tests (§9.5).
+- 1 is the timing law `sim::tests::energy_job_previews_checkpoints_and_commits_bounded_steps` ("worst energy step was 13 ms"). Rerun alone it **passes** (1/1), so this is load jitter.
+- Every fixture law passes with the Fatal levels.
+
+**Open items.**
+
+- The schema catalog hashes of the two changed framework schemas are stale; they need a central `schema generate`.
+- `.tmp-ticket` blocks the outcome-law gate for everyone.
+- W3-CODES was messaged: vocabulary landed, fem remap already done, energy code edits done.

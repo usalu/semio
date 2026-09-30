@@ -1,8 +1,6 @@
-//! ⚡️ En1991 mutations — OpText/OpBinary via JSON tokens (design-load subject).
+//! ⚡️ En1991 mutations — OpText as the aggregate's JSON wire, OpBinary as the protocol-tagged payload frame (design-load subject).
 
 pub use crate::artifact_schema::mutations::En1991Mutation;
-
-use protocol::OpText;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -20,11 +18,10 @@ impl protocol::OpText for En1991Mutation {
 
 impl protocol::OpBinary for En1991Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        semio_s_artifact_norm_contract::payload_op_binary::encode::<crate::En1991Snapshot, _>(include_str!("../💾️binary/📡️.protocol.semio"), self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(text).map_err(|e| protocol::ProtocolError::Malformed { what: "json", offset: 0, detail: e.to_string() })
+        semio_s_artifact_norm_contract::payload_op_binary::decode::<crate::En1991Snapshot, _>(include_str!("../💾️binary/📡️.protocol.semio"), bytes)
     }
 }
 

@@ -1,4 +1,4 @@
-//! ⚡️ EN 1990 — hand-rolled `OpText`/`OpBinary` for `En1990Mutation`.
+//! ⚡️ EN 1990 — hand-rolled `OpText` for `En1990Mutation`; `OpBinary` is the protocol-tagged payload frame.
 
 pub use crate::artifact_schema::mutations::En1990Mutation;
 
@@ -191,157 +191,12 @@ impl protocol::OpText for En1990Mutation {
 //#endregion 🔖️OpTextCodec
 
 //#region 🔖️OpBinaryCodec
-fn write_json_bin<T: dsl::ToValue>(out: &mut Vec<u8>, value: &T) {
-    let bytes = pack::json::to_json_string(value);
-    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
-    out.extend_from_slice(bytes.as_bytes());
-}
-fn read_json_bin<T: dsl::FromValue>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?;
-    let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
-    pack::json::from_json_str(text).map_err(|e| e.to_string())
-}
-
-const TAG_CHANGE_ANNEX: u8 = 0;
-const TAG_CHANGE_PROJECT_ID: u8 = 1;
-const TAG_CHANGE_CONSEQUENCE_CLASS: u8 = 2;
-const TAG_CHANGE_RELIABILITY_CLASS: u8 = 3;
-const TAG_CHANGE_DWL_CATEGORY: u8 = 4;
-const TAG_CHANGE_DWL_YEARS: u8 = 5;
-const TAG_CHANGE_REFERENCE_PERIOD: u8 = 6;
-const TAG_CHANGE_SUPERVISION: u8 = 7;
-const TAG_CHANGE_INSPECTION: u8 = 8;
-const TAG_CHANGE_BETA: u8 = 9;
-const TAG_CHANGE_PERMANENTS: u8 = 10;
-const TAG_CHANGE_VARIABLES: u8 = 11;
-const TAG_CHANGE_ACCIDENTALS: u8 = 12;
-const TAG_CHANGE_SEISMICS: u8 = 13;
-const TAG_CHANGE_MEMBERS: u8 = 14;
-const TAG_CHANGE_EFFECTS: u8 = 15;
-const TAG_CHANGE_ALTITUDE: u8 = 28;
-const TAG_CHANGE_BRIDGE_SLS: u8 = 29;
-const TAG_INSERT_PERMANENT: u8 = 16;
-const TAG_REMOVE_PERMANENT: u8 = 17;
-const TAG_INSERT_VARIABLE: u8 = 18;
-const TAG_REMOVE_VARIABLE: u8 = 19;
-const TAG_INSERT_ACCIDENTAL: u8 = 20;
-const TAG_REMOVE_ACCIDENTAL: u8 = 21;
-const TAG_INSERT_SEISMIC: u8 = 22;
-const TAG_REMOVE_SEISMIC: u8 = 23;
-const TAG_INSERT_MEMBER: u8 = 24;
-const TAG_REMOVE_MEMBER: u8 = 25;
-const TAG_INSERT_EFFECT: u8 = 26;
-const TAG_REMOVE_EFFECT: u8 = 27;
-
 impl protocol::OpBinary for En1990Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let tag: u8 = match self {
-            En1990Mutation::ChangeAnnex(_) => TAG_CHANGE_ANNEX,
-            En1990Mutation::ChangeProjectId(_) => TAG_CHANGE_PROJECT_ID,
-            En1990Mutation::ChangeAltitudeM(_) => TAG_CHANGE_ALTITUDE,
-            En1990Mutation::ChangeConsequenceClass(_) => TAG_CHANGE_CONSEQUENCE_CLASS,
-            En1990Mutation::ChangeReliabilityClass(_) => TAG_CHANGE_RELIABILITY_CLASS,
-            En1990Mutation::ChangeDesignWorkingLifeCategory(_) => TAG_CHANGE_DWL_CATEGORY,
-            En1990Mutation::ChangeDesignWorkingLifeYears(_) => TAG_CHANGE_DWL_YEARS,
-            En1990Mutation::ChangeReferencePeriodYears(_) => TAG_CHANGE_REFERENCE_PERIOD,
-            En1990Mutation::ChangeSupervisionLevel(_) => TAG_CHANGE_SUPERVISION,
-            En1990Mutation::ChangeInspectionLevel(_) => TAG_CHANGE_INSPECTION,
-            En1990Mutation::ChangeBetaComputed(_) => TAG_CHANGE_BETA,
-            En1990Mutation::ChangePermanents(_) => TAG_CHANGE_PERMANENTS,
-            En1990Mutation::ChangeVariables(_) => TAG_CHANGE_VARIABLES,
-            En1990Mutation::ChangeAccidentals(_) => TAG_CHANGE_ACCIDENTALS,
-            En1990Mutation::ChangeSeismics(_) => TAG_CHANGE_SEISMICS,
-            En1990Mutation::ChangeMembers(_) => TAG_CHANGE_MEMBERS,
-            En1990Mutation::ChangeBridgeSls(_) => TAG_CHANGE_BRIDGE_SLS,
-            En1990Mutation::ChangeEffects(_) => TAG_CHANGE_EFFECTS,
-            En1990Mutation::InsertPermanent(_) => TAG_INSERT_PERMANENT,
-            En1990Mutation::RemovePermanent(_) => TAG_REMOVE_PERMANENT,
-            En1990Mutation::InsertVariable(_) => TAG_INSERT_VARIABLE,
-            En1990Mutation::RemoveVariable(_) => TAG_REMOVE_VARIABLE,
-            En1990Mutation::InsertAccidental(_) => TAG_INSERT_ACCIDENTAL,
-            En1990Mutation::RemoveAccidental(_) => TAG_REMOVE_ACCIDENTAL,
-            En1990Mutation::InsertSeismic(_) => TAG_INSERT_SEISMIC,
-            En1990Mutation::RemoveSeismic(_) => TAG_REMOVE_SEISMIC,
-            En1990Mutation::InsertMember(_) => TAG_INSERT_MEMBER,
-            En1990Mutation::RemoveMember(_) => TAG_REMOVE_MEMBER,
-            En1990Mutation::InsertEffect(_) => TAG_INSERT_EFFECT,
-            En1990Mutation::RemoveEffect(_) => TAG_REMOVE_EFFECT,
-        };
-        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
-        match self {
-            En1990Mutation::ChangeAnnex(p) => write_json_bin(&mut out, &p.new_annex),
-            En1990Mutation::ChangeProjectId(p) => write_json_bin(&mut out, &p.new_project_id),
-            En1990Mutation::ChangeAltitudeM(p) => write_json_bin(&mut out, &p.new_altitude_m),
-            En1990Mutation::ChangeConsequenceClass(p) => write_json_bin(&mut out, &p.new_consequence_class),
-            En1990Mutation::ChangeReliabilityClass(p) => write_json_bin(&mut out, &p.new_reliability_class),
-            En1990Mutation::ChangeDesignWorkingLifeCategory(p) => write_json_bin(&mut out, &p.new_design_working_life_category),
-            En1990Mutation::ChangeDesignWorkingLifeYears(p) => write_json_bin(&mut out, &p.new_design_working_life_years),
-            En1990Mutation::ChangeReferencePeriodYears(p) => write_json_bin(&mut out, &p.new_reference_period_years),
-            En1990Mutation::ChangeSupervisionLevel(p) => write_json_bin(&mut out, &p.new_supervision_level),
-            En1990Mutation::ChangeInspectionLevel(p) => write_json_bin(&mut out, &p.new_inspection_level),
-            En1990Mutation::ChangeBetaComputed(p) => write_json_bin(&mut out, &p.new_beta_computed),
-            En1990Mutation::ChangePermanents(p) => write_json_bin(&mut out, &p.new_permanents),
-            En1990Mutation::ChangeVariables(p) => write_json_bin(&mut out, &p.new_variables),
-            En1990Mutation::ChangeAccidentals(p) => write_json_bin(&mut out, &p.new_accidentals),
-            En1990Mutation::ChangeSeismics(p) => write_json_bin(&mut out, &p.new_seismics),
-            En1990Mutation::ChangeMembers(p) => write_json_bin(&mut out, &p.new_members),
-            En1990Mutation::ChangeBridgeSls(p) => write_json_bin(&mut out, &p.new_bridge_sls),
-            En1990Mutation::ChangeEffects(p) => write_json_bin(&mut out, &p.new_effects),
-            En1990Mutation::InsertPermanent(p) => { write_json_bin(&mut out, &p.index); write_json_bin(&mut out, &p.item); }
-            En1990Mutation::RemovePermanent(p) => write_json_bin(&mut out, &p.index),
-            En1990Mutation::InsertVariable(p) => { write_json_bin(&mut out, &p.index); write_json_bin(&mut out, &p.item); }
-            En1990Mutation::RemoveVariable(p) => write_json_bin(&mut out, &p.index),
-            En1990Mutation::InsertAccidental(p) => { write_json_bin(&mut out, &p.index); write_json_bin(&mut out, &p.item); }
-            En1990Mutation::RemoveAccidental(p) => write_json_bin(&mut out, &p.index),
-            En1990Mutation::InsertSeismic(p) => { write_json_bin(&mut out, &p.index); write_json_bin(&mut out, &p.item); }
-            En1990Mutation::RemoveSeismic(p) => write_json_bin(&mut out, &p.index),
-            En1990Mutation::InsertMember(p) => { write_json_bin(&mut out, &p.index); write_json_bin(&mut out, &p.item); }
-            En1990Mutation::RemoveMember(p) => write_json_bin(&mut out, &p.index),
-            En1990Mutation::InsertEffect(p) => { write_json_bin(&mut out, &p.index); write_json_bin(&mut out, &p.item); }
-            En1990Mutation::RemoveEffect(p) => write_json_bin(&mut out, &p.index),
-        }
-        Ok(out)
+        semio_s_artifact_norm_contract::payload_op_binary::encode::<crate::En1990Snapshot, _>(include_str!("../💾️binary/📡️.protocol.semio"), self)
     }
-
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
-        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
-        match tag {
-            TAG_CHANGE_ANNEX => Ok(En1990Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: read_json_bin(&mut reader).map_err(|e| malformed("new_annex", reader.position(), e))? })),
-            TAG_CHANGE_PROJECT_ID => Ok(En1990Mutation::ChangeProjectId(change_project_id::ChangeProjectId { new_project_id: read_json_bin(&mut reader).map_err(|e| malformed("new_project_id", reader.position(), e))? })),
-            TAG_CHANGE_ALTITUDE => Ok(En1990Mutation::ChangeAltitudeM(change_altitude_m::ChangeAltitudeM { new_altitude_m: read_json_bin(&mut reader).map_err(|e| malformed("altitude_m", reader.position(), e))? })),
-            TAG_CHANGE_CONSEQUENCE_CLASS => Ok(En1990Mutation::ChangeConsequenceClass(change_consequence_class::ChangeConsequenceClass { new_consequence_class: read_json_bin(&mut reader).map_err(|e| malformed("cc", reader.position(), e))? })),
-            TAG_CHANGE_RELIABILITY_CLASS => Ok(En1990Mutation::ChangeReliabilityClass(change_reliability_class::ChangeReliabilityClass { new_reliability_class: read_json_bin(&mut reader).map_err(|e| malformed("rc", reader.position(), e))? })),
-            TAG_CHANGE_DWL_CATEGORY => Ok(En1990Mutation::ChangeDesignWorkingLifeCategory(change_design_working_life_category::ChangeDesignWorkingLifeCategory { new_design_working_life_category: read_json_bin(&mut reader).map_err(|e| malformed("dwl_cat", reader.position(), e))? })),
-            TAG_CHANGE_DWL_YEARS => Ok(En1990Mutation::ChangeDesignWorkingLifeYears(change_design_working_life_years::ChangeDesignWorkingLifeYears { new_design_working_life_years: read_json_bin(&mut reader).map_err(|e| malformed("dwl_y", reader.position(), e))? })),
-            TAG_CHANGE_REFERENCE_PERIOD => Ok(En1990Mutation::ChangeReferencePeriodYears(change_reference_period_years::ChangeReferencePeriodYears { new_reference_period_years: read_json_bin(&mut reader).map_err(|e| malformed("ref", reader.position(), e))? })),
-            TAG_CHANGE_SUPERVISION => Ok(En1990Mutation::ChangeSupervisionLevel(change_supervision_level::ChangeSupervisionLevel { new_supervision_level: read_json_bin(&mut reader).map_err(|e| malformed("sup", reader.position(), e))? })),
-            TAG_CHANGE_INSPECTION => Ok(En1990Mutation::ChangeInspectionLevel(change_inspection_level::ChangeInspectionLevel { new_inspection_level: read_json_bin(&mut reader).map_err(|e| malformed("insp", reader.position(), e))? })),
-            TAG_CHANGE_BETA => Ok(En1990Mutation::ChangeBetaComputed(change_beta_computed::ChangeBetaComputed { new_beta_computed: read_json_bin(&mut reader).map_err(|e| malformed("beta", reader.position(), e))? })),
-            TAG_CHANGE_PERMANENTS => Ok(En1990Mutation::ChangePermanents(change_permanents::ChangePermanents { new_permanents: read_json_bin(&mut reader).map_err(|e| malformed("permanents", reader.position(), e))? })),
-            TAG_CHANGE_VARIABLES => Ok(En1990Mutation::ChangeVariables(change_variables::ChangeVariables { new_variables: read_json_bin(&mut reader).map_err(|e| malformed("variables", reader.position(), e))? })),
-            TAG_CHANGE_ACCIDENTALS => Ok(En1990Mutation::ChangeAccidentals(change_accidentals::ChangeAccidentals { new_accidentals: read_json_bin(&mut reader).map_err(|e| malformed("accidentals", reader.position(), e))? })),
-            TAG_CHANGE_SEISMICS => Ok(En1990Mutation::ChangeSeismics(change_seismics::ChangeSeismics { new_seismics: read_json_bin(&mut reader).map_err(|e| malformed("seismics", reader.position(), e))? })),
-            TAG_CHANGE_MEMBERS => Ok(En1990Mutation::ChangeMembers(change_members::ChangeMembers { new_members: read_json_bin(&mut reader).map_err(|e| malformed("members", reader.position(), e))? })),
-            TAG_CHANGE_BRIDGE_SLS => Ok(En1990Mutation::ChangeBridgeSls(change_bridge_sls::ChangeBridgeSls { new_bridge_sls: read_json_bin(&mut reader).map_err(|e| malformed("bridge_sls", reader.position(), e))? })),
-            TAG_CHANGE_EFFECTS => Ok(En1990Mutation::ChangeEffects(change_effects::ChangeEffects { new_effects: read_json_bin(&mut reader).map_err(|e| malformed("effects", reader.position(), e))? })),
-            TAG_INSERT_PERMANENT => Ok(En1990Mutation::InsertPermanent(insert_permanent::InsertPermanent { index: read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?, item: read_json_bin(&mut reader).map_err(|e| malformed("item", reader.position(), e))? })),
-            TAG_REMOVE_PERMANENT => Ok(En1990Mutation::RemovePermanent(remove_permanent::RemovePermanent { index: read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))? })),
-            TAG_INSERT_VARIABLE => Ok(En1990Mutation::InsertVariable(insert_variable::InsertVariable { index: read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?, item: read_json_bin(&mut reader).map_err(|e| malformed("item", reader.position(), e))? })),
-            TAG_REMOVE_VARIABLE => Ok(En1990Mutation::RemoveVariable(remove_variable::RemoveVariable { index: read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))? })),
-            TAG_INSERT_ACCIDENTAL => Ok(En1990Mutation::InsertAccidental(insert_accidental::InsertAccidental { index: read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?, item: read_json_bin(&mut reader).map_err(|e| malformed("item", reader.position(), e))? })),
-            TAG_REMOVE_ACCIDENTAL => Ok(En1990Mutation::RemoveAccidental(remove_accidental::RemoveAccidental { index: read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))? })),
-            TAG_INSERT_SEISMIC => Ok(En1990Mutation::InsertSeismic(insert_seismic::InsertSeismic { index: read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?, item: read_json_bin(&mut reader).map_err(|e| malformed("item", reader.position(), e))? })),
-            TAG_REMOVE_SEISMIC => Ok(En1990Mutation::RemoveSeismic(remove_seismic::RemoveSeismic { index: read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))? })),
-            TAG_INSERT_MEMBER => Ok(En1990Mutation::InsertMember(insert_member::InsertMember { index: read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?, item: read_json_bin(&mut reader).map_err(|e| malformed("item", reader.position(), e))? })),
-            TAG_REMOVE_MEMBER => Ok(En1990Mutation::RemoveMember(remove_member::RemoveMember { index: read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))? })),
-            TAG_INSERT_EFFECT => Ok(En1990Mutation::InsertEffect(insert_effect::InsertEffect { index: read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?, item: read_json_bin(&mut reader).map_err(|e| malformed("item", reader.position(), e))? })),
-            TAG_REMOVE_EFFECT => Ok(En1990Mutation::RemoveEffect(remove_effect::RemoveEffect { index: read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))? })),
-            other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
-        }
+        semio_s_artifact_norm_contract::payload_op_binary::decode::<crate::En1990Snapshot, _>(include_str!("../💾️binary/📡️.protocol.semio"), bytes)
     }
 }
 //#endregion 🔖️OpBinaryCodec

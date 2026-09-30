@@ -18,7 +18,7 @@ Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
 
   It replaced the 747-byte minified part this case used to rest on, which was the `word/document.xml`
   of the 1 648-byte demo DOCX — a document too small to place a mutation anywhere but at its edges.
-  That part is NOT gone: `identity-round-trip` still reads it, because it is the one committed
+  That part is NOT gone: `minified-identity-round-trip` still reads it, because it is the one committed
   document on which this repository's writer and `quick-xml` are known to converge character for
   character, and that convergence is the whole reason the serialization-form probe below exists.
 
@@ -44,8 +44,12 @@ Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
 
   `quick-xml` reads AND writes real XML, so every kind below is genuinely differential: the oracle
   performs the mutation with `quick-xml`, the subject performs it with this subset's own
-  `XmlSnapshot`/`XmlMutation`, and both results are read back through the SAME independent `quick-xml`
-  projection (`project_xml_1_0`) before comparison.
+  `XmlSnapshot`/`XmlMutation`, and each side hands the document it produced to the `semantic-xml-v1`
+  profile's `xml-1-0-quick-xml-compare-v1` pipeline — the oracle's as `expected-xml`, the subject's as
+  `actual-xml`. The pipeline's probes read BOTH files with the standalone `quick-xml-oracle-codec`
+  (which shares no code with either side) and compare what they recovered; that verdict is the
+  parity verdict. Every scenario therefore produces exactly one document per side, which is why the
+  two round trips below are two scenarios rather than one scenario over two documents.
 
   Three laws are asserted IN ROLE, by the handler that plays the role, and are not deferred to the
   oracle-vs-subject comparison. Every `mutate-<kind>` row requires the semantic projection to
@@ -80,7 +84,8 @@ Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
   different byte strings unchanged and fails immediately; only an implementation that parsed both
   into one tree and re-derived the output from it can pass. The probe is additionally required to be
   non-vacuous. Both sides assert it, over BOTH documents — the minified part whose convergence made
-  the naive check useless, and the 92 KB declaration-bearing part where it would not have been.
+  the naive check useless (`minified-identity-round-trip`), and the 92 KB declaration-bearing part
+  where it would not have been (`identity-round-trip`).
 
   ⚠️ One real defect the inverse law found and that WAS fixed at its cause, in the oracle module:
   `oracles::apply_mutation_inverse` used to re-serialize between the forward step and the undo and
@@ -99,7 +104,7 @@ Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
       """
       {"kind": "<id>", "params": <params>}
       """
-    Then the oracle and the subject agree on the semantic projection
+    Then the quick-xml reader reads the oracle's and the subject's documents as the same XML
     And the semantic projection moved
     Examples:
       | id              | params                                                                                                                                                                                                                                       |
@@ -119,7 +124,7 @@ Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
       """
       {"kind": "<id>", "params": <params>}
       """
-    Then the oracle and the subject agree on the semantic projection
+    Then the quick-xml reader reads the oracle's and the subject's restored documents as the same XML
     Examples:
       | id              | params                                                                                                                                                                                                                                       |
       | set-declaration  | {"declaration": {"version": "1.0", "encoding": "UTF-8", "standalone": false}}                                                                                                                                                                                |
@@ -132,9 +137,17 @@ Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode and re-encode both real documents without passing bytes through
+  Scenario: Decode and re-encode the real document without passing bytes through
     Given the real input document shared://🧪️ooxml-readme-document/🏷️.xml
-    And the minified OOXML part this case used to rest on shared://🏷️.xml
-    When each document is fully parsed into the subset's own snapshot model and re-encoded from it alone
-    Then the oracle and the subject agree on the semantic projection of both
-    And a byte-different rendering of each document re-encodes to exactly those bytes
+    When the document is fully parsed into the subset's own snapshot model and re-encoded from it alone
+    Then the quick-xml reader reads the oracle's and the subject's re-encoded documents as the same XML
+    And a byte-different rendering of the document re-encodes to exactly those bytes
+
+  @id-minified-identity-round-trip
+  @level-long
+  @mode-round-trip
+  Scenario: Decode and re-encode the minified OOXML part without passing bytes through
+    Given the minified OOXML part this case used to rest on shared://🏷️.xml
+    When the part is fully parsed into the subset's own snapshot model and re-encoded from it alone
+    Then the quick-xml reader reads the oracle's and the subject's re-encoded parts as the same XML
+    And a byte-different rendering of the part re-encodes to exactly those bytes

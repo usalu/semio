@@ -287,3 +287,54 @@ async fn a_whole_document_archive_with_supersessions_loads_its_superseded_state(
     close_bounded_source_store(&mut source);
     close_member_admission_app(&mut app);
 }
+
+/// 🗂️ One history row as a human reads it: what it names (the edit or the history transition) and its English label.
+fn archive_history_rows(history: &semio_framework::kernel::HistoryPatch) -> Vec<(Option<String>, Option<String>, String)> {
+    let mut rows: Vec<(Option<String>, Option<String>, String)> = history.upserts.iter().map(|entry| (entry.edit_id.clone(), entry.transition_id.clone(), label_in(&entry.label, Locale::En).to_string())).collect();
+    rows.sort();
+    rows
+}
+
+/// 🗂️ LAW (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING follow-up 3, e2e R2-2): a document archive carries its whole
+/// history. The source's edits, its history edit (`Supersede`) and an undo and redo of it (`Revert`, `Reinstate`) print into
+/// the archive, and so do two history edits finalized as new alternatives in a row with edits on the second; a fresh instance that loads
+/// it — holding a document of its own first, as a reloaded playground holds its example — lists exactly the rows the source
+/// lists, and none of the document it replaced.
+#[semio_framework_async_macros::async_test]
+async fn a_document_archive_round_trip_lists_every_history_row_of_its_source() {
+    use crate::test_app_mutation_fixture::{SetCount, SetLabel};
+    let mut source = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp)).await;
+    for (operation, description) in [(TestMutation::SetCount(SetCount { value: 1 }), "Set one"), (TestMutation::SetLabel(SetLabel { value: "edited".into() }), "Relabel"), (TestMutation::SetCount(SetCount { value: 2 }), "Set two")] {
+        Box::pin(source.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: Some(description.into()), transaction: None })).await.expect("source edit");
+    }
+    let ids: Vec<protocol::MutationId> = source.store.mutation_ops().expect("source operations").into_iter().map(|operation| operation.mutation_id).collect();
+    Box::pin(source.store.dispatch(store::ArtifactCommand::Supersede { scope: None, inputs: vec![store::SupersedeInput { target: ids[0].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 5 })) }] })).await.expect("history edit");
+    Box::pin(source.store.dispatch(store::ArtifactCommand::Undo)).await.expect("revert");
+    Box::pin(source.store.dispatch(store::ArtifactCommand::Redo)).await.expect("reinstate");
+    Box::pin(source.store.dispatch(store::ArtifactCommand::CreateAlternativeWithSupersede { name: "c".into(), inputs: vec![store::SupersedeInput { target: ids[2].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 7 })) }] })).await.expect("history edit as a new alternative");
+    Box::pin(source.store.dispatch(store::ArtifactCommand::CreateAlternativeWithSupersede { name: "b".into(), inputs: vec![store::SupersedeInput { target: ids[1].clone(), replacement: Some(TestMutation::SetLabel(SetLabel { value: "alternative".into() })) }] })).await.expect("a second history edit as a new alternative");
+    Box::pin(source.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "branched".into() })], description: Some("On the alternative".into()), transaction: None })).await.expect("edit on the alternative");
+    Box::pin(source.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 9 })], description: Some("Again on the alternative".into()), transaction: None })).await.expect("a second edit on the alternative");
+    let expected = source.snapshot().expect("source projection");
+    let before = archive_history_rows(&Box::pin(source.history_snapshot()).await.expect("source history"));
+    let archive = Box::pin(PluginApp::document_archive(&source)).await.expect("source archive");
+    let mut target = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp)).await;
+    Box::pin(target.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 42 })], description: Some("Set Active Example".into()), transaction: None })).await.expect("target example");
+    let replaced = archive_history_rows(&Box::pin(target.history_snapshot()).await.expect("target history before the load"));
+    let dialect: ArtifactDialect = SingleDocumentApp::DIALECT.into();
+    let target_id = target.store.envelope().id.clone();
+    let parent_spr = Box::pin(store::stamp_document_spr_identity(&archive.parent_spr, &target_id, SingleDocumentApp::DOCUMENT_SCHEMA, &dialect, target.store.envelope().owner.as_ref())).await.expect("archive identity stamp");
+    PluginApp::begin_document_archive_load(&mut target, 96, protocol::DocumentArchivePack { parent_spr, ..archive }).expect("archive admission");
+    let status = Box::pin(drive_single_document_archive(&mut target, 96)).await;
+    assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "the archive failed to load: {}", archive_fault_text(&status));
+    PluginApp::acknowledge_document_archive_load(&mut target, 96).expect("archive acknowledgement");
+    assert_eq!(target.snapshot().expect("loaded projection"), expected);
+    assert_eq!(target.store.envelope().transitions.len(), source.store.envelope().transitions.len(), "every history transition survives the round trip");
+    let after = archive_history_rows(&Box::pin(target.history_snapshot()).await.expect("target history after the load"));
+    for label in ["Set one", "Relabel", "Set two", "On the alternative", "Again on the alternative"] {
+        assert!(before.iter().any(|(_, _, row)| row == label), "the source lists {label}: {before:?}");
+    }
+    assert_eq!(after, before, "the loaded instance lists exactly the source's rows (it listed {replaced:?} before the load)");
+    close_member_admission_app(&mut source);
+    close_member_admission_app(&mut target);
+}

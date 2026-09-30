@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeSpaceFloorArea, base: &EnergyModelSnapshot) -
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Space {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_floor_area_m2.is_finite() || payload.new_floor_area_m2 < 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Space {} needs a non-negative finite floor area, got {}.", payload.id.0, payload.new_floor_area_m2), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Space {} needs a non-negative finite floor area, got {}.", payload.id.0, payload.new_floor_area_m2), [payload.id.0.to_string()]);
     }
     if existing.floor_area_m2 == payload.new_floor_area_m2 {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Space {} already has this floor area.", payload.id.0));

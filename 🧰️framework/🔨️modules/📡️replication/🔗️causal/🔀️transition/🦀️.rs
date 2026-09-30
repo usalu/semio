@@ -219,6 +219,78 @@ impl crate::value::FromValue for EffectiveSupersession {
         })
     }
 }
+
+/// 🏷️ The kind of a [`HistoryTransition`], named by its wire tag's lower-case spelling.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum HistoryTransitionKind {
+    Revert,
+    Reinstate,
+    Commit,
+    Branch,
+    Checkout,
+    Repin,
+    Supersede,
+}
+
+impl HistoryTransitionKind {
+    /// 📚️ Every kind, in wire-tag order.
+    pub const ALL: [HistoryTransitionKind; 7] = [Self::Revert, Self::Reinstate, Self::Commit, Self::Branch, Self::Checkout, Self::Repin, Self::Supersede];
+
+    /// 🔤️ The kind's name, as the transition corpus and every twin spell it.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Revert => "revert",
+            Self::Reinstate => "reinstate",
+            Self::Commit => "commit",
+            Self::Branch => "branch",
+            Self::Checkout => "checkout",
+            Self::Repin => "repin",
+            Self::Supersede => "supersede",
+        }
+    }
+}
+
+impl HistoryTransition {
+    /// 🏷️ This transition's kind.
+    pub fn kind(&self) -> HistoryTransitionKind {
+        match self {
+            Self::Revert { .. } => HistoryTransitionKind::Revert,
+            Self::Reinstate { .. } => HistoryTransitionKind::Reinstate,
+            Self::Commit(_) => HistoryTransitionKind::Commit,
+            Self::Branch { .. } => HistoryTransitionKind::Branch,
+            Self::Checkout { .. } => HistoryTransitionKind::Checkout,
+            Self::Repin { .. } => HistoryTransitionKind::Repin,
+            Self::Supersede(_) => HistoryTransitionKind::Supersede,
+        }
+    }
+}
+
+/// 🗂️ The shape of a history: a `Document` holds every transition; a `Config` holds its edits with undo and redo only —
+/// never a checkpoint, an alternative, a pin or a supersession, which a config history does not persist.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub enum HistoryShape {
+    #[default]
+    Document,
+    Config,
+}
+
+impl HistoryShape {
+    /// 🛂️ Whether a history of this shape holds a transition of `kind`.
+    pub fn admits(self, kind: HistoryTransitionKind) -> bool {
+        match self {
+            Self::Document => true,
+            Self::Config => matches!(kind, HistoryTransitionKind::Revert | HistoryTransitionKind::Reinstate),
+        }
+    }
+
+    /// 🔤️ The shape's name, as the transition corpus and every twin spell it.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Document => "document",
+            Self::Config => "config",
+        }
+    }
+}
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Codec
@@ -442,6 +514,22 @@ pub fn history_transition_id(timestamp: &HybridLogicalTimestamp, payload: &[u8])
     MutationId(id)
 }
 
+/// 🌳️ The id of `document_id`'s trunk — the implicit root line every document starts on, active whenever no branched
+/// alternative is: `trunk-{hex16(blake3(str "semio.history.trunk" | str document_id))}` (strings as `varint length |
+/// utf-8`). The log never names it: a `Checkout` to the trunk carries no alternative, and the fold resolves the id.
+pub fn trunk_alternative_id(document_id: &ArtifactId) -> String {
+    let mut material = Vec::with_capacity(document_id.0.len() + 24);
+    crate::write_str(&mut material, "semio.history.trunk");
+    crate::write_str(&mut material, &document_id.0);
+    let digest = crate::wire::RecordHasher::hash(&crate::format::Blake3Hasher, &material);
+    let mut id = String::with_capacity("trunk-".len() + 16);
+    id.push_str("trunk-");
+    for byte in &digest[..8] {
+        id.push_str(&format!("{byte:02x}"));
+    }
+    id
+}
+
 /// ✉️ Wraps `transition` as a causal envelope: schema-tagged payload, empty inverse (a
 /// transition is undone by a later transition, never by an inverse payload), no target and no
 /// transaction. A `Supersede` envelope's `dependencies` are its [`TransitionSupersede::targets`];
@@ -523,6 +611,8 @@ pub struct FoldAlternative {
 /// (`refused`, transition ids in fold order), the current checkpoint and alternative, every
 /// change/checkpoint/alternative fact, and the effective supersession of every superseded operation
 /// (every fold site folds an operation's effective input, never its original, once it is listed here).
+/// `alternative` is `None` while the trunk is active; the trunk (id `trunk`, [`trunk_alternative_id`]) is listed
+/// first in `alternatives`, with an empty name the UI localizes, as soon as a commit made on it gives it a chain.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct HistoryFold {
     pub applied: Vec<String>,
@@ -530,6 +620,7 @@ pub struct HistoryFold {
     pub refused: Vec<String>,
     pub checkpoint: Option<String>,
     pub alternative: Option<String>,
+    pub trunk: String,
     pub changes: Vec<FoldChange>,
     pub checkpoints: Vec<FoldCheckpoint>,
     pub alternatives: Vec<FoldAlternative>,
@@ -552,9 +643,11 @@ fn fold_error(detail: impl Into<String>) -> crate::ProtocolError {
 /// `Revert` or `Reinstate` naming any operation another actor authored withdraws or restores nothing
 /// and is listed in `refused` (an edit whose author is unknown — a local-only one — belongs to anyone).
 /// A `Supersede` has no ownership rule: an operation's effective supersession is the last one (by
-/// `(hlc, id)`) naming it whose scope is `None` or the final alternative; it keeps the operation's
-/// slot, id, HLC and edit, so `Revert`/`Reinstate`/`Commit` compose with it independently.
-pub fn fold_history(edits: &[FoldEdit], transitions: &[super::MutationEnvelope], excluded: &std::collections::HashSet<String>) -> Result<HistoryFold, crate::ProtocolError> {
+/// `(hlc, id)`) naming it whose scope is `None` or the final alternative — the trunk's id while the trunk is
+/// active; it keeps the operation's slot, id, HLC and edit, so `Revert`/`Reinstate`/`Commit` compose with it
+/// independently. The trunk of `document_id` is a first-class alternative: commits made while no branched
+/// alternative is active grow its chain, a `Checkout` naming it (or none) activates it, a `Branch` cannot claim it.
+pub fn fold_history(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &[super::MutationEnvelope], excluded: &std::collections::HashSet<String>) -> Result<HistoryFold, crate::ProtocolError> {
     let mut owners: std::collections::HashMap<&str, &str> = std::collections::HashMap::new();
     let mut authors: std::collections::HashMap<&str, Option<&str>> = std::collections::HashMap::new();
     for edit in edits {
@@ -590,7 +683,8 @@ pub fn fold_history(edits: &[FoldEdit], transitions: &[super::MutationEnvelope],
         Ok(edit_ids)
     };
     let foreign = |edit_ids: &[String], actor: &str| edit_ids.iter().any(|edit_id| authors.get(edit_id.as_str()).copied().flatten().is_some_and(|author| author != actor));
-    let mut fold = HistoryFold::default();
+    let mut fold = HistoryFold { trunk: trunk_alternative_id(document_id), ..HistoryFold::default() };
+    let mut trunk_chain: Vec<String> = Vec::new();
     let mut active: std::collections::HashSet<String> = std::collections::HashSet::new();
     let mut superseding: Vec<(MutationId, EffectiveSupersession)> = Vec::new();
     for (_, _, event) in events {
@@ -635,31 +729,35 @@ pub fn fold_history(edits: &[FoldEdit], transitions: &[super::MutationEnvelope],
                 change_ids.push(checkpoint.change_id.clone());
                 fold.changes.push(FoldChange { id: checkpoint.change_id, edit_ids: owned(&checkpoint.mutation_ids)?, description: checkpoint.description, saved_at: checkpoint.saved_at });
                 fold.checkpoints.push(FoldCheckpoint { id: checkpoint.checkpoint_id.clone(), change_ids, parent_id: checkpoint.parent_id, authors: checkpoint.authors, message: checkpoint.message, timestamp: checkpoint.timestamp, pins: Vec::new() });
-                if let Some(alternative_id) = &fold.alternative {
-                    if let Some(alternative) = fold.alternatives.iter_mut().find(|alternative| alternative.id == *alternative_id) {
-                        alternative.checkpoint_ids.push(checkpoint.checkpoint_id.clone());
+                match &fold.alternative {
+                    Some(alternative_id) => {
+                        if let Some(alternative) = fold.alternatives.iter_mut().find(|alternative| alternative.id == *alternative_id) {
+                            alternative.checkpoint_ids.push(checkpoint.checkpoint_id.clone());
+                        }
                     }
+                    None => trunk_chain.push(checkpoint.checkpoint_id.clone()),
                 }
                 fold.checkpoint = Some(checkpoint.checkpoint_id);
             }
             FoldEvent::Transition { transition: HistoryTransition::Branch { alternative_id, name, checkpoint_id }, .. } => {
+                if alternative_id == fold.trunk {
+                    return Err(fold_error(format!("branch claims the trunk alternative {alternative_id}")));
+                }
                 checkout(&mut fold, &mut active, &checkpoint_id, excluded)?;
                 fold.alternatives.push(FoldAlternative { id: alternative_id.clone(), name, checkpoint_ids: vec![checkpoint_id] });
                 fold.alternative = Some(alternative_id);
             }
             FoldEvent::Transition { transition: HistoryTransition::Checkout { checkpoint_id, alternative_id }, .. } => {
                 checkout(&mut fold, &mut active, &checkpoint_id, excluded)?;
-                fold.alternative = alternative_id;
+                fold.alternative = alternative_id.filter(|alternative_id| *alternative_id != fold.trunk);
             }
             FoldEvent::Transition { transition: HistoryTransition::Repin { checkpoint_id, pinned_checkpoint_id, pins }, .. } => {
                 let checkpoint = fold.checkpoints.iter_mut().find(|known| known.id == checkpoint_id).ok_or_else(|| fold_error(format!("repin names unknown checkpoint {checkpoint_id}")))?;
                 checkpoint.id = pinned_checkpoint_id.clone();
                 checkpoint.pins = pins;
-                for alternative in &mut fold.alternatives {
-                    for id in &mut alternative.checkpoint_ids {
-                        if *id == checkpoint_id {
-                            *id = pinned_checkpoint_id.clone();
-                        }
+                for id in fold.alternatives.iter_mut().flat_map(|alternative| alternative.checkpoint_ids.iter_mut()).chain(trunk_chain.iter_mut()) {
+                    if *id == checkpoint_id {
+                        *id = pinned_checkpoint_id.clone();
                     }
                 }
                 if fold.checkpoint.as_deref() == Some(checkpoint_id.as_str()) {
@@ -674,10 +772,14 @@ pub fn fold_history(edits: &[FoldEdit], transitions: &[super::MutationEnvelope],
             }
         }
     }
+    let active_line = fold.alternative.clone().unwrap_or_else(|| fold.trunk.clone());
     for (target, supersession) in superseding {
-        if supersession.scope.is_none() || supersession.scope == fold.alternative {
+        if supersession.scope.as_ref().is_none_or(|scope| *scope == active_line) {
             fold.supersessions.insert(target, supersession);
         }
+    }
+    if !trunk_chain.is_empty() {
+        fold.alternatives.insert(0, FoldAlternative { id: fold.trunk.clone(), name: String::new(), checkpoint_ids: trunk_chain });
     }
     let mut ordered: Vec<&FoldEdit> = edits.iter().filter(|edit| active.contains(&edit.id)).collect();
     ordered.sort_by(|left, right| (left.timestamp.cmp_key(), left.id.as_str()).cmp(&(right.timestamp.cmp_key(), right.id.as_str())));

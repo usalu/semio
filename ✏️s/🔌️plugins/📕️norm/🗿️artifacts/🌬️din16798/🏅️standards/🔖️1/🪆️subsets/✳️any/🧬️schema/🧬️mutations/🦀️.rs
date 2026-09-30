@@ -170,3 +170,7 @@ pub fn inverse_din16798_mutation(mutation: &Din16798Mutation, base: &Din16798Sna
 #[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
+mod fixture;

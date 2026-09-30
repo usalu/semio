@@ -10,6 +10,7 @@ line = create-part / delete-part / move-part2d / replace-part2d-geometry / edit-
      / replace-part-grip / connect-grips / disconnect-grips / replace-fastener-geometry
      / change-fastener-kind / rename-puzzle5d / change-domain / change-description
      / connect-kind-compatibility / disconnect-kind-compatibility / replace-kind-catalogs
+     / drag-selection2d / drag-selection3d / rotate-selection3d / scale-selection3d
 
 create-part = "create-part" SP part-block SP index-opt
 delete-part = "delete-part" SP id
@@ -39,6 +40,10 @@ change-description = "change-description" SP text
 connect-kind-compatibility = "connect-kind-compatibility" SP id SP id SP boolean SP boolean SP specificity
 disconnect-kind-compatibility = "disconnect-kind-compatibility" SP id SP id
 replace-kind-catalogs = "replace-kind-catalogs" SP catalogs-block-opt
+drag-selection2d = "drag-selection2d" SP id-list SP number SP number
+drag-selection3d = "drag-selection3d" SP id-list SP number SP number SP number
+rotate-selection3d = "rotate-selection3d" SP id-list SP number SP number SP number SP number
+scale-selection3d = "scale-selection3d" SP id-list SP number SP number SP number
 
 part-block = "{" NL OCTET+ "}"
 grip-block = "{" NL OCTET+ "}"
@@ -53,6 +58,7 @@ index-opt = number / "none"
 text-opt = text / "none"
 number-opt = number / "none"
 boolean-opt = boolean / "none"
+id-list = "[" id* "]"
 id = OCTET+
 number = OCTET+
 text = OCTET+

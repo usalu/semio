@@ -51,7 +51,15 @@
             "layer_id": "layer-1"
           },
           "frame_removed": null,
-          "frame_patched": null
+          "frame_patched": null,
+          "frame_layer": null,
+          "frame_order": null,
+          "guides": null,
+          "layer_added": null,
+          "layer_patched": null,
+          "layer_removed": null,
+          "overrides": null,
+          "parent_page_id": null
         }
       }
     ],

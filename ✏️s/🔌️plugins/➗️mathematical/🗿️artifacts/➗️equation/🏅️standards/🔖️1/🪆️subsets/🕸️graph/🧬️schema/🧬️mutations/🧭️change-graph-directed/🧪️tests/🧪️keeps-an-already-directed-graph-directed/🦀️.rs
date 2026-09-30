@@ -66,8 +66,8 @@ async fn inverse_restores_before() {
 }
 
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical: decode→encode is
-/// a fixed point. Note the payload field is `new_directed` — this enum carries no
-/// `#[serde(rename_all)]`, so mutation payloads stay snake_case on the wire.
+/// a fixed point. The payload field is `newDirected` — every `EquationMutation` leaf carries
+/// `#[value(rename_all = "camelCase")]`.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {

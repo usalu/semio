@@ -4,14 +4,15 @@ pub use crate::artifact_schema::mutations::En1998Mutation;
 
 use crate::artifact_schema::mutations::{
     change_annex::ChangeAnnex, update_site::UpdateSite, insert_building::InsertBuilding, remove_building::RemoveBuilding,
-    change_system_base_shear_resistance_n::ChangeSystemBaseShearResistanceN, change_storey_permanent_gk_n::ChangeStoreyPermanentGkN,
+    change_system_v_rd_n::ChangeSystemVRdN, change_storey_permanent_gk_n::ChangeStoreyPermanentGkN,
     change_storey_stiffness_x::ChangeStoreyStiffnessX, change_storey_drift_xm::ChangeStoreyDriftXM,
-    change_building_plan_regular::ChangeBuildingPlanRegular, change_building_elevation_regular::ChangeBuildingElevationRegular,
-    change_member_detailing_compatible::ChangeMemberDetailingCompatible,
-    change_building_masonry_wall_area_ratio::ChangeBuildingMasonryWallAreaRatio, insert_bridge::InsertBridge,
+    change_building_plan_regular::ChangeBuildingPlanRegular, change_elevation_regular::ChangeElevationRegular,
+    change_member_detailing::ChangeMemberDetailing,
+    change_masonry_wall_ratio::ChangeMasonryWallRatio, insert_bridge::InsertBridge,
     change_bridge_v_rd_n::ChangeBridgeVRdN, insert_assessment::InsertAssessment, change_assessment_rkn::ChangeAssessmentRKN,
     insert_silo::InsertSilo, insert_tank::InsertTank, insert_foundation::InsertFoundation,
     insert_retaining_wall::InsertRetainingWall, insert_tower::InsertTower, change_tower_m_rd_nm::ChangeTowerMRdNm,
+    remove_bridge::RemoveBridge, remove_assessment::RemoveAssessment, remove_silo::RemoveSilo, remove_tank::RemoveTank, remove_foundation::RemoveFoundation, remove_retaining_wall::RemoveRetainingWall, remove_tower::RemoveTower,
 };
 
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -85,14 +86,14 @@ fn print_en1998_mutation(mutation: &En1998Mutation) -> String {
         En1998Mutation::UpdateSite(p) => format!("update-site site={}", enc_json(&p.site)),
         En1998Mutation::InsertBuilding(p) => format!("insert-building index={} building={}", enc_json(&p.index), enc_json(&p.building)),
         En1998Mutation::RemoveBuilding(p) => format!("remove-building index={}", enc_json(&p.index)),
-        En1998Mutation::ChangeSystemBaseShearResistanceN(p) => format!("change-system-base-shear-resistance-n building-index={} system-index={} new-base-shear-resistance-n={}", enc_json(&p.building_index), enc_json(&p.system_index), enc_json(&p.new_base_shear_resistance_n)),
+        En1998Mutation::ChangeSystemVRdN(p) => format!("change-system-v-rd-n building-index={} system-index={} new-base-shear-resistance-n={}", enc_json(&p.building_index), enc_json(&p.system_index), enc_json(&p.new_base_shear_resistance_n)),
         En1998Mutation::ChangeStoreyPermanentGkN(p) => format!("change-storey-permanent-gk-n building-index={} storey-index={} new-permanent-gk-n={}", enc_json(&p.building_index), enc_json(&p.storey_index), enc_json(&p.new_permanent_gk_n)),
         En1998Mutation::ChangeStoreyStiffnessX(p) => format!("change-storey-stiffness-x building-index={} storey-index={} new-stiffness-x={}", enc_json(&p.building_index), enc_json(&p.storey_index), enc_json(&p.new_stiffness_x)),
         En1998Mutation::ChangeStoreyDriftXM(p) => format!("change-storey-drift-xm building-index={} storey-index={} new-drift-x-m={}", enc_json(&p.building_index), enc_json(&p.storey_index), enc_json(&p.new_drift_x_m)),
         En1998Mutation::ChangeBuildingPlanRegular(p) => format!("change-building-plan-regular building-index={} new-plan-regular={}", enc_json(&p.building_index), enc_json(&p.new_plan_regular)),
-        En1998Mutation::ChangeBuildingElevationRegular(p) => format!("change-building-elevation-regular building-index={} new-elevation-regular={}", enc_json(&p.building_index), enc_json(&p.new_elevation_regular)),
-        En1998Mutation::ChangeMemberDetailingCompatible(p) => format!("change-member-detailing-compatible building-index={} member-index={} new-detailing-compatible-with-q={}", enc_json(&p.building_index), enc_json(&p.member_index), enc_json(&p.new_detailing_compatible_with_q)),
-        En1998Mutation::ChangeBuildingMasonryWallAreaRatio(p) => format!("change-building-masonry-wall-area-ratio building-index={} new-masonry-wall-area-ratio={}", enc_json(&p.building_index), enc_json(&p.new_masonry_wall_area_ratio)),
+        En1998Mutation::ChangeElevationRegular(p) => format!("change-elevation-regular building-index={} new-elevation-regular={}", enc_json(&p.building_index), enc_json(&p.new_elevation_regular)),
+        En1998Mutation::ChangeMemberDetailing(p) => format!("change-member-detailing building-index={} member-index={} new-detailing-compatible-with-q={}", enc_json(&p.building_index), enc_json(&p.member_index), enc_json(&p.new_detailing_compatible_with_q)),
+        En1998Mutation::ChangeMasonryWallRatio(p) => format!("change-masonry-wall-ratio building-index={} new-masonry-wall-area-ratio={}", enc_json(&p.building_index), enc_json(&p.new_masonry_wall_area_ratio)),
         En1998Mutation::InsertBridge(p) => format!("insert-bridge index={} bridge={}", enc_json(&p.index), enc_json(&p.bridge)),
         En1998Mutation::ChangeBridgeVRdN(p) => format!("change-bridge-v-rd-n index={} new-v-rd-n={}", enc_json(&p.index), enc_json(&p.new_v_rd_n)),
         En1998Mutation::InsertAssessment(p) => format!("insert-assessment index={} assessment={}", enc_json(&p.index), enc_json(&p.assessment)),
@@ -103,6 +104,13 @@ fn print_en1998_mutation(mutation: &En1998Mutation) -> String {
         En1998Mutation::InsertRetainingWall(p) => format!("insert-retaining-wall index={} wall={}", enc_json(&p.index), enc_json(&p.wall)),
         En1998Mutation::InsertTower(p) => format!("insert-tower index={} tower={}", enc_json(&p.index), enc_json(&p.tower)),
         En1998Mutation::ChangeTowerMRdNm(p) => format!("change-tower-m-rd-nm index={} new-m-rd-nm={}", enc_json(&p.index), enc_json(&p.new_m_rd_nm)),
+        En1998Mutation::RemoveBridge(p) => format!("remove-bridge index={}", enc_json(&p.index)),
+        En1998Mutation::RemoveAssessment(p) => format!("remove-assessment index={}", enc_json(&p.index)),
+        En1998Mutation::RemoveSilo(p) => format!("remove-silo index={}", enc_json(&p.index)),
+        En1998Mutation::RemoveTank(p) => format!("remove-tank index={}", enc_json(&p.index)),
+        En1998Mutation::RemoveFoundation(p) => format!("remove-foundation index={}", enc_json(&p.index)),
+        En1998Mutation::RemoveRetainingWall(p) => format!("remove-retaining-wall index={}", enc_json(&p.index)),
+        En1998Mutation::RemoveTower(p) => format!("remove-tower index={}", enc_json(&p.index)),
     }
 }
 
@@ -115,14 +123,14 @@ fn parse_en1998_mutation(line: &str) -> Result<En1998Mutation, String> {
         "update-site" => Ok(En1998Mutation::UpdateSite(UpdateSite { site: dec_json(&arg("site")?)? })),
         "insert-building" => Ok(En1998Mutation::InsertBuilding(InsertBuilding { index: dec_json(&arg("index")?)?, building: dec_json(&arg("building")?)? })),
         "remove-building" => Ok(En1998Mutation::RemoveBuilding(RemoveBuilding { index: dec_json(&arg("index")?)? })),
-        "change-system-base-shear-resistance-n" => Ok(En1998Mutation::ChangeSystemBaseShearResistanceN(ChangeSystemBaseShearResistanceN { building_index: dec_json(&arg("building-index")?)?, system_index: dec_json(&arg("system-index")?)?, new_base_shear_resistance_n: dec_json(&arg("new-base-shear-resistance-n")?)? })),
+        "change-system-v-rd-n" => Ok(En1998Mutation::ChangeSystemVRdN(ChangeSystemVRdN { building_index: dec_json(&arg("building-index")?)?, system_index: dec_json(&arg("system-index")?)?, new_base_shear_resistance_n: dec_json(&arg("new-base-shear-resistance-n")?)? })),
         "change-storey-permanent-gk-n" => Ok(En1998Mutation::ChangeStoreyPermanentGkN(ChangeStoreyPermanentGkN { building_index: dec_json(&arg("building-index")?)?, storey_index: dec_json(&arg("storey-index")?)?, new_permanent_gk_n: dec_json(&arg("new-permanent-gk-n")?)? })),
         "change-storey-stiffness-x" => Ok(En1998Mutation::ChangeStoreyStiffnessX(ChangeStoreyStiffnessX { building_index: dec_json(&arg("building-index")?)?, storey_index: dec_json(&arg("storey-index")?)?, new_stiffness_x: dec_json(&arg("new-stiffness-x")?)? })),
         "change-storey-drift-xm" => Ok(En1998Mutation::ChangeStoreyDriftXM(ChangeStoreyDriftXM { building_index: dec_json(&arg("building-index")?)?, storey_index: dec_json(&arg("storey-index")?)?, new_drift_x_m: dec_json(&arg("new-drift-x-m")?)? })),
         "change-building-plan-regular" => Ok(En1998Mutation::ChangeBuildingPlanRegular(ChangeBuildingPlanRegular { building_index: dec_json(&arg("building-index")?)?, new_plan_regular: dec_json(&arg("new-plan-regular")?)? })),
-        "change-building-elevation-regular" => Ok(En1998Mutation::ChangeBuildingElevationRegular(ChangeBuildingElevationRegular { building_index: dec_json(&arg("building-index")?)?, new_elevation_regular: dec_json(&arg("new-elevation-regular")?)? })),
-        "change-member-detailing-compatible" => Ok(En1998Mutation::ChangeMemberDetailingCompatible(ChangeMemberDetailingCompatible { building_index: dec_json(&arg("building-index")?)?, member_index: dec_json(&arg("member-index")?)?, new_detailing_compatible_with_q: dec_json(&arg("new-detailing-compatible-with-q")?)? })),
-        "change-building-masonry-wall-area-ratio" => Ok(En1998Mutation::ChangeBuildingMasonryWallAreaRatio(ChangeBuildingMasonryWallAreaRatio { building_index: dec_json(&arg("building-index")?)?, new_masonry_wall_area_ratio: dec_json(&arg("new-masonry-wall-area-ratio")?)? })),
+        "change-elevation-regular" => Ok(En1998Mutation::ChangeElevationRegular(ChangeElevationRegular { building_index: dec_json(&arg("building-index")?)?, new_elevation_regular: dec_json(&arg("new-elevation-regular")?)? })),
+        "change-member-detailing" => Ok(En1998Mutation::ChangeMemberDetailing(ChangeMemberDetailing { building_index: dec_json(&arg("building-index")?)?, member_index: dec_json(&arg("member-index")?)?, new_detailing_compatible_with_q: dec_json(&arg("new-detailing-compatible-with-q")?)? })),
+        "change-masonry-wall-ratio" => Ok(En1998Mutation::ChangeMasonryWallRatio(ChangeMasonryWallRatio { building_index: dec_json(&arg("building-index")?)?, new_masonry_wall_area_ratio: dec_json(&arg("new-masonry-wall-area-ratio")?)? })),
         "insert-bridge" => Ok(En1998Mutation::InsertBridge(InsertBridge { index: dec_json(&arg("index")?)?, bridge: dec_json(&arg("bridge")?)? })),
         "change-bridge-v-rd-n" => Ok(En1998Mutation::ChangeBridgeVRdN(ChangeBridgeVRdN { index: dec_json(&arg("index")?)?, new_v_rd_n: dec_json(&arg("new-v-rd-n")?)? })),
         "insert-assessment" => Ok(En1998Mutation::InsertAssessment(InsertAssessment { index: dec_json(&arg("index")?)?, assessment: dec_json(&arg("assessment")?)? })),
@@ -133,6 +141,13 @@ fn parse_en1998_mutation(line: &str) -> Result<En1998Mutation, String> {
         "insert-retaining-wall" => Ok(En1998Mutation::InsertRetainingWall(InsertRetainingWall { index: dec_json(&arg("index")?)?, wall: dec_json(&arg("wall")?)? })),
         "insert-tower" => Ok(En1998Mutation::InsertTower(InsertTower { index: dec_json(&arg("index")?)?, tower: dec_json(&arg("tower")?)? })),
         "change-tower-m-rd-nm" => Ok(En1998Mutation::ChangeTowerMRdNm(ChangeTowerMRdNm { index: dec_json(&arg("index")?)?, new_m_rd_nm: dec_json(&arg("new-m-rd-nm")?)? })),
+        "remove-bridge" => Ok(En1998Mutation::RemoveBridge(RemoveBridge { index: dec_json(&arg("index")?)? })),
+        "remove-assessment" => Ok(En1998Mutation::RemoveAssessment(RemoveAssessment { index: dec_json(&arg("index")?)? })),
+        "remove-silo" => Ok(En1998Mutation::RemoveSilo(RemoveSilo { index: dec_json(&arg("index")?)? })),
+        "remove-tank" => Ok(En1998Mutation::RemoveTank(RemoveTank { index: dec_json(&arg("index")?)? })),
+        "remove-foundation" => Ok(En1998Mutation::RemoveFoundation(RemoveFoundation { index: dec_json(&arg("index")?)? })),
+        "remove-retaining-wall" => Ok(En1998Mutation::RemoveRetainingWall(RemoveRetainingWall { index: dec_json(&arg("index")?)? })),
+        "remove-tower" => Ok(En1998Mutation::RemoveTower(RemoveTower { index: dec_json(&arg("index")?)? })),
         other => Err(format!("en1998 mutation: unknown keyword {other:?}")),
     }
 }
@@ -163,14 +178,14 @@ const TAG_CHANGE_ANNEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change
 const TAG_UPDATE_SITE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "update-site");
 const TAG_INSERT_BUILDING: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-building");
 const TAG_REMOVE_BUILDING: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-building");
-const TAG_CHANGE_SYSTEM_BASE_SHEAR_RESISTANCE_N: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-system-base-shear-resistance-n");
+const TAG_CHANGE_SYSTEM_V_RD_N: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-system-v-rd-n");
 const TAG_CHANGE_STOREY_PERMANENT_GK_N: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-storey-permanent-gk-n");
 const TAG_CHANGE_STOREY_STIFFNESS_X: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-storey-stiffness-x");
 const TAG_CHANGE_STOREY_DRIFT_X_M: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-storey-drift-xm");
 const TAG_CHANGE_BUILDING_PLAN_REGULAR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-building-plan-regular");
-const TAG_CHANGE_BUILDING_ELEVATION_REGULAR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-building-elevation-regular");
-const TAG_CHANGE_MEMBER_DETAILING_COMPATIBLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-member-detailing-compatible");
-const TAG_CHANGE_BUILDING_MASONRY_WALL_AREA_RATIO: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-building-masonry-wall-area-ratio");
+const TAG_CHANGE_ELEVATION_REGULAR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-elevation-regular");
+const TAG_CHANGE_MEMBER_DETAILING: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-member-detailing");
+const TAG_CHANGE_MASONRY_WALL_RATIO: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-masonry-wall-ratio");
 const TAG_INSERT_BRIDGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-bridge");
 const TAG_CHANGE_BRIDGE_V_RD_N: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-bridge-v-rd-n");
 const TAG_INSERT_ASSESSMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-assessment");
@@ -181,6 +196,13 @@ const TAG_INSERT_FOUNDATION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "i
 const TAG_INSERT_RETAINING_WALL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-retaining-wall");
 const TAG_INSERT_TOWER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-tower");
 const TAG_CHANGE_TOWER_M_RD_NM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-tower-m-rd-nm");
+const TAG_REMOVE_BRIDGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-bridge");
+const TAG_REMOVE_ASSESSMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-assessment");
+const TAG_REMOVE_SILO: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-silo");
+const TAG_REMOVE_TANK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-tank");
+const TAG_REMOVE_FOUNDATION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-foundation");
+const TAG_REMOVE_RETAINING_WALL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-retaining-wall");
+const TAG_REMOVE_TOWER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-tower");
 
 impl protocol::OpBinary for En1998Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -189,14 +211,14 @@ impl protocol::OpBinary for En1998Mutation {
             En1998Mutation::UpdateSite(_) => TAG_UPDATE_SITE,
             En1998Mutation::InsertBuilding(_) => TAG_INSERT_BUILDING,
             En1998Mutation::RemoveBuilding(_) => TAG_REMOVE_BUILDING,
-            En1998Mutation::ChangeSystemBaseShearResistanceN(_) => TAG_CHANGE_SYSTEM_BASE_SHEAR_RESISTANCE_N,
+            En1998Mutation::ChangeSystemVRdN(_) => TAG_CHANGE_SYSTEM_V_RD_N,
             En1998Mutation::ChangeStoreyPermanentGkN(_) => TAG_CHANGE_STOREY_PERMANENT_GK_N,
             En1998Mutation::ChangeStoreyStiffnessX(_) => TAG_CHANGE_STOREY_STIFFNESS_X,
             En1998Mutation::ChangeStoreyDriftXM(_) => TAG_CHANGE_STOREY_DRIFT_X_M,
             En1998Mutation::ChangeBuildingPlanRegular(_) => TAG_CHANGE_BUILDING_PLAN_REGULAR,
-            En1998Mutation::ChangeBuildingElevationRegular(_) => TAG_CHANGE_BUILDING_ELEVATION_REGULAR,
-            En1998Mutation::ChangeMemberDetailingCompatible(_) => TAG_CHANGE_MEMBER_DETAILING_COMPATIBLE,
-            En1998Mutation::ChangeBuildingMasonryWallAreaRatio(_) => TAG_CHANGE_BUILDING_MASONRY_WALL_AREA_RATIO,
+            En1998Mutation::ChangeElevationRegular(_) => TAG_CHANGE_ELEVATION_REGULAR,
+            En1998Mutation::ChangeMemberDetailing(_) => TAG_CHANGE_MEMBER_DETAILING,
+            En1998Mutation::ChangeMasonryWallRatio(_) => TAG_CHANGE_MASONRY_WALL_RATIO,
             En1998Mutation::InsertBridge(_) => TAG_INSERT_BRIDGE,
             En1998Mutation::ChangeBridgeVRdN(_) => TAG_CHANGE_BRIDGE_V_RD_N,
             En1998Mutation::InsertAssessment(_) => TAG_INSERT_ASSESSMENT,
@@ -207,6 +229,13 @@ impl protocol::OpBinary for En1998Mutation {
             En1998Mutation::InsertRetainingWall(_) => TAG_INSERT_RETAINING_WALL,
             En1998Mutation::InsertTower(_) => TAG_INSERT_TOWER,
             En1998Mutation::ChangeTowerMRdNm(_) => TAG_CHANGE_TOWER_M_RD_NM,
+            En1998Mutation::RemoveBridge(_) => TAG_REMOVE_BRIDGE,
+            En1998Mutation::RemoveAssessment(_) => TAG_REMOVE_ASSESSMENT,
+            En1998Mutation::RemoveSilo(_) => TAG_REMOVE_SILO,
+            En1998Mutation::RemoveTank(_) => TAG_REMOVE_TANK,
+            En1998Mutation::RemoveFoundation(_) => TAG_REMOVE_FOUNDATION,
+            En1998Mutation::RemoveRetainingWall(_) => TAG_REMOVE_RETAINING_WALL,
+            En1998Mutation::RemoveTower(_) => TAG_REMOVE_TOWER,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -217,7 +246,7 @@ impl protocol::OpBinary for En1998Mutation {
                 write_json_bin(&mut out, &p.building);
             }
             En1998Mutation::RemoveBuilding(p) => write_json_bin(&mut out, &p.index),
-            En1998Mutation::ChangeSystemBaseShearResistanceN(p) => {
+            En1998Mutation::ChangeSystemVRdN(p) => {
                 write_json_bin(&mut out, &p.building_index);
                 write_json_bin(&mut out, &p.system_index);
                 write_json_bin(&mut out, &p.new_base_shear_resistance_n);
@@ -241,16 +270,16 @@ impl protocol::OpBinary for En1998Mutation {
                 write_json_bin(&mut out, &p.building_index);
                 write_json_bin(&mut out, &p.new_plan_regular);
             }
-            En1998Mutation::ChangeBuildingElevationRegular(p) => {
+            En1998Mutation::ChangeElevationRegular(p) => {
                 write_json_bin(&mut out, &p.building_index);
                 write_json_bin(&mut out, &p.new_elevation_regular);
             }
-            En1998Mutation::ChangeMemberDetailingCompatible(p) => {
+            En1998Mutation::ChangeMemberDetailing(p) => {
                 write_json_bin(&mut out, &p.building_index);
                 write_json_bin(&mut out, &p.member_index);
                 write_json_bin(&mut out, &p.new_detailing_compatible_with_q);
             }
-            En1998Mutation::ChangeBuildingMasonryWallAreaRatio(p) => {
+            En1998Mutation::ChangeMasonryWallRatio(p) => {
                 write_json_bin(&mut out, &p.building_index);
                 write_json_bin(&mut out, &p.new_masonry_wall_area_ratio);
             }
@@ -294,6 +323,13 @@ impl protocol::OpBinary for En1998Mutation {
                 write_json_bin(&mut out, &p.index);
                 write_json_bin(&mut out, &p.new_m_rd_nm);
             }
+            En1998Mutation::RemoveBridge(p) => write_json_bin(&mut out, &p.index),
+            En1998Mutation::RemoveAssessment(p) => write_json_bin(&mut out, &p.index),
+            En1998Mutation::RemoveSilo(p) => write_json_bin(&mut out, &p.index),
+            En1998Mutation::RemoveTank(p) => write_json_bin(&mut out, &p.index),
+            En1998Mutation::RemoveFoundation(p) => write_json_bin(&mut out, &p.index),
+            En1998Mutation::RemoveRetainingWall(p) => write_json_bin(&mut out, &p.index),
+            En1998Mutation::RemoveTower(p) => write_json_bin(&mut out, &p.index),
         }
         Ok(out)
     }
@@ -321,11 +357,11 @@ impl protocol::OpBinary for En1998Mutation {
                 let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
                 Ok(En1998Mutation::RemoveBuilding(RemoveBuilding { index }))
             }
-            TAG_CHANGE_SYSTEM_BASE_SHEAR_RESISTANCE_N => {
+            TAG_CHANGE_SYSTEM_V_RD_N => {
                 let building_index = read_json_bin(&mut reader).map_err(|e| malformed("building_index", reader.position(), e))?;
                 let system_index = read_json_bin(&mut reader).map_err(|e| malformed("system_index", reader.position(), e))?;
                 let new_base_shear_resistance_n = read_json_bin(&mut reader).map_err(|e| malformed("new_base_shear_resistance_n", reader.position(), e))?;
-                Ok(En1998Mutation::ChangeSystemBaseShearResistanceN(ChangeSystemBaseShearResistanceN { building_index, system_index, new_base_shear_resistance_n }))
+                Ok(En1998Mutation::ChangeSystemVRdN(ChangeSystemVRdN { building_index, system_index, new_base_shear_resistance_n }))
             }
             TAG_CHANGE_STOREY_PERMANENT_GK_N => {
                 let building_index = read_json_bin(&mut reader).map_err(|e| malformed("building_index", reader.position(), e))?;
@@ -350,21 +386,21 @@ impl protocol::OpBinary for En1998Mutation {
                 let new_plan_regular = read_json_bin(&mut reader).map_err(|e| malformed("new_plan_regular", reader.position(), e))?;
                 Ok(En1998Mutation::ChangeBuildingPlanRegular(ChangeBuildingPlanRegular { building_index, new_plan_regular }))
             }
-            TAG_CHANGE_BUILDING_ELEVATION_REGULAR => {
+            TAG_CHANGE_ELEVATION_REGULAR => {
                 let building_index = read_json_bin(&mut reader).map_err(|e| malformed("building_index", reader.position(), e))?;
                 let new_elevation_regular = read_json_bin(&mut reader).map_err(|e| malformed("new_elevation_regular", reader.position(), e))?;
-                Ok(En1998Mutation::ChangeBuildingElevationRegular(ChangeBuildingElevationRegular { building_index, new_elevation_regular }))
+                Ok(En1998Mutation::ChangeElevationRegular(ChangeElevationRegular { building_index, new_elevation_regular }))
             }
-            TAG_CHANGE_MEMBER_DETAILING_COMPATIBLE => {
+            TAG_CHANGE_MEMBER_DETAILING => {
                 let building_index = read_json_bin(&mut reader).map_err(|e| malformed("building_index", reader.position(), e))?;
                 let member_index = read_json_bin(&mut reader).map_err(|e| malformed("member_index", reader.position(), e))?;
                 let new_detailing_compatible_with_q = read_json_bin(&mut reader).map_err(|e| malformed("new_detailing_compatible_with_q", reader.position(), e))?;
-                Ok(En1998Mutation::ChangeMemberDetailingCompatible(ChangeMemberDetailingCompatible { building_index, member_index, new_detailing_compatible_with_q }))
+                Ok(En1998Mutation::ChangeMemberDetailing(ChangeMemberDetailing { building_index, member_index, new_detailing_compatible_with_q }))
             }
-            TAG_CHANGE_BUILDING_MASONRY_WALL_AREA_RATIO => {
+            TAG_CHANGE_MASONRY_WALL_RATIO => {
                 let building_index = read_json_bin(&mut reader).map_err(|e| malformed("building_index", reader.position(), e))?;
                 let new_masonry_wall_area_ratio = read_json_bin(&mut reader).map_err(|e| malformed("new_masonry_wall_area_ratio", reader.position(), e))?;
-                Ok(En1998Mutation::ChangeBuildingMasonryWallAreaRatio(ChangeBuildingMasonryWallAreaRatio { building_index, new_masonry_wall_area_ratio }))
+                Ok(En1998Mutation::ChangeMasonryWallRatio(ChangeMasonryWallRatio { building_index, new_masonry_wall_area_ratio }))
             }
             TAG_INSERT_BRIDGE => {
                 let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
@@ -416,6 +452,34 @@ impl protocol::OpBinary for En1998Mutation {
                 let new_m_rd_nm = read_json_bin(&mut reader).map_err(|e| malformed("new_m_rd_nm", reader.position(), e))?;
                 Ok(En1998Mutation::ChangeTowerMRdNm(ChangeTowerMRdNm { index, new_m_rd_nm }))
             }
+            TAG_REMOVE_BRIDGE => {
+                let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
+                Ok(En1998Mutation::RemoveBridge(RemoveBridge { index }))
+            }
+            TAG_REMOVE_ASSESSMENT => {
+                let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
+                Ok(En1998Mutation::RemoveAssessment(RemoveAssessment { index }))
+            }
+            TAG_REMOVE_SILO => {
+                let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
+                Ok(En1998Mutation::RemoveSilo(RemoveSilo { index }))
+            }
+            TAG_REMOVE_TANK => {
+                let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
+                Ok(En1998Mutation::RemoveTank(RemoveTank { index }))
+            }
+            TAG_REMOVE_FOUNDATION => {
+                let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
+                Ok(En1998Mutation::RemoveFoundation(RemoveFoundation { index }))
+            }
+            TAG_REMOVE_RETAINING_WALL => {
+                let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
+                Ok(En1998Mutation::RemoveRetainingWall(RemoveRetainingWall { index }))
+            }
+            TAG_REMOVE_TOWER => {
+                let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
+                Ok(En1998Mutation::RemoveTower(RemoveTower { index }))
+            }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
         }
     }
@@ -430,7 +494,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
         En1998Mutation::UpdateSite(UpdateSite { site: snap.site.clone() }),
         En1998Mutation::InsertBuilding(InsertBuilding { index: 0usize, building: building.clone() }),
         En1998Mutation::RemoveBuilding(RemoveBuilding { index: 0usize }),
-        En1998Mutation::ChangeSystemBaseShearResistanceN(ChangeSystemBaseShearResistanceN {
+        En1998Mutation::ChangeSystemVRdN(ChangeSystemVRdN {
             building_index: 0usize,
             system_index: 0usize,
             new_base_shear_resistance_n: 1.0e6,
@@ -454,16 +518,16 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
             building_index: 0usize,
             new_plan_regular: false,
         }),
-        En1998Mutation::ChangeBuildingElevationRegular(ChangeBuildingElevationRegular {
+        En1998Mutation::ChangeElevationRegular(ChangeElevationRegular {
             building_index: 0usize,
             new_elevation_regular: false,
         }),
-        En1998Mutation::ChangeMemberDetailingCompatible(ChangeMemberDetailingCompatible {
+        En1998Mutation::ChangeMemberDetailing(ChangeMemberDetailing {
             building_index: 0usize,
             member_index: 0usize,
             new_detailing_compatible_with_q: false,
         }),
-        En1998Mutation::ChangeBuildingMasonryWallAreaRatio(ChangeBuildingMasonryWallAreaRatio {
+        En1998Mutation::ChangeMasonryWallRatio(ChangeMasonryWallRatio {
             building_index: 0usize,
             new_masonry_wall_area_ratio: 0.05,
         }),
@@ -558,6 +622,13 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
             },
         }),
         En1998Mutation::ChangeTowerMRdNm(ChangeTowerMRdNm { index: 0usize, new_m_rd_nm: 2.5e6 }),
+        En1998Mutation::RemoveBridge(RemoveBridge { index: 0usize }),
+        En1998Mutation::RemoveAssessment(RemoveAssessment { index: 0usize }),
+        En1998Mutation::RemoveSilo(RemoveSilo { index: 0usize }),
+        En1998Mutation::RemoveTank(RemoveTank { index: 0usize }),
+        En1998Mutation::RemoveFoundation(RemoveFoundation { index: 0usize }),
+        En1998Mutation::RemoveRetainingWall(RemoveRetainingWall { index: 0usize }),
+        En1998Mutation::RemoveTower(RemoveTower { index: 0usize }),
     ]
 }
 

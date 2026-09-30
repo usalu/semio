@@ -133,7 +133,7 @@ fn every_mutation_round_trips_through_text_and_binary_op_encodings() {
 fn a_missing_target_is_refused_and_changes_nothing() {
     let base = fixture_base();
     let outcome = <Wfc3dMutation as Mutation<Wfc3dSnapshot>>::diff(&delete_slot("ghost".into()), &base);
-    assert!(outcome.messages().iter().any(|message| message.code.0 == "wfc3d.slot.missing"), "a missing slot must be named");
+    assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.target-missing"), "a missing slot must be named");
     assert_eq!(outcome.diff(), &Wfc3dDiff::default(), "a refusal authors no delta");
     let mut projection = base.clone();
     apply_wfc3d_mutation(&mut projection, &delete_slot("ghost".into())).expect("an empty delta still applies");
@@ -146,7 +146,7 @@ fn a_duplicate_id_is_fatal() {
     let base = fixture_base();
     let duplicate = create_tile(0, Tile { id: "room".into(), label: None, weight: 1.0, media: TileMedia3d::default() });
     let outcome = <Wfc3dMutation as Mutation<Wfc3dSnapshot>>::diff(&duplicate, &base);
-    assert!(outcome.messages().iter().any(|message| message.code.0 == "wfc3d.tile.duplicate-id"));
+    assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
 }
 //#endregion 🔖️Laws
 

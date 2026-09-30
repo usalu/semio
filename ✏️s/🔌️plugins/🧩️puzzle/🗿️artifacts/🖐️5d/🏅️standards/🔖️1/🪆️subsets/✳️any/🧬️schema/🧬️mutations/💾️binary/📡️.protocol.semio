@@ -81,3 +81,11 @@ record change-target-volume-hidden tag=33
 field payload bytes
 record change-target-volume-locked tag=34
 field payload bytes
+record drag-selection2d tag=35
+field payload bytes
+record drag-selection3d tag=36
+field payload bytes
+record rotate-selection3d tag=37
+field payload bytes
+record scale-selection3d tag=38
+field payload bytes

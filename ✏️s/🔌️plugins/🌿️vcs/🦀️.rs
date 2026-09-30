@@ -26,8 +26,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining,
 /// `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s shape.
 pub fn plugin() -> Result<Plugin<VcsApps>, PluginAssemblyError> {
-    let dependency = semio_s_plugin_stdio::registry::native_artifact_catalog_dependency()?;
-    let catalog = semio_s_plugin_stdio::registry::native_artifact_catalog_contribution()?;
+    let dependency = semio_s_plugin_stdio::catalog::native_artifact_catalog_dependency()?;
+    let catalog = semio_s_plugin_stdio::catalog::native_artifact_catalog_contribution()?;
     Plugin::<VcsApps>::builder("vcs")
         .label("VCS")
         .version("0.1.0")

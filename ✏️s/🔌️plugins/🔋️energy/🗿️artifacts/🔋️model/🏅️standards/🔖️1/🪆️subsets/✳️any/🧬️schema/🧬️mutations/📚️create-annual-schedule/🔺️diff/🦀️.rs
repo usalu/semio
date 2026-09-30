@@ -12,7 +12,7 @@ pub fn diff(payload: &super::CreateAnnualSchedule, base: &EnergyModelSnapshot) -
         || base.model.schedules.annual.iter().any(|schedule| schedule.id == payload.id)
         || base.model.schedules.time_series.iter().any(|schedule| schedule.id == payload.id)
     {
-        return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Schedule {} is already defined.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Schedule {} is already defined.", payload.id.0), [payload.id.0.to_string()]);
     }
     if payload.index as usize > base.model.schedules.annual.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} annual schedules.", payload.index, base.model.schedules.annual.len()), [payload.id.0.to_string()]);

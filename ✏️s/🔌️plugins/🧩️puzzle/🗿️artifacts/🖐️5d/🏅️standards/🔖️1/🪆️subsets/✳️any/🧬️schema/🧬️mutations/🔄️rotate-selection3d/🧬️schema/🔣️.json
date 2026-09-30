@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/mutation/rotate-selection3d/schema.json",
+  "title": "RotateSelection3d",
+  "description": "The `rotate-selection3d` mutation record — a relative turn of parts and target volumes, each about its own origin; internally tagged `\"mutation\": \"rotateSelection3d\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targets",
+    "axis",
+    "angle"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "rotateSelection3d",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Targets",
+          "de": "Ziele"
+        },
+        "description": {
+          "en": "Parts and target volumes to rotate; locked or missing ones are skipped.",
+          "de": "Zu drehende Teile und Zielvolumen; gesperrte oder fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": [
+            "part",
+            "targetVolume"
+          ],
+          "domain": "vortex",
+          "granularity": "part"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "axis": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Axis",
+          "de": "Achse"
+        },
+        "description": {
+          "en": "World axis (x, y, z) every target turns about, through its own origin.",
+          "de": "Weltachse (x, y, z), um die sich jedes Ziel durch seinen eigenen Ursprung dreht."
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "rotation",
+        "order": 20
+      }
+    },
+    "angle": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Angle",
+          "de": "Winkel"
+        },
+        "description": {
+          "en": "Right-handed rotation about the axis.",
+          "de": "Rechtshändige Drehung um die Achse."
+        },
+        "unit": "rad",
+        "displayUnit": "deg",
+        "displayFactor": 57.29577951308232,
+        "step": 0.017453292519943295,
+        "softMin": -3.141592653589793,
+        "softMax": 3.141592653589793,
+        "snaps": [
+          -3.141592653589793,
+          -1.5707963267948966,
+          0,
+          1.5707963267948966,
+          3.141592653589793
+        ],
+        "group": "rotation",
+        "order": 30
+      }
+    }
+  }
+}

@@ -56,7 +56,15 @@
     "test-reference-coordinate-progress": "nx run @semio-tech/repo-lib:test-reference-coordinate-progress",
     "test-draw-destination-observation": "nx run @semio-tech/repo-lib:test-draw-destination-observation",
     "test-markdown-inline-references": "nx run @semio-tech/repo-lib:test-markdown-inline-references",
-    "test-os-dev-composition-ownership": "nx run @semio-tech/repo-lib:test-os-dev-composition-ownership"
+    "test-mutation-case-pair": "nx run @semio-tech/repo-lib:test-mutation-case-pair",
+    "test-mutation-wire-witness": "nx run @semio-tech/repo-lib:test-mutation-wire-witness",
+    "test-os-dev-composition-ownership": "nx run @semio-tech/repo-lib:test-os-dev-composition-ownership",
+    "test-dependency-direction": "nx run @semio-tech/repo-lib:test-dependency-direction",
+    "lint-dependency-direction": "nx run @semio-tech/repo-lib:lint-dependency-direction",
+    "test-cargo-dependency-direction": "nx run @semio-tech/repo-lib:test-cargo-dependency-direction",
+    "lint-cargo-dependency-direction": "nx run @semio-tech/repo-lib:lint-cargo-dependency-direction",
+    "test-rust-source-direction": "nx run @semio-tech/repo-lib:test-rust-source-direction",
+    "lint-rust-source-direction": "nx run @semio-tech/repo-lib:lint-rust-source-direction"
   },
   "nx": {
     "includedScripts": []

@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MutationWireWitnessVectors",
+  "description": "Language-agnostic vectors for the payload-only mutation wire witness case directory: its one taxonomy kind, its bounded parent scopes, its bundle shape and its two real placements in a mutation leaf's fixture scope.",
+  "type": "object",
+  "required": ["contract", "kindId", "directoryName", "parentKindIds", "witnessNodes", "witnessLeaves", "resolutions", "placements"],
+  "additionalProperties": false,
+  "definitions": {
+    "kindId": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$" },
+    "repositoryPath": { "type": "string", "minLength": 1, "pattern": "^[^/\\\\]+(?:/[^/\\\\]+)*$" }
+  },
+  "properties": {
+    "contract": { "type": "string", "const": "mutation-wire-witness-v1" },
+    "kindId": { "type": "string", "const": "mutation-wire-witness" },
+    "directoryName": { "type": "string", "const": "🧾️wire-witness" },
+    "parentKindIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/definitions/kindId" } },
+    "witnessNodes": { "type": "integer", "const": 3 },
+    "witnessLeaves": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "type": "string", "const": "🦠️mutation/🔣️.json" } },
+    "resolutions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "parentKindId", "expectedKindId"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "name": { "type": "string", "minLength": 1 },
+          "parentKindId": { "anyOf": [{ "$ref": "#/definitions/kindId" }, { "type": "null" }] },
+          "expectedKindId": { "anyOf": [{ "$ref": "#/definitions/kindId" }, { "type": "null" }] }
+        }
+      }
+    },
+    "placements": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["id", "scope", "leafRoots", "witnessRoot", "grandparentKindId", "parentKindId"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "scope": { "$ref": "#/definitions/repositoryPath" },
+          "leafRoots": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/definitions/repositoryPath" } },
+          "witnessRoot": { "type": "string", "pattern": "(?:^|/)🧬️mutations/[^/]+/(?:🧫️fixtures/)?🧾️wire-witness$" },
+          "grandparentKindId": { "$ref": "#/definitions/kindId" },
+          "parentKindId": { "$ref": "#/definitions/kindId" }
+        }
+      }
+    }
+  }
+}

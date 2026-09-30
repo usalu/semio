@@ -187,6 +187,28 @@ fn a_real_activation_arms_the_shell_window_activate_history_note() {
     assert_eq!(shell.deferred_actions.len(), 1, "…and re-observing the same active window notes nothing again");
 }
 
+/// 📨️ LAW: the pane that loses the activation is blurred exactly once — `hostEvent{windowId, kind: blur}` for it on the
+/// session's controller, React's pane `onBlur` twin — while the first observation only seeds the witness.
+#[test]
+fn a_pane_losing_the_activation_is_blurred_once() {
+    let mut shell = shell_with_keybindings(Vec::new());
+    shell.active_window_id = Some("main".into());
+    shell.arm_window_blur_host_event();
+    assert!(shell.deferred_actions.is_empty(), "the first observation seeds the witness without a blur");
+
+    shell.active_window_id = Some("second".into());
+    shell.arm_window_blur_host_event();
+    let [blur] = shell.deferred_actions.as_slice() else { panic!("one blur: {:?}", shell.deferred_actions) };
+    assert_eq!(blur.action, semio_framework::HOST_EVENT_ACTION_ID);
+    let args = blur.args.as_ref().expect("the blur names its window");
+    assert_eq!(args.get(semio_framework::HOST_EVENT_ARG_WINDOW_ID).and_then(DslValue::as_str), Some("main"));
+    assert_eq!(args.get(semio_framework::HOST_EVENT_ARG_KIND).and_then(DslValue::as_str), Some(semio_framework::HOST_EVENT_KIND_BLUR));
+
+    shell.deferred_actions.clear();
+    shell.arm_window_blur_host_event();
+    assert!(shell.deferred_actions.is_empty(), "re-observing the same active window blurs nothing");
+}
+
 //#endregion 🪟️WindowActivationNote
 
 //#region 📚️ExamplePickerAndRole

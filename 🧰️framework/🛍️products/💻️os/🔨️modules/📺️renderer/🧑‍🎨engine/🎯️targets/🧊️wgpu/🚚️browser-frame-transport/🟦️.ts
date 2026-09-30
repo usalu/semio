@@ -304,7 +304,7 @@ export type BrowserFrameWireLosslessEvent =
  *
  * 🛰️ `agent-bridge-scope` is production too: the shell's agent-bridge offer scope (hub origin, space, its human's agent
  * principals — never the session capability) for the page's offer watcher (ticket 26/09/23, G12 × WG11 session 14c). */
-export type BrowserFrameIntrospectionProbe = "structure" | "frame-stats" | "accessibility" | "mesh-stats" | "chrome" | "agent-bridge-scope";
+export type BrowserFrameIntrospectionProbe = "structure" | "frame-stats" | "accessibility" | "mesh-stats" | "board2d" | "chrome" | "agent-bridge-scope";
 
 export type BrowserFrameWorkerIntrospect = { readonly kind: "introspect"; readonly lifecycle: number; readonly requestId: number; readonly probe: BrowserFrameIntrospectionProbe; readonly windowId?: string };
 

@@ -1,55 +1,12 @@
-//! 🦀️ EN 1999 exhaustive mutation case — Rust adapter. Ticket
-//! 26/08/23/END-TO-END-TESTING-REFACTOR, wave 14 (the no-oracle conversion). The recorded
-//! no-oracle decision `en1999-1-mutation-semantics` is gone from
-//! `../../🔮️oracles/🔣️.json`, because a reference now
-//! exists to compare against: `s.norm.en1999` is a
-//! semio-native artifact with no third-party reader or writer, so its reference is a second
-//! IMPLEMENTATION: the independent Python `🐍️.py` beside this file, registered as the
-//! oracle `en1999-1-python-independent`. This adapter is the SUBJECT half only — it drives this
-//! repository's own `apply_en1999_mutation` over the full 26-kind `En1999Mutation` vocabulary.
-//!
-//! Twenty-six document-root scalars and enums, one `change-<field>` each: the design actions
-//! N_Ed and M_Ed, the section properties A and W_el, the alloy selection, the buckling
-//! reduction chi, the torsion constant I_T and the critical length L_cr, the
-//! elevated-temperature theta, the fatigue set (applied and detail stress ranges, the slope m,
-//! and the cycle count), the fillet weld set (V_Ed, throat, length and the correlation factor
-//! beta_w), the thin-sheet local-buckling set (b, t, k_sigma, W_el and M_Ed) and the shell set
-//! (t, r and the applied meridional stress).
-//!
-//! ⚖️ WHERE THE ASSERTIONS LIVE. Every law this case claims is asserted IN ROLE inside the
-//! subject handlers as well as being compared against the oracle's answer, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` module (`law::mutation_is_observable`,
-//! `law::inverse_restores`, `law::round_trip_preserves`, `law::carrier_is_exact`) that the
-//! stdio mutation cases use, reached through the `oracleHostPackages` entry this plugin
-//! declares in `✏️s/🔌️plugins/📕️norm/🔣️oracle.json`. What `parity` adds on top is the
-//! one thing a single implementation can never provide: that a second implementation, written in
-//! another language from the same written specification, reaches the same document.
-//!
-//! 🌉️ HOW THE FIXTURES REACH TYPED VALUES. The generated test host links only
-//! `semio-repo-test-host`, the stdio law crate and — behind `sut` — this plugin's own crate;
-//! `serde`, `serde_json` and this crate's `protocol`/`store`/`vcs` extern-crate aliases are all
-//! unreachable from here. The subset's own production code therefore exports the bridges
-//! (`decode_en1999_snapshot_json`/`encode_en1999_snapshot_json`,
-//! `decode_en1999_dsl`/`encode_en1999_dsl`, `decode_en1999_pack`/`encode_en1999_pack` in
-//! `../../🧬️schema/📸️snapshot/🦀️.rs`;
-//! `decode_en1999_mutation_json`, `apply_en1999_mutation`, `inverse_en1999_mutation` in
-//! `../../🧬️schema/🧬️mutations/🦀️.rs`), whose
-//! signatures name only reachable types. This side reaches the committed vectors through
-//! `include_str!` and the Python side through the `asset://` URIs the feature declares, so both
-//! read the SAME committed bytes and neither holds a Rust or Python literal transcribed beside
-//! them that could drift from what the other one read.
-//!
-//! 🚧️ The Rust SUBJECT phase still cannot run: `semio-s-plugin-norm` does not compile (671 errors
-//! at the time of writing — a concurrent session is mid-flight across ~2000 files of this plugin,
-//! removing gratuitous `async fn` wrappers). `parity` therefore has nothing to compare the oracle
-//! against YET; the moment the crate is green it does, with no further change here. The subject half is
-//! written against the SYNC trait surface the fixture tests in this crate already call
-//! (`Mutation::diff`, `MutationDiff::apply`, `Mutation::inverse`, `ArtifactDsl`,
-//! `ArtifactPack`) rather than against the plugin's async wrappers, and is `sut`-gated so the
-//! oracle-only run never links it.
+//! 🦀️ EN 1999 exhaustive mutation case — the Rust SUBJECT adapter over the current 18-kind `En1999Mutation`
+//! vocabulary. Every kind applies its committed vector (`../../🧫️fixtures/🧬️mutations/<leaf>/<scenario>`) through the
+//! subset's production bridges and asserts, in role, the committed after-snapshot, that the document moved and that
+//! its own inverse restores the before-snapshot; `identity-round-trip` re-emits the committed carrier through the DSL,
+//! pack and JSON codecs. The reference answer is the shared Python norm engine (`../🐍️.py`).
 
-use semio_repo_test_host::{digest, parse_json, Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::law;
+use semio_repo_test_host::Adapter;
+#[cfg(feature = "sut")]
+use semio_repo_test_host::{digest, parse_json, Json};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `En1999Mutation::KINDS` (`../../🧬️schema/🧬️mutations/🦀️.rs`) —
@@ -58,32 +15,24 @@ use semio_s_plugin_stdio_test_oracle::law;
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
 #[cfg(feature = "sut")]
 const KINDS: &[&str] = &[
-    "change-n-ed-kn",
-    "change-m-ed-knm",
-    "change-a-mm2",
-    "change-w-el-mm3",
-    "change-alloy",
-    "change-chi",
-    "change-it-mm4",
-    "change-l-cr-mm",
-    "change-theta-c",
-    "change-delta-sigma-ed",
-    "change-delta-sigma-c",
-    "change-fatigue-m",
-    "change-n-cycles",
-    "change-v-weld-ed-kn",
-    "change-weld-throat-mm",
-    "change-weld-length-mm",
-    "change-beta-w",
-    "change-sheet-b-mm",
-    "change-sheet-t-mm",
-    "change-sheet-k-sigma",
-    "change-sheet-w-el-mm3",
-    "change-sheet-m-ed-knm",
-    "change-shell-t-mm",
-    "change-shell-r-mm",
-    "change-sigma-ed-shell-mpa",
     "change-annex",
+    "change-materials",
+    "change-sections",
+    "change-members",
+    "change-connections",
+    "change-fire-scenarios",
+    "change-fatigue-details",
+    "change-cold-formed",
+    "change-shells",
+    "add-member",
+    "remove-member",
+    "change-member-n-ed",
+    "change-member-my-ed",
+    "change-member-buckling-length",
+    "change-material-designation",
+    "change-plate-thickness",
+    "change-weld-throat",
+    "change-bolt-count",
 ];
 
 /// 🗣️ The real committed EN 1999 document, read where the domain already keeps it.
@@ -102,161 +51,113 @@ const PACK_ASSET: &str = "asset://🏠️aluminium-roof-purlin/🎒️.pack.semi
 #[cfg(feature = "sut")]
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
-        "change-n-ed-kn" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-n-ed-kn/🏋️raises-axial-force-to-180-kn/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-n-ed-kn/🏋️raises-axial-force-to-180-kn/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-n-ed-kn/🏋️raises-axial-force-to-180-kn/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-n-ed-kn/🏋️raises-axial-force-to-180-kn/🎯️outcome/🔣️.json"),
-        ),
-        "change-m-ed-knm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/⤴️change-m-ed-knm/⤴️raises-design-moment-to-9-5-knm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⤴️change-m-ed-knm/⤴️raises-design-moment-to-9-5-knm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⤴️change-m-ed-knm/⤴️raises-design-moment-to-9-5-knm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⤴️change-m-ed-knm/⤴️raises-design-moment-to-9-5-knm/🎯️outcome/🔣️.json"),
-        ),
-        "change-a-mm2" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-a-mm2/📐️enlarges-section-area-to-2250-mm2/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-a-mm2/📐️enlarges-section-area-to-2250-mm2/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-a-mm2/📐️enlarges-section-area-to-2250-mm2/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-a-mm2/📐️enlarges-section-area-to-2250-mm2/🎯️outcome/🔣️.json"),
-        ),
-        "change-w-el-mm3" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧊️change-w-el-mm3/🧊️raises-section-modulus-to-40000-mm3/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧊️change-w-el-mm3/🧊️raises-section-modulus-to-40000-mm3/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧊️change-w-el-mm3/🧊️raises-section-modulus-to-40000-mm3/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧊️change-w-el-mm3/🧊️raises-section-modulus-to-40000-mm3/🎯️outcome/🔣️.json"),
-        ),
-        "change-alloy" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/⚗️change-alloy/⚗️switches-alloy-to-aw7020t6/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⚗️change-alloy/⚗️switches-alloy-to-aw7020t6/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⚗️change-alloy/⚗️switches-alloy-to-aw7020t6/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⚗️change-alloy/⚗️switches-alloy-to-aw7020t6/🎯️outcome/🔣️.json"),
-        ),
-        "change-chi" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-chi/⬇️lowers-buckling-chi-to-0-5/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-chi/⬇️lowers-buckling-chi-to-0-5/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-chi/⬇️lowers-buckling-chi-to-0-5/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-chi/⬇️lowers-buckling-chi-to-0-5/🎯️outcome/🔣️.json"),
-        ),
-        "change-it-mm4" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-it-mm4/🌀️raises-torsion-constant-to-10240-mm4/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-it-mm4/🌀️raises-torsion-constant-to-10240-mm4/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-it-mm4/🌀️raises-torsion-constant-to-10240-mm4/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌀️change-it-mm4/🌀️raises-torsion-constant-to-10240-mm4/🎯️outcome/🔣️.json"),
-        ),
-        "change-l-cr-mm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-l-cr-mm/📏️lengthens-buckling-length-to-4000-mm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-l-cr-mm/📏️lengthens-buckling-length-to-4000-mm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-l-cr-mm/📏️lengthens-buckling-length-to-4000-mm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-l-cr-mm/📏️lengthens-buckling-length-to-4000-mm/🎯️outcome/🔣️.json"),
-        ),
-        "change-theta-c" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🌡️change-theta-c/🌡️raises-temperature-to-225-c/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌡️change-theta-c/🌡️raises-temperature-to-225-c/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌡️change-theta-c/🌡️raises-temperature-to-225-c/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌡️change-theta-c/🌡️raises-temperature-to-225-c/🎯️outcome/🔣️.json"),
-        ),
-        "change-delta-sigma-ed" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-delta-sigma-ed/↕️raises-fatigue-stress-range-to-62-5-mpa/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-delta-sigma-ed/↕️raises-fatigue-stress-range-to-62-5-mpa/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-delta-sigma-ed/↕️raises-fatigue-stress-range-to-62-5-mpa/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-delta-sigma-ed/↕️raises-fatigue-stress-range-to-62-5-mpa/🎯️outcome/🔣️.json"),
-        ),
-        "change-delta-sigma-c" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-delta-sigma-c/🏷️upgrades-detail-category-to-90-mpa/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-delta-sigma-c/🏷️upgrades-detail-category-to-90-mpa/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-delta-sigma-c/🏷️upgrades-detail-category-to-90-mpa/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-delta-sigma-c/🏷️upgrades-detail-category-to-90-mpa/🎯️outcome/🔣️.json"),
-        ),
-        "change-fatigue-m" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📉️change-fatigue-m/📉️flattens-sn-slope-to-m-5/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📉️change-fatigue-m/📉️flattens-sn-slope-to-m-5/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📉️change-fatigue-m/📉️flattens-sn-slope-to-m-5/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📉️change-fatigue-m/📉️flattens-sn-slope-to-m-5/🎯️outcome/🔣️.json"),
-        ),
-        "change-n-cycles" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-n-cycles/🔁️doubles-fatigue-cycles-to-2000000/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-n-cycles/🔁️doubles-fatigue-cycles-to-2000000/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-n-cycles/🔁️doubles-fatigue-cycles-to-2000000/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-n-cycles/🔁️doubles-fatigue-cycles-to-2000000/🎯️outcome/🔣️.json"),
-        ),
-        "change-v-weld-ed-kn" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-v-weld-ed-kn/✂️raises-weld-shear-to-48-kn/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-v-weld-ed-kn/✂️raises-weld-shear-to-48-kn/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-v-weld-ed-kn/✂️raises-weld-shear-to-48-kn/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-v-weld-ed-kn/✂️raises-weld-shear-to-48-kn/🎯️outcome/🔣️.json"),
-        ),
-        "change-weld-throat-mm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-weld-throat-mm/🔥️thickens-weld-throat-to-6-5-mm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-weld-throat-mm/🔥️thickens-weld-throat-to-6-5-mm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-weld-throat-mm/🔥️thickens-weld-throat-to-6-5-mm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-weld-throat-mm/🔥️thickens-weld-throat-to-6-5-mm/🎯️outcome/🔣️.json"),
-        ),
-        "change-weld-length-mm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧵️change-weld-length-mm/🧵️lengthens-weld-to-200-mm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧵️change-weld-length-mm/🧵️lengthens-weld-to-200-mm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧵️change-weld-length-mm/🧵️lengthens-weld-to-200-mm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧵️change-weld-length-mm/🧵️lengthens-weld-to-200-mm/🎯️outcome/🔣️.json"),
-        ),
-        "change-beta-w" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧮️change-beta-w/🧮️raises-weld-correlation-beta-w-to-0-75/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧮️change-beta-w/🧮️raises-weld-correlation-beta-w-to-0-75/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧮️change-beta-w/🧮️raises-weld-correlation-beta-w-to-0-75/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧮️change-beta-w/🧮️raises-weld-correlation-beta-w-to-0-75/🎯️outcome/🔣️.json"),
-        ),
-        "change-sheet-b-mm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-sheet-b-mm/↔️widens-sheet-to-320-mm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-sheet-b-mm/↔️widens-sheet-to-320-mm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-sheet-b-mm/↔️widens-sheet-to-320-mm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-sheet-b-mm/↔️widens-sheet-to-320-mm/🎯️outcome/🔣️.json"),
-        ),
-        "change-sheet-t-mm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📑️change-sheet-t-mm/📑️thickens-sheet-to-3-5-mm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📑️change-sheet-t-mm/📑️thickens-sheet-to-3-5-mm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📑️change-sheet-t-mm/📑️thickens-sheet-to-3-5-mm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📑️change-sheet-t-mm/📑️thickens-sheet-to-3-5-mm/🎯️outcome/🔣️.json"),
-        ),
-        "change-sheet-k-sigma" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🎚️change-sheet-k-sigma/🎚️raises-sheet-plate-buckling-k-sigma-to-6-25/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🎚️change-sheet-k-sigma/🎚️raises-sheet-plate-buckling-k-sigma-to-6-25/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🎚️change-sheet-k-sigma/🎚️raises-sheet-plate-buckling-k-sigma-to-6-25/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🎚️change-sheet-k-sigma/🎚️raises-sheet-plate-buckling-k-sigma-to-6-25/🎯️outcome/🔣️.json"),
-        ),
-        "change-sheet-w-el-mm3" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📊️change-sheet-w-el-mm3/📊️raises-sheet-section-modulus-to-12800-mm3/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📊️change-sheet-w-el-mm3/📊️raises-sheet-section-modulus-to-12800-mm3/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📊️change-sheet-w-el-mm3/📊️raises-sheet-section-modulus-to-12800-mm3/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📊️change-sheet-w-el-mm3/📊️raises-sheet-section-modulus-to-12800-mm3/🎯️outcome/🔣️.json"),
-        ),
-        "change-sheet-m-ed-knm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🌊️change-sheet-m-ed-knm/🌊️raises-sheet-design-moment-to-1-25-knm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌊️change-sheet-m-ed-knm/🌊️raises-sheet-design-moment-to-1-25-knm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌊️change-sheet-m-ed-knm/🌊️raises-sheet-design-moment-to-1-25-knm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌊️change-sheet-m-ed-knm/🌊️raises-sheet-design-moment-to-1-25-knm/🎯️outcome/🔣️.json"),
-        ),
-        "change-shell-t-mm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🐚️change-shell-t-mm/🐚️thickens-shell-to-6-25-mm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🐚️change-shell-t-mm/🐚️thickens-shell-to-6-25-mm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🐚️change-shell-t-mm/🐚️thickens-shell-to-6-25-mm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🐚️change-shell-t-mm/🐚️thickens-shell-to-6-25-mm/🎯️outcome/🔣️.json"),
-        ),
-        "change-shell-r-mm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-shell-r-mm/🐚️widens-shell-radius-to-750-mm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-shell-r-mm/🐚️widens-shell-radius-to-750-mm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-shell-r-mm/🐚️widens-shell-radius-to-750-mm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⭕️change-shell-r-mm/🐚️widens-shell-radius-to-750-mm/🎯️outcome/🔣️.json"),
-        ),
-        "change-sigma-ed-shell-mpa" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🗜️change-sigma-ed-shell-mpa/🐚️raises-shell-design-stress-to-165-mpa/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗜️change-sigma-ed-shell-mpa/🐚️raises-shell-design-stress-to-165-mpa/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗜️change-sigma-ed-shell-mpa/🐚️raises-shell-design-stress-to-165-mpa/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗜️change-sigma-ed-shell-mpa/🐚️raises-shell-design-stress-to-165-mpa/🎯️outcome/🔣️.json"),
-        ),
         "change-annex" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌍️switches-national-annex-to-en/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌍️switches-national-annex-to-en/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌍️switches-national-annex-to-en/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌍️switches-national-annex-to-en/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/✏️to-en/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/✏️to-en/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/✏️to-en/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/✏️to-en/🎯️outcome/🔣️.json"),
+        ),
+        "change-materials" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-materials/✏️sets-materials/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-materials/✏️sets-materials/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-materials/✏️sets-materials/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-materials/✏️sets-materials/🎯️outcome/🔣️.json"),
+        ),
+        "change-sections" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-sections/✏️sets-sections/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-sections/✏️sets-sections/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-sections/✏️sets-sections/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-sections/✏️sets-sections/🎯️outcome/🔣️.json"),
+        ),
+        "change-members" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🏗️change-members/✏️sets-members/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏗️change-members/✏️sets-members/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏗️change-members/✏️sets-members/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏗️change-members/✏️sets-members/🎯️outcome/🔣️.json"),
+        ),
+        "change-connections" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🔗change-connections/✏️larger-weld-throat/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔗change-connections/✏️larger-weld-throat/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔗change-connections/✏️larger-weld-throat/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔗change-connections/✏️larger-weld-throat/🎯️outcome/🔣️.json"),
+        ),
+        "change-fire-scenarios" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-scenarios/🔥️hotter-fire/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-scenarios/🔥️hotter-fire/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-scenarios/🔥️hotter-fire/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-scenarios/🔥️hotter-fire/🎯️outcome/🔣️.json"),
+        ),
+        "change-fatigue-details" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-fatigue-details/✏️more-stress/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-fatigue-details/✏️more-stress/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-fatigue-details/✏️more-stress/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-fatigue-details/✏️more-stress/🎯️outcome/🔣️.json"),
+        ),
+        "change-cold-formed" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/❄️change-cold-formed/✏️thinner-sheet/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/❄️change-cold-formed/✏️thinner-sheet/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/❄️change-cold-formed/✏️thinner-sheet/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/❄️change-cold-formed/✏️thinner-sheet/🎯️outcome/🔣️.json"),
+        ),
+        "change-shells" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🫙change-shells/✏️thicker-shell/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🫙change-shells/✏️thicker-shell/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🫙change-shells/✏️thicker-shell/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🫙change-shells/✏️thicker-shell/🎯️outcome/🔣️.json"),
+        ),
+        "add-member" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/➕add-member/➕️adds-member/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕add-member/➕️adds-member/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕add-member/➕️adds-member/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕add-member/➕️adds-member/🎯️outcome/🔣️.json"),
+        ),
+        "remove-member" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/➖remove-member/➖️removes-member/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖remove-member/➖️removes-member/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖remove-member/➖️removes-member/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖remove-member/➖️removes-member/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-n-ed" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-member-n-ed/✏️to-2500/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-member-n-ed/✏️to-2500/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-member-n-ed/✏️to-2500/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-member-n-ed/✏️to-2500/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-my-ed" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/⤴️change-member-my-ed/✏️to-5000/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⤴️change-member-my-ed/✏️to-5000/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⤴️change-member-my-ed/✏️to-5000/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⤴️change-member-my-ed/✏️to-5000/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-buckling-length" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-member-buckling-length/✏️to-0/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-member-buckling-length/✏️to-0/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-member-buckling-length/✏️to-0/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-member-buckling-length/✏️to-0/🎯️outcome/🔣️.json"),
+        ),
+        "change-material-designation" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/⚗️change-material-designation/✏️to-en-aw/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚗️change-material-designation/✏️to-en-aw/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚗️change-material-designation/✏️to-en-aw/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚗️change-material-designation/✏️to-en-aw/🎯️outcome/🔣️.json"),
+        ),
+        "change-plate-thickness" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-plate-thickness/✏️to-0-0125/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-plate-thickness/✏️to-0-0125/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-plate-thickness/✏️to-0-0125/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧱change-plate-thickness/✏️to-0-0125/🎯️outcome/🔣️.json"),
+        ),
+        "change-weld-throat" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-weld-throat/✏️to-0-006/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-weld-throat/✏️to-0-006/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-weld-throat/✏️to-0-006/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-weld-throat/✏️to-0-006/🎯️outcome/🔣️.json"),
+        ),
+        "change-bolt-count" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🔩change-bolt-count/✏️to-3/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔩change-bolt-count/✏️to-3/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔩change-bolt-count/✏️to-3/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔩change-bolt-count/✏️to-3/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-en1999-1: no committed fixture is registered for kind {other:?}"),
     }
@@ -431,7 +332,7 @@ mod subject {
             return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different document than the committed text artifact", &twin, &parsed));
         }
         law::round_trip_preserves(&projection(&repacked)?, &projection(&parsed)?)?;
-        Ok(Outcome::with_raw(reprinted.as_bytes().to_vec(), carrier_projection(&reprinted)))
+        Ok(Outcome::with_raw(reprinted.as_bytes().to_vec(), super::carrier_projection(&reprinted)))
     }
     //#endregion 🔖️Handlers
 }

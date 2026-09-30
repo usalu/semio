@@ -200,6 +200,11 @@ impl TreeRowMetrics {
     }
 
     pub fn for_item(mut self, item: &UiTreeItemNode) -> Self {
+        if let Some(lines) = item.content_lines {
+            self.control_height = tree_content_height(lines, self.standard_control_height, self.gap);
+            self.row_height = self.row_height.max(self.control_height + self.gap * 2.0);
+            return self;
+        }
         self.control_height = match (item.control.as_ref(), item.inline_toolbar.as_ref()) {
             (_, Some(_)) => self.control_height_small,
             (Some(UiControlNode::Input(_) | UiControlNode::Select(_)), None) => self.control_height_small,
@@ -209,6 +214,17 @@ impl TreeRowMetrics {
         self.row_height = self.row_height.max(self.control_height);
         self
     }
+
+    /// 📏️ The height one line of tree-row content takes — a standard control.
+    pub fn content_line_height(&self) -> f32 {
+        self.standard_control_height
+    }
+}
+
+/// 📚️ The height `lines` lines of tree-row content stack to: one `line` each, one `gap` between two.
+pub fn tree_content_height(lines: u16, line: f32, gap: f32) -> f32 {
+    let lines = f32::from(lines);
+    (lines * line + (lines - 1.0).max(0.0) * gap).max(0.0)
 }
 
 pub fn tree_drag_role(item: &UiTreeItemNode) -> Option<TreeDragRole> {

@@ -137,9 +137,11 @@ describe("joining a named hub", () => {
     const port = await detectPort(0);
     try {
       const world = recordingWorld();
-      const unreachable = await ensureDevLocalHub(REPO, { hubUrl: `http://127.0.0.1:${port}`, dataDir: scratch("explicit"), world, joinBoundMs: 800 });
+      process.env.S_HUB_URL = `http://127.0.0.1:${port}`;
+      const unreachable = await ensureDevLocalHub(REPO, { dataDir: scratch("explicit"), world, joinBoundMs: 800 });
       expect(unreachable).toBeNull();
       expect(world.statuses.map((status) => status.kind)).toContain("gave-up");
+      expect(process.env.S_HUB_URL, "a serve that continues local-first hands its Vite no hub to proxy to").toBeUndefined();
       const server = createServer((_request, response) => {
         response.statusCode = 401;
         response.end();
@@ -147,6 +149,7 @@ describe("joining a named hub", () => {
       try {
         const joined = await ensureDevLocalHub(REPO, { hubUrl: `http://127.0.0.1:${port}/`, dataDir: scratch("explicit-up"), world, joinBoundMs: 5_000 });
         expect(joined).toMatchObject({ hubUrl: `http://127.0.0.1:${port}`, userId: "" });
+        expect(process.env.S_HUB_URL, "a joined hub is the one the serve's Vite proxies to").toBe(`http://127.0.0.1:${port}`);
         expect(world.statuses.at(-1)?.kind, "a joined hub without a broker says to sign in through the shell").toBe("no-broker");
       } finally {
         await new Promise<void>((resolveClosed) => server.close(() => resolveClosed()));

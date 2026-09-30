@@ -60,6 +60,8 @@
         },
         "data": {
           "type": "string",
+          "contentEncoding": "base64",
+          "pattern": "^[A-Za-z0-9+/]*={0,2}$",
           "x-semio-ui": {
             "widget": "hidden",
             "role": "value",

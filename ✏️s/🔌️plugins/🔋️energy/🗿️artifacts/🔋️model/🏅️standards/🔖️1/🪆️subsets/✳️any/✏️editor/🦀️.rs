@@ -997,7 +997,7 @@ fn load_document_effect(model: &crate::model::Model) -> semio_framework_plugin::
 /// ⛔️ The refusal a not-yet-landed mutation group raises, naming itself instead of degrading to a
 /// silent no-op or a banned whole-document replace.
 fn kind_unavailable(kind: &'static str, missing: &str) -> Fault {
-    Fault::new(FaultOrigin::App, FaultCode::new("mutation.kind-unavailable"), format!("the editor command {kind:?} needs the semantic mutation {missing:?}, which this artifact's vocabulary does not declare yet"))
+    Fault::new(FaultOrigin::App, FaultCode::new("app.command.kind-unavailable"), format!("the editor command {kind:?} needs the semantic mutation {missing:?}, which this artifact's vocabulary does not declare yet"))
 }
 
 /// 🆔️ Mints the next free `EntityId` for a collection addressed by its own ids — `max + 1`, so an
@@ -1025,7 +1025,7 @@ fn target_missing(entity: &str, id: u32) -> Fault {
 }
 
 fn target_in_use(entity: &str, id: u32, blocker: &str) -> Fault {
-    Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-in-use"), format!("{entity} {id} is still referenced by at least one {blocker}"))
+    Fault::new(FaultOrigin::App, FaultCode::new("app.command.target-in-use"), format!("{entity} {id} is still referenced by at least one {blocker}"))
 }
 //#endregion 🧬️MutationSeam
 
@@ -1069,7 +1069,7 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
         }
         EnergyModelEditorCommand::CreateZone { name, volume_m3, multiplier, conditioned } => {
             if *volume_m3 <= 0.0 {
-                return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.invalid-payload"), "a zone volume must be strictly positive"));
+                return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "a zone volume must be strictly positive"));
             }
             let id = next_entity_id(model.zones.iter().map(|zone| zone.id));
             model.zones.push(Zone { id, name: name.clone(), volume_m3: *volume_m3, multiplier: (*multiplier).max(1), conditioned: *conditioned, part_of_total_floor_area: true });
@@ -1106,7 +1106,7 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
             if !model.constructions.iter().any(|entry| entry.id == construction_id) {
                 return Err(target_missing("construction", *construction));
             }
-            let class = surface_class_from_id(class).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("mutation.invalid-payload"), format!("'{class}' is not a surface class")))?;
+            let class = surface_class_from_id(class).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("'{class}' is not a surface class")))?;
             let id = next_entity_id(model.surfaces.iter().map(|surface| surface.id));
             model.surfaces.push(Surface {
                 id,
@@ -1190,7 +1190,7 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
         }
         EnergyModelEditorCommand::SetSite { latitude_deg, longitude_deg, elevation_m, time_zone_hours, north_axis_deg } => {
             if !(-90.0..=90.0).contains(latitude_deg) || !(-180.0..=180.0).contains(longitude_deg) {
-                return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.invalid-payload"), "the site latitude/longitude are outside their SI ranges"));
+                return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "the site latitude/longitude are outside their SI ranges"));
             }
             model.site = Site { latitude_deg: *latitude_deg, longitude_deg: *longitude_deg, elevation_m: *elevation_m, time_zone_hours: *time_zone_hours, north_axis_deg: *north_axis_deg };
             ("update-site", "Set site".to_string())
@@ -1198,7 +1198,7 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
         EnergyModelEditorCommand::SetRunPeriod { start_month, start_day, end_month, end_day } => {
             let valid = (1..=12).contains(start_month) && (1..=12).contains(end_month) && (1..=31).contains(start_day) && (1..=31).contains(end_day);
             if !valid {
-                return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.invalid-payload"), "the run period must address real calendar months and days"));
+                return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "the run period must address real calendar months and days"));
             }
             model.run_period.start_month = *start_month as u8;
             model.run_period.start_day = *start_day as u8;
@@ -1213,13 +1213,13 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
         EnergyModelEditorCommand::SetSimulationSettings { zone_timestep_minutes, system_timestep_minutes, warmup_days } => {
             let settings = ChangeSimulationSettings { zone_timestep_minutes: *zone_timestep_minutes, system_timestep_minutes: *system_timestep_minutes, warmup_days: *warmup_days };
             if !settings.config().is_valid() {
-                return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.invalid-payload"), "the simulation settings are outside the engine's admissible timestep and warmup ranges"));
+                return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "the simulation settings are outside the engine's admissible timestep and warmup ranges"));
             }
             return Ok(Emit { config_mutations: vec![EnergyModelConfigMutation::ChangeSimulationSettings(settings)], description: Some("Set simulation settings".into()), ..Default::default() });
         }
         EnergyModelEditorCommand::SetResultField { field } => {
             let Some(selected) = crate::editor::model::results::ResultField::from_id(field) else {
-                return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.invalid-payload"), format!("'{field}' is not a published per-surface result field")));
+                return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("'{field}' is not a published per-surface result field")));
             };
             // 🎨️ Only the 3d model window's body re-renders: the map, the ramp and the legend are all
             // derived inside its own `render`, and nothing else in the editor reads `resultField`.
@@ -1293,12 +1293,12 @@ fn schedule_exists(schedules: &crate::schedule::ScheduleSet, id: u32) -> bool {
 //#region 🔍️InspectorProperties
 /// ⛔️ `'{property}'` is not a field of `{entity}`.
 fn unknown_property(entity: &str, property: &str) -> Fault {
-    Fault::new(FaultOrigin::App, FaultCode::new("mutation.invalid-payload"), format!("'{property}' is not a {entity} property"))
+    Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("'{property}' is not a {entity} property"))
 }
 
 /// ⛔️ `'{value}'` cannot be read as `{property}`, or lies outside its SI range.
 fn invalid_value(property: &str, value: &str) -> Fault {
-    Fault::new(FaultOrigin::App, FaultCode::new("mutation.invalid-payload"), format!("'{value}' is outside the admissible range of property '{property}'"))
+    Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("'{value}' is outside the admissible range of property '{property}'"))
 }
 
 fn as_f64(property: &str, value: &str, admits: impl Fn(f64) -> bool) -> Result<f64, Fault> {
@@ -1678,7 +1678,7 @@ fn set_construction_property(model: &mut crate::model::Model, construction: u32,
         if !opaque.contains(&id) {
             return Err(Fault::new(
                 FaultOrigin::App,
-                FaultCode::new("mutation.invalid-payload"),
+                FaultCode::new("app.command.invalid-payload"),
                 format!("layer material {} is not an opaque material — 'add-construction-layer' declares no glazing or gas layer", id.0),
             ));
         }

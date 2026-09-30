@@ -33,7 +33,10 @@ import { XMLBuilder } from "fast-xml-parser";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-const BUILD = new XMLBuilder({ ignoreAttributes: false, attributeNamePrefix: "@_", format: false, suppressEmptyNode: true });
+/** 🏷️ `suppressBooleanAttributes` defaults to `true`, which writes an attribute whose value is the string `"true"` as a
+ *  bare name (`<Visibility DefaultVisibility/>`) — HTML syntax, not well-formed XML 1.0 (§3.1 `Attribute ::= Name Eq
+ *  AttValue`). Every strict XML reader then rejects the whole `.bcfv`. */
+const BUILD = new XMLBuilder({ ignoreAttributes: false, attributeNamePrefix: "@_", format: false, suppressEmptyNode: true, suppressBooleanAttributes: false });
 
 function xmlPart(root: Record<string, unknown>): string {
   return `<?xml version="1.0" encoding="UTF-8"?>${BUILD.build(root)}`;

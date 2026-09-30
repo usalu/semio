@@ -74,11 +74,11 @@ fn drain(registry: &mut semio_framework_job::FixedOperationRegistry<DrawingGestu
 fn drawing_gesture_maximum_plus_one_returns_the_exact_owner() {
     let mut registry = semio_framework_job::FixedOperationRegistry::<DrawingGestureOperationOwner, 64>::new(64 * DRAWING_GESTURE_RETAINED_BYTES);
     for operation in 0..64 {
-        if registry.admit(key(operation, 0), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY)).is_err() {
+        if registry.admit(key(operation, 0), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_err() {
             panic!("every distinct fixed slot must admit through the declared maximum");
         }
     }
-    let rejected = match registry.admit(key(64, 0), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY)) {
+    let rejected = match registry.admit(key(64, 0), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")) {
         Ok(()) => panic!("maximum plus one must return its exact owner"),
         Err(rejected) => rejected,
     };
@@ -95,7 +95,7 @@ fn drawing_gesture_maximum_plus_one_returns_the_exact_owner() {
 #[test]
 fn drawing_gesture_stale_generation_and_aba_are_exact() {
     let mut registry = semio_framework_job::FixedOperationRegistry::<DrawingGestureOperationOwner, 64>::new(DRAWING_GESTURE_RETAINED_BYTES);
-    assert!(registry.admit(key(7, 1), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY)).is_ok());
+    assert!(registry.admit(key(7, 1), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
     for _ in 0..64 {
         if registry.cancel_stale_step(semio_framework_job::OperationId(7), semio_framework_job::Generation(2)) {
             break;
@@ -108,7 +108,7 @@ fn drawing_gesture_stale_generation_and_aba_are_exact() {
         let _ = registry.close_step(1, DRAWING_GESTURE_RETAINED_BYTES);
     }
     assert!(registry.is_empty());
-    assert!(registry.admit(key(7, 2), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY)).is_ok(), "the new generation owns the retired slot");
+    assert!(registry.admit(key(7, 2), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok(), "the new generation owns the retired slot");
     registry.cancel(key(7, 2));
     for _ in 0..128 {
         if registry.is_empty() {
@@ -121,7 +121,7 @@ fn drawing_gesture_stale_generation_and_aba_are_exact() {
 
 #[test]
 fn drawing_gesture_interrupted_and_repeated_close_is_terminal_empty() {
-    let mut owner = DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY);
+    let mut owner = DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "");
     owner.cancel();
     owner.begin_close();
     assert_eq!(owner.close_step(0, DRAWING_GESTURE_RETAINED_BYTES), semio_framework_job::InteractiveJobCloseStep::Blocked);
@@ -137,7 +137,7 @@ fn drawing_gesture_interrupted_and_repeated_close_is_terminal_empty() {
 #[test]
 fn drawing_gesture_owner_closes_under_the_framework_page_grant() {
     let page = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
-    let mut owner = DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY);
+    let mut owner = DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "");
     owner.begin_close();
     assert_eq!(owner.close_step(1, page), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: page });
     assert!(owner.session.is_none(), "the session is dropped on the first granted page");
@@ -176,7 +176,7 @@ fn drawing_retained_decoder_is_incremental_exact_and_fail_closed() {
 fn drawing_preview_rejects_a_stale_revision_and_cancels_the_owner() {
     let mut owner = DrawingInstanceOperationOwner::new();
     let operation = key(9, 4);
-    assert!(owner.operations.admit(operation, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY)).is_ok());
+    assert!(owner.operations.admit(operation, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
     owner.active = Some((operation, [1; 32]));
     assert!(owner.preview_projection([2; 32], "selectDirect").is_none());
     assert!(owner.active.is_none());
@@ -196,7 +196,7 @@ fn drawing_instance_owner_close_reaches_every_slot_parity() {
     use semio_framework_plugin::ArtifactInstanceOperationOwner as _;
     let mut owner = DrawingInstanceOperationOwner::new();
     for operation in 0..3u64 {
-        assert!(owner.operations.admit(key(operation, 0), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY)).is_ok());
+        assert!(owner.operations.admit(key(operation, 0), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
     }
     let page = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
     for _ in 0..4_096 {
@@ -220,7 +220,7 @@ fn drawing_instance_owner_close_reaches_every_slot_parity() {
 fn drawing_gesture_admission_retires_the_retiring_owner_in_its_residue_class() {
     let mut owner = DrawingInstanceOperationOwner::new();
     let first = key(256, 2);
-    assert!(owner.operations.admit(first, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY)).is_ok());
+    assert!(owner.operations.admit(first, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
     owner.operations.cancel(first);
     let second = key(320, 3);
     assert!(!owner.operations.can_admit(second, DRAWING_GESTURE_RETAINED_BYTES), "the retiring predecessor still holds the residue class");
@@ -231,7 +231,7 @@ fn drawing_gesture_admission_retires_the_retiring_owner_in_its_residue_class() {
         let _ = owner.operations.close_step(1, DRAWING_GESTURE_RETAINED_BYTES);
     }
     assert!(owner.operations.can_admit(second, DRAWING_GESTURE_RETAINED_BYTES), "one bounded sweep retires the predecessor");
-    assert!(owner.operations.admit(second, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY)).is_ok());
+    assert!(owner.operations.admit(second, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
     owner.operations.cancel(second);
     drain(&mut owner.operations);
 }
@@ -243,7 +243,7 @@ fn drawing_gesture_maintenance_retires_a_cancelled_owner_promptly() {
     use semio_framework_plugin::ArtifactInstanceOperationOwner as _;
     let mut owner = DrawingInstanceOperationOwner::new();
     let live = key(448, 3);
-    assert!(owner.operations.admit(live, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY)).is_ok());
+    assert!(owner.operations.admit(live, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
     owner.operations.cancel(live);
     let page = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
     let mut steps = 0;

@@ -59,7 +59,7 @@ import {
 } from "@semio-tech/framework";
 import { packedTextLeaf } from "./🧳️packed-text/🟦️.ts";
 import type { MediaExportHandle, MediaExportStatus } from "@semio-tech/framework-os";
-import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type DocumentArchiveLoadStatus, type DocumentArchivePack, type WindowConfigPackEntry, decodeAppCommand, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodeAppFrame, encodePackValue, faultDisplayMessage, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, type AppDocumentIdentity, type AppFrameValue, type DocumentArchiveLoadStatus, type DocumentArchivePack, type WindowConfigPackEntry, decodeAppCommand, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodeAppFrame, encodePackValue, faultDisplayMessage, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
 import {
   DOCUMENT_BACKBONE_RETENTION_LIMITS,
   decodeLocalInteractionCaptureJson,
@@ -204,6 +204,9 @@ export type PluginWasmHandle = {
   readonly loadAppDocumentPack?: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
   /** 🗃️ Complete root plus recursive owned-member closure for durable document persistence. */
   readonly readAppDocumentArchive?: (instanceId: number) => Promise<DocumentArchivePack>;
+  /** 🪪️ The instance's own document identity — the id its store stamps on every envelope it publishes — without exporting
+   * its bytes; `parent_document_id` is `null` for an app without a document. */
+  readonly readAppDocumentIdentity: (instanceId: number) => Promise<AppDocumentIdentity>;
   /** 🗃️ Atomically restores a complete recursive document archive; `signal` cancels the load, `progress` hears every
    * polled status (`completed` of `total`). */
   readonly loadAppDocumentArchive?: (instanceId: number, archive: DocumentArchivePack, signal?: AbortSignal, progress?: (status: DocumentArchiveLoadStatus) => void) => Promise<void>;
@@ -3968,6 +3971,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       if (errorFrame) throw new Error(`loadAppDocumentPack failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
     },
     readAppDocumentArchive: (instanceId) => requireChannel(instanceId).readDocumentArchive(),
+    readAppDocumentIdentity: (instanceId) => requireChannel(instanceId).readDocumentIdentity(),
     loadAppDocumentArchive: (instanceId, archive, signal, progress) => requireChannel(instanceId).loadDocumentArchive(archive, signal, progress),
     readWindowConfigPacks: (instanceId) => requireChannel(instanceId).readWindowConfigs(),
     loadWindowConfigPack: (instanceId, entry) => requireChannel(instanceId).loadWindowConfig(entry),

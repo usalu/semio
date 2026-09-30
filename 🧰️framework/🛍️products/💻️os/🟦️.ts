@@ -12,7 +12,7 @@
  */
 // #endregion Header
 
-import type { AppRef, AppRole, AppRouter, ArtifactDialect, ArtifactDiff, Conflict, ConflictResolution, DispatchReport, Fault, FetchTimeoutResponse, InverseMutation, KernelMutation, MergePolicy, MergeReport, MutationMessage, OpeningPreferences, PluginDispatchHintV1, PluginViewState, PluginWasmHandle, TurnOutcome, UndoGroup, UndoPolicy, UtilityLeaf } from "@semio-tech/framework";
+import type { AppRef, AppRole, AppRouter, ArtifactDialect, ArtifactDiff, Conflict, ConflictResolution, DispatchReport, Fault, FetchTimeoutResponse, InverseMutation, KernelMutation, MergePolicy, MergeReport, MutationMessage, OpeningPreferences, Severity, PluginDispatchHintV1, PluginViewState, PluginWasmHandle, TurnOutcome, UndoGroup, UndoPolicy, UtilityLeaf } from "@semio-tech/framework";
 import { conflictResolutionAsU8, createTurnOutcomeBroadcast, dialectCoordinate, fetchWithTimeout, mergePolicyAsU8, parseDialectCoordinate, parseSurfaceAppId, resolveOpeningApp, retryWithJitteredBackoff, viewContextWithIntegerCarriers } from "@semio-tech/framework";
 /** 📇️ Directory event/command/DTO types (contract-freeze §C1/§C6) — imported once here for
  * {@link BackboneWorkerRequest}/{@link BackboneWorkerResponse}'s `directory-*` variants and this
@@ -365,7 +365,11 @@ if (import.meta.vitest) {
 export type BinaryBackboneMessage =
   | { readonly kind: "genesis"; readonly pack: Uint8Array }
   | { readonly kind: "mutations"; readonly envelopes: Uint8Array }
-  | { readonly kind: "ack"; readonly opIds: readonly string[] };
+  | { readonly kind: "ack"; readonly opIds: readonly string[] }
+  | { readonly kind: "retract"; readonly mutationIds: readonly string[] };
+
+/** 🏷️ The Rust `BackboneMessage` variant ordinal of each kind this twin speaks; `Member` (3) is a Rust-only lane. */
+const BACKBONE_MESSAGE_ORDINALS = { genesis: 0, mutations: 1, ack: 2, retract: 4 } as const;
 
 export const BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES = 262_144;
 export const BACKBONE_GENESIS_MAXIMUM_BYTES = 4 * 1024 * 1024;
@@ -379,17 +383,18 @@ export function encodeBackboneMessage(message: BinaryBackboneMessage): Uint8Arra
     if (!(value instanceof Uint8Array) || value.length > maximum) throw new Error("backbone message: byte limit");
     return value;
   };
-  if (message.kind === "ack") {
-    if (message.opIds.length > maximum / 2) throw new Error("backbone message: item limit");
-    for (const value of message.opIds) {
+  const ids = message.kind === "ack" ? message.opIds : message.kind === "retract" ? message.mutationIds : null;
+  if (ids !== null) {
+    if (ids.length > maximum / 2) throw new Error("backbone message: item limit");
+    for (const value of ids) {
       if (typeof value !== "string" || value.length > maximum || encoder.encode(value).length > maximum || new TextDecoder("utf-8", { fatal: true }).decode(encoder.encode(value)) !== value) throw new Error("backbone message: invalid string");
     }
   } else if (message.kind === "genesis") checkedBytes(message.pack);
   else if (message.kind === "mutations") checkedBytes(message.envelopes);
   else throw new Error("backbone message: unknown kind");
-  const symbols = message.kind === "ack" ? packBuildSymbols(message.opIds) : [];
+  const symbols = ids !== null ? packBuildSymbols(ids) : [];
   const symbolIndex = new Map(symbols.map((value, index) => [value, index] as const));
-  const out: number[] = [1, message.kind === "genesis" ? 0 : message.kind === "mutations" ? 1 : 2];
+  const out: number[] = [1, BACKBONE_MESSAGE_ORDINALS[message.kind]];
   const bounded = () => { if (out.length > maximum) throw new Error("backbone message: byte limit"); };
   writeVarintU64(out, symbols.length);
   for (const symbol of symbols) {
@@ -412,8 +417,8 @@ export function encodeBackboneMessage(message: BinaryBackboneMessage): Uint8Arra
     byteField(0, message.envelopes);
   } else {
     out.push(0, PACK_TAG_LIST);
-    writeVarintU64(out, message.opIds.length);
-    for (const value of message.opIds) { packEncodeString(value, symbolIndex, out); bounded(); }
+    writeVarintU64(out, ids!.length);
+    for (const value of ids!) { packEncodeString(value, symbolIndex, out); bounded(); }
   }
   bounded();
   return new Uint8Array(out);
@@ -430,7 +435,8 @@ export function decodeBackboneMessage(bytes: Uint8Array): BinaryBackboneMessage 
     if (value > BigInt(maximum) || (pos[0] - start > 1 && bytes[pos[0] - 1] === 0)) throw new Error("backbone message: invalid count");
     return Number(value);
   };
-  const tag = natural(2);
+  const tag = natural(BACKBONE_MESSAGE_ORDINALS.retract);
+  if (tag === 3) throw new Error("backbone message: member lanes are Rust-only");
   if (tag !== 0 && bytes.length > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES) throw new Error("backbone message: hot byte limit");
   const take = (length: number) => {
     if (length > bytes.length - pos[0]) throw new Error("backbone message: truncated bytes");
@@ -470,7 +476,7 @@ export function decodeBackboneMessage(bytes: Uint8Array): BinaryBackboneMessage 
         opIds.push(symbol);
       } else throw new Error("backbone message: string tag");
     }
-    message = { kind: "ack", opIds };
+    message = tag === BACKBONE_MESSAGE_ORDINALS.retract ? { kind: "retract", mutationIds: opIds } : { kind: "ack", opIds };
   }
   if (pos[0] !== bytes.length) throw new Error("backbone message: trailing bytes");
   const canonical = encodeBackboneMessage(message);
@@ -487,6 +493,14 @@ export function parseDocumentBackboneMessage(message: Uint8Array): DocumentBackb
   if (parsed.kind !== "mutations") throw new Error("document backbone: mutations required");
   const envelopes = decodeDocumentBackboneEnvelopeBatchExact(parsed.envelopes);
   return { message: message.slice(), envelopes };
+}
+
+/** 🔙️ Admits one canonical hot message an actor hands its store: a mutation batch, exactly as
+ * {@link parseDocumentBackboneMessage} admits it, or the retraction of history transitions the hub refused. */
+export function parseInboundDocumentBackboneMessage(message: Uint8Array): Uint8Array {
+  if (!(message instanceof Uint8Array) || message.length > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES) throw new Error("document backbone: hot byte limit");
+  if (decodeBackboneMessage(message).kind === "retract") return message.slice();
+  return parseDocumentBackboneMessage(message).message;
 }
 
 //#endregion 🔀️BackboneMessage
@@ -732,10 +746,28 @@ export type ArtifactSyncStatus = {
  * conflict card / offer "fork alternative" vs "take theirs", and `message` alone already covers that. */
 export type SyncConflict = { readonly message?: string } & Record<string, unknown>;
 
+/** 🧾️ Every class of refused command batch, one closed set for every producer: the hub (`hub.refused`, or `hub.unreadable`
+ * when its diagnostics do not decode) and the local actor's own refusals before any frame leaves it — mirrors Rust
+ * `CommandRejectionCode`.
+ * @see ./🔨️modules/🏪️store/🔄️sync/🧬️schema/🔣️command-rejection/🔣️.json */
+export const COMMAND_REJECTION_CODES_V1 = ["hub.refused", "hub.unreadable", "local.read-only", "local.queue-full", "local.backbone-capacity", "local.backbone-duplicate", "local.backbone-pair-unavailable", "local.backbone-scope-mismatch", "local.backbone-malformed", "local.socket-frame-ceiling"] as const;
+
+/** 🧾️ One {@link COMMAND_REJECTION_CODES_V1} member. */
+export type CommandRejectionCodeV1 = (typeof COMMAND_REJECTION_CODES_V1)[number];
+
+/** 🔢️ The typed counters a local refusal reports: the refused batch's envelopes, the bytes it or its queue holds, and the
+ * limit it met — mirrors Rust `CommandRejectionDetail`. */
+export type CommandRejectionDetailV1 = { readonly envelopes?: number; readonly bytes?: number; readonly limit?: number };
+
+/** 🚫️ One refused command batch: its class, the producer's English diagnostic `reason` (never shown to a human), the
+ * structured `MutationMessage`s the hub graded it with (decoded once from the wire, empty for a local refusal) and the local
+ * counters — mirrors Rust `CommandAckOutcome::Rejected`. */
+export type CommandRejectionV1 = { readonly kind: "rejected"; readonly code: CommandRejectionCodeV1; readonly reason: string; readonly messages: readonly MutationMessage[]; readonly detail?: CommandRejectionDetailV1 };
+
 /** 📮️ The client-side twin of `protocol_wire::ApplyOutcome`, minus the `Transformed` envelope
  * payload (already delivered separately as a `remoteMutations` event by the time this fires) —
  * mirrors Rust `CommandAckOutcome`. */
-export type CommandAckOutcome = { readonly kind: "accepted" } | { readonly kind: "transformed" } | { readonly kind: "rejected"; readonly reason: string; readonly messages: readonly number[] };
+export type CommandAckOutcome = { readonly kind: "accepted" } | { readonly kind: "transformed" } | CommandRejectionV1;
 
 /** 📬️ Actor→subscriber events — mirrors Rust `ArtifactEvent`. */
 export type ArtifactEvent =
@@ -1506,7 +1538,7 @@ function parseArtifactActorMsg(message: Record<string, unknown>): ArtifactActorM
 
 function wireArtifactEvent(event: ArtifactEvent): unknown {
   if (event.kind === "documentBackbone") {
-    return { kind: "documentBackbone", message: Array.from(parseDocumentBackboneMessage(event.message).message) };
+    return { kind: "documentBackbone", message: Array.from(parseInboundDocumentBackboneMessage(event.message)) };
   }
   if (event.kind === "remoteMutations") {
     return { kind: "remoteMutations", envelopes: encodeCausalEnvelopeBatch(event.envelopes, replicationPackCodec) };
@@ -1522,7 +1554,7 @@ function wireArtifactEvent(event: ArtifactEvent): unknown {
 function parseArtifactEvent(event: Record<string, unknown>): ArtifactEvent {
   if (event.kind === "documentBackbone") {
     if (Object.keys(event).sort().join(",") !== "kind,message" || !Array.isArray(event.message) || event.message.length > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES || !event.message.every((entry) => Number.isInteger(entry) && entry >= 0 && entry <= 255)) throw new Error("backbone worker response: invalid document backbone message");
-    return { kind: "documentBackbone", message: parseDocumentBackboneMessage(Uint8Array.from(event.message as readonly number[])).message };
+    return { kind: "documentBackbone", message: parseInboundDocumentBackboneMessage(Uint8Array.from(event.message as readonly number[])) };
   }
   if (event.kind === "remoteMutations" && Array.isArray(event.envelopes) && event.envelopes.every((entry) => typeof entry === "number")) {
     return { kind: "remoteMutations", envelopes: decodeCausalEnvelopeBatch(event.envelopes as readonly number[], replicationPackCodec) };
@@ -1532,6 +1564,12 @@ function parseArtifactEvent(event: Record<string, unknown>): ArtifactEvent {
     const archive = Uint8Array.from(event.archive as readonly number[]);
     decodeDocumentArchiveBytes(archive);
     return { kind: "documentArchiveReplaced", archive: Array.from(archive) };
+  }
+  if (event.kind === "commandOutcome") {
+    const batchId = commandBatchIdOfValueV1(event.batchId);
+    const outcome = commandAckOutcomeOfValueV1(event.outcome);
+    if (Object.keys(event).sort().join(",") !== "batchId,kind,outcome" || batchId === null || outcome === null) throw new Error("backbone worker response: invalid command outcome");
+    return { kind: "commandOutcome", batchId, outcome };
   }
   return event as ArtifactEvent;
 }
@@ -3705,7 +3743,7 @@ export function faultDisplayMessage(faultBytes: readonly number[], decodePackVal
 
 /** 📥️ Decodes a pack-encoded {@link DispatchReport} from an app-channel wire blob —
  * `AppFrame::Invocation.messages` (a successful dispatch's report) or `AppFrame::Error.report` (the
- * rejected dispatch's report, `Fault.code == "mutation.rejected"`). `null` for an empty blob (the
+ * rejected dispatch's report, `Fault.code == "app.command.rejected"`). `null` for an empty blob (the
  * trailing field's zero value before every dispatch path was updated to populate it). */
 export function decodeDispatchReportFromWire(reportBytes: readonly number[], decodePackValue: (bytes: Uint8Array) => unknown): DispatchReport | null {
   if (reportBytes.length === 0) return null;
@@ -4766,6 +4804,93 @@ if (import.meta.vitest) {
 }
 //#endregion ⏳️TransientApplyRefusal
 
+//#region 🚫️CommandRejection
+const MUTATION_MESSAGE_LEVELS: ReadonlySet<unknown> = new Set(["info", "warning", "error", "fatal"]);
+
+/** 🧾️ One `MutationMessage` read like Rust's hand-written `FromValue` twin (`📡️replication/🎮️mutation/🦀️.rs`): `level`,
+ * `code` and `message` required, `target` and `opIndex` optional (an empty `target` and a `null` `opIndex` read as absent),
+ * any other field ignored; `null` when a field has the wrong type. Integers are read from a JSON number or a pack carrier. */
+function mutationMessageOfValueV1(value: unknown): MutationMessage | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value) || isPackInteger(value)) return null;
+  const { level, code, message, target, opIndex } = value as Record<string, PackValue | undefined>;
+  if (!MUTATION_MESSAGE_LEVELS.has(level) || typeof code !== "string" || typeof message !== "string") return null;
+  if (target !== undefined && (!Array.isArray(target) || !target.every((segment) => typeof segment === "string"))) return null;
+  const index = opIndex === undefined || opIndex === null ? null : packUIntSafeOrNull(opIndex);
+  if (opIndex !== undefined && opIndex !== null && (index === null || index > 0xffff_ffff)) return null;
+  return { level: level as Severity, code, message, ...(target === undefined || target.length === 0 ? {} : { target: [...(target as readonly string[])] }), ...(index === null ? {} : { opIndex: index }) };
+}
+
+/** 🧾️ The hub's `ApplyOutcome::Rejected.messages` bytes — `🌎️hub` `encode_messages`: the UTF-8 JSON of one
+ * `MutationMessage` array, empty for an admission or transport refusal — decoded once; `null` when they are not that array. */
+export function decodeHubRejectionMessagesV1(bytes: ArrayLike<number>): readonly MutationMessage[] | null {
+  if (bytes.length === 0) return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(bytes)));
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(parsed)) return null;
+  const messages = parsed.map(mutationMessageOfValueV1);
+  return messages.every((message) => message !== null) ? (messages as MutationMessage[]) : null;
+}
+
+/** 🚫️ The hub's refusal in the one rejection contract: `hub.refused` with the messages it graded the batch with, or
+ * `hub.unreadable` when they do not decode — never a throw, whatever the wire carried. */
+export function hubCommandRejectionV1(rejected: { readonly reason: string; readonly messages: ArrayLike<number> }): CommandRejectionV1 {
+  const messages = decodeHubRejectionMessagesV1(rejected.messages);
+  return { kind: "rejected", code: messages === null ? "hub.unreadable" : "hub.refused", reason: rejected.reason, messages: messages ?? [] };
+}
+
+/** 🚫️ A refusal the local actor answers before any frame leaves it: no hub messages, only its typed counters. */
+export function localCommandRejectionV1(code: Exclude<CommandRejectionCodeV1, `hub.${string}`>, reason: string, detail?: CommandRejectionDetailV1): CommandRejectionV1 {
+  return { kind: "rejected", code, reason, messages: [], ...(detail === undefined ? {} : { detail }) };
+}
+
+const COMMAND_REJECTION_CODE_SET: ReadonlySet<unknown> = new Set(COMMAND_REJECTION_CODES_V1);
+const COMMAND_REJECTION_DETAIL_FIELDS = ["envelopes", "bytes", "limit"] as const;
+
+/** 🔎️ A `commandOutcome`'s outcome as either actor wires it (Rust `CommandAckOutcome`'s `ToValue`, or this module's own
+ * shape through a structured clone), read into the contract; `null` when it is not one. */
+export function commandAckOutcomeOfValueV1(value: unknown): CommandAckOutcome | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value) || isPackInteger(value)) return null;
+  const row = value as Record<string, PackValue | undefined>;
+  if (row.kind === "accepted" || row.kind === "transformed") return Object.keys(row).length === 1 ? { kind: row.kind } : null;
+  if (row.kind !== "rejected" || !COMMAND_REJECTION_CODE_SET.has(row.code) || typeof row.reason !== "string" || !Array.isArray(row.messages)) return null;
+  if (Object.keys(row).some((key) => key !== "kind" && key !== "code" && key !== "reason" && key !== "messages" && key !== "detail")) return null;
+  const messages = row.messages.map(mutationMessageOfValueV1);
+  if (!messages.every((message) => message !== null)) return null;
+  const rejection = { kind: "rejected", code: row.code as CommandRejectionCodeV1, reason: row.reason, messages: messages as MutationMessage[] } as const;
+  if (row.detail === undefined || row.detail === null) return rejection;
+  if (typeof row.detail !== "object" || Array.isArray(row.detail) || isPackInteger(row.detail)) return null;
+  const detailRow = row.detail as Record<string, PackValue | undefined>;
+  if (Object.keys(detailRow).some((key) => !(COMMAND_REJECTION_DETAIL_FIELDS as readonly string[]).includes(key))) return null;
+  const detail: { envelopes?: number; bytes?: number; limit?: number } = {};
+  for (const field of COMMAND_REJECTION_DETAIL_FIELDS) {
+    const entry = detailRow[field];
+    if (entry === undefined || entry === null) continue;
+    const count = packUIntSafeOrNull(entry);
+    if (count === null) return null;
+    detail[field] = count;
+  }
+  return { ...rejection, detail };
+}
+
+/** 🔢️ A `commandOutcome` batch id: the hub's ids count up from zero, both actors' local refusals count down from -1 — the
+ * TypeScript actor as a negative number, the Rust actor as its two's-complement `u64` (`u64::MAX` is -1). */
+function commandBatchIdOfValueV1(value: unknown): number | null {
+  if (typeof value === "number") return Number.isSafeInteger(value) ? value : null;
+  if (!isPackInteger(value)) return null;
+  const signed = value.kind === "uint" ? BigInt.asIntN(64, value.value) : value.value;
+  return signed >= BigInt(Number.MIN_SAFE_INTEGER) && signed <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(signed) : null;
+}
+
+if (import.meta.vitest) {
+  const { registerCommandRejectionTests } = await import("./🔨️modules/🏪️store/🔄️sync/🧪️tests/🧪️command-rejection/🟦️.ts");
+  await registerCommandRejectionTests(import.meta.vitest, { COMMAND_REJECTION_CODES_V1, commandAckOutcomeOfValueV1, decodeBackboneWorkerResponse, decodeHubRejectionMessagesV1, encodePackValue, hubCommandRejectionV1, localCommandRejectionV1, packUInt, BACKBONE_WORKER_WIRE_MAGIC });
+}
+//#endregion 🚫️CommandRejection
+
 //#region 🔑️DirectoryAccessChanged
 if (import.meta.vitest) {
   const { registerDirectoryAccessChangedTests } = await import("./🧪️tests/🔑️directory-access-changed/🟦️.ts");
@@ -5453,7 +5578,7 @@ export class DirectoryClient {
 
 if (import.meta.vitest) {
   const { registerTests4 } = await import("./🧪️tests/🧪️backbone-envelope-io/🟦️.ts");
-  await registerTests4(import.meta.vitest, { BACKBONE_WORKER_WIRE_MAGIC, DIRECTORY_HTTP_TIMEOUT_MS, DirectoryClient, HUB_HEALTHY_RESET_MS, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodePackValue, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodePackValue, fetchWithTimeout, parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1, parseDirectorySpaceAdministrationPageV1, parseDocumentBackboneMessage }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests4(import.meta.vitest, { BACKBONE_WORKER_WIRE_MAGIC, DIRECTORY_HTTP_TIMEOUT_MS, DirectoryClient, HUB_HEALTHY_RESET_MS, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodePackValue, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodePackValue, fetchWithTimeout, parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1, parseDirectorySpaceAdministrationPageV1, parseDocumentBackboneMessage, decodeBackboneMessage, parseInboundDocumentBackboneMessage }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🔖️HubBinding
 //#endregion 🔖️Directory

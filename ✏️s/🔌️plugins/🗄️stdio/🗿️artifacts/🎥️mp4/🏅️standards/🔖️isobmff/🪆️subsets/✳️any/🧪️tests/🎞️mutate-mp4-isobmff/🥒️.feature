@@ -44,7 +44,7 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
   `-c copy -movflags +faststart` fixture's own layout. Demanding that our writer move the bytes
   would demand that a lossless container codec lose something. The artifact holds itself to the
   exact-bytes claim outside this case too, on the FULL recording rather than this excerpt
-  (`🚪️io/🦀️component.rs::exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte`), and the ten
+  (`🚪️io/🦀️component.rs::exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte`), and the
   `mutate-*` rows below are what prove a real parse happened: they drive the same decode/encode
   pipeline and every one of them moves both the bytes and the compared projection.
 
@@ -55,7 +55,10 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
   under its own `ftyp`, the 16x16 two-sample AVC track of this subset's committed `set-snapshot`
   specification vector — a verbatim duplicate of the real track would put 2.7 MB of sample bytes
   into one cell. The oracle refuses what `mp4` 0.14 cannot write (a non-AVC sample entry, more than
-  one SPS or PPS) rather than approximating it.
+  one SPS or PPS) rather than approximating it. The `patch-snapshot` row is the editor's compact
+  path-addressed patch over the snapshot's own member paths: it promotes sample 5 to a sync sample and
+  demotes the real key frame 27, which the subject applies through the schema-validated snapshot editor
+  and the oracle interprets over `mp4` 0.14's own sample model.
 
   Every scenario copies the immutable fixture into the case work directory before touching it; the
   committed fixture is never written to. Both the oracle's and the subject's results are read back by
@@ -88,6 +91,7 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
       | insert-sample | {"trackIndex":0,"index":10,"sample":{"data":[0,0,0,4,101,1,2,3],"duration":512,"ctsOffset":0,"sync":false}} |
       | remove-sample | {"trackIndex":0,"index":10} |
       | set-sample-sync | {"trackIndex":0,"index":27,"sync":false} |
+      | patch-snapshot | {"patch":{"edits":[{"path":["tracks","0","samples","5","sync"],"edit":{"operation":"set","value":true}},{"path":["tracks","0","samples","27","sync"],"edit":{"operation":"set","value":false}}]}} |
 
   @id-inverse
   @level-exhaustive
@@ -111,6 +115,7 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
       | insert-sample | {"trackIndex":0,"index":10,"sample":{"data":[0,0,0,4,101,1,2,3],"duration":512,"ctsOffset":0,"sync":false}} |
       | remove-sample | {"trackIndex":0,"index":10} |
       | set-sample-sync | {"trackIndex":0,"index":27,"sync":false} |
+      | patch-snapshot | {"patch":{"edits":[{"path":["tracks","0","samples","5","sync"],"edit":{"operation":"set","value":true}},{"path":["tracks","0","samples","27","sync"],"edit":{"operation":"set","value":false}}]}} |
 
   @id-identity-round-trip
   @level-long

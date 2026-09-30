@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeWallHeight
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/↕️applies-change-wall-height/🦀️.rs"]
+#[path = "🧪️tests/↕️shortens-first-wall/🦀️.rs"]
 mod named_test;

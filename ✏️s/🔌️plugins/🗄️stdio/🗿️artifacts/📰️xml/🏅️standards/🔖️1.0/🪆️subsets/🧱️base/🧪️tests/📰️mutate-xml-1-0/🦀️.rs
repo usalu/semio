@@ -7,9 +7,11 @@
 //! `quick-xml` reference implementation (`../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`'s
 //! own `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's
 //! own `XmlSnapshot::import_utf8`/`export_utf8`/`apply_xml_mutation` over the full 8-kind
-//! `XmlMutation` vocabulary. Both results are read back by the SAME independent `project_xml_1_0`
-//! (`quick-xml`) before the `semantic-xml-v1` profile compares them. The subject half is gated behind
-//! the generated host's `sut` feature so the oracle-only run never compiles the local implementation.
+//! `XmlMutation` vocabulary. Each side hands the document it produced to the `semantic-xml-v1` profile's
+//! `xml-1-0-quick-xml-compare-v1` pipeline — the oracle as `expected-xml`, the subject as `actual-xml` — whose
+//! standalone `quick-xml-oracle-codec` probes read both files independently and compare what they recovered. The
+//! subject half is gated behind the generated host's `sut` feature so the oracle-only run never compiles the local
+//! implementation.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::xml::standards::v1_0::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_xml_1_0};
@@ -32,10 +34,18 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 
-/// 🧫️ The same, for the minified part the round-trip scenario additionally reads.
+/// 🧫️ The same, for the minified part its own round-trip scenario reads.
 fn mutable_minified_input(ctx: &Context) -> Result<Vec<u8>, String> {
     let copy = ctx.copy_fixture(MINIFIED_INPUT, Some("word-document.xml"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
+}
+
+/// 📦️ The document one side produced, written as the `role` artifact (`expected-xml` for the oracle, `actual-xml` for the
+/// subject) the `xml-1-0-quick-xml-compare-v1` pipeline hands to its probes.
+fn produced(ctx: &Context, role: &str, bytes: Vec<u8>, projection: Json) -> Result<Outcome, String> {
+    let path = ctx.artifact(role, &format!("{role}.xml"))?;
+    std::fs::write(&path, &bytes).map_err(|error| error.to_string())?;
+    Ok(Outcome::with_raw(bytes, projection).artifact(role, &path, "application/xml"))
 }
 //#endregion 🔖️Input
 
@@ -57,7 +67,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     if projection_divergence(&projection, &project_xml_1_0(&input)?).is_none() {
         return Err(format!("{kind:?} left the semantic projection exactly as it found it -- a mutation whose parameters make it a no-op against the real document is not a test of that kind"));
     }
-    Ok(Outcome::with_raw(bytes, projection))
+    produced(ctx, "expected-xml", bytes, projection)
 }
 
 /// ⚖️ First point at which two projections diverge, as a character offset into the canonical
@@ -87,7 +97,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     if let Some(divergence) = projection_divergence(&projection, &original) {
         return Err(format!("inverse law violated: {:?} followed by its own inverse did not restore the original document's projection -- {divergence}", spec.str("kind")));
     }
-    Ok(Outcome::with_raw(bytes, projection))
+    produced(ctx, "expected-xml", bytes, projection)
 }
 
 /// 🧪️ The same XML document, rendered differently: one insignificant space inserted before the `>`
@@ -161,9 +171,15 @@ fn loosen_start_tags(input: &[u8]) -> Vec<u8> {
 /// additionally required to be non-vacuous (the perturbation must really have moved the bytes), and
 /// the round trip must still preserve the semantic projection.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let minified = round_trip_oracle_once(&mutable_minified_input(ctx)?, "the minified OOXML part")?;
-    let readme = round_trip_oracle_once(&mutable_input(ctx)?, "the README document part")?;
-    Ok(Outcome::with_raw(readme.0, Json::Object(vec![("minified".to_string(), minified.1), ("readme".to_string(), readme.1)])))
+    let (bytes, projection) = round_trip_oracle_once(&mutable_input(ctx)?, "the README document part")?;
+    produced(ctx, "expected-xml", bytes, projection)
+}
+
+/// 🔒️ The same probe over the minified OOXML part — its own scenario, so the pipeline compares the oracle's and the
+/// subject's re-encodings of THIS document too rather than only asserting each side's law in role.
+fn minified_identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
+    let (bytes, projection) = round_trip_oracle_once(&mutable_minified_input(ctx)?, "the minified OOXML part")?;
+    produced(ctx, "expected-xml", bytes, projection)
 }
 
 /// 🔁️ The probe itself, over one document.
@@ -194,7 +210,7 @@ fn round_trip_oracle_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), S
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::mutable_input;
+    use super::{mutable_input, produced};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_xml::schema::mutations::{apply_xml_mutation, decode_xml_mutation_payload_json, inverse_xml_mutation, XmlMutation};
     use semio_s_artifact_stdio_xml::XmlSnapshot;
@@ -224,7 +240,7 @@ mod subject {
         if super::projection_divergence(&projection, &project_xml_1_0(&base.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?)?).is_none() {
             return Err(format!("{kind:?} left the semantic projection exactly as it found it -- the parameters address nothing in the real document"));
         }
-        Ok(Outcome::with_raw(bytes, projection))
+        produced(ctx, "actual-xml", bytes, projection)
     }
 
     /// ↩️ The inverse law, asserted on the SUBJECT side too rather than deferred to the parity
@@ -249,7 +265,7 @@ mod subject {
                 backward
             ));
         }
-        Ok(Outcome::with_raw(bytes, projection))
+        produced(ctx, "actual-xml", bytes, projection)
     }
 
     /// 🔒️ The no-byte-pass-through rule, asserted by the SAME serialization-form probe the oracle
@@ -262,9 +278,14 @@ mod subject {
     /// ONLY channel from input to output (XML is text-native; there is no separate binary layer
     /// over the same model).
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let minified = round_trip_once(&super::mutable_minified_input(ctx)?, "the minified OOXML part")?;
-        let readme = round_trip_once(&mutable_input(ctx)?, "the README document part")?;
-        Ok(Outcome::with_raw(readme.0, Json::Object(vec![("minified".to_string(), minified.1), ("readme".to_string(), readme.1)])))
+        let (bytes, projection) = round_trip_once(&mutable_input(ctx)?, "the README document part")?;
+        produced(ctx, "actual-xml", bytes, projection)
+    }
+
+    /// 🔒️ The same probe over the minified OOXML part, mirroring `super::minified_identity_round_trip_oracle`.
+    pub fn minified_identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
+        let (bytes, projection) = round_trip_once(&super::mutable_minified_input(ctx)?, "the minified OOXML part")?;
+        produced(ctx, "actual-xml", bytes, projection)
     }
 
     /// 🔁️ The probe itself, over one document.
@@ -296,11 +317,11 @@ mod subject {
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
-    built = built.oracle("identity-round-trip", identity_round_trip_oracle);
+    built = built.oracle("identity-round-trip", identity_round_trip_oracle).oracle("minified-identity-round-trip", minified_identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
         built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
-        built = built.subject("identity-round-trip", subject::identity_round_trip);
+        built = built.subject("identity-round-trip", subject::identity_round_trip).subject("minified-identity-round-trip", subject::minified_identity_round_trip);
     }
     built
 }

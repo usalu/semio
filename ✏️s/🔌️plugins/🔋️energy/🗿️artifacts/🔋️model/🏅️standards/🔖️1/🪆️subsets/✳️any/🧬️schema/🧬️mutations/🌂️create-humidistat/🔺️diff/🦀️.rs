@@ -7,7 +7,7 @@ use crate::EnergyModelSnapshot;
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateHumidistat, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
     if base.model.humidistats.iter().any(|item| item.id == payload.id) {
-        return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Humidistat {} already exists.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Humidistat {} already exists.", payload.id.0), [payload.id.0.to_string()]);
     }
     if !base.model.zones.iter().any(|zone| zone.id == payload.zone_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Zone {} does not exist.", payload.zone_id.0), [payload.zone_id.0.to_string()]);
@@ -29,10 +29,10 @@ pub fn diff(payload: &super::CreateHumidistat, base: &EnergyModelSnapshot) -> pr
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} is not defined by this model.", payload.dehumidifying_setpoint_schedule_id.0), [payload.dehumidifying_setpoint_schedule_id.0.to_string()]);
     }
     if !payload.humidifying_throttle_range.is_finite() || payload.humidifying_throttle_range <= 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("A humidifying throttle range must be a positive finite number, got {}.", payload.humidifying_throttle_range), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("A humidifying throttle range must be a positive finite number, got {}.", payload.humidifying_throttle_range), [payload.id.0.to_string()]);
     }
     if !payload.dehumidifying_throttle_range.is_finite() || payload.dehumidifying_throttle_range <= 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("A dehumidifying throttle range must be a positive finite number, got {}.", payload.dehumidifying_throttle_range), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("A dehumidifying throttle range must be a positive finite number, got {}.", payload.dehumidifying_throttle_range), [payload.id.0.to_string()]);
     }
     let mut model = base.model.clone();
     model.humidistats.push(crate::model::Humidistat {

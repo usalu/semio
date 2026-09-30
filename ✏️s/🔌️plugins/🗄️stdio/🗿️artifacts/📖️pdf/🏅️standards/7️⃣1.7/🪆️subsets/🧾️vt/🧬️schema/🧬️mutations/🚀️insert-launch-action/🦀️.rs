@@ -3,7 +3,6 @@
 use super::remove_launch_action::RemoveLaunchAction;
 use super::PdfVtMutation;
 use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::PdfDiff, snapshot::PdfSnapshot};
-use protocol::command::DiffAlgebra;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -20,7 +19,7 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for InsertLaunchAction {
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         let mut next = base.clone();
         support::insert_object(&mut next, support::action_object("Launch", "F", &self.target));
-        MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
+        MutationOutcome::new(support::graph_edit_diff(base, next))
     }
 
     fn inverse(&self, _base: &PdfSnapshot) -> Vec<PdfVtMutation> {

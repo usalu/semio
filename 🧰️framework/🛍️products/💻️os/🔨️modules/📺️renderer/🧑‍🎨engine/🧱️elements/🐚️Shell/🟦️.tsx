@@ -600,7 +600,7 @@ type OverlayState = {
 };
 
 /** 🧯️ One non-blocking shell notice — `code` carries the originating fault code (e.g.
- * `SURFACE_FAULT_CODES.ViewerReadOnly`, or `"mutation.rejected"` for a rejected local dispatch —
+ * `SURFACE_FAULT_CODES.ViewerReadOnly`, or `"app.command.rejected"` for a rejected local dispatch —
  * contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C8/§C9)
  * when the notice was raised from a decoded {@link Fault}, `undefined` for a locally-raised notice.
  * `kind` widened from the original `"info" | "error"` to the full four-level {@link Severity}

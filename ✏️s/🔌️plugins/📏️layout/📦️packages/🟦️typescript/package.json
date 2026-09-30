@@ -3,16 +3,13 @@
   "projectType": "library",
   "name": "@semio-tech/layout-js",
   "version": "0.1.0",
-  "description": "📐️ CAD plugin TS: spatial factory runtime/model graph (core), R3F renderer, brepjs kernel, construct query language, XState machine adapter, and the runtime composition root — folded from the 6 former cad-js-* packages.",
+  "description": "@semio-tech/layout-js authored owner test infrastructure.",
   "type": "module",
   "private": true,
   "scripts": {
     "test": "bun nx run @semio-tech/cad-js:test",
     "generate": "bun nx run @semio-tech/cad-js:generate",
     "fixture": "bun nx run @semio-tech/cad-js:fixture"
-  },
-  "exports": {
-    ".": "./🟦️.ts"
   },
   "dependencies": {
     "@semio-tech/s-3d-js": "workspace:*",
@@ -39,7 +36,7 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript"
   },
-  "bundleKind": "library",
+  "bundleKind": "repo",
   "nx": {
     "includedScripts": []
   }

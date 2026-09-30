@@ -13,7 +13,7 @@ pub fn diff(payload: &super::AddAirLoopTerminalZone, base: &EnergyModelSnapshot)
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Zone {} does not exist.", payload.zone_id.0), [payload.zone_id.0.to_string()]);
     }
     if existing.terminal_zone_ids.contains(&payload.zone_id) {
-        return protocol::MutationOutcome::error("mutation.duplicate-id", format!("Air loop {} already lists terminal zone {}.", payload.id.0, payload.zone_id.0), [payload.zone_id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Air loop {} already lists terminal zone {}.", payload.id.0, payload.zone_id.0), [payload.zone_id.0.to_string()]);
     }
     let mut model = base.model.clone();
     if let Some(item) = model.air_loops.iter_mut().find(|item| item.id == payload.id) {

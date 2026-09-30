@@ -26,8 +26,8 @@ fn catalogue_ghost_rejects_incomplete_payloads() {
 #[test]
 fn drag_ghost_descriptor_accepts_flow_widget_and_catalogue_mimes() {
     let mut flow = HashMap::new();
-    flow.insert(FLOW_WIDGET_DRAG_MIME.into(), r#"{"kind":"inputSlider"}"#.into());
-    assert_eq!(node_graph_drag_ghost_descriptor(&flow).as_deref(), Some(r#"{"kind":"inputSlider"}"#));
+    flow.insert(FLOW_WIDGET_DRAG_MIME.into(), r#"{"kind":"inputSlider","label":"Number"}"#.into());
+    assert_eq!(node_graph_drag_ghost_descriptor(&flow).as_deref(), Some(r#"{"kind":"inputSlider","label":"Number"}"#));
     let mut catalogue = HashMap::new();
     catalogue.insert(CATALOGUE_DRAG_MIME.into(), r#"{"pluginId":"draw","appId":"draw","label":"Draw"}"#.into());
     let ghost = node_graph_drag_ghost_descriptor(&catalogue).unwrap();
@@ -57,7 +57,7 @@ fn catalogue_drop_ignores_pointer_outside_node_graph_and_wrong_mime() {
     catalogue.insert(CATALOGUE_DRAG_MIME.into(), r#"{"pluginId":"draw","appId":"draw"}"#.into());
     assert!(node_graph_catalogue_drop_action(10.0, 10.0, &catalogue, &[("s.play.workflow", bounds, "s-play")],).is_none());
     let mut flow = HashMap::new();
-    flow.insert(FLOW_WIDGET_DRAG_MIME.into(), r#"{"kind":"inputSlider"}"#.into());
+    flow.insert(FLOW_WIDGET_DRAG_MIME.into(), r#"{"kind":"inputSlider","label":"Number"}"#.into());
     assert!(node_graph_catalogue_drop_action(140.0, 90.0, &flow, &[("s.play.workflow", bounds, "s-play")],).is_none());
 }
 

@@ -75,7 +75,7 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
       | insert-unknown-chunk | {"index":0,"chunk":{"kind":[119,97,86,101],"data":[119,97,118,101,55,45,112,114,111,98,101]}} |
       | remove-unknown-chunk | {"index":0} |
 
-  @id-mutate-raster
+  @id-mutate
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to a small palette document
@@ -118,7 +118,7 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
       | insert-unknown-chunk | {"index":0,"chunk":{"kind":[119,97,86,101],"data":[119,97,118,101,55,45,112,114,111,98,101]}} |
       | remove-unknown-chunk | {"index":0} |
 
-  @id-inverse-raster
+  @id-inverse
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores a small palette document

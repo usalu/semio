@@ -4,7 +4,7 @@ use crate::artifact_schema::diff::En1991WindFacesList;
 use crate::{En1991Diff, En1991Snapshot};
 pub fn diff(payload: &InsertWindFaces, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if payload.index > base.wind_faces.len() {
-        return protocol::MutationOutcome::fatal("mutation.invariant", "Index out of range.", Vec::<String>::new());
+        return protocol::MutationOutcome::error("mutation.target-missing", "Index out of range.", [payload.index.to_string()]);
     }
     let mut values = base.wind_faces.clone();
     values.insert(payload.index, payload.item.clone());

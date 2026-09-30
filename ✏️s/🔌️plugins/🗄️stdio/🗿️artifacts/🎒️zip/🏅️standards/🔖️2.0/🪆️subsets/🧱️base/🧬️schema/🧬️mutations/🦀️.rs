@@ -64,7 +64,7 @@ pub fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) ->
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -109,7 +109,7 @@ pub(crate) fn agg_diff(this: &ZipMutation, base: &ZipSnapshot) -> protocol::Muta
         ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment, comment_utf8 }) => diff::diff_set_archive_comment(comment, *comment_utf8),
         ZipMutation::AddEntry(add_entry::AddEntry { entry, before }) => {
             if before.as_ref().is_some_and(|name| !base.entries.iter().any(|entry| &entry.name == name)) {
-                return protocol::MutationOutcome::error("mutation.apply.missing-target", "ZIP insertion anchor no longer exists", ["entries"]);
+                return protocol::MutationOutcome::error("mutation.target-missing", "ZIP insertion anchor no longer exists", ["entries"]);
             }
             diff::diff_add_entry(base, entry.clone(), before.as_deref())
         },

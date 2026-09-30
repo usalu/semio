@@ -4,11 +4,11 @@
 @mutations-puzzle-3d-1-any
 Feature: Apply every typed puzzle3d scene mutation twice — once in Rust, once in Python — and require the same answer
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
-  second implementation of the `s.puzzle.3d` scene document and its thirty-five typed mutations,
+  second implementation of the `s.puzzle.3d` scene document and its thirty-eight typed mutations,
   written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`, from
   rules 2, 4 and 7 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and
-  from the thirty-five committed quintets. It imports nothing from this repository's Rust.
+  from the committed quintets. It imports nothing from this repository's Rust.
 
   Why a second implementation rather than a third-party library, and why the previous answer was
   wrong. This case used to argue that its two-level connectivity — objects owning VORTICES, an
@@ -131,6 +131,9 @@ Feature: Apply every typed puzzle3d scene mutation twice — once in Rust, once 
       | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️adds-vortex-kind-pair            |
       | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🚫️removes-vortex-kind-pair      |
       | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️installs-vortex-kind-catalog          |
+      | drag-selection                | ✋️drag-selection/✋️drags-two-objects                            |
+      | rotate-selection              | 🔄️rotate-selection/🔄️turns-two-objects                         |
+      | scale-selection               | 🔍️scale-selection/🔍️scales-two-objects                         |
 
   @id-inverse
   @level-exhaustive
@@ -186,6 +189,9 @@ Feature: Apply every typed puzzle3d scene mutation twice — once in Rust, once 
       | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️adds-vortex-kind-pair            |
       | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🚫️removes-vortex-kind-pair      |
       | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️installs-vortex-kind-catalog          |
+      | drag-selection                | ✋️drag-selection/✋️drags-two-objects                            |
+      | rotate-selection              | 🔄️rotate-selection/🔄️turns-two-objects                         |
+      | scale-selection               | 🔍️scale-selection/🔍️scales-two-objects                         |
 
   @id-identity-round-trip
   @level-long

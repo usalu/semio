@@ -518,7 +518,7 @@ async fn every_editable_leaf_changes_a_check_when_perturbed_in_applicable_scope(
                     "IL3" => "IL1",
                     "office" => "snow",
                     "wind" => "snow",
-                    "snow" => "snow_high",
+                    "snow" => "wind",
                     "road_traffic" => "rail_traffic",
                     "g_sup" => "g_inf",
                     "g_inf" => "prestress",

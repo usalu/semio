@@ -139,91 +139,91 @@
       },
       "mappings": [
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructOneWayReinforcedConcreteSlabFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructOneWayReinforcedConcreteSlabFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructOneWayReinforcedConcreteSlabFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructOneWayReinforcedConcreteSlabFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🎬️actions/🔣️constructReinforcedConcreteColumnFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteColumnFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteColumnFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🎬️actions/🔣️constructReinforcedConcreteColumnFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteColumnFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteColumnFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🎬️actions/🔣️constructReinforcedConcreteColumnFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteColumnFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteColumnFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🎬️actions/🔣️constructReinforcedConcreteExternalWallFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteExternalWallFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteExternalWallFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🎬️actions/🔣️constructReinforcedConcreteExternalWallFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteExternalWallFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteExternalWallFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🎬️actions/🔣️constructReinforcedConcreteExternalWallFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteExternalWallFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteExternalWallFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🎬️actions/🔣️constructReinforcedConcreteInternalWallFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteInternalWallFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteInternalWallFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🎬️actions/🔣️constructReinforcedConcreteInternalWallFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteInternalWallFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteInternalWallFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🎬️actions/🔣️constructReinforcedConcreteInternalWallFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🎬️actions/🔣️constructReinforcedConcreteInternalWallFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🎬️actions/🎬️constructReinforcedConcreteInternalWallFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🔀️transformations/🔀️from_aec.building.structure/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🔣️modelDefinition.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🔣️modelDefinition.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🔣️constructOneWayReinforcedConcreteSlab.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🔣️constructOneWayReinforcedConcreteSlab.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🕹️interactions/🕹️constructOneWayReinforcedConcreteSlab/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🔣️constructReinforcedConcreteColumn.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🔣️constructReinforcedConcreteColumn.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🕹️interactions/🕹️constructReinforcedConcreteColumn/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🔣️constructReinforcedConcreteExternalWall.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🔣️constructReinforcedConcreteExternalWall.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🕹️interactions/🕹️constructReinforcedConcreteExternalWall/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🔣️constructReinforcedConcreteInternalWall.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🕹️interactions/🔣️constructReinforcedConcreteInternalWall.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🕹️interactions/🕹️constructReinforcedConcreteInternalWall/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️typology.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️typology.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🗂️typologies/🚧️ReinforcedConcreteInternal/🔣️typology.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternal/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternalWall/🔣️typology.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternalWall/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🗂️typologies/🛡️ReinforcedConcreteExternal/🔣️typology.json",
-          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternal/🔣️.json"
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternalWall/🔣️typology.json",
+          "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternalWall/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️typology.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️typology.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🌉️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️.json"
         },
         {
@@ -415,31 +415,31 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🏢️aec.building/🗂️typologies/🪵️Beam/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building/🎬️actions/🔣️constructLineElementFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🎬️actions/🔣️constructLineElementFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🎬️actions/🎬️constructLineElementFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building/🎬️actions/🔣️constructLineElementFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🎬️actions/🔣️constructLineElementFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🎬️actions/🎬️constructLineElementFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building/🎬️actions/🔣️constructLineElementFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🎬️actions/🔣️constructLineElementFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🎬️actions/🎬️constructLineElementFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🔀️transformations/🔀️from_aec.building.structure/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building/🔣️modelDefinition.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🔣️modelDefinition.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building/🕹️interactions/🔣️constructLineElement.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🕹️interactions/🔣️constructLineElement.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🕹️interactions/🕹️constructLineElement/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building/🗂️typologies/📏️LineElement/🔣️typology.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building.structure.fem.line/🗂️typologies/📏️LineElement/🔣️typology.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/📏️aec.building.structure.fem.line/🗂️typologies/📏️LineElement/🔣️.json"
         },
         {
@@ -963,59 +963,59 @@
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🔥️aec.building.energy/🗂️typologies/🪨️BasePlate/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building/🎬️actions/🔣️constructSurfaceElementFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🎬️actions/🔣️constructSurfaceElementFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🎬️actions/🎬️constructSurfaceElementFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building/🎬️actions/🔣️constructSurfaceElementFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🎬️actions/🔣️constructSurfaceElementFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🎬️actions/🎬️constructSurfaceElementFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building/🎬️actions/🔣️constructSurfaceElementFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🎬️actions/🔣️constructSurfaceElementFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🎬️actions/🎬️constructSurfaceElementFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🔀️transformations/🔀️from_aec.building.structure/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building/🔣️modelDefinition.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🔣️modelDefinition.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building/🕹️interactions/🔣️constructSurfaceElement.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🕹️interactions/🔣️constructSurfaceElement.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🕹️interactions/🕹️constructSurfaceElement/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building/🗂️typologies/🗺️SurfaceElement/🔣️typology.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building.structure.fem.surface/🗂️typologies/🗺️SurfaceElement/🔣️typology.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🗺️aec.building.structure.fem.surface/🗂️typologies/🗺️SurfaceElement/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building/🎬️actions/🔣️constructSolidElementFrom2PointsAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🎬️actions/🔣️constructSolidElementFrom2PointsAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🎬️actions/🎬️constructSolidElementFrom2PointsAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building/🎬️actions/🔣️constructSolidElementFromCurveAndHeight.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🎬️actions/🔣️constructSolidElementFromCurveAndHeight.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🎬️actions/🎬️constructSolidElementFromCurveAndHeight/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building/🎬️actions/🔣️constructSolidElementFromSurface.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🎬️actions/🔣️constructSolidElementFromSurface.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🎬️actions/🎬️constructSolidElementFromSurface/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🔀️transformations/🔀️from_aec.building.structure/🔣️transformation.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🔀️transformations/🔀️from_aec.building.structure/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building/🔣️modelDefinition.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🔣️modelDefinition.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building/🕹️interactions/🔣️constructSolidElement.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🕹️interactions/🔣️constructSolidElement.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🕹️interactions/🕹️constructSolidElement/🔣️.json"
         },
         {
-          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building/🗂️typologies/🧊️SolidElement/🔣️typology.json",
+          "sourcePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building.structure.fem.solid/🗂️typologies/🧊️SolidElement/🔣️typology.json",
           "destinationPath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🪆️1-any/🏗️models/🧊️aec.building.structure.fem.solid/🗂️typologies/🧊️SolidElement/🔣️.json"
         },
         {
@@ -1133,12 +1133,12 @@
           "live": "🌉️aec.building.structure.classic/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️typology.json"
         },
         {
-          "source": "🌉️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternal/🔣️typology.json",
-          "live": "🌉️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternal/🔣️typology.json"
+          "source": "🌉️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternalWall/🔣️typology.json",
+          "live": "🌉️aec.building.structure.classic/🗂️typologies/🚧️ReinforcedConcreteInternalWall/🔣️typology.json"
         },
         {
-          "source": "🌉️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternal/🔣️typology.json",
-          "live": "🌉️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternal/🔣️typology.json"
+          "source": "🌉️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternalWall/🔣️typology.json",
+          "live": "🌉️aec.building.structure.classic/🗂️typologies/🛡️ReinforcedConcreteExternalWall/🔣️typology.json"
         },
         {
           "source": "🌉️aec.building.structure.classic/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️typology.json",

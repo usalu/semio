@@ -31,6 +31,7 @@
     },
     "width": {
       "type": "number",
+      "exclusiveMinimum": 0,
       "x-semio-ui": {
         "widget": "stepper",
         "role": "value",
@@ -46,6 +47,7 @@
     },
     "height": {
       "type": "number",
+      "exclusiveMinimum": 0,
       "x-semio-ui": {
         "widget": "stepper",
         "role": "value",
@@ -61,6 +63,7 @@
     },
     "depth": {
       "type": "number",
+      "exclusiveMinimum": 0,
       "x-semio-ui": {
         "widget": "stepper",
         "role": "value",

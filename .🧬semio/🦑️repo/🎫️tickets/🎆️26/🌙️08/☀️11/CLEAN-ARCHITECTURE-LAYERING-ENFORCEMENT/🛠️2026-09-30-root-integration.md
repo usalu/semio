@@ -238,3 +238,25 @@ Actual uncached registry generation passed in57.4s, then check-generated passed 
 Measured concrete app law121 passed with supplied geometry authority=true,38 vertices and20 triangles; its original real OBJ/GLB/STL coordinate and roundtrip assertions ran. Preserved app execution then reached a separate invalid handwritten mesh fixture at law127; the owner adds the schema-required actual data without weakening mesh/id/role assertions.
 
 Actual native47-law IO RED independently caught temporary imported-graph text snapshot destruction and the newly authored host-method authority escape. Root landed the parsed method-call visitor only after that RED. The IO owner lands explicit owned snapshot retirement. Final clean IO47, app276 and full25-owner aggregate remain pending.
+
+## Settled Schema and Launcher Registration
+
+Schema generation passed in16.6s and documentation generation in11.3s. The final uncached global check exited1 in11.5s:4,266 modules,3,650 scopes and8,911 independently parsed diagnostic rows. Catalog-stale zero. All24 established exact-prefix mappings and the new authority/registry/export-input/profile fixture contracts have zero findings. The broader generation3d parent schema still has38 findings; no suppression or whole-tree green claim is made. Plugin registration generation passed22.8s and byte freshness check22.9s. Existing TypeScript JSONC parsing independently confirmed25 debugger canonical owners including artifact-owned generation3d IO.
+
+Fresh concrete app276 run with two measured face-mode setup diagnostics passed in5m00s after the mounted fault correction. Final cleanup of those diagnostics, clean276 execution and all25-owner aggregate remain pending.
+
+## Settled Guest Registration Handoff
+
+All five guest producers passed after the final mounted-fault SDK edit: Flow/BREP2m53s, Sequence37.8s and Playbook/procedural44.5s. Independent raw/core/staged/canonical-pack/self-hash checks passed, with the SDK dispatch/end fingerprint unchanged. A subsequent uncached registry check correctly refused its old plugin catalog after the final guest descriptor hashes changed (21.9s). Regeneration and a fresh check are now running against the settled guest bytes; the refusal is retained as real evidence, not ignored.
+
+Clean concrete app276 execution subsequently passed in4m06s with the two temporary granularity measurements removed. Original law230 covers all ten invalid/unsupported input rows and preserves exact `generation3d.widget.add` codes plus unchanged documents. The current all25-owner root run supplies deliberately conflicting outer build-root and native-capture environment variables to verify owned authority in actual execution. Its final result remains pending.
+
+## Final All-Owner GREEN
+
+Actual uncached root `workspace:verify-canonical-architecture` exited0 in12m58s. Dynamic child discovery passed25 projects in12m38s, with no project filter. Independent inspection verified20 exact-native group receipts and433 successful law executions: each expected name runs exactly once, terminal status0/no signal, one passed/zero failed/zero ignored, current executable SHA-256, exact selector, group assertion inventory and owned canonical Cargo root. The six composition target groups total356 (1+6+18+7+276+48), preserving355 originals and adding exactly one supplied-owner law. The final app executable matches the clean independently admitted hash.
+
+After final guests settled, registration generation21.1s and check-generated22.0s passed. The final uncached global schema check retains8,911 findings, catalog-stale zero, all24 exact authored prefixes/four fixture contracts zero, and38 broader generation3d schema findings. Read-only combined whitespace check reports one unrelated puzzle EOF blank line; none in the explicit owned union. No peer source is changed. Detailed admitted binary hashes and owner inventory are preserved in the final receipt audit. All owned agents and proof jobs have finished; generated output cleanup and ticket closure now remain.
+
+## Ticket Closed
+
+Repo MCP `ticket_close` confirmed status `closed` for26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT with the final775-path file list and completion summary. `no_management=true` was supplied; no modifying Git operation or repo goal lifecycle action was requested. The generated directory is absent after cleanup. This completes the requested first canonicalization increment; broader schema and orchestration work remains documented.

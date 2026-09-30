@@ -43,4 +43,5 @@ export type SemioFlowMutation =
   | { mutation: "insertEdge"; edge: FlowEdge }
   | { mutation: "removeEdge"; id: string }
   | { mutation: "setEdgeEndpoints"; id: string; from: PortRef; to: PortRef }
-  | { mutation: "setEdgeKind"; id: string; kind: string };
+  | { mutation: "setEdgeKind"; id: string; kind: string }
+  | { mutation: "dragNodes"; targets: string[]; dx: number; dy: number };

@@ -1,0 +1,65 @@
+{
+  "annex": "De",
+  "masonryClass": "Class3",
+  "designSituation": "Persistent",
+  "storeys": 4,
+  "walls": [
+    {
+      "id": "wall-weak",
+      "labelEn": "Undersized masonry wall",
+      "labelDe": "Unterbemessene Mauerwerkswand",
+      "wallType": "Shear",
+      "thicknessM": 0.09,
+      "heightM": 3.2,
+      "lengthM": 2.5,
+      "supportSides": 2,
+      "openings": [],
+      "slabBearingDepthM": 0.05,
+      "eccentricityTopM": 0.04,
+      "eccentricityBottomM": 0.03,
+      "unitGroup": "Group2",
+      "unitMaterial": "Aerated",
+      "fBPa": 4000000.0,
+      "unitLengthM": 0.5,
+      "unitWidthM": 0.09,
+      "unitHeightM": 0.25,
+      "mortarType": "GeneralPurpose",
+      "mortarClass": "M2_5",
+      "mortarStrengthPa": 2500000.0,
+      "bedJointThicknessM": 0.004,
+      "reinforced": false,
+      "asVerticalM2": 0.0,
+      "asHorizontalM2": 0.0,
+      "fYdPa": 0.0,
+      "fireReiMin": 90,
+      "exposure": "Mx4",
+      "mu": 0.4,
+      "densityKgM3": 600.0,
+      "phiInfinity": 1.5,
+      "isBasement": false,
+      "loadCases": [
+        {
+          "id": "uls-bad",
+          "designSituation": "persistent",
+          "imposedCategory": "C",
+          "gKSlabN": 280000.0,
+          "qKImposedPa": 5000.0,
+          "tributaryAreaM2": 20.0,
+          "slabSpanM": 7.0,
+          "qKSnowPa": 1500.0,
+          "qPWindPa": 1200.0,
+          "cPe": 1.0,
+          "hKEarthN": 0.0,
+          "concentrated": [
+            {
+              "id": "beam-A",
+              "forceN": 80000.0,
+              "bearingAreaM2": 0.01,
+              "bearingLengthM": 0.1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

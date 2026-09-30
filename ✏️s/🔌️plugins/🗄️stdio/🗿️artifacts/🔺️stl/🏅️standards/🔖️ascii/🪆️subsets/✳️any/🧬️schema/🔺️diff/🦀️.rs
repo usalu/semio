@@ -137,13 +137,13 @@ fn validate_triangles_diff(base_len: usize, diff: &StlTrianglesDiff) -> Mutation
     let mut removed = BTreeSet::new();
     for &index in &diff.removed {
         if index >= base_len || !removed.insert(index) {
-            return Err(MutationApplyError::new("invalid-remove-index", "triangle removal target must exist exactly once").at(["triangles", &index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-remove-index", "triangle removal target must exist exactly once").at(["triangles", &index.to_string()]));
         }
     }
     let mut modified = BTreeSet::new();
     for entry in &diff.modified {
         if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
-            return Err(MutationApplyError::new("invalid-modify-index", "triangle modification target must exist exactly once and remain present").at(["triangles", &entry.index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-modify-index", "triangle modification target must exist exactly once and remain present").at(["triangles", &entry.index.to_string()]));
         }
     }
     let mut additions: Vec<usize> = diff.added.iter().map(|entry| entry.index).collect();
@@ -151,7 +151,7 @@ fn validate_triangles_diff(base_len: usize, diff: &StlTrianglesDiff) -> Mutation
     let mut previous = None;
     for (length, index) in (base_len - removed.len()..).zip(additions) {
         if index > length || previous == Some(index) {
-            return Err(MutationApplyError::new("invalid-add-index", "triangle addition target must be unique and within the evolving sequence").at(["triangles", &index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-add-index", "triangle addition target must be unique and within the evolving sequence").at(["triangles", &index.to_string()]));
         }
         previous = Some(index);
     }

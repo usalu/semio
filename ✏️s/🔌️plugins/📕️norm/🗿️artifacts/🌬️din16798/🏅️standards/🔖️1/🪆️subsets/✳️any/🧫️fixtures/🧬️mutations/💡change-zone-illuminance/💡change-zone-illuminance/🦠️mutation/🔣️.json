@@ -1,0 +1,6 @@
+{
+  "ChangeZoneIlluminance": {
+    "zoneId": "zone-office",
+    "newIlluminanceLx": 750.0
+  }
+}

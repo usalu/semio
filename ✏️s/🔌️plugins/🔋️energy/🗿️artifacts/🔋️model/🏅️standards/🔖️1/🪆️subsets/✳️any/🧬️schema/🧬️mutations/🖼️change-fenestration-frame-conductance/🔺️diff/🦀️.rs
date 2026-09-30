@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeFenestrationFrameConductance, base: &EnergyMo
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Fenestration {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if !payload.new_frame_conductance_w_k.is_finite() || payload.new_frame_conductance_w_k < 0.0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Fenestration {} needs a non-negative finite frame conductance, got {}.", payload.id.0, payload.new_frame_conductance_w_k), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fenestration {} needs a non-negative finite frame conductance, got {}.", payload.id.0, payload.new_frame_conductance_w_k), [payload.id.0.to_string()]);
     }
     if existing.frame_conductance_w_k == payload.new_frame_conductance_w_k {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Fenestration {} already has this frame conductance.", payload.id.0));

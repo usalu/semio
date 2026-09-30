@@ -1,6 +1,6 @@
 {
   "status": "rejected",
-  "code": "mutation.invalid-reconstruction-sparse",
+  "code": "mutation.target-mismatch",
   "path": [
     "sparse"
   ]

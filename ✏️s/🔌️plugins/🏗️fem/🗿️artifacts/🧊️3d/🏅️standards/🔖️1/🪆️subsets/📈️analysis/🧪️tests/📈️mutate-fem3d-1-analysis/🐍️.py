@@ -247,7 +247,7 @@ def land(document, kind, loads):
 
 
 def refuse(document, kind, mutation):
-    """🛡️ The refusals owed before a mutation may move the model: `mutation.id-mismatch` for a replace that renames its
+    """🛡️ The refusals owed before a mutation may move the model: `mutation.target-mismatch` for a replace that renames its
     target, `mutation.target-missing` for a reference that does not resolve, `mutation.target-referenced` for a delete
     that would leave a referrer dangling, `mutation.invariant` for a value the solver cannot take. Raises on the first;
     an identical replace or settings update is a no-op and passes."""

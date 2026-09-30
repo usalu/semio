@@ -10,7 +10,7 @@ pub fn diff(payload: &super::ChangeSurfaceMultiplier, base: &EnergyModelSnapshot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Surface {} does not exist.", payload.id.0), [payload.id.0.to_string()]);
     };
     if payload.new_multiplier == 0 {
-        return protocol::MutationOutcome::error("mutation.invariant", format!("Surface {} needs at least one instance.", payload.id.0), [payload.id.0.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Surface {} needs at least one instance.", payload.id.0), [payload.id.0.to_string()]);
     }
     if existing.multiplier == payload.new_multiplier {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Surface {} already has this multiplier.", payload.id.0));

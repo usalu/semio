@@ -1,5 +1,6 @@
 //! 🎈️️ `unflatten` — restores the node addressed by `at` wholesale to `original` (a captured
-//! hierarchy, per `📓️taxonomy.md`'s `flatten`/`unflatten` row: "addr + captured hierarchy").
+//! hierarchy, per `📓️taxonomy.md`'s `flatten`/`unflatten` row: "addr + captured hierarchy"). Its own
+//! inverse captures the node it overwrites, so undoing it is exact for any node it replaces.
 
 use crate::standards::v1::subsets::drawing::schema::diff::NodePath;
 use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;

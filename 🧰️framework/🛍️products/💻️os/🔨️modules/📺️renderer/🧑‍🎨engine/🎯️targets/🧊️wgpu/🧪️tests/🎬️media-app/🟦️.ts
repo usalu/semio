@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import fixture from "../../../../🧫️fixtures/🎬️media-app-acceptance/🔣️.json";
 
-type MediaAppReceipt = { readonly id: string; readonly url: string; readonly acceptedWindow: string; readonly acceptedNode: string; readonly token: string; readonly state: string; readonly kind: string; readonly mediaType: string; readonly reason: string; readonly rootCorrelated: boolean };
+type MediaAppReceipt = { readonly id: string; readonly url: string; readonly acceptedWindow: string; readonly acceptedNode: string; readonly token: string; readonly state: string; readonly kind: string; readonly mediaType: string; readonly reason: string; readonly rootCorrelated: boolean; readonly acceptedRoot: { readonly windowId: string; readonly windowGeneration: number; readonly nodeId: number; readonly key: string; readonly role: string } | null };
 
 /** 🎬️ Checks the real guest→accepted WGPU root→frame Worker→DOM reservation without replacing any app or transport. */
 export async function runBrowserMediaAppAcceptance(segments: readonly string[]): Promise<void> {
@@ -18,7 +18,7 @@ export async function runBrowserMediaAppAcceptance(segments: readonly string[]):
   const outputDirectory = resolve(output);
   mkdirSync(outputDirectory, { recursive: true });
   const { chromium } = await import("playwright");
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", `--use-angle=${process.platform === "darwin" ? "metal" : process.platform === "win32" ? "d3d11" : "vulkan"}`] });
   const context = await browser.newContext({ locale: locale === "en" ? "en-US" : "de-DE", viewport: { width: 1280, height: 900 } });
   const receipts: MediaAppReceipt[] = [];
   const logs: string[] = [];
@@ -41,10 +41,13 @@ export async function runBrowserMediaAppAcceptance(segments: readonly string[]):
           const element = host as HTMLElement;
           const windowId = element.dataset.mediaWindow!; const nodeId = element.dataset.uiNodeId!; const nodeKey = element.dataset.uiNodeKey!;
           const bridge = (window as unknown as { semioWgpuIntrospection?: { dumpAccessibility(windowId: string): Promise<string> } }).semioWgpuIntrospection;
-          const projection = JSON.parse(await bridge!.dumpAccessibility(windowId)) as { windows: { windowId: string; nodes: { nodeId: number; key: string }[] }[] };
-          const rootCorrelated = projection.windows.some((surface) => surface.windowId === windowId && surface.nodes.some((node) => String(node.nodeId) === nodeId && node.key === nodeKey));
+          const projection = JSON.parse(await bridge!.dumpAccessibility(windowId)) as { windows: { windowId: string; windowGeneration: number; nodes: { nodeId: number; key: string; role: string }[] }[] };
+          const surface = projection.windows.find((surface) => surface.windowId === windowId);
+          const node = surface?.nodes.find((node) => String(node.nodeId) === nodeId && node.key === nodeKey);
+          const acceptedRoot = surface && node ? { windowId: surface.windowId, windowGeneration: surface.windowGeneration, nodeId: node.nodeId, key: node.key, role: node.role } : null;
+          const rootCorrelated = acceptedRoot !== null;
           console.debug(`[DEBUG] app-backed-media ${input.id} accepted=${windowId}/${nodeId}/${nodeKey} token=${element.dataset.mediaSlot} state=${element.dataset.mediaState} root-correlated=${rootCorrelated}`);
-          return { id: input.id, url: location.href, acceptedWindow: windowId, acceptedNode: nodeKey, token: element.dataset.mediaSlot!, state: element.dataset.mediaState!, kind: element.dataset.mediaKind!, mediaType: element.dataset.mediaType!, reason: element.textContent ?? "", rootCorrelated };
+          return { id: input.id, url: location.href, acceptedWindow: windowId, acceptedNode: nodeKey, token: element.dataset.mediaSlot!, state: element.dataset.mediaState!, kind: element.dataset.mediaKind!, mediaType: element.dataset.mediaType!, reason: element.textContent ?? "", rootCorrelated, acceptedRoot };
         }, specimen);
         assert.equal(receipt.state, fixture.capability);
         assert.equal(receipt.kind, specimen.kind);

@@ -1,0 +1,125 @@
+//! 🧪️ `scale-selection` fixture — `🔍️scales-two-objects`.
+//!
+//! Factors (2, 1, 0.5): `object-a`'s uniform scale becomes a per-axis triple, and `object-b`, which carries no scale, reads as one.
+//!
+//! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/🔍️scale-selection/🔍️scales-two-objects/`
+//! (contract D1); the scene is the synthetic selection scene shared by every selection-transform vector.
+
+use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle3d_mutation, inverse_puzzle3d_mutation};
+use crate::Puzzle3dSnapshot;
+
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍️scale-selection/🔍️scales-two-objects/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍️scale-selection/🔍️scales-two-objects/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍️scale-selection/🔍️scales-two-objects/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍️scale-selection/🔍️scales-two-objects/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔍️scale-selection/🔍️scales-two-objects/🎯️outcome/🔣️.json");
+
+fn before() -> Puzzle3dSnapshot {
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
+}
+fn expected_after() -> Puzzle3dSnapshot {
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
+}
+fn mutation() -> Puzzle3dMutation {
+    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
+}
+fn outcome() -> serde_json::Value {
+    serde_json::from_str(OUTCOME).expect("outcome decodes")
+}
+
+/// 🗣️ `(level, code, target)` of every message `scale-selection` raises on the committed base.
+fn produced_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {
+    let produced = <Puzzle3dMutation as protocol::Mutation<Puzzle3dSnapshot>>::diff(&mutation(), &before());
+    produced.messages().iter().map(|message| (message.level, message.code.0.clone(), message.target.clone())).collect()
+}
+
+/// 🔣️ Both committed snapshots and the committed `scale-selection` payload are already canonical.
+#[test]
+fn committed_json_is_canonical() {
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: Puzzle3dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "scale-selection/scales-two-objects: committed {label} JSON is not canonical");
+    }
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&mutation())).expect("mutation encodes");
+    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    assert_eq!(reencoded, original, "scale-selection/scales-two-objects: committed mutation JSON is not canonical");
+}
+
+/// 📜️ `(level, code, target)` of every message the committed outcome declares.
+fn declared_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {
+    let level = |text: &str| match text {
+        "info" => protocol::Severity::Info,
+        "warn" => protocol::Severity::Warning,
+        "error" => protocol::Severity::Error,
+        "fatal" => protocol::Severity::Fatal,
+        other => panic!("scale-selection/scales-two-objects: unknown message level {other:?}"),
+    };
+    let strings = |value: &serde_json::Value| value.as_array().expect("an array of strings").iter().map(|entry| entry.as_str().expect("a string").to_string()).collect::<Vec<_>>();
+    outcome().get("messages").and_then(serde_json::Value::as_array).map_or_else(Vec::new, |messages| {
+        messages.iter().map(|message| (level(message["level"].as_str().expect("a level")), message["code"].as_str().expect("a code").to_string(), strings(&message["target"]))).collect()
+    })
+}
+
+/// 🔺️ The sparse delta `scale-selection` produces is exactly the committed diff: WHICH records it patches, and
+/// every patched record whole.
+#[test]
+fn produces_committed_diff() {
+    let outcome = <Puzzle3dMutation as protocol::Mutation<Puzzle3dSnapshot>>::diff(&mutation(), &before());
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    assert_eq!(produced, committed, "scale-selection/scales-two-objects: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert!(committed["attractions"].is_null() && committed["meta"].is_null() && committed["references"].is_null(), "scale-selection/scales-two-objects: a selection transform touches no relation and no document meta");
+}
+
+/// 🩹 Applying the committed diff directly to `before` yields the committed `after`.
+#[test]
+fn committed_diff_applies_to_after() {
+    let decoded: Puzzle3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <Puzzle3dDiff as protocol::MutationDiff<Puzzle3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "scale-selection/scales-two-objects: committed diff did not carry before to after");
+}
+
+/// ▶️ The committed payload carries `before` to exactly the committed `after`.
+#[test]
+fn applies_to_committed_after() {
+    let mut snapshot = before();
+    apply_puzzle3d_mutation(&mut snapshot, &mutation()).expect("scale-selection applies to its committed before-snapshot");
+    assert_eq!(snapshot, expected_after(), "scale-selection/scales-two-objects: applied state differs from committed after-snapshot");
+    assert_ne!(snapshot, before(), "scale-selection/scales-two-objects: an applied vector must move the scene");
+}
+
+/// ↩️ Applying the payload then the inverse it derives from `before` restores `before` EXACTLY — the
+/// inverse is absolute setters read off the base, never a negated parameter.
+#[test]
+fn inverse_restores_before() {
+    let base = before();
+    let mutation = mutation();
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation);
+    assert!(!inverse.is_empty(), "scale-selection/scales-two-objects: a moving vector must have something to undo");
+    let mut snapshot = base.clone();
+    apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");
+    for step in inverse.iter().rev() {
+        apply_puzzle3d_mutation(&mut snapshot, step).expect("inverse step applies");
+    }
+    assert_eq!(snapshot, base, "scale-selection/scales-two-objects: inverse did not restore the before-snapshot");
+}
+
+/// 🎯️ The declared outcome — `applied`, with exactly the declared warnings — is what `scale-selection` emits.
+#[test]
+fn declared_outcome_holds() {
+    assert_eq!(outcome()["status"].as_str(), Some("applied"), "scale-selection/scales-two-objects declares an applied outcome");
+    assert_eq!(produced_messages(), declared_messages(), "scale-selection/scales-two-objects: the produced messages differ from the declared ones");
+}
+
+/// 🧾️ The committed diff is itself canonical and decodes to `Puzzle3dDiff`.
+#[test]
+fn committed_diff_is_canonical() {
+    let decoded: Puzzle3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "scale-selection/scales-two-objects: committed diff JSON is not canonical");
+}

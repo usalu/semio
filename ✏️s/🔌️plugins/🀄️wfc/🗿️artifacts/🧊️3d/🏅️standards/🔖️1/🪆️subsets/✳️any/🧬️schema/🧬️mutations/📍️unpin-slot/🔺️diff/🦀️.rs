@@ -5,11 +5,11 @@ use crate::schema::snapshot::Wfc3dSnapshot;
 
 pub fn diff(payload: &super::UnpinSlot, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
     let Some(index) = base.slots.iter().position(|slot| slot.id == payload.id) else {
-        return protocol::MutationOutcome::error("wfc3d.slot.missing", format!("Slot \"{}\" does not exist.", payload.id), [payload.id.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Slot \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     let slot = &base.slots[index];
     if slot.pinned_tile_id.is_none() {
-        return protocol::MutationOutcome::empty().warn("wfc3d.slot.pin-absent", format!("Slot \"{}\" carries no pin.", payload.id));
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Slot \"{}\" carries no pin.", payload.id));
     }
     let mut released = slot.clone();
     released.pinned_tile_id = None;

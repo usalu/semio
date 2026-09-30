@@ -12,12 +12,11 @@ extern crate semio_framework_schema as framework_schema;
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
 // here would diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
-// 🎭️ `fsm::statechart!` (used by `editor::drawing::commands::canvas_pointer_down`'s gesture machine) generates code
-// containing `#[cfg(feature = "serde")]` gates meant for `fsm`'s OWN crate; macro hygiene splices
-// that cfg check into the CALLING crate's feature list instead (a `fsm`/rustc macro-expansion
-// limitation, not a real conditional-compilation bug here) — this crate declares no `serde` feature
-// at all (the dependency is always-on), so rustc flags the value as unrecognized. Harmless, but a
-// hard error under `-D warnings` without this crate-wide allow.
+// 🎭️ `machine::statechart!` (the canvas tool of `editor::drawing::commands::canvas_pointer_down`) generates code
+// containing `#[cfg(feature = "serde")]` gates meant for `machine`'s OWN crate; macro hygiene splices that cfg check
+// into the CALLING crate's feature list instead (a rustc macro-expansion limitation, not a real
+// conditional-compilation bug here) — this crate declares no `serde` feature, so rustc flags the value as
+// unrecognized. Harmless, but a hard error under `-D warnings` without this crate-wide allow.
 
 pub use store::ArtifactDsl;
 pub use schema::stroke::{StrokeCap, StrokeJoin};
@@ -964,6 +963,54 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔍️update-layer-trace-params/🧪️tests/🔍️sharpens-the-trace/🦀️.rs"]
                             mod tests_sharpens_the_trace;
+                        }
+                        #[path = "."]
+                        pub mod drag_layers {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✋️drag-layers/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✋️drag-layers/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✋️drag-layers/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✋️drag-layers/🧪️tests/✋️drags-a-child/🦀️.rs"]
+                            mod tests_drags_a_child;
+                        }
+                        #[path = "."]
+                        pub mod rotate_layers {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🧭️rotate-layers/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🧭️rotate-layers/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🧭️rotate-layers/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🧭️rotate-layers/🧪️tests/🧭️quarter-turn/🦀️.rs"]
+                            mod tests_quarter_turn;
+                        }
+                        #[path = "."]
+                        pub mod scale_layers {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📐️scale-layers/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📐️scale-layers/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📐️scale-layers/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📐️scale-layers/🧪️tests/📐️doubles-a-rect/🦀️.rs"]
+                            mod tests_doubles_a_rect;
+                        }
+                        #[path = "."]
+                        pub mod drag_path_points {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📍️drag-path-points/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📍️drag-path-points/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📍️drag-path-points/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📍️drag-path-points/🧪️tests/📍️drags-two-anchors/🦀️.rs"]
+                            mod tests_drags_two_anchors;
                         }
                     }
                 }

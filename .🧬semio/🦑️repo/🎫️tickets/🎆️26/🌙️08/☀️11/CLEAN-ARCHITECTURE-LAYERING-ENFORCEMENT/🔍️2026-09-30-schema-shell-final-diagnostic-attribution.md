@@ -110,3 +110,11 @@ Uncached schema generation/docs passed23.3s; whole-repository check failed11.8s 
 ## Owner-Context Intermediate Refresh
 
 The actual uncached global check after the25-owner registry refresh failed with4,266modules,3,650scopes and9,341 independently parsed JSON diagnostics, including one catalog-stale finding. All24 previously mapped authored prefixes still have zero findings. The generation3d parent schema subtree contains42 findings; four specifically name new Generation3dIoAuthority missing-language exports. These four are root-owned and have been corrected by declaring its intended JSON-only source-test fixture format. The new Generation3dExportInputs and Generation3dRegistryTextRoundTrip fixture contracts already declare their supported JSON format; no findings name them in this run. The remaining parent-subtree findings are retained broader schema work. Final regeneration/check remains pending.
+
+## Settled Prepared IO and Retained Profile Refresh
+
+Actual uncached schema generation passed16.6s and docs passed11.3s, with3,650 scopes. The global check exited1 after11.5s. Independently parsed diagnostic JSON rows: 8911. Catalog-stale: 0. All24 existing exact authored-prefix mappings remain zero. New JSON-only source fixture contracts have zero named/path findings: Generation3dIoAuthority=0, Generation3dRegistryTextRoundTrip=0, Generation3dExportInputs=0, Retained Extrusion Fixture=0. The broader generation3d parent schema retains38 findings; they are not suppressed. These counts concern diagnostic attribution, and the whole-repository check is still failing.
+
+## Final Settled Source Check
+
+After the clean app source and all five final guest producers settled, plugin catalog regeneration passed in21.1s and byte freshness verification in22.0s. The final uncached schema check again exited1: 8911 independently parsed findings, catalog-stale 0. All24 exact authored prefixes and four new fixture contracts remain zero. Broader generation3d parent findings: 38. No catalog or schema filtering was introduced.

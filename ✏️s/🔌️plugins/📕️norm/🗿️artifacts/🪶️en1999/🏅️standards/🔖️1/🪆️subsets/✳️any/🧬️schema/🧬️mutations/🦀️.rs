@@ -108,10 +108,6 @@ impl En1999Mutation {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-
 pub fn decode_en1999_mutation_json(text: &str) -> Result<En1999Mutation, String> {
     pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
@@ -130,3 +126,10 @@ pub fn inverse_en1999_mutation(mutation: &En1999Mutation, base: &En1999Snapshot)
 #[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
+
+
+//#region 🧫️Vectors
+#[cfg(test)]
+#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
+mod fixture_tests;
+//#endregion 🧫️Vectors

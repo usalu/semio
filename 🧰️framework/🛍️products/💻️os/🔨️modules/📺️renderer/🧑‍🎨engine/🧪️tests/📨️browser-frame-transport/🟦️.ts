@@ -907,8 +907,9 @@ describe("browser frame worker transport", () => {
     expect(bootSource).toContain("host.semioWgpuIntrospection = { dumpStructure:");
     expect(bootSource).not.toContain("wasmBindings =");
     expect(bootSource.indexOf("detachIntrospection = attachIntrospectionBindings(transport)")).toBeGreaterThan(bootSource.indexOf("onReady: () => {"));
-    for (const mapping of ['message.probe === "structure" ? bindings.dumpStructure', 'message.probe === "accessibility" ? bindings.dumpAccessibility', 'message.probe === "mesh-stats" ? bindings.dumpMeshStats', 'message.probe === "chrome" ? bindings.dumpChrome', "bindings.dumpFrameStats"]) expect(workerSource).toContain(mapping);
+    for (const mapping of ['message.probe === "structure" ? bindings.dumpStructure', 'message.probe === "accessibility" ? bindings.dumpAccessibility', 'message.probe === "mesh-stats" ? bindings.dumpMeshStats', 'message.probe === "board2d" ? bindings.dumpBoard2d', 'message.probe === "chrome" ? bindings.dumpChrome', "bindings.dumpFrameStats"]) expect(workerSource).toContain(mapping);
     expect(bootSource).toContain('dumpChrome: probe("chrome")');
+    expect(bootSource).toContain('dumpBoard2d: probe("board2d")');
     expect(workerSource).toContain("INTROSPECTION_STEP_BUDGET_MS");
     expect(workerSource).toContain("publishWorld3dAcceptedFrameDiagnostic(input.generation)");
     expect(workerSource).toContain("json === lastWorld3dAcceptedFrameDiagnostic");

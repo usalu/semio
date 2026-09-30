@@ -52,3 +52,19 @@ fn stamping_into_a_class_and_back_is_the_identity() {
     assert_eq!(stamp_conformance_class(stamp_conformance_class(base.clone(), true), false), stamp_conformance_class(base, false));
 }
 //#endregion 🔖️StampLaw
+
+//#region 🔖️AuthorityLaw
+/// 📄️ Every class axis lives in the snapshot's authoritative logical XML parts: retargeting the main namespace and
+/// stamping the conformance attribute move the main part itself — an edit of `opc.parts` alone would move nothing, because
+/// XML parts are never opaque OPC bytes.
+#[test]
+fn class_edits_move_the_authoritative_main_part() {
+    let mut snapshot = XlsxSnapshot::default();
+    let main = main_part_path(&snapshot).expect("the default workbook has a main part");
+    apply_xlsx_strict_mutation(&mut snapshot, &XlsxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace: STRICT_MAIN_NS.into() }));
+    apply_xlsx_strict_mutation(&mut snapshot, &XlsxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value: "strict".into() }));
+    let root = snapshot.xml_part(&main).and_then(|part| part.document.root.as_ref()).expect("the main part keeps its root");
+    assert!(declares_namespace(root, STRICT_MAIN_NS), "the strict main namespace must land on the logical main part");
+    assert_eq!(conformance_attribute(&snapshot).as_deref(), Some("strict"));
+}
+//#endregion 🔖️AuthorityLaw

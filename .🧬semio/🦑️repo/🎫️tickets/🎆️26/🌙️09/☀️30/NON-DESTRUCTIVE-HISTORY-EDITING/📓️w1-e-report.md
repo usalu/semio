@@ -468,3 +468,91 @@ API, not mine. Main was told.
   - `UiInputNode` literals in HubConnection wgpu and playbook
 - **Root:** `package.json`, `bun.lock` (color-string 1.9.1)
 - **Ticket inputs:** `w1e-conformance-cases.py` (color case, sorted catalog insertion)
+
+## 7. Follow-up 2: tree rows render recipe content in wgpu
+
+Status: **DONE and verified**.
+
+**The problem:** in wgpu, reconcile turned only the first of the nine inline controls under a `TreeItem` into the row's
+`control`. Every other child became a placeholder row: a group recipe, text, progress, or a second control.
+`mounted_layout` matched that placeholder by key and painted it as a tree row labelled with the node key. So the
+time-travel editor's colour, vector and reference inputs could not be used in wgpu, while React (which renders every
+non-row child in the row's property value column) showed them correctly.
+
+**The fix** (one rule, deterministic before layout):
+- **Reconcile** (`UI/🎯️targets/🧊️wgpu/🔀️reconcile`):
+  - `tree_row_content` lists a row's content: every child that is not a nested row, its toolbar or its detail.
+  - When that content is exactly one of the nine inline controls, it stays the row's `control`, as before.
+  - Otherwise `UiTreeItemNode.content_lines` (new) counts the lines the content stacks to:
+    - one per leaf (control, button, text, progress);
+    - one per Field label, description and error;
+    - one per Section title;
+    - other containers count only their children.
+  - Nested items are only real `TreeItem` rows now, so no placeholder row is ever made.
+- **Metrics** (`🧮️layout`): `TreeRowMetrics::for_item` grows a content row to `tree_content_height(lines)`, one
+  standard control per line plus one gap between lines. Paint, hit-testing and layout all read this one height.
+- **Layout** (`📌️mounted_layout` and `📐️flex`):
+  - A direct content child gets `TreeContentFlow::Slot`: its box in the value column, below the content before it,
+    vertically centred in the row.
+  - Content containers become `Column`s whose label bands take one line each.
+  - Leaves become fixed `Line`s.
+  - Content Fields and Sections do not take part in chrome text measurement, so their bands stay deterministic and the
+    lines/runs invariant holds. Without this the layout faulted as `layout.stale` and never settled.
+- **Paint:**
+  - Rows with content reserve the value column for their label.
+  - A Group inside a tree paints no chevron or label of its own; the row label names it and its accessibility label
+    stays.
+- **React:** `SliderView` now passes the record's accessibility label as `aria-label`. Before, a React slider had no
+  accessible name of its own.
+- **Budget:** the fixed-slot budget `🧱️boxed-fixed-slots` records `UiSurfaceRegistry` at 165872 B (+32 B), from the
+  layout node's new content field.
+
+**Corpus:** new case `🖥️composite/🌲️tree-row-recipes`: a tree section whose rows hold a colour input, a vector input
+(Fields with unit descriptions and detents), a reference list, and a text with a progress bar. The corpus now has 71
+cases.
+- **Rust contract:** `conformance-unit` validates the case.
+- **TS:** the corpus self-test covers it (71).
+- **React** (Interpreter corpus test):
+  - every control is named: Tint, Hex, Alpha, X, Y, "Remove Piece 3", "Remove Piece 7", "Use selection", "Add target",
+    "Replay progress";
+  - the swatch value and the progress `aria-valuenow` are checked;
+  - each control sits inside its own `treeitem`.
+- **wgpu:**
+  - `tree_rows_render_recipe_content_in_their_value_column` checks:
+    - each row's `content_lines` (3/6/4/2), with no placeholder rows and no `control`;
+    - every leaf laid out inside its row, in the value column, one below the other, and rows below each other;
+    - `hit_test` at every leaf's centre finds that leaf;
+    - Tab reaches every control.
+  - The corpus accessibility law now also covers the case: slider, buttons and progressbar roles, plus every name and
+    description.
+
+**Verification (gated, all run):**
+
+| Suite | Result |
+|---|---|
+| `semio-framework-ui --features testkit --lib` | 761 ✔ |
+| `semio-framework-ui-contract --lib` | 215 ✔ |
+| TS corpus self-test | 71 ✔ |
+| renderer-react Interpreter file, full | 168 ✔ |
+| renderer-react typecheck | 0 errors |
+| renderer wgpu `time_travel` / `tree` | 17 / 29 ✔ |
+| `cargo check -p semio-framework-ui -p semio-framework-os-renderer-wgpu -p semio-framework-plugin --tests` | 0 errors |
+| `cargo check -p semio-s-plugin-puzzle --target wasm32-wasip2` | ✔ |
+
+The renderer `staged` filter could not be re-run at the end, because a peer's in-flight shell presence edit
+(`PresenceActivity`, `PresencePeerRow.activity`) breaks the crate right now. It passed (9) earlier, and staged rows are
+spec-built, with `content_lines` always `None`.
+
+**Files:**
+- **wgpu:**
+  - `UI/🎯️targets/🧊️wgpu/{🧩️component,🔀️reconcile,🧮️layout,📐️flex,📌️mounted_layout,🖌️paint}/🦀️.rs`
+  - `UI/🧪️tests/🧪️conformance-corpus/🦀️.rs`
+  - `UI/🧪️tests/{🔬️targets-wgpu-flex-unit,🔬️targets-wgpu-engine-unit,🎯️retained-hit-targets,🔬️targets-wgpu-component-ui-value-round-trip,🔬️targets-wgpu-reconcile-unit}/🦀️.rs`
+  - `UiTreeItemNode` literals in `🐚️Shell` wgpu (none left besides `..base`) and playbook
+- **Contract:**
+  - corpus case `C/🧫️fixtures/🧪️conformance/🖥️composite/🌲️tree-row-recipes/{📸️snapshot.json,🎯️expect.json}`
+  - `📇️catalog.json`
+  - count updates in `C/🧪️tests/🔬️conformance-unit/🦀️.rs` and `C/🧪️tests/🔬️conformance-corpus/🟦️.ts`
+- **React:** `RE/🗣️Interpreter/{🟦️.tsx,🧪️tests/🧪️unknown-component-placeholder/🟦️.tsx}`
+- **Budget:** `🔨️modules/⏳️async/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json`
+- **Ticket input:** `w1e-conformance-cases.py` (tree-row case)

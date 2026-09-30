@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.en1998` — checked against PyPI, which serves no `en1998`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../../../../../🧪️tests/mutate-en1998-1/🐍️component.py`, all 49 kinds of `En1998Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `en1998-1-mutate`'s external-oracle requirement for its 49-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 49 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.en1998` — checked against PyPI, which serves no `en1998`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is the shared norm reference engine `✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution/🐍️.py` fed by `../🧪️tests/🫨️mutate-en1998-1/🐍️.py`, all 29 kinds of `En1998Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `en1998-1-mutate`'s external-oracle requirement for its 29-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 29 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -49,7 +49,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": "📓️taxonomy.md; 📓️derivation-rules.md; .dsl.semio",
         "fixtureCoverage": {
-          "vectors": 49,
+          "vectors": 29,
           "capabilitiesCovered": [
             "en1998-1-mutate"
           ]
@@ -67,594 +67,354 @@
       "vectors": [
         {
           "mutationId": "change-annex",
-          "sourceMutationDirectoryName": "🌍️change-annex",
-          "mutationDirectoryName": "🌍️change-annex",
+          "sourceMutationDirectoryName": "📎️change-annex",
+          "mutationDirectoryName": "📎️change-annex",
           "scenarios": [
             {
-              "id": "switches-annex-to-en",
-              "directoryName": "🌍️switches-annex-to-en"
+              "id": "switches-to-en",
+              "directoryName": "🌍️switches-to-en"
             }
           ]
         },
         {
-          "mutationId": "change-bearing-d-ed-mm",
-          "sourceMutationDirectoryName": "🎯️change-bearing-d-ed-mm",
-          "mutationDirectoryName": "🎯️change-bearing-d-ed-mm",
+          "mutationId": "update-site",
+          "sourceMutationDirectoryName": "🌚️update-site",
+          "mutationDirectoryName": "🌚️update-site",
           "scenarios": [
             {
-              "id": "raises-bearing-d-ed-mm-to-165-5",
-              "directoryName": "🎯️raises-bearing-d-ed-mm-to-165-5"
+              "id": "zone-3-soft-soil",
+              "directoryName": "🌋️zone-3-soft-soil"
             }
           ]
         },
         {
-          "mutationId": "change-bearing-d-rd-mm",
-          "sourceMutationDirectoryName": "🛑️change-bearing-d-rd-mm",
-          "mutationDirectoryName": "🛑️change-bearing-d-rd-mm",
+          "mutationId": "insert-building",
+          "sourceMutationDirectoryName": "➕️insert-building",
+          "mutationDirectoryName": "➕️insert-building",
           "scenarios": [
             {
-              "id": "raises-bearing-d-rd-mm-to-312-5",
-              "directoryName": "🛑️raises-bearing-d-rd-mm-to-312-5"
+              "id": "adds-an-annex",
+              "directoryName": "🏢️adds-an-annex"
             }
           ]
         },
         {
-          "mutationId": "change-bridge-v-rd-kn",
-          "sourceMutationDirectoryName": "🌉️change-bridge-v-rd-kn",
-          "mutationDirectoryName": "🌉️change-bridge-v-rd-kn",
+          "mutationId": "remove-building",
+          "sourceMutationDirectoryName": "➖️remove-building",
+          "mutationDirectoryName": "➖️remove-building",
           "scenarios": [
             {
-              "id": "raises-bridge-v-rd-kn-to-725-0",
-              "directoryName": "🌉️raises-bridge-v-rd-kn-to-725-0"
+              "id": "drops-the-office",
+              "directoryName": "🏚️drops-the-office"
             }
           ]
         },
         {
-          "mutationId": "change-drift-mm",
-          "sourceMutationDirectoryName": "↔️change-drift-mm",
-          "mutationDirectoryName": "↔️change-drift-mm",
+          "mutationId": "change-system-v-rd-n",
+          "sourceMutationDirectoryName": "💪️change-system-v-rd-n",
+          "mutationDirectoryName": "💪️change-system-v-rd-n",
           "scenarios": [
             {
-              "id": "raises-drift-mm-to-33-5",
-              "directoryName": "↔️raises-drift-mm-to-33-5"
+              "id": "stronger-y",
+              "directoryName": "💪️stronger-y"
             }
           ]
         },
         {
-          "mutationId": "change-en-a-gr",
-          "sourceMutationDirectoryName": "🏎️change-en-a-gr",
-          "mutationDirectoryName": "🏎️change-en-a-gr",
+          "mutationId": "change-storey-permanent-gk-n",
+          "sourceMutationDirectoryName": "⚖️change-storey-permanent-gk-n",
+          "mutationDirectoryName": "⚖️change-storey-permanent-gk-n",
           "scenarios": [
             {
-              "id": "raises-en-a-gr-to-0-25",
-              "directoryName": "🏎️raises-en-a-gr-to-0-25"
+              "id": "heavier",
+              "directoryName": "⚖️heavier"
             }
           ]
         },
         {
-          "mutationId": "change-en-ground-type",
-          "sourceMutationDirectoryName": "🗺️change-en-ground-type",
-          "mutationDirectoryName": "🗺️change-en-ground-type",
+          "mutationId": "change-storey-stiffness-x",
+          "sourceMutationDirectoryName": "📐️change-storey-stiffness-x",
+          "mutationDirectoryName": "📐️change-storey-stiffness-x",
           "scenarios": [
             {
-              "id": "switches-en-ground-type-to-e",
-              "directoryName": "🗺️switches-en-ground-type-to-e"
+              "id": "softer",
+              "directoryName": "📐️softer"
             }
           ]
         },
         {
-          "mutationId": "change-en-spectrum-type",
-          "sourceMutationDirectoryName": "🌈️change-en-spectrum-type",
-          "mutationDirectoryName": "🌈️change-en-spectrum-type",
+          "mutationId": "change-storey-drift-xm",
+          "sourceMutationDirectoryName": "📏️change-storey-drift-xm",
+          "mutationDirectoryName": "📏️change-storey-drift-xm",
           "scenarios": [
             {
-              "id": "switches-en-spectrum-type-to-type2",
-              "directoryName": "🌈️switches-en-spectrum-type-to-type2"
+              "id": "more-drift",
+              "directoryName": "📏️more-drift"
             }
           ]
         },
         {
-          "mutationId": "change-foundation-area-m2",
-          "sourceMutationDirectoryName": "🔲️change-foundation-area-m2",
-          "mutationDirectoryName": "🔲️change-foundation-area-m2",
+          "mutationId": "change-building-plan-regular",
+          "sourceMutationDirectoryName": "🧭️change-building-plan-regular",
+          "mutationDirectoryName": "🧭️change-building-plan-regular",
           "scenarios": [
             {
-              "id": "raises-foundation-area-m2-to-144-0",
-              "directoryName": "🔲️raises-foundation-area-m2-to-144-0"
+              "id": "twist",
+              "directoryName": "🧭️twist"
             }
           ]
         },
         {
-          "mutationId": "change-foundation-h-ed-kn",
-          "sourceMutationDirectoryName": "➡️change-foundation-h-ed-kn",
-          "mutationDirectoryName": "➡️change-foundation-h-ed-kn",
+          "mutationId": "change-elevation-regular",
+          "sourceMutationDirectoryName": "📏️change-elevation-regular",
+          "mutationDirectoryName": "📏️change-elevation-regular",
           "scenarios": [
             {
-              "id": "raises-foundation-h-ed-kn-to-212-5",
-              "directoryName": "➡️raises-foundation-h-ed-kn-to-212-5"
+              "id": "irregular",
+              "directoryName": "🏙️irregular"
             }
           ]
         },
         {
-          "mutationId": "change-foundation-h-rd-kn",
-          "sourceMutationDirectoryName": "🧲️change-foundation-h-rd-kn",
-          "mutationDirectoryName": "🧲️change-foundation-h-rd-kn",
+          "mutationId": "change-member-detailing",
+          "sourceMutationDirectoryName": "✅️change-member-detailing",
+          "mutationDirectoryName": "✅️change-member-detailing",
           "scenarios": [
             {
-              "id": "raises-foundation-h-rd-kn-to-475-0",
-              "directoryName": "🧲️raises-foundation-h-rd-kn-to-475-0"
+              "id": "beam-unfit",
+              "directoryName": "✅️beam-unfit"
             }
           ]
         },
         {
-          "mutationId": "change-foundation-p-rd-kpa",
-          "sourceMutationDirectoryName": "👇️change-foundation-p-rd-kpa",
-          "mutationDirectoryName": "👇️change-foundation-p-rd-kpa",
+          "mutationId": "change-masonry-wall-ratio",
+          "sourceMutationDirectoryName": "🧱️change-masonry-wall-ratio",
+          "mutationDirectoryName": "🧱️change-masonry-wall-ratio",
           "scenarios": [
             {
-              "id": "raises-foundation-p-rd-kpa-to-625-0",
-              "directoryName": "👇️raises-foundation-p-rd-kpa-to-625-0"
+              "id": "four-pct",
+              "directoryName": "🧱️four-pct"
             }
           ]
         },
         {
-          "mutationId": "change-ground-type",
-          "sourceMutationDirectoryName": "🪨️change-ground-type",
-          "mutationDirectoryName": "🪨️change-ground-type",
+          "mutationId": "insert-bridge",
+          "sourceMutationDirectoryName": "🌉insert-bridge",
+          "mutationDirectoryName": "🌉insert-bridge",
           "scenarios": [
             {
-              "id": "switches-ground-type-to-c",
-              "directoryName": "🪨️switches-ground-type-to-c"
+              "id": "adds-a-viaduct",
+              "directoryName": "🌉️adds-a-viaduct"
             }
           ]
         },
         {
-          "mutationId": "change-height-m",
-          "sourceMutationDirectoryName": "↕️change-height-m",
-          "mutationDirectoryName": "↕️change-height-m",
+          "mutationId": "change-bridge-v-rd-n",
+          "sourceMutationDirectoryName": "🛑️change-bridge-v-rd-n",
+          "mutationDirectoryName": "🛑️change-bridge-v-rd-n",
           "scenarios": [
             {
-              "id": "raises-height-m-to-18-75",
-              "directoryName": "↕️raises-height-m-to-18-75"
+              "id": "stronger-pier",
+              "directoryName": "🛑️stronger-pier"
             }
           ]
         },
         {
-          "mutationId": "change-importance-class",
-          "sourceMutationDirectoryName": "🏛️change-importance-class",
-          "mutationDirectoryName": "🏛️change-importance-class",
+          "mutationId": "insert-assessment",
+          "sourceMutationDirectoryName": "🔧insert-assessment",
+          "mutationDirectoryName": "🔧insert-assessment",
           "scenarios": [
             {
-              "id": "switches-importance-class-to-cc3",
-              "directoryName": "🏛️switches-importance-class-to-cc3"
+              "id": "adds-a-kl3-check",
+              "directoryName": "🔧️adds-a-kl3-check"
             }
           ]
         },
         {
-          "mutationId": "change-k-foundation",
-          "sourceMutationDirectoryName": "🌀️change-k-foundation",
-          "mutationDirectoryName": "🌀️change-k-foundation",
+          "mutationId": "change-assessment-rkn",
+          "sourceMutationDirectoryName": "🏋️change-assessment-rkn",
+          "mutationDirectoryName": "🏋️change-assessment-rkn",
           "scenarios": [
             {
-              "id": "raises-k-foundation-to-640000-0",
-              "directoryName": "🌀️raises-k-foundation-to-640000-0"
+              "id": "stronger",
+              "directoryName": "🏋️stronger"
             }
           ]
         },
         {
-          "mutationId": "change-k-soil",
-          "sourceMutationDirectoryName": "🌱️change-k-soil",
-          "mutationDirectoryName": "🌱️change-k-soil",
+          "mutationId": "insert-silo",
+          "sourceMutationDirectoryName": "🫙insert-silo",
+          "mutationDirectoryName": "🫙insert-silo",
           "scenarios": [
             {
-              "id": "raises-k-soil-to-262500-0",
-              "directoryName": "🌱️raises-k-soil-to-262500-0"
+              "id": "adds-a-grain-silo",
+              "directoryName": "🫙️adds-a-grain-silo"
             }
           ]
         },
         {
-          "mutationId": "change-mass-t",
-          "sourceMutationDirectoryName": "⚖️change-mass-t",
-          "mutationDirectoryName": "⚖️change-mass-t",
+          "mutationId": "insert-tank",
+          "sourceMutationDirectoryName": "🛢insert-tank",
+          "mutationDirectoryName": "🛢insert-tank",
           "scenarios": [
             {
-              "id": "raises-mass-t-to-812-5",
-              "directoryName": "⚖️raises-mass-t-to-812-5"
+              "id": "adds-a-water-tank",
+              "directoryName": "🛢️adds-a-water-tank"
             }
           ]
         },
         {
-          "mutationId": "change-multiple-resisting-systems",
-          "sourceMutationDirectoryName": "🕸️change-multiple-resisting-systems",
-          "mutationDirectoryName": "🕸️change-multiple-resisting-systems",
+          "mutationId": "insert-foundation",
+          "sourceMutationDirectoryName": "🪨insert-foundation",
+          "mutationDirectoryName": "🪨insert-foundation",
           "scenarios": [
             {
-              "id": "turns-multiple-resisting-systems-off",
-              "directoryName": "🕸️turns-multiple-resisting-systems-off"
+              "id": "adds-a-pad",
+              "directoryName": "🪨️adds-a-pad"
             }
           ]
         },
         {
-          "mutationId": "change-period-ratio",
-          "sourceMutationDirectoryName": "⏱️change-period-ratio",
-          "mutationDirectoryName": "⏱️change-period-ratio",
+          "mutationId": "insert-retaining-wall",
+          "sourceMutationDirectoryName": "🧱️insert-retaining-wall",
+          "mutationDirectoryName": "🧱️insert-retaining-wall",
           "scenarios": [
             {
-              "id": "raises-period-ratio-to-3-5",
-              "directoryName": "⏱️raises-period-ratio-to-3-5"
+              "id": "adds-a-wall",
+              "directoryName": "🧱️adds-a-wall"
             }
           ]
         },
         {
-          "mutationId": "change-retrofit-ed-kn",
-          "sourceMutationDirectoryName": "📥️change-retrofit-ed-kn",
-          "mutationDirectoryName": "📥️change-retrofit-ed-kn",
+          "mutationId": "insert-tower",
+          "sourceMutationDirectoryName": "🗼insert-tower",
+          "mutationDirectoryName": "🗼insert-tower",
           "scenarios": [
             {
-              "id": "raises-retrofit-e-d-kn-to-337-5",
-              "directoryName": "📥️raises-retrofit-e-d-kn-to-337-5"
+              "id": "adds-a-chimney",
+              "directoryName": "🏭️adds-a-chimney"
             }
           ]
         },
         {
-          "mutationId": "change-retrofit-gamma-el",
-          "sourceMutationDirectoryName": "✖️change-retrofit-gamma-el",
-          "mutationDirectoryName": "✖️change-retrofit-gamma-el",
+          "mutationId": "change-tower-m-rd-nm",
+          "sourceMutationDirectoryName": "↪️change-tower-m-rd-nm",
+          "mutationDirectoryName": "↪️change-tower-m-rd-nm",
           "scenarios": [
             {
-              "id": "raises-retrofit-gamma-el-to-1-25",
-              "directoryName": "✖️raises-retrofit-gamma-el-to-1-25"
+              "id": "stronger-base",
+              "directoryName": "↪️stronger-base"
             }
           ]
         },
         {
-          "mutationId": "change-retrofit-knowledge-level",
-          "sourceMutationDirectoryName": "🎓️change-retrofit-knowledge-level",
-          "mutationDirectoryName": "🎓️change-retrofit-knowledge-level",
+          "mutationId": "remove-bridge",
+          "sourceMutationDirectoryName": "➖️remove-bridge",
+          "mutationDirectoryName": "➖️remove-bridge",
           "scenarios": [
             {
-              "id": "switches-retrofit-knowledge-level-to-kl3",
-              "directoryName": "🎓️switches-retrofit-knowledge-level-to-kl3"
+              "id": "drops-the-viaduct",
+              "directoryName": "🌉️drops-the-viaduct"
             }
           ]
         },
         {
-          "mutationId": "change-retrofit-limit-state",
-          "sourceMutationDirectoryName": "🚦️change-retrofit-limit-state",
-          "mutationDirectoryName": "🚦️change-retrofit-limit-state",
+          "mutationId": "remove-assessment",
+          "sourceMutationDirectoryName": "➖️remove-assessment",
+          "mutationDirectoryName": "➖️remove-assessment",
           "scenarios": [
             {
-              "id": "switches-retrofit-limit-state-to-near-collapse",
-              "directoryName": "🚦️switches-retrofit-limit-state-to-near-collapse"
+              "id": "drops-the-check",
+              "directoryName": "🔧️drops-the-check"
             }
           ]
         },
         {
-          "mutationId": "change-retrofit-rk-kn",
-          "sourceMutationDirectoryName": "💪️change-retrofit-rk-kn",
-          "mutationDirectoryName": "💪️change-retrofit-rk-kn",
+          "mutationId": "remove-silo",
+          "sourceMutationDirectoryName": "➖️remove-silo",
+          "mutationDirectoryName": "➖️remove-silo",
           "scenarios": [
             {
-              "id": "raises-retrofit-r-k-kn-to-512-5",
-              "directoryName": "💪️raises-retrofit-r-k-kn-to-512-5"
+              "id": "drops-the-silo",
+              "directoryName": "🫙️drops-the-silo"
             }
           ]
         },
         {
-          "mutationId": "change-seismic-zone",
-          "sourceMutationDirectoryName": "🫨️change-seismic-zone",
-          "mutationDirectoryName": "🫨️change-seismic-zone",
+          "mutationId": "remove-tank",
+          "sourceMutationDirectoryName": "➖️remove-tank",
+          "mutationDirectoryName": "➖️remove-tank",
           "scenarios": [
             {
-              "id": "raises-seismic-zone-to-4",
-              "directoryName": "🫨️raises-seismic-zone-to-4"
+              "id": "drops-the-tank",
+              "directoryName": "🛢️drops-the-tank"
             }
           ]
         },
         {
-          "mutationId": "change-silo-height-m",
-          "sourceMutationDirectoryName": "🌾️change-silo-height-m",
-          "mutationDirectoryName": "🌾️change-silo-height-m",
+          "mutationId": "remove-foundation",
+          "sourceMutationDirectoryName": "➖️remove-foundation",
+          "mutationDirectoryName": "➖️remove-foundation",
           "scenarios": [
             {
-              "id": "raises-silo-height-m-to-14-5",
-              "directoryName": "🌾️raises-silo-height-m-to-14-5"
+              "id": "drops-the-pad",
+              "directoryName": "🪨️drops-the-pad"
             }
           ]
         },
         {
-          "mutationId": "change-silo-n-rd-kn",
-          "sourceMutationDirectoryName": "🗜️change-silo-n-rd-kn",
-          "mutationDirectoryName": "🗜️change-silo-n-rd-kn",
+          "mutationId": "remove-retaining-wall",
+          "sourceMutationDirectoryName": "➖️remove-retaining-wall",
+          "mutationDirectoryName": "➖️remove-retaining-wall",
           "scenarios": [
             {
-              "id": "raises-silo-n-rd-kn-to-640-0",
-              "directoryName": "🗜️raises-silo-n-rd-kn-to-640-0"
+              "id": "drops-it",
+              "directoryName": "🧱️drops-it"
             }
           ]
         },
         {
-          "mutationId": "change-silo-q-nominal",
-          "sourceMutationDirectoryName": "📊️change-silo-q-nominal",
-          "mutationDirectoryName": "📊️change-silo-q-nominal",
+          "mutationId": "remove-tower",
+          "sourceMutationDirectoryName": "➖️remove-tower",
+          "mutationDirectoryName": "➖️remove-tower",
           "scenarios": [
             {
-              "id": "raises-silo-q-nominal-to-2-75",
-              "directoryName": "📊️raises-silo-q-nominal-to-2-75"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-silo-radius-m",
-          "sourceMutationDirectoryName": "⭕️change-silo-radius-m",
-          "mutationDirectoryName": "⭕️change-silo-radius-m",
-          "scenarios": [
-            {
-              "id": "raises-silo-radius-m-to-6-25",
-              "directoryName": "⭕️raises-silo-radius-m-to-6-25"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-silo-v-ed-kn",
-          "sourceMutationDirectoryName": "📉️change-silo-v-ed-kn",
-          "mutationDirectoryName": "📉️change-silo-v-ed-kn",
-          "scenarios": [
-            {
-              "id": "raises-silo-v-ed-kn-to-225-5",
-              "directoryName": "📉️raises-silo-v-ed-kn-to-225-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-silo-v-rd-kn",
-          "sourceMutationDirectoryName": "🚧️change-silo-v-rd-kn",
-          "mutationDirectoryName": "🚧️change-silo-v-rd-kn",
-          "scenarios": [
-            {
-              "id": "raises-silo-v-rd-kn-to-412-5",
-              "directoryName": "🚧️raises-silo-v-rd-kn-to-412-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-structural-system",
-          "sourceMutationDirectoryName": "🏗️change-structural-system",
-          "mutationDirectoryName": "🏗️change-structural-system",
-          "scenarios": [
-            {
-              "id": "switches-structural-system-to-wall-dcm",
-              "directoryName": "🏗️switches-structural-system-to-wall-dcm"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-t1-s",
-          "sourceMutationDirectoryName": "🕐️change-t1-s",
-          "mutationDirectoryName": "🕐️change-t1-s",
-          "scenarios": [
-            {
-              "id": "raises-t1-s-to-0-75",
-              "directoryName": "🕐️raises-t1-s-to-0-75"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-tank-height-m",
-          "sourceMutationDirectoryName": "🛢️change-tank-height-m",
-          "mutationDirectoryName": "🛢️change-tank-height-m",
-          "scenarios": [
-            {
-              "id": "raises-tank-height-m-to-11-5",
-              "directoryName": "🛢️raises-tank-height-m-to-11-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-tank-mass-t",
-          "sourceMutationDirectoryName": "⚓️change-tank-mass-t",
-          "mutationDirectoryName": "⚓️change-tank-mass-t",
-          "scenarios": [
-            {
-              "id": "raises-tank-mass-t-to-425-0",
-              "directoryName": "⚓️raises-tank-mass-t-to-425-0"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-tank-radius-m",
-          "sourceMutationDirectoryName": "🥁️change-tank-radius-m",
-          "mutationDirectoryName": "🥁️change-tank-radius-m",
-          "scenarios": [
-            {
-              "id": "raises-tank-radius-m-to-5-75",
-              "directoryName": "🥁️raises-tank-radius-m-to-5-75"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-tank-v-rd-kn",
-          "sourceMutationDirectoryName": "🔰️change-tank-v-rd-kn",
-          "mutationDirectoryName": "🔰️change-tank-v-rd-kn",
-          "scenarios": [
-            {
-              "id": "raises-tank-v-rd-kn-to-537-5",
-              "directoryName": "🔰️raises-tank-v-rd-kn-to-537-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-tower-is-chimney",
-          "sourceMutationDirectoryName": "🏭️change-tower-is-chimney",
-          "mutationDirectoryName": "🏭️change-tower-is-chimney",
-          "scenarios": [
-            {
-              "id": "turns-tower-is-chimney-off",
-              "directoryName": "🏭️turns-tower-is-chimney-off"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-tower-m-ed-knm",
-          "sourceMutationDirectoryName": "↪️change-tower-m-ed-knm",
-          "mutationDirectoryName": "↪️change-tower-m-ed-knm",
-          "scenarios": [
-            {
-              "id": "raises-tower-m-ed-knm-to-1562-5",
-              "directoryName": "↪️raises-tower-m-ed-knm-to-1562-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-tower-m-rd-knm",
-          "sourceMutationDirectoryName": "🦾️change-tower-m-rd-knm",
-          "mutationDirectoryName": "🦾️change-tower-m-rd-knm",
-          "scenarios": [
-            {
-              "id": "raises-tower-m-rd-knm-to-2812-5",
-              "directoryName": "🦾️raises-tower-m-rd-knm-to-2812-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-tower-mass-t",
-          "sourceMutationDirectoryName": "🗼️change-tower-mass-t",
-          "mutationDirectoryName": "🗼️change-tower-mass-t",
-          "scenarios": [
-            {
-              "id": "raises-tower-mass-t-to-112-5",
-              "directoryName": "🗼️raises-tower-mass-t-to-112-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-tower-q-nominal",
-          "sourceMutationDirectoryName": "💨️change-tower-q-nominal",
-          "mutationDirectoryName": "💨️change-tower-q-nominal",
-          "scenarios": [
-            {
-              "id": "raises-tower-q-nominal-to-3-25",
-              "directoryName": "💨️raises-tower-q-nominal-to-3-25"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-v-rd-kn",
-          "sourceMutationDirectoryName": "🛡️change-v-rd-kn",
-          "mutationDirectoryName": "🛡️change-v-rd-kn",
-          "scenarios": [
-            {
-              "id": "raises-v-rd-kn-to-925-0",
-              "directoryName": "🛡️raises-v-rd-kn-to-925-0"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-wall-h-rd-kn",
-          "sourceMutationDirectoryName": "🏋️change-wall-h-rd-kn",
-          "mutationDirectoryName": "🏋️change-wall-h-rd-kn",
-          "scenarios": [
-            {
-              "id": "raises-wall-h-rd-kn-to-187-5",
-              "directoryName": "🏋️raises-wall-h-rd-kn-to-187-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-wall-height-m",
-          "sourceMutationDirectoryName": "🧱️change-wall-height-m",
-          "mutationDirectoryName": "🧱️change-wall-height-m",
-          "scenarios": [
-            {
-              "id": "raises-wall-height-m-to-5-5",
-              "directoryName": "🧱️raises-wall-height-m-to-5-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-wall-phi-deg",
-          "sourceMutationDirectoryName": "📐️change-wall-phi-deg",
-          "mutationDirectoryName": "📐️change-wall-phi-deg",
-          "scenarios": [
-            {
-              "id": "raises-wall-phi-deg-to-37-5",
-              "directoryName": "📐️raises-wall-phi-deg-to-37-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-wall-r",
-          "sourceMutationDirectoryName": "🔢️change-wall-r",
-          "mutationDirectoryName": "🔢️change-wall-r",
-          "scenarios": [
-            {
-              "id": "raises-wall-r-to-2-25",
-              "directoryName": "🔢️raises-wall-r-to-2-25"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-wall-soil-gamma-kn-m3",
-          "sourceMutationDirectoryName": "🧂️change-wall-soil-gamma-kn-m3",
-          "mutationDirectoryName": "🧂️change-wall-soil-gamma-kn-m3",
-          "scenarios": [
-            {
-              "id": "raises-wall-soil-gamma-kn-m3-to-20-5",
-              "directoryName": "🧂️raises-wall-soil-gamma-kn-m3-to-20-5"
+              "id": "drops-the-tower",
+              "directoryName": "🗼️drops-the-tower"
             }
           ]
         }
       ],
       "kinds": [
-        "change-seismic-zone",
-        "change-ground-type",
-        "change-importance-class",
-        "change-structural-system",
-        "change-t1-s",
-        "change-mass-t",
-        "change-v-rd-kn",
-        "change-drift-mm",
-        "change-height-m",
-        "change-multiple-resisting-systems",
         "change-annex",
-        "change-en-a-gr",
-        "change-en-ground-type",
-        "change-en-spectrum-type",
-        "change-period-ratio",
-        "change-bridge-v-rd-kn",
-        "change-bearing-d-ed-mm",
-        "change-bearing-d-rd-mm",
-        "change-retrofit-knowledge-level",
-        "change-retrofit-limit-state",
-        "change-retrofit-ed-kn",
-        "change-retrofit-rk-kn",
-        "change-retrofit-gamma-el",
-        "change-silo-height-m",
-        "change-silo-radius-m",
-        "change-silo-n-rd-kn",
-        "change-silo-v-ed-kn",
-        "change-silo-v-rd-kn",
-        "change-silo-q-nominal",
-        "change-tank-height-m",
-        "change-tank-radius-m",
-        "change-tank-mass-t",
-        "change-tank-v-rd-kn",
-        "change-tower-m-ed-knm",
-        "change-tower-m-rd-knm",
-        "change-tower-is-chimney",
-        "change-tower-q-nominal",
-        "change-tower-mass-t",
-        "change-foundation-area-m2",
-        "change-foundation-p-rd-kpa",
-        "change-foundation-h-ed-kn",
-        "change-foundation-h-rd-kn",
-        "change-k-foundation",
-        "change-k-soil",
-        "change-wall-height-m",
-        "change-wall-phi-deg",
-        "change-wall-soil-gamma-kn-m3",
-        "change-wall-r",
-        "change-wall-h-rd-kn"
+        "update-site",
+        "insert-building",
+        "remove-building",
+        "change-system-v-rd-n",
+        "change-storey-permanent-gk-n",
+        "change-storey-stiffness-x",
+        "change-storey-drift-xm",
+        "change-building-plan-regular",
+        "change-elevation-regular",
+        "change-member-detailing",
+        "change-masonry-wall-ratio",
+        "insert-bridge",
+        "change-bridge-v-rd-n",
+        "insert-assessment",
+        "change-assessment-rkn",
+        "insert-silo",
+        "insert-tank",
+        "insert-foundation",
+        "insert-retaining-wall",
+        "insert-tower",
+        "change-tower-m-rd-nm",
+        "remove-bridge",
+        "remove-assessment",
+        "remove-silo",
+        "remove-tank",
+        "remove-foundation",
+        "remove-retaining-wall",
+        "remove-tower"
       ]
     }
   ],
@@ -673,7 +433,8 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-annex",
@@ -688,7 +449,7 @@
           ]
         },
         {
-          "id": "change-bearing-d-ed-mm",
+          "id": "update-site",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -697,9 +458,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-bearing-d-ed-mm",
+            "operation": "update-site",
             "bridgeVersion": 1,
-            "variant": "ChangeBearingDEdMm"
+            "variant": "UpdateSite"
           },
           "oracleRequirements": [
             {
@@ -709,7 +470,7 @@
           ]
         },
         {
-          "id": "change-bearing-d-rd-mm",
+          "id": "insert-building",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -718,9 +479,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-bearing-d-rd-mm",
+            "operation": "insert-building",
             "bridgeVersion": 1,
-            "variant": "ChangeBearingDRdMm"
+            "variant": "InsertBuilding"
           },
           "oracleRequirements": [
             {
@@ -730,7 +491,7 @@
           ]
         },
         {
-          "id": "change-bridge-v-rd-kn",
+          "id": "remove-building",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -739,9 +500,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-bridge-v-rd-kn",
+            "operation": "remove-building",
             "bridgeVersion": 1,
-            "variant": "ChangeBridgeVRdKn"
+            "variant": "RemoveBuilding"
           },
           "oracleRequirements": [
             {
@@ -751,7 +512,7 @@
           ]
         },
         {
-          "id": "change-drift-mm",
+          "id": "change-system-v-rd-n",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -760,9 +521,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-drift-mm",
+            "operation": "change-system-v-rd-n",
             "bridgeVersion": 1,
-            "variant": "ChangeDriftMm"
+            "variant": "ChangeSystemVRdN"
           },
           "oracleRequirements": [
             {
@@ -772,7 +533,7 @@
           ]
         },
         {
-          "id": "change-en-a-gr",
+          "id": "change-storey-permanent-gk-n",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -781,9 +542,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-en-a-gr",
+            "operation": "change-storey-permanent-gk-n",
             "bridgeVersion": 1,
-            "variant": "ChangeEnAGr"
+            "variant": "ChangeStoreyPermanentGkN"
           },
           "oracleRequirements": [
             {
@@ -793,47 +554,7 @@
           ]
         },
         {
-          "id": "change-en-ground-type",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-en-ground-type",
-            "bridgeVersion": 1,
-            "variant": "ChangeEnGroundType"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-en-spectrum-type",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-en-spectrum-type",
-            "bridgeVersion": 1,
-            "variant": "ChangeEnSpectrumType"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-foundation-area-m2",
+          "id": "change-storey-stiffness-x",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -842,9 +563,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-foundation-area-m2",
+            "operation": "change-storey-stiffness-x",
             "bridgeVersion": 1,
-            "variant": "ChangeFoundationAreaM2"
+            "variant": "ChangeStoreyStiffnessX"
           },
           "oracleRequirements": [
             {
@@ -854,7 +575,7 @@
           ]
         },
         {
-          "id": "change-foundation-h-ed-kn",
+          "id": "change-storey-drift-xm",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -863,9 +584,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-foundation-h-ed-kn",
+            "operation": "change-storey-drift-xm",
             "bridgeVersion": 1,
-            "variant": "ChangeFoundationHEdKn"
+            "variant": "ChangeStoreyDriftXM"
           },
           "oracleRequirements": [
             {
@@ -875,7 +596,7 @@
           ]
         },
         {
-          "id": "change-foundation-h-rd-kn",
+          "id": "change-building-plan-regular",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -884,9 +605,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-foundation-h-rd-kn",
+            "operation": "change-building-plan-regular",
             "bridgeVersion": 1,
-            "variant": "ChangeFoundationHRdKn"
+            "variant": "ChangeBuildingPlanRegular"
           },
           "oracleRequirements": [
             {
@@ -896,7 +617,7 @@
           ]
         },
         {
-          "id": "change-foundation-p-rd-kpa",
+          "id": "change-elevation-regular",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -905,9 +626,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-foundation-p-rd-kpa",
+            "operation": "change-elevation-regular",
             "bridgeVersion": 1,
-            "variant": "ChangeFoundationPRdKpa"
+            "variant": "ChangeElevationRegular"
           },
           "oracleRequirements": [
             {
@@ -917,27 +638,7 @@
           ]
         },
         {
-          "id": "change-ground-type",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-ground-type",
-            "bridgeVersion": 1,
-            "variant": "ChangeGroundType"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-height-m",
+          "id": "change-member-detailing",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -946,9 +647,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-height-m",
+            "operation": "change-member-detailing",
             "bridgeVersion": 1,
-            "variant": "ChangeHeightM"
+            "variant": "ChangeMemberDetailing"
           },
           "oracleRequirements": [
             {
@@ -958,27 +659,7 @@
           ]
         },
         {
-          "id": "change-importance-class",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-importance-class",
-            "bridgeVersion": 1,
-            "variant": "ChangeImportanceClass"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-k-foundation",
+          "id": "change-masonry-wall-ratio",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -987,9 +668,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-k-foundation",
+            "operation": "change-masonry-wall-ratio",
             "bridgeVersion": 1,
-            "variant": "ChangeKFoundation"
+            "variant": "ChangeMasonryWallRatio"
           },
           "oracleRequirements": [
             {
@@ -999,7 +680,7 @@
           ]
         },
         {
-          "id": "change-k-soil",
+          "id": "insert-bridge",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1008,9 +689,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-k-soil",
+            "operation": "insert-bridge",
             "bridgeVersion": 1,
-            "variant": "ChangeKSoil"
+            "variant": "InsertBridge"
           },
           "oracleRequirements": [
             {
@@ -1020,7 +701,7 @@
           ]
         },
         {
-          "id": "change-mass-t",
+          "id": "change-bridge-v-rd-n",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1029,9 +710,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-mass-t",
+            "operation": "change-bridge-v-rd-n",
             "bridgeVersion": 1,
-            "variant": "ChangeMassT"
+            "variant": "ChangeBridgeVRdN"
           },
           "oracleRequirements": [
             {
@@ -1041,27 +722,7 @@
           ]
         },
         {
-          "id": "change-multiple-resisting-systems",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-multiple-resisting-systems",
-            "bridgeVersion": 1,
-            "variant": "ChangeMultipleResistingSystems"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-period-ratio",
+          "id": "insert-assessment",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1070,9 +731,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-period-ratio",
+            "operation": "insert-assessment",
             "bridgeVersion": 1,
-            "variant": "ChangePeriodRatio"
+            "variant": "InsertAssessment"
           },
           "oracleRequirements": [
             {
@@ -1082,7 +743,7 @@
           ]
         },
         {
-          "id": "change-retrofit-ed-kn",
+          "id": "change-assessment-rkn",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1091,9 +752,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-retrofit-ed-kn",
+            "operation": "change-assessment-rkn",
             "bridgeVersion": 1,
-            "variant": "ChangeRetrofitEDKn"
+            "variant": "ChangeAssessmentRKN"
           },
           "oracleRequirements": [
             {
@@ -1103,7 +764,7 @@
           ]
         },
         {
-          "id": "change-retrofit-gamma-el",
+          "id": "insert-silo",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1112,9 +773,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-retrofit-gamma-el",
+            "operation": "insert-silo",
             "bridgeVersion": 1,
-            "variant": "ChangeRetrofitGammaEl"
+            "variant": "InsertSilo"
           },
           "oracleRequirements": [
             {
@@ -1124,47 +785,7 @@
           ]
         },
         {
-          "id": "change-retrofit-knowledge-level",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-retrofit-knowledge-level",
-            "bridgeVersion": 1,
-            "variant": "ChangeRetrofitKnowledgeLevel"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-retrofit-limit-state",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-retrofit-limit-state",
-            "bridgeVersion": 1,
-            "variant": "ChangeRetrofitLimitState"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-retrofit-rk-kn",
+          "id": "insert-tank",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1173,9 +794,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-retrofit-rk-kn",
+            "operation": "insert-tank",
             "bridgeVersion": 1,
-            "variant": "ChangeRetrofitRKKn"
+            "variant": "InsertTank"
           },
           "oracleRequirements": [
             {
@@ -1185,27 +806,7 @@
           ]
         },
         {
-          "id": "change-seismic-zone",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-seismic-zone",
-            "bridgeVersion": 1,
-            "variant": "ChangeSeismicZone"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-silo-height-m",
+          "id": "insert-foundation",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1214,9 +815,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-silo-height-m",
+            "operation": "insert-foundation",
             "bridgeVersion": 1,
-            "variant": "ChangeSiloHeightM"
+            "variant": "InsertFoundation"
           },
           "oracleRequirements": [
             {
@@ -1226,7 +827,7 @@
           ]
         },
         {
-          "id": "change-silo-n-rd-kn",
+          "id": "insert-retaining-wall",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1235,9 +836,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-silo-n-rd-kn",
+            "operation": "insert-retaining-wall",
             "bridgeVersion": 1,
-            "variant": "ChangeSiloNRdKn"
+            "variant": "InsertRetainingWall"
           },
           "oracleRequirements": [
             {
@@ -1247,7 +848,7 @@
           ]
         },
         {
-          "id": "change-silo-q-nominal",
+          "id": "insert-tower",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1256,9 +857,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-silo-q-nominal",
+            "operation": "insert-tower",
             "bridgeVersion": 1,
-            "variant": "ChangeSiloQNominal"
+            "variant": "InsertTower"
           },
           "oracleRequirements": [
             {
@@ -1268,7 +869,7 @@
           ]
         },
         {
-          "id": "change-silo-radius-m",
+          "id": "change-tower-m-rd-nm",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1277,9 +878,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-silo-radius-m",
+            "operation": "change-tower-m-rd-nm",
             "bridgeVersion": 1,
-            "variant": "ChangeSiloRadiusM"
+            "variant": "ChangeTowerMRdNm"
           },
           "oracleRequirements": [
             {
@@ -1289,7 +890,7 @@
           ]
         },
         {
-          "id": "change-silo-v-ed-kn",
+          "id": "remove-bridge",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1298,9 +899,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-silo-v-ed-kn",
+            "operation": "remove-bridge",
             "bridgeVersion": 1,
-            "variant": "ChangeSiloVEdKn"
+            "variant": "RemoveBridge"
           },
           "oracleRequirements": [
             {
@@ -1310,7 +911,7 @@
           ]
         },
         {
-          "id": "change-silo-v-rd-kn",
+          "id": "remove-assessment",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1319,9 +920,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-silo-v-rd-kn",
+            "operation": "remove-assessment",
             "bridgeVersion": 1,
-            "variant": "ChangeSiloVRdKn"
+            "variant": "RemoveAssessment"
           },
           "oracleRequirements": [
             {
@@ -1331,27 +932,7 @@
           ]
         },
         {
-          "id": "change-structural-system",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-structural-system",
-            "bridgeVersion": 1,
-            "variant": "ChangeStructuralSystem"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-t1-s",
+          "id": "remove-silo",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1360,9 +941,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-t1-s",
+            "operation": "remove-silo",
             "bridgeVersion": 1,
-            "variant": "ChangeT1S"
+            "variant": "RemoveSilo"
           },
           "oracleRequirements": [
             {
@@ -1372,7 +953,7 @@
           ]
         },
         {
-          "id": "change-tank-height-m",
+          "id": "remove-tank",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1381,9 +962,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-tank-height-m",
+            "operation": "remove-tank",
             "bridgeVersion": 1,
-            "variant": "ChangeTankHeightM"
+            "variant": "RemoveTank"
           },
           "oracleRequirements": [
             {
@@ -1393,7 +974,7 @@
           ]
         },
         {
-          "id": "change-tank-mass-t",
+          "id": "remove-foundation",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1402,9 +983,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-tank-mass-t",
+            "operation": "remove-foundation",
             "bridgeVersion": 1,
-            "variant": "ChangeTankMassT"
+            "variant": "RemoveFoundation"
           },
           "oracleRequirements": [
             {
@@ -1414,7 +995,7 @@
           ]
         },
         {
-          "id": "change-tank-radius-m",
+          "id": "remove-retaining-wall",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1423,9 +1004,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-tank-radius-m",
+            "operation": "remove-retaining-wall",
             "bridgeVersion": 1,
-            "variant": "ChangeTankRadiusM"
+            "variant": "RemoveRetainingWall"
           },
           "oracleRequirements": [
             {
@@ -1435,7 +1016,7 @@
           ]
         },
         {
-          "id": "change-tank-v-rd-kn",
+          "id": "remove-tower",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1444,239 +1025,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-tank-v-rd-kn",
+            "operation": "remove-tower",
             "bridgeVersion": 1,
-            "variant": "ChangeTankVRdKn"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-tower-is-chimney",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-tower-is-chimney",
-            "bridgeVersion": 1,
-            "variant": "ChangeTowerIsChimney"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-tower-m-ed-knm",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-tower-m-ed-knm",
-            "bridgeVersion": 1,
-            "variant": "ChangeTowerMEdKnm"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-tower-m-rd-knm",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-tower-m-rd-knm",
-            "bridgeVersion": 1,
-            "variant": "ChangeTowerMRdKnm"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-tower-mass-t",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-tower-mass-t",
-            "bridgeVersion": 1,
-            "variant": "ChangeTowerMassT"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-tower-q-nominal",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-tower-q-nominal",
-            "bridgeVersion": 1,
-            "variant": "ChangeTowerQNominal"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-v-rd-kn",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-v-rd-kn",
-            "bridgeVersion": 1,
-            "variant": "ChangeVRdKn"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-wall-h-rd-kn",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-wall-h-rd-kn",
-            "bridgeVersion": 1,
-            "variant": "ChangeWallHRdKn"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-wall-height-m",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-wall-height-m",
-            "bridgeVersion": 1,
-            "variant": "ChangeWallHeightM"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-wall-phi-deg",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-wall-phi-deg",
-            "bridgeVersion": 1,
-            "variant": "ChangeWallPhiDeg"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-wall-r",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-wall-r",
-            "bridgeVersion": 1,
-            "variant": "ChangeWallR"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1998-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-wall-soil-gamma-kn-m3",
-          "capability": "en1998-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-wall-soil-gamma-kn-m3",
-            "bridgeVersion": 1,
-            "variant": "ChangeWallSoilGammaKnM3"
+            "variant": "RemoveTower"
           },
           "oracleRequirements": [
             {

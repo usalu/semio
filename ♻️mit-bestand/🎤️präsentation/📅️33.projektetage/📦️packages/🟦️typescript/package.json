@@ -29,7 +29,8 @@
   },
   "bundleKind": "application",
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./spec": "./🔖️spec.ts"
   },
   "semio": {
     "app": {

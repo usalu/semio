@@ -30,5 +30,5 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for InsertWall {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/➕️applies-insert-wall/🦀️.rs"]
+#[path = "🧪️tests/➕️inserts-a-wall/🦀️.rs"]
 mod named_test;

@@ -7,7 +7,9 @@ import Ajv from "ajv";
 export function testGeneration3dIoAuthorityFixture(): number {
   const fixture = JSON.parse(readFileSync(new URL("../../../🧫️fixtures/🛡️authority/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
-  const validate = new Ajv({ strict: true }).compile(schema.$defs.Generation3dIoAuthority);
+  const oracle = new Ajv({ strict: true });
+  oracle.addKeyword({ keyword: "x-semio-formats", schemaType: "array", valid: true });
+  const validate = oracle.compile(schema.$defs.Generation3dIoAuthority);
   assert(validate(fixture), JSON.stringify(validate.errors));
   assert.equal(new Set(fixture.cases.map((entry: { id: string }) => entry.id)).size, fixture.cases.length);
   for (const entry of fixture.cases) {

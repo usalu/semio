@@ -396,7 +396,7 @@ export function readStr(bytes: Uint8Array, pos: [number]): string {
 }
 
 /** 🎞️ `varint-u64 len | raw bytes` — the TS twin of `protocol_core::write_bytes`. */
-export function writeBytes(out: number[], value: readonly number[]): void {
+export function writeBytes(out: number[], value: readonly number[] | Uint8Array): void {
   writeVarintU64(out, value.length);
   for (const byte of value) out.push(byte);
 }
@@ -941,6 +941,21 @@ function decodeHlc(bytes: Uint8Array, pos: [number]): { readonly actor: number; 
  * target vec<str> | diff.schema str | diff.payload bytes | inverse.schema str | inverse.payload bytes | hlc |
  * transaction (0 | 1 id str tool str)` — the TS twin of Rust `protocol_causal::encode_envelope`. */
 function encodeEnvelope(out: number[], envelope: WireMutationEnvelope): void {
+  encodeEnvelopeFields(out, envelope, () => encodeHlc(out, envelope.timestamp));
+}
+
+/** 🎯️ {@link encodeEnvelope} over an exact envelope: every HLC field keeps its whole u64 (a replica's HLC actor is random
+ * entropy, far past 2^53). */
+function encodeExactEnvelope(out: number[], envelope: ExactWireMutationEnvelope): void {
+  encodeEnvelopeFields(out, envelope, () => {
+    writeVarintU64Exact(out, envelope.timestamp.actor);
+    writeVarintU64Exact(out, envelope.timestamp.physical_ms);
+    writeVarintU64Exact(out, envelope.timestamp.logical);
+  });
+}
+
+/** 🎞️ Every envelope field in wire order, the HLC written by `hlc`. */
+function encodeEnvelopeFields(out: number[], envelope: Omit<WireMutationEnvelope, "timestamp" | "diff" | "inverse"> & Readonly<{ diff: Readonly<{ schema: string; payload: readonly number[] | Uint8Array }>; inverse: Readonly<{ schema: string; payload: readonly number[] | Uint8Array }> }>, hlc: () => void): void {
   writeStr(out, envelope.mutation_id);
   writeStr(out, envelope.document_id);
   writeStr(out, envelope.actor);
@@ -955,7 +970,7 @@ function encodeEnvelope(out: number[], envelope: WireMutationEnvelope): void {
   writeBytes(out, envelope.diff.payload);
   writeStr(out, envelope.inverse.schema);
   writeBytes(out, envelope.inverse.payload);
-  encodeHlc(out, envelope.timestamp);
+  hlc();
   if (envelope.transaction === null) writeVarintU64(out, 0);
   else {
     writeVarintU64(out, 1);
@@ -1052,6 +1067,30 @@ export function historyTransitionId(hlc: WireMutationEnvelope["timestamp"], payl
   return `transition-${blake3Hex(new Uint8Array(material)).slice(0, 16)}`;
 }
 
+/** 🏷️ Twin of Rust `HistoryTransitionKind`: every transition kind, in wire-tag order. */
+export const HISTORY_TRANSITION_KINDS = Object.freeze(["revert", "reinstate", "commit", "branch", "checkout", "repin", "supersede"] as const);
+
+/** 🏷️ One transition kind. */
+export type HistoryTransitionKind = (typeof HISTORY_TRANSITION_KINDS)[number];
+
+/** 🗂️ Twin of Rust `HistoryShape`: a `document` history holds every transition, a `config` history only the undo and
+ * redo of its edits — no checkpoint, alternative, pin or supersession. */
+export type HistoryShape = "document" | "config";
+
+/** 🛂️ Twin of Rust `HistoryShape::admits`. */
+export function historyShapeAdmits(shape: HistoryShape, kind: HistoryTransitionKind): boolean {
+  return shape === "document" || kind === "revert" || kind === "reinstate";
+}
+
+/** 🌳️ Twin of Rust `trunk_alternative_id`: the id of `documentId`'s trunk, the implicit root line every document starts
+ * on — `trunk-{hex16(blake3(str "semio.history.trunk" | str documentId))}`. The log never names it. */
+export function trunkAlternativeId(documentId: string): string {
+  const material: number[] = [];
+  writeStr(material, "semio.history.trunk");
+  writeStr(material, documentId);
+  return `trunk-${blake3Hex(new Uint8Array(material)).slice(0, 16)}`;
+}
+
 /** ♻️ Twin of Rust `InputReplacement` (`ToValue` shape): an operation's replacement input (the artifact aggregate op's
  * canonical `OpBinary` bytes under `schema`) or a withdrawal that folds the operation as a no-op. */
 export type InputReplacement = { readonly kind: "input"; readonly schema: string; readonly payload: readonly number[] } | { readonly kind: "withdrawn" };
@@ -1082,11 +1121,14 @@ export type SupersessionFoldTransition =
 /** ✉️ One transition event of a document log as the supersession fold sees it. */
 export type SupersessionFoldEvent = { readonly id: string; readonly actor: string; readonly timestamp: WireMutationEnvelope["timestamp"]; readonly transition: SupersessionFoldTransition };
 
-/** 🧮️ Twin of the supersession half of Rust `fold_history`: events in `(physical_ms, logical, actor, id)` order; an
- * operation's effective supersession is the last `supersede` naming it whose scope is `null` or the final
- * alternative. No ownership rule. A target outside `operations` is refused like Rust's unknown-operation fold error.
+/** 🧮️ Twin of the supersession half of Rust `fold_history` for the document `documentId`: events in
+ * `(physical_ms, logical, actor, id)` order; an operation's effective supersession is the last `supersede` naming it
+ * whose scope is `null` or the final alternative — the trunk's id ({@link trunkAlternativeId}) while the trunk is active
+ * (`alternative` is `null` then: a `checkout` naming the trunk or none activates it, a `branch` may not claim it). No
+ * ownership rule. A target outside `operations` is refused like Rust's unknown-operation fold error.
  * @see ./🔗️causal/🔀️transition/🦀️.rs */
-export function foldSupersessions(operations: ReadonlySet<string>, events: readonly SupersessionFoldEvent[]): Readonly<{ alternative: string | null; supersessions: ReadonlyMap<string, EffectiveSupersession> }> {
+export function foldSupersessions(documentId: string, operations: ReadonlySet<string>, events: readonly SupersessionFoldEvent[]): Readonly<{ alternative: string | null; trunk: string; supersessions: ReadonlyMap<string, EffectiveSupersession> }> {
+  const trunk = trunkAlternativeId(documentId);
   const key = (event: SupersessionFoldEvent): readonly [number, number, number] => [event.timestamp.physical_ms, event.timestamp.logical, event.timestamp.actor];
   const ordered = [...events].sort((left, right) => {
     const [a, b] = [key(left), key(right)];
@@ -1096,8 +1138,10 @@ export function foldSupersessions(operations: ReadonlySet<string>, events: reado
   const candidates: [string, EffectiveSupersession][] = [];
   for (const event of ordered) {
     const transition = event.transition;
-    if (transition.kind === "branch") alternative = transition.alternativeId;
-    else if (transition.kind === "checkout") alternative = transition.alternativeId;
+    if (transition.kind === "branch") {
+      if (transition.alternativeId === trunk) throw new Error(`history fold: branch claims the trunk alternative ${trunk}`);
+      alternative = transition.alternativeId;
+    } else if (transition.kind === "checkout") alternative = transition.alternativeId === trunk ? null : transition.alternativeId;
     else if (transition.kind === "supersede") {
       for (const input of transition.inputs) {
         if (!operations.has(input.target)) throw new Error(`history fold: transition references unknown operation ${input.target}`);
@@ -1105,9 +1149,10 @@ export function foldSupersessions(operations: ReadonlySet<string>, events: reado
       }
     }
   }
+  const activeLine = alternative ?? trunk;
   const supersessions = new Map<string, EffectiveSupersession>();
-  for (const [target, supersession] of candidates) if (supersession.scope === null || supersession.scope === alternative) supersessions.set(target, supersession);
-  return { alternative, supersessions };
+  for (const [target, supersession] of candidates) if (supersession.scope === null || supersession.scope === activeLine) supersessions.set(target, supersession);
+  return { alternative, trunk, supersessions };
 }
 
 /** 🚦️ Twin of Rust `diagnostic::Severity` (`ToValue` spelling), in level order. */
@@ -1116,8 +1161,32 @@ export const REPLAY_SEVERITIES = Object.freeze(["info", "warning", "error", "fat
 /** 🚦️ One `Severity` wire name. */
 export type ReplaySeverity = (typeof REPLAY_SEVERITIES)[number];
 
+/** 📖️ Twin of Rust `OUTCOME_CODES`: the frozen outcome-code vocabulary and the one level each code fixes
+ * (`🎮️mutation/🧫️fixtures/🧫️outcome-code`). */
+export const OUTCOME_CODES = Object.freeze([
+  ["mutation.target-missing", "error"],
+  ["mutation.target-referenced", "error"],
+  ["mutation.target-mismatch", "error"],
+  ["mutation.no-op", "warning"],
+  ["mutation.partial", "warning"],
+  ["mutation.clamped", "warning"],
+  ["mutation.duplicate-id", "fatal"],
+  ["mutation.invariant", "fatal"],
+  ["mutation.cascade", "info"],
+] as const satisfies readonly (readonly [string, ReplaySeverity])[]);
+
+/** 🧱️ Twin of Rust `APPLY_OUTCOME_CODE_PREFIX`: the apply-time rejection family, always `fatal`. */
+export const APPLY_OUTCOME_CODE_PREFIX = "mutation.apply.";
+
+/** ⚖️ Twin of Rust `outcome_code_level`: the level the vocabulary fixes for `code`, `null` outside it. */
+export function outcomeCodeLevel(code: string): ReplaySeverity | null {
+  const known = OUTCOME_CODES.find(([candidate]) => candidate === code);
+  if (known) return known[1];
+  return code.startsWith(APPLY_OUTCOME_CODE_PREFIX) && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(code.slice(APPLY_OUTCOME_CODE_PREFIX.length)) ? "fatal" : null;
+}
+
 /** 📨️ Twin of Rust `MutationMessage` (`ToValue` shape: `target`/`opIndex` omitted when empty). */
-export type ReplayMutationMessage = { readonly level: ReplaySeverity; readonly code: string; readonly message: string; readonly target?: readonly string[]; readonly opIndex?: number };
+export type ReplayMutationMessage ={ readonly level: ReplaySeverity; readonly code: string; readonly message: string; readonly target?: readonly string[]; readonly opIndex?: number };
 
 /** 🔬️ Twin of Rust `conflict::MutationReplayOutcome`. */
 export type MutationReplayOutcome = {
@@ -1821,6 +1890,16 @@ export function encodeClientFrame(frame: ClientFrame, lane: WireLane): Uint8Arra
   return new Uint8Array(out);
 }
 
+/** 📤️ One `ClientFrame::Commands` of exact envelopes — {@link encodeClientFrame}'s `Commands` bytes, every HLC exact: a relay
+ * keeps each envelope's authored `(hlc, id)`, the TS twin of the Rust actors' relay. */
+export function encodeClientCommandsFrameExact(batchId: number, envelopes: readonly ExactWireMutationEnvelope[], lane: WireLane): Uint8Array {
+  const out: number[] = [WIRE_LANE_BYTES[lane], 1];
+  writeVarintU64(out, batchId);
+  writeVarintU64(out, envelopes.length);
+  for (const envelope of envelopes) encodeExactEnvelope(out, envelope);
+  return new Uint8Array(out);
+}
+
 /** 📥️ Decodes one `ClientFrame` — the TS twin of `protocol_wire::decode_client_frame`. */
 export function decodeClientFrame(bytes: Uint8Array): { readonly lane: WireLane; readonly frame: ClientFrame } {
   if (bytes.length === 0) throw new Error("wire frame: empty frame");
@@ -2023,9 +2102,9 @@ if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️artifact-bootstrap-protocol/🟦️.ts");
   await registerTests1(import.meta.vitest, { ArtifactBootstrapAssembler, artifactBootstrapAggregateHash, artifactBootstrapSha256, decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame }, { directory: import.meta.dir, url: import.meta.url });
   const { registerTests2 } = await import("./🧪️tests/🧪️document-backbone-envelope-batch/🟦️.ts");
-  await registerTests2(import.meta.vitest, { DOCUMENT_BACKBONE_RETENTION_LIMITS, DocumentBackboneBatchError, decodeDocumentBackboneEnvelopeBatchExact, encodeDocumentBackboneEnvelopeBatchExact }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests2(import.meta.vitest, { DOCUMENT_BACKBONE_RETENTION_LIMITS, DocumentBackboneBatchError, decodeDocumentBackboneEnvelopeBatchExact, encodeDocumentBackboneEnvelopeBatchExact, encodeClientCommandsFrameExact, encodeClientFrame }, { directory: import.meta.dir, url: import.meta.url });
   const { registerTests3 } = await import("./🧪️tests/🧪️history-transition/🟦️.ts");
-  await registerTests3(import.meta.vitest, { directory: import.meta.dir, url: import.meta.url }, HISTORY_TRANSITION_DIFF_SCHEMA, { historyTransitionId });
+  await registerTests3(import.meta.vitest, { directory: import.meta.dir, url: import.meta.url }, HISTORY_TRANSITION_DIFF_SCHEMA, { historyTransitionId, trunkAlternativeId, historyShapeAdmits, HISTORY_TRANSITION_KINDS });
   const { registerTests: registerDurableCollaborativeRedoTests } = await import("./🧪️tests/🗄️durable-collaborative-redo/🟦️.ts");
   await registerDurableCollaborativeRedoTests(import.meta.vitest, { directory: import.meta.dir, url: import.meta.url });
   const { registerSupersedeFoldTests } = await import("./🧪️tests/🧪️supersede-fold/🟦️.ts");
@@ -2034,6 +2113,8 @@ if (import.meta.vitest) {
   await registerTransactionRefTests(import.meta.vitest, { mintTransactionRef, writeVecEnvelope, readVecEnvelope }, { directory: import.meta.dir, url: import.meta.url });
   const { registerReplayReportTests } = await import("./🧪️tests/🧪️replay-report/🟦️.ts");
   await registerReplayReportTests(import.meta.vitest, { replayReportBlocksFinalize, REPLAY_SEVERITIES }, { directory: import.meta.dir, url: import.meta.url });
+  const { registerOutcomeCodeTests } = await import("./🧪️tests/🧪️outcome-code/🟦️.ts");
+  await registerOutcomeCodeTests(import.meta.vitest, { OUTCOME_CODES, APPLY_OUTCOME_CODE_PREFIX, outcomeCodeLevel }, { directory: import.meta.dir, url: import.meta.url });
 
 }
 

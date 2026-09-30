@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceCombination`.
 //!
 //! Guards, in the order they run: `mutation.target-missing` (Error) on the selected id,
-//! `mutation.id-mismatch` (Fatal) when the replacement renames it, the SAME per-term resolution
+//! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME per-term resolution
 //! `create-combination` runs (`mutation.target-missing` on a term this base cannot resolve,
 //! `mutation.invariant` on a term weighting the combination itself), the finite-factor bound
 //! (`mutation.invariant`, Fatal), and finally `mutation.no-op`.

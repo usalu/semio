@@ -1,4 +1,4 @@
-import type { QueryResult } from "../../🟦️";
+import type { QueryResult } from "../../../../../../../../🧬️schema/🌳️ast/🟦️.ts";
 
 /** 🧬️ A replacement of one addressed results-window execution state. */
 export type JackResultsWindowTransientMutation = {
